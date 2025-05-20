@@ -6,7 +6,6 @@
 /public/uploads
 /storage/*.key
 /vendor
-.env
 .idea
 .env.backup
 .env.production
