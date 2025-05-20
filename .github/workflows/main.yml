@@ -44,7 +44,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
-        server-dir: /public_html/  # Change to your path (e.g., / or /smarthr/)
+        server-dir: /  # Change to your path (e.g., / or /smarthr/)
         local-dir: ./  # Upload everything from repo root
         exclude: |
           **/.git*
