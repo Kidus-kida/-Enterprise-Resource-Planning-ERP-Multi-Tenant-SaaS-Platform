@@ -1,0 +1,6 @@
+Scripts available in undefined via `npm run-script`:
+  dev
+    vite
+  build
+    vite build
+
