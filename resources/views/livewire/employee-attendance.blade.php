@@ -162,42 +162,32 @@
               </button>
             </div>
             <div class="modal-body">
-            <form wire:submit.prevent="clockin" method="post" enctype="multipart/form-data">
-                        @csrf
-                        <div x-data="{forProject: false}">
-                            <x-form.input-block>
-                                <div class="status-toggle">
-                                    <x-form.label>{{ __('For Project ??') }}</x-form.label>
-                                    <x-form.input type="checkbox" id="forProject" class="check" @click="forProject =! forProject" name="forProject" wire:model="forProject" />
-                                    <label for="forProject" class="checktoggle">checkbox</label>
-                                </div>
-                            </x-form.input-block>
-                            <div x-show="forProject">
-                                <x-form.input-block>
-                                    <x-form.label required>{{ __('Project') }}</x-form.label>
-                                    <select class="form-control" name="project" wire:model="project">
-                                        <option value="">{{ __('Select Project') }}</option>
-                                        @foreach (\Modules\Project\Models\Project::get() as $project)
-                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </x-form.input-block>
-                            </div>
-
-                            <!-- Camera Section -->
-                            <div class="camera-section">
-                                <video id="video" width="100%" autoplay></video>
-                                <canvas id="canvas" style="display: none;"></canvas>
-                                <img id="capturedImage" style="display: none; width: 100%;" />
-                                <input type="hidden" id="photo" wire:model="photo">
-                                <button type="button" class="btn btn-primary mt-2" id="capture-btn">Capture Photo</button>
-                            </div>
-                        </div>
-
-                        <div class="submit-section mb-3">
-                            <x-form.button class="btn btn-primary submit-btn">{{ __('Start') }}</x-form.button>
-                        </div>
-                    </form>
+              <form wire:submit.prevent="clockin" method="post" enctype="multipart/form-data">
+                @csrf
+                <div x-data="{forProject: false}">
+                    <x-form.input-block>
+                    <div class="status-toggle">
+                        <x-form.label>{{ __('For Project ?') }}</x-form.label>
+                        <x-form.input type="checkbox" id="forProject" class="check" @click="forProject =! forProject" name="forProject" wire:model="forProject" />
+                        <label for="forProject" class="checktoggle">checkbox</label>
+                    </div>
+                    </x-form.input-block>
+                    <div x-show="forProject">
+                        <x-form.input-block>
+                            <x-form.label required>{{ __('Project') }}</x-form.label>
+                            <select class="form-control" name="project" wire:model="project">
+                                <option value="">{{ __('Select Project') }}</option>
+                                @foreach (\Modules\Project\Models\Project::get() as $project)
+                                    <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-form.input-block>
+                    </div>
+                </div>
+                <div class="submit-section mb-3">
+                    <x-form.button class="btn btn-primary submit-btn">{{ __('Start') }}</x-form.button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -217,46 +207,6 @@
                 className: "success",
             }).showToast()
         })
-    </script>
-    @endscript
-
-    @script
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let video = document.getElementById("video");
-            let canvas = document.getElementById("canvas");
-            let context = canvas.getContext("2d");
-            let captureButton = document.getElementById("capture-btn");
-            let capturedImage = document.getElementById("capturedImage");
-            let photoInput = document.getElementById("photo");
-
-            // Start Camera
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function (stream) {
-                    video.srcObject = stream;
-                })
-                .catch(function (err) {
-                    console.error("Error accessing camera: ", err);
-                });
-
-            // Capture Photo
-            captureButton.addEventListener("click", function () {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                let imageData = canvas.toDataURL("image/png"); // Convert to Base64
-
-                capturedImage.src = imageData;
-                capturedImage.style.display = "block"; // Show image preview
-
-                //photoInput.value = imageData; // Store in hidden input field
-
-                photoInput.value = imageData;
-                photoInput.dispatchEvent(new Event('input')); // Notify Livewire about the change
-                Livewire.emit('photoCaptured', imageData); // Send to Livewire
-            });
-        });
     </script>
     @endscript
 </div>

@@ -11,16 +11,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\BaseController;
 
-
 class UsersController extends BaseController
 {
-    function __construct()
-    {
-        $this->middleware('permission:view-users', ['only' => ['index']]);
-        $this->middleware('permission:delete-user', ['only' => ['destroy']]);
-        $this->middleware('permission:edit-user', ['only' => ['edit','update']]);
-        $this->middleware('permission:create-user', ['only' => ['create', 'store']]);
-    }
     /**
      * Display a listing of the resource.
      */

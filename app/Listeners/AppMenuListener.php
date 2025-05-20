@@ -104,21 +104,5 @@ class AppMenuListener
             Link::toRoute('assets.index', '<i class="la la-object-ungroup"></i> <span>' . __('Assets') . '</span>')->setActive(route_is('assets.index'))
         );
 
-        if(auth()->user()->canAny([
-            'view-employees','view-attendances','view-departments','view-designations','view-holidays'
-        ])){
-            $menu->html('<span>System Configuration</span>', ['class' => 'menu-title']);
-            $activeClass = route_is(['employees.index','employees.list','departments.index','designations.index','holidays.*']) ? "active" : "";
-            $menu
-                ->submenu(
-                    Html::raw('<a href="#" class="' . $activeClass . '" class="noti-dot"><i class="la la-user"></i> <span> ' . __('Policy') . '</span><span class="menu-arrow"></span></a>'),
-                    Menu::new()
-                        ->addParentClass('submenu')
-                        ->addIfCan('view-employees',Link::toRoute('policy-type.index', __('Type'))->addClass(route_is(['policy-type.index']) ? 'active' : ''))
-                        ->addIfCan('view-attendances',Link::toRoute('attendances.index', __('Sub Type'))->addClass(route_is(['attendances.index']) ? 'active' : ''))
-                        ->addIfCan('view-departments',Link::toRoute('departments.index', __('Duration'))->addClass(route_is('departments.index') ? 'active' : ''))
-                );
-        }
-
     }
 }

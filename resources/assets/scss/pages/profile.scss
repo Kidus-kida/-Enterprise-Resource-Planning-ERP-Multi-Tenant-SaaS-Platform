@@ -83,12 +83,11 @@
 .personal-info {
     @extend %ul_reset;
     li {
-        margin-bottom: 10px;
         @extend %display-flex;
         @include respond-below(custom991) {
             width:100%;
         }
-        
+        margin-bottom: 10px;
         .title {
             color: $__gray;
             float: $__left;

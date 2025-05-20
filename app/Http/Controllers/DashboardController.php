@@ -19,7 +19,6 @@ class DashboardController extends BaseController
 
     public function index()
     {
-       
         $this->data['pageTitle'] = __('Dashboard');
         if(auth()->user()->type === UserType::EMPLOYEE)
         {

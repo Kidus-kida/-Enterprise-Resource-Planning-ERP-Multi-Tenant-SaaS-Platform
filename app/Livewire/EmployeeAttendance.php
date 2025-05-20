@@ -9,7 +9,6 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Carbon;
 use App\Models\AttendanceTimestamp;
 use Illuminate\Support\Facades\Crypt;
-use Livewire\WithFileUploads;
 
 class EmployeeAttendance extends Component
 {
@@ -21,14 +20,6 @@ class EmployeeAttendance extends Component
     public $totalHoursToday;
     public $totalHoursThisMonth;
     public $totalHoursThisWeek;
-    public $photo;
-
-    protected $listeners = ['photoCaptured'];
-
-    public function photoCaptured($imageData)
-    {
-        $this->photo = $imageData;
-    }
 
     public function clockin()
     {
@@ -40,18 +31,6 @@ class EmployeeAttendance extends Component
                     'project' => 'required',
                 ]);
             }
-
-           
-             // Save the photo (Convert Base64 to file and store in storage)
-            $image = str_replace('data:image/png;base64,', '', $this->photo);
-            $image = str_replace(' ', '+', $image);
-            $imageName = 'clockin_' . time() . '.png';
-
-            \Storage::disk('public')->put('attendance/' . $imageName, base64_decode($image));
-
-            
-
-
             $todayAttendance = Attendance::where('user_id', $user->id)
                     ->whereDate('created_at', Carbon::today())->first();
             if(!empty($todayAttendance)){
@@ -63,7 +42,6 @@ class EmployeeAttendance extends Component
                     'endDate' => null,
                 ]);
             }
-            //dd('attendance/' . $imageName);
             AttendanceTimestamp::create([
                 'user_id' => $user->id,
                 'attendance_id' => $attendance->id,
@@ -73,7 +51,6 @@ class EmployeeAttendance extends Component
                 'location' => $user->employeeDetail->department->location ?? null,
                 'billable' => false,
                 'ip' => request()->ip() ?? null,
-                'photo' => 'attendance/' . $imageName, // Save image path
             ]);
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');

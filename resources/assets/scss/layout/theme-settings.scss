@@ -1552,9 +1552,8 @@
     } 
    
     .sidebar {
-        background-color: #34444c;
         box-shadow: 0 1px 1px 0 rgb(0 0 0 / 20%);
-        
+        background-color: #34444c;
         .sidebar-menu{
             .greedy ul li a:hover {
                 color: #fff;
@@ -1855,11 +1854,10 @@
                 }
             }
             .dropdown-menu {
-                background-color: #34444c;
                 .notification-title {
                     color: #bbc4cc;
                 }
-                
+                background-color: #34444c;
                 .topnav-dropdown-header {
                     border-bottom-color:#bdbdbd ;
                 }

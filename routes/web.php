@@ -3,13 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\AllowancesController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\DeductionsController;
 use App\Http\Controllers\Admin\UsersController;
-use App\Http\Controllers\Admin\PolicyTypeController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\AssetsController;
 use App\Http\Controllers\Admin\ChatAppController;
@@ -27,16 +25,8 @@ use App\Http\Controllers\Admin\EmployeeDetailsController;
 
 include __DIR__ . '/auth.php';
 
-//Route::get('/', [DashboardController::class, 'index'])->name('home');
-
-Route::get('/', function () {
-    return Auth::check() ? redirect('/dashboard') : redirect('/welcome');
-});
-
-Route::get('welcome', [WelcomeController::class, 'index'])->name('welcome');
-
 Route::middleware(['auth'])->group(function () {
-    
+    Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -87,9 +77,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
 
-    //policy
-    Route::resource('policy-type', PolicyTypeController::class);
-   
     //settings
     Route::prefix('settings')->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
