@@ -9,10 +9,12 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Carbon;
 use App\Models\AttendanceTimestamp;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
+
 
 class EmployeeAttendance extends Component
 {
-    public $forProject,$project, $clockedIn, $timeStarted;
+    public $forProject,$project, $clockedIn=false, $timeStarted;
     public $totalHours = 0;
     public $timeId = null;
     public $attendances, $todayActivity;
@@ -21,10 +23,47 @@ class EmployeeAttendance extends Component
     public $totalHoursThisMonth;
     public $totalHoursThisWeek;
 
+    public $latitude;
+    public $longitude;
+    protected $listeners = ['setLocationCoords'];
+
+    public function setLocationCoords($coords)
+    {
+        $this->latitude = $coords['lat'];
+        $this->longitude = $coords['lng'];
+    }
+
+
+    public function getLocationNameFromCoords($lat, $lng)
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => 'TewosSmartHR/1.0 (https://smarthr.tewostechsolutions.com)' 
+        ])->get("https://nominatim.openstreetmap.org/reverse", [
+            'format' => 'json',
+            'lat' => $lat,
+            'lon' => $lng,
+            'zoom' => 18,
+            'addressdetails' => 1,
+        ]);
+
+        // dd($response->json()['display_name']);
+
+        if ($response->successful()) {
+            return $response->json()['display_name'] ?? null;
+        }
+
+        return null;
+    }
+
+
     public function clockin()
     {
         try{
-
+            $locationName = null;
+            if ($this->latitude && $this->longitude) {
+                $locationName = $this->getLocationNameFromCoords($this->latitude, $this->longitude);
+            }
+            // dd($locationName);
             $user  = auth()->user();
             if($this->forProject){
                 $this->validate([
@@ -42,20 +81,25 @@ class EmployeeAttendance extends Component
                     'endDate' => null,
                 ]);
             }
+            // dd($locationName);
             AttendanceTimestamp::create([
                 'user_id' => $user->id,
                 'attendance_id' => $attendance->id,
                 'project_id' => $this->project,
                 'startTime' => now(),
                 'endTime' => null,
-                'location' => $user->employeeDetail->department->location ?? null,
+                // 'location' => $user->employeeDetail->department->location ?? null,
+                'location' => $locationName ?? ($user->employeeDetail->department->location ?? null),
                 'billable' => false,
                 'ip' => request()->ip() ?? null,
             ]);
+            $this->clockedIn = true;
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');
             $this->dispatch('Notification',__('You have clockin successfully'));
             $this->js("bootstrap.Modal.getInstance(document.getElementById('clockin_modal')).hide()");
+            $this->latitude = null;
+            $this->longitude = null;
         }catch(\Exception $e){
             $this->dispatch('Notification',__('Something went wrong'));
         }
@@ -64,16 +108,24 @@ class EmployeeAttendance extends Component
     public function clockout($timestampId)
     {
         try{
+            $locationName = null;
+            if ($this->latitude && $this->longitude) {
+                $locationName = $this->getLocationNameFromCoords($this->latitude, $this->longitude);
+            }
             $timestamp = AttendanceTimestamp::find(Crypt::decrypt($timestampId));
             $timestamp->attendance->update([
                 'endDate' => now(),
             ]);
             $timestamp->update([
                 'endTime' => now(),
+                'co_location' => $locationName ?? null,
             ]);
+            $this->clockedIn = false;
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');
             $this->dispatch('Notification',__('You have clockout successfully'));
+            $this->latitude = null;
+            $this->longitude = null;
         }catch(\Exception $e){
             $this->dispatch('Notification',__('Something went wrong'));
         }
@@ -118,7 +170,7 @@ class EmployeeAttendance extends Component
         if(!empty($todayClockin)){
             $latestClockin = $todayClockin->timestamps()->latest()->whereNull('endTime')->first() ?? null;
             if(!empty($latestClockin)){
-                $this->clockedIn = true;
+                // $this->clockedIn = true;
                 $this->timeId = Crypt::encrypt($latestClockin->id);
                 $this->timeStarted = $latestClockin->startTime;
                 $this->totalHours = Carbon::now()->diff($latestClockin->startTime)->h;

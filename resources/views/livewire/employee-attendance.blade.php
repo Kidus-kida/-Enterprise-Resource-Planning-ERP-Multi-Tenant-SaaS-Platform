@@ -32,8 +32,15 @@
                         </div>
                     </div>
                     <div class="punch-btn-section">
-                        @if (!empty($clockedIn) && !empty($timeId))
-                        <button type="button" wire:click="clockout('{{ $timeId }}')" class="btn btn-primary punch-btn">{{ __('Clock Out') }}</button>
+                        {{-- @if (!empty($clockedIn) && !empty($timeId)) --}}
+                        @if ($clockedIn)
+                        <button type="button" 
+                            wire:loading.attr="disabled"
+                            wire:target="clockout"  
+                            onclick="prepareClockOut('{{ $timeId }}')" class="btn btn-primary punch-btn">
+                                <span wire:loading.remove wire:target="clockout">{{ __('Clock Out') }}</span>
+                                <span wire:loading wire:target="clockout">Clocking out...</span>
+                        </button>
                         @else
                         <button type="button" data-bs-toggle="modal" data-bs-target="#clockin_modal" class="btn btn-primary punch-btn">{{ __('Clock In') }}</button>
                         @endif
@@ -193,8 +200,8 @@
         </div>
     </div>
       
-    @script
-    <script defer type="module">
+    {{-- @script --}}
+    {{-- <script defer type="module">
         document.addEventListener('livewire:initialized', () => {
             Livewire.dispatch('refreshAttendance')
             Livewire.dispatch('fetchStatistics')
@@ -207,6 +214,82 @@
                 className: "success",
             }).showToast()
         })
+    </script> --}}
+    <script defer type="module">
+        let userLatitude = null;
+        let userLongitude = null;
+
+    
+        function getUserLocation() {
+            console.log("GETUSERLOC")
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    userLatitude = position.coords.latitude;
+                    userLongitude = position.coords.longitude;
+                    console.log('Lat:',userLatitude)
+                    console.log('Lon:',userLongitude)
+
+                    // window.open(`https://www.google.com/maps?q=${userLatitude},${userLongitude}`, "_blank");
+    
+                    // Livewire.dispatch('setLocationCoords', {
+                    //     lat: userLatitude,
+                    //     lng: userLongitude
+                    // });
+                    @this.set('latitude', userLatitude);
+                    @this.set('longitude', userLongitude);
+                }, function(error) {
+                    console.warn("Location access denied or unavailable.");
+                    // Livewire.dispatch('setLocationCoords', {
+                    //     lat: null,
+                    //     lng: null
+                    // });
+                });
+            }
+        }
+    
+        // Run when modal opens
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('CLOCKEDIN:',@this.get('clockedIn'))
+
+            const clockInModal = document.getElementById('clockin_modal');
+            clockInModal.addEventListener('shown.bs.modal', () => {
+                getUserLocation();
+            });
+        });
+
     </script>
-    @endscript
+
+    {{-- clockout --}}
+    <script>
+        function prepareClockOut(id) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    @this.set('latitude',  position.coords.latitude);
+                    @this.set('longitude',  position.coords.longitude);
+                    console.log(@this.get('latitude'))
+                    console.log("COLAT:", position.coords.latitude)
+                    console.log("COLON:", position.coords.longitude)
+                    
+                    setTimeout(() => {
+                        @this.call('clockout', id);
+                    }, 500);
+                }, function(error) {
+                    console.warn("Location access denied.");
+                    @this.set('latitude', null);
+                    @this.set('longitude', null);
+                    setTimeout(() => {
+                        @this.call('clockout', id);
+                    }, 500);
+                });
+            } else {
+                Livewire.dispatch('clockout', id);
+            }
+        }
+    </script>
+
+
+    
+    {{-- @endscript --}}
 </div>
+
+

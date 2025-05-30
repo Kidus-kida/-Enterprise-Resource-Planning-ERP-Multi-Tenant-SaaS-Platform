@@ -32,7 +32,7 @@
                         @if (!empty($attendanceActivity))
                             @foreach ($attendanceActivity as $item)
                             <li>
-                                <p class="mb-0">{{ __('Punch In at') }}</p>
+                                <p class="mb-0">{{ __('Punch In at') }} - ({{$item->location ?? null}})</p>
                                 <p class="res-activity-time">
                                     <i class="fa-regular fa-clock"></i>
                                     {{ !empty($item->startTime) ? $item->startTime->format('H:i A'): '' }}
@@ -40,7 +40,7 @@
                             </li>
                             @if (!empty($item->endTime))
                             <li>
-                                <p class="mb-0">{{ __('Punch Out at') }}</p>
+                                <p class="mb-0">{{ __('Punch Out at') }} - ({{$item->co_location ?? null}})</p>
                                 <p class="res-activity-time">
                                     <i class="fa-regular fa-clock"></i>
                                     {{ !empty($item->endTime) ? $item->endTime->format('H:i A'): '' }}

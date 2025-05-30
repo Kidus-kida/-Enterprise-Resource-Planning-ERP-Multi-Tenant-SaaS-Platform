@@ -11,7 +11,7 @@ class AttendanceTimestamp extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id','attendance_id','project_id','startTime','endTime','location',
+        'user_id','attendance_id','project_id','startTime','endTime','location','co_location',
         'billable','ip','note'
     ];
 
