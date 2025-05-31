@@ -32,17 +32,23 @@
                         </div>
                     </div>
                     <div class="punch-btn-section">
-                        {{-- @if (!empty($clockedIn) && !empty($timeId)) --}}
                         @if ($clockedIn)
-                        <button type="button" 
-                            wire:loading.attr="disabled"
-                            wire:target="clockout"  
-                            onclick="prepareClockOut('{{ $timeId }}')" class="btn btn-primary punch-btn">
-                                <span wire:loading.remove wire:target="clockout">{{ __('Clock Out') }}</span>
-                                <span wire:loading wire:target="clockout">Clocking out...</span>
-                        </button>
+                            <button type="button" 
+                                wire:loading.attr="disabled"
+                                wire:target="clockout"  
+                                onclick="prepareClockOut('{{ $timeId }}')" class="btn btn-primary punch-btn">
+                                    <span wire:loading.remove wire:target="clockout">{{ __('Clock Out') }}</span>
+                                    <span wire:loading wire:target="clockout">Clocking out...</span>
+                            </button>
                         @else
-                        <button type="button" data-bs-toggle="modal" data-bs-target="#clockin_modal" class="btn btn-primary punch-btn">{{ __('Clock In') }}</button>
+                            <button type="button"
+                             class="btn btn-primary punch-btn"
+                             onclick="getUserLocation()" 
+                             wire:loading.attr="disabled"
+                             wire:target="clockin"  >
+                               <span wire:loading.remove wire:target="clockin">{{ __('Clock In') }}</span>
+                               <span wire:loading wire:target="clockin">Clocking in...</span>
+                            </button>
                         @endif
                     </div>
                     <div class="statistics">
@@ -155,7 +161,7 @@
         </div>
     </div>
 
-    <div class="modal custom-modal fade" id="clockin_modal" role="dialog">
+    {{-- <div class="modal custom-modal fade" id="clockin_modal" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
           <div class="modal-content">
             <div class="modal-header">
@@ -198,10 +204,10 @@
             </div>
           </div>
         </div>
-    </div>
+    </div> --}}
       
-    {{-- @script --}}
-    {{-- <script defer type="module">
+    @script
+    <script defer type="module">
         document.addEventListener('livewire:initialized', () => {
             Livewire.dispatch('refreshAttendance')
             Livewire.dispatch('fetchStatistics')
@@ -214,8 +220,9 @@
                 className: "success",
             }).showToast()
         })
-    </script> --}}
-    <script defer type="module">
+    </script>
+    @endscript
+    <script >
         let userLatitude = null;
         let userLongitude = null;
 
@@ -237,6 +244,9 @@
                     // });
                     @this.set('latitude', userLatitude);
                     @this.set('longitude', userLongitude);
+                    setTimeout(() => {
+                        @this.call('clockin');
+                    }, 100);
                 }, function(error) {
                     console.warn("Location access denied or unavailable.");
                     // Livewire.dispatch('setLocationCoords', {
@@ -248,14 +258,14 @@
         }
     
         // Run when modal opens
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('CLOCKEDIN:',@this.get('clockedIn'))
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     console.log('CLOCKEDIN:',@this.get('clockedIn'))
 
-            const clockInModal = document.getElementById('clockin_modal');
-            clockInModal.addEventListener('shown.bs.modal', () => {
-                getUserLocation();
-            });
-        });
+        //     const clockInModal = document.getElementById('clockin_modal');
+        //     clockInModal.addEventListener('shown.bs.modal', () => {
+        //         getUserLocation();
+        //     });
+        // });
 
     </script>
 

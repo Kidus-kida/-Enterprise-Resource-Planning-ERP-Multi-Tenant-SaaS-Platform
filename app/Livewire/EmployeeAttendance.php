@@ -33,6 +33,12 @@ class EmployeeAttendance extends Component
         $this->longitude = $coords['lng'];
     }
 
+    public function mount()
+    {
+        $this->getClockInData(); 
+    }
+
+
 
     public function getLocationNameFromCoords($lat, $lng)
     {
@@ -93,7 +99,7 @@ class EmployeeAttendance extends Component
                 'billable' => false,
                 'ip' => request()->ip() ?? null,
             ]);
-            $this->clockedIn = true;
+            // $this->clockedIn = true;
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');
             $this->dispatch('Notification',__('You have clockin successfully'));
@@ -120,7 +126,7 @@ class EmployeeAttendance extends Component
                 'endTime' => now(),
                 'co_location' => $locationName ?? null,
             ]);
-            $this->clockedIn = false;
+            // $this->clockedIn = false;
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');
             $this->dispatch('Notification',__('You have clockout successfully'));
@@ -167,16 +173,22 @@ class EmployeeAttendance extends Component
         $todayClockin = Attendance::where('user_id', auth()->user()->id)
                     ->whereDate('created_at', Carbon::today())
                     ->first();
+    
         if(!empty($todayClockin)){
             $latestClockin = $todayClockin->timestamps()->latest()->whereNull('endTime')->first() ?? null;
             if(!empty($latestClockin)){
-                // $this->clockedIn = true;
+                $this->clockedIn = true; // ✅ This was missing
                 $this->timeId = Crypt::encrypt($latestClockin->id);
                 $this->timeStarted = $latestClockin->startTime;
                 $this->totalHours = Carbon::now()->diff($latestClockin->startTime)->h;
+            } else {
+                $this->clockedIn = false; // ✅ Also set explicitly
             }
+        } else {
+            $this->clockedIn = false;
         }
     }
+
    
     public function render()
     {
