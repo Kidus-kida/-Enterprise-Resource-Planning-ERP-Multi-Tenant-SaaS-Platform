@@ -37,16 +37,16 @@ class AssetsController extends Controller
     {
         $request->validate([
             'name' => 'required|max:200',
-            'purchase_date' => 'required|date',
-            'purchase_from' => 'required',
-            'manufacturer' => 'required',
+            'purchase_date' => 'nullable',
+            'purchase_from' => 'nullable',
+            'manufacturer' => 'nullable',
             'model' => 'nullable|max:100',
             'serial_no' => 'nullable|max:50',
             'supplier' => 'nullable|max:200',
             'condition' => 'nullable|max:200',
             'warranty' => 'nullable',
-            'cost' => 'required',
-            'status' => 'required',
+            'cost' => 'nullable',
+            'status' => 'nullable',
             'user' => 'required',
             'description' => 'nullable|max:255'
         ]);
