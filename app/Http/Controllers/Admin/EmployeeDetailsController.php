@@ -152,11 +152,11 @@ class EmployeeDetailsController extends BaseController
         ));
     }
 
-    public function updateEducation(Request $request, EmployeeWorkExperience $employeeDetail)
+    public function updateEducation(Request $request, EmployeeDetail $employeeDetail)
     {
         $educations = $request->education;
         foreach ($educations as $i => $education) {
-            $fileName = null;
+            $fileName = $education['file_existing'] ?? null;
             $dir = public_path("storage/employees/" . $employeeDetail->emp_id . "/education");
             $requestFile = $education['file'] ?? null;
             if (!empty($requestFile)) {

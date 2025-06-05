@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('employee/experience/{employeeDetail}', [EmployeeDetailsController::class, 'updateWorkExperience']);
     Route::delete('delete-experience/{experience}', [EmployeeDetailsController::class, 'deleteWorkExperience'])->name('employee.experience.delete');
     Route::get('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'education'])->name('employee.education');
-    Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation']);
+    Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
     Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
     Route::group(['prefix' => 'payroll'], function(){

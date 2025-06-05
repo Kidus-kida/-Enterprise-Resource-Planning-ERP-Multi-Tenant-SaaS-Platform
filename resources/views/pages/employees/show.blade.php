@@ -308,7 +308,7 @@
                                 <div>{{ $education->course }}</div>
                                 <span class="time">{{ $education->start_date }} - {{ $education->end_date }}</span>
                                 @if (!empty($education->file))
-                                    <a href="{{ uploadedAsset($education->file,'employees/education') }}" target="_blank" rel="noopener noreferrer">{{ __('View File') }}</a>
+                                    <a href="{{ uploadedAsset($education->file,'employees/'.$employee->emp_id.'/education') }}" target="_blank" rel="noopener noreferrer">{{ __('View File') }}</a>
                                 @endif
                               </div>
                             </div>

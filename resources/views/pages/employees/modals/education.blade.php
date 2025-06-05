@@ -1,6 +1,7 @@
 <div class="modal-body">
-  <form action="{{ route('employee.education', $employeeDetail->id) }}" method="post" enctype="multipart/form-data" class="repeater">
+  <form action="{{ route('employee-education.update', $employeeDetail->id) }}" method="post" enctype="multipart/form-data" class="repeater">
       @csrf
+      @method('POST')
       <div class="form-scroll">
           <div data-repeater-list="education">
               @if (!empty($educations) && ($educations->count() > 0))
@@ -17,6 +18,7 @@
                             </a>
                            
                         </h3>
+                        <input type="hidden" name="file_existing" value="{{ $education->file ?? '' }}">
                         <div class="row">
                             <div class="col-md-6">
                                 <x-form.input-block>
