@@ -168,7 +168,7 @@ class EmployeeDetailsController extends BaseController
                 'id' => $education['id'] ?? null,
             ], [
                 'employee_detail_id' => $employeeDetail->id,
-                'institution' => $education['start_date'] ?? '',
+                'institution' => $education['institution'] ?? '',
                 'subject' => $education['subject'] ?? '',
                 'course' => $education['course'] ?? '',
                 'grade' => $education['grade'] ?? '',
