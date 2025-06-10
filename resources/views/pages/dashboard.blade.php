@@ -219,11 +219,6 @@
                             </div>
                             @endif
                         </div>
-                        <div class="mt-3">
-                            <a href="{{ route('evaluation.index') }}" class="btn btn-primary">
-                                {{ __('Evaluation') }}
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>

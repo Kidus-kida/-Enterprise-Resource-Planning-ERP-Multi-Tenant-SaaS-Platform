@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     // evaluation
     Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+    Route::get('evaluate/guide', [EvaluationController::class, 'showGuide'])->name('evaluation.guide');
 
 
     //settings
