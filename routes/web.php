@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AttendancesController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\DesignationsController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
+use App\Http\Controllers\Admin\EvaluationController;
 
 include __DIR__ . '/auth.php';
 
@@ -76,6 +77,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('assign-ticket', [TicketsController::class, 'assignUser'])->name('ticket.assign-user');
 
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
+
+
+    // evaluation
+    Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+
 
     //settings
     Route::prefix('settings')->group(function () {
