@@ -9,7 +9,7 @@ class EvaluationController extends Controller
 {
     public function index()
     {
-        return view('pages.evaluation.evaluation');
+        return view('pages.evaluation.index');
     }
 
     public function showGuide()
