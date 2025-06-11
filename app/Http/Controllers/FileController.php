@@ -4,24 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Models\Folder;
 class FileController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
-        return view("pages.file-management.files");
-    }
+{
+    // List all folders/files
+    // $folders = Folder::all();
+    //return view("pages.file-management.files");
+}
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        //
-    }
+   
+public function create(Request $request)
+{
+    return view('pages.file-management.create-file');
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -34,10 +38,12 @@ class FileController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+    public function show($id)
+{
+    $folder = Folder::findOrFail($id);
+    $files = []; // Get files for this folder
+    return view("pages.file-management.files", compact('folder', 'files'));
+}
 
     /**
      * Show the form for editing the specified resource.
