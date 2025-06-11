@@ -31,9 +31,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-      Route::get('files/{id}', [FileController::class, 'index'])->name('files.index');
-     
+    //  Route::get('files/{id}', [FileController::class, 'index'])->name('files.index');
 
+Route::resource('files', FileController::class);
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
