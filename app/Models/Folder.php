@@ -18,13 +18,24 @@ class Folder extends Model
         return $this->hasMany(File::class);
     }
 
-    public function owners($query)
+
+    public function members()
     {
-        return $query->where('is_owner', true);
+        return $this->belongsToMany(User::class, 'member_folder');
     }
 
-    public function members($query)
+    public function syncMembers(array $userIds)
     {
-        return $query->where('is_owner', false);
+        MemberFolder::where('folder_id', $this->id)
+            ->where('is_owner', false)
+            ->delete();
+
+        foreach ($userIds as $userId) {
+            MemberFolder::firstOrCreate([
+                'folder_id' => $this->id,
+                'user_id' => $userId,
+            ]);
+        }
     }
+
 }

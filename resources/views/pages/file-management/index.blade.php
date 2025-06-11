@@ -46,5 +46,10 @@
     "resources/js/datatables.js"
 ])
 {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
+
+
+
+    
+
 @endpush
 

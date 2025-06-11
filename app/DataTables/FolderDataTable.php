@@ -25,29 +25,35 @@ class FolderDataTable extends DataTable
             ->addIndexColumn()
             ->editColumn('created_at', function($row){
                 return format_date($row->created_at);
-            })
+            })        
             ->addColumn('action', function($row){
-                $id = $row->id;
-                return view('pages.departments.actions',compact(
-                    'id'
-                ));
+                $isOwner = $row->members()
+                               ->where('user_id', auth()->id())
+                               ->where('is_owner', true)
+                               ->exists();
+                if ($isOwner) {
+                    $id = $row->id;
+                    return view('pages.file-management.actions', compact('id'));
+                }
+                return '';
             })
+            
+            
             ->editColumn('name', content: function ($row) {
-
                 $url = route('files.index', $row->id);
                 return '<a href="' . $url . '"><i class="la la-folder px-3 text-primary"></i><span class="text-decoration-none hover-underline">'.e($row->name).'</span></a>';
             })
+            
             ->rawColumns(['name','action'])
-
             ->setRowId('id');
     }
 
-    /**
-     * Get the query source of dataTable.
-     */
     public function query(Folder $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->newQuery()
+            ->whereHas('members', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
     }
 
     /**
@@ -62,10 +68,10 @@ class FolderDataTable extends DataTable
                     ->dom('Bfrtip')
                     ->orderBy(1)
                     ->buttons([
-                        Button::make('excel'),
-                        Button::make('csv'),
-                        Button::make('pdf'),
-                        Button::make('print'),
+                        // Button::make('excel'),
+                        // Button::make('csv'),
+                        // Button::make('pdf'),
+                        // Button::make('print'),
                         // Button::make('reset'),
                         // Button::make('reload')
                     ]);
@@ -78,14 +84,14 @@ class FolderDataTable extends DataTable
     {
         return [
             // Column::make('DT_RowIndex')->title('#'),
-            Column::make('name')->searchable(),
+            Column::make('name')->title('Folder')->searchable(),
             // Column::make('location')->searchable(),
             // Column::make('description'),
             Column::make('created_at'),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
-                ->addClass('text-end'),
+                ->addClass('text-center'),
         ];
     }
 
