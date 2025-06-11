@@ -32,7 +32,11 @@ class FolderDataTable extends DataTable
                     'id'
                 ));
             })
-            ->rawColumns(['action'])
+            ->editColumn('name', content: function ($row) {
+                $url = route('folders.show', $row->id);
+                return '<a href="' . $url . '"><i class="la la-folder px-3 text-primary"></i><span class="text-decoration-none hover-underline">'.e($row->name).'</span></a>';
+            })
+            ->rawColumns(['name','action'])
             ->setRowId('id');
     }
 
@@ -71,7 +75,7 @@ class FolderDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('DT_RowIndex')->title('#'),
+            // Column::make('DT_RowIndex')->title('#'),
             Column::make('name')->searchable(),
             // Column::make('location')->searchable(),
             // Column::make('description'),
