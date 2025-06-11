@@ -7,13 +7,17 @@ use App\Http\Controllers\Controller;
 
 class EvaluationController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('pages.evaluation.evaluation');
     }
 
-    public function showGuide() {
+    public function showGuide()
+    {
         return view('pages.evaluation.evaluation-guide', [
             'pageTitle' => __('Employee Evaluation Guide')
         ]);
     }
+
+
 }
