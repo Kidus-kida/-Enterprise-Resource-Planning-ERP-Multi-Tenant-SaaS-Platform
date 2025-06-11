@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AttendancesController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\DesignationsController;
 use App\Http\Controllers\FolderController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
 
 include __DIR__ . '/auth.php';
@@ -29,10 +30,15 @@ include __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+      Route::get('files/{id}', [FileController::class, 'index'])->name('files.index');
+     
+
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
       Route::resource('folders',FolderController::class);
+
 
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
