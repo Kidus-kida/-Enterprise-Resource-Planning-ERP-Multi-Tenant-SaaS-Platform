@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\FolderDataTable;
 use Illuminate\Http\Request;
+use App\Models\Folder;
 
 class FolderController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(FolderDataTable $dataTable )
     {
-        //
-        
+        return $dataTable->render("pages.file-management.index");
     }
 
     /**
