@@ -38,7 +38,9 @@ Route::resource('files', FileController::class);
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
       Route::resource('folders',FolderController::class);
-
+      Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
+      Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
+      
 
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
