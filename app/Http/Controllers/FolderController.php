@@ -21,7 +21,7 @@ class FolderController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.file-management.create-folder');
     }
 
     /**
@@ -29,7 +29,15 @@ class FolderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+        ]);
+
+        Folder::create([
+            'name' => $request->name,
+        ]);
+        $notification = notify('Folder has been created');
+        return redirect()->route('folders.index')->with($notification);
     }
 
     /**
@@ -45,7 +53,9 @@ class FolderController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        return view('pages.departments.edit',compact(
+            'department',
+        ));
     }
 
     /**
