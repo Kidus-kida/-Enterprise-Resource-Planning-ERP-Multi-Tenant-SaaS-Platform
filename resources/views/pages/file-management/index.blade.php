@@ -17,9 +17,9 @@
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a data-url="{{ route('departments.create') }}" href="javascript:void(0)" class="btn add-btn"
+                    <a data-url="{{ route('folders.create') }}" href="javascript:void(0)" class="btn add-btn"
                         data-ajax-modal="true"
-                        data-size="md" data-title="Add Department">
+                        data-size="md" data-title="Add Folder">
                         <i class="fa-solid fa-plus"></i> {{ __('Add Folder') }}
                     </a>
                 </div>
