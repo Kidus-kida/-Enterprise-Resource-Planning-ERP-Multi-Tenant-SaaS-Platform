@@ -32,7 +32,11 @@ class FolderDataTable extends DataTable
                     'id'
                 ));
             })
-            ->rawColumns(['action'])
+            ->editColumn('name', content: function ($row) {
+                $url = route('files.index', $row->id);
+                return '<a href="' . $url . '">' . e($row->name) . '</a>';
+            })
+            ->rawColumns(['action','name'])
             ->setRowId('id');
     }
 
