@@ -35,7 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [UserProfileController::class, 'update']);
 
-    Route::group(['prefix' => 'apps'], function(){
+    Route::group(['prefix' => 'apps'], function () {
         Route::get('chat/{contact?}', [ChatAppController::class, 'index'])->name('app.chat');
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
@@ -55,8 +55,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
     Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
-    Route::group(['prefix' => 'payroll'], function(){
-        Route::get('items',[PayrollsController::class, 'items'])->name('payroll.items'); 
+    Route::group(['prefix' => 'payroll'], function () {
+        Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
         Route::resource('allowances', AllowancesController::class)->except(['show']);
         Route::resource('deductions', DeductionsController::class)->except(['show']);
         Route::resource('payslips', PayrollsController::class);
@@ -69,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
     Route::resource('family-information', FamilyInfoController::class);
     Route::resource('assets', AssetsController::class);
-    Route::get('backups', fn() => view('pages.backups',[ 'pageTitle' => __('Backups')]))->name('backups.index');
+    Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
     Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
     Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
     Route::resource('tickets', TicketsController::class);
@@ -81,7 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     // evaluation
     Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
-    Route::get('evaluate/guide', [EvaluationController::class, 'showGuide'])->name('evaluation.guide');
+    // Route::get('evaluate/guide', [EvaluationController::class, 'showGuide'])->name('evaluation.guide');
 
 
     //settings

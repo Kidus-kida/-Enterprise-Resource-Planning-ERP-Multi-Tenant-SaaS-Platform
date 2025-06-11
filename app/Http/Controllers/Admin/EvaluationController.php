@@ -12,12 +12,8 @@ class EvaluationController extends Controller
         return view('pages.evaluation.index');
     }
 
-    public function showGuide()
-    {
-        return view('pages.evaluation.evaluation-guide', [
-            'pageTitle' => __('Employee Evaluation Guide')
-        ]);
-    }
+
+
 
 
 }

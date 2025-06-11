@@ -24,11 +24,7 @@
                     </a>
                 </div>
 
-                <div class="col-auto float-end ms-auto">
-                    <a href="{{ route('evaluation.index') }}" class="btn btn-primary">
-                        {{ __('Evaluation') }}
-                    </a>
-                </div>
+
             </x-slot>
 
 
