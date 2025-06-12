@@ -30,10 +30,10 @@ include __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
+Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');
 
-    //  Route::get('files/{id}', [FileController::class, 'index'])->name('files.index');
-
-Route::resource('files', FileController::class);
+Route::resource('files', FileController::class);//file routes
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
