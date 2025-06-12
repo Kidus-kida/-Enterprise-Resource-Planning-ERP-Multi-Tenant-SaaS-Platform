@@ -15,6 +15,22 @@
                                 <button class="btn btn-primary" type="submit">Search</button>
                             </div>
                         </form>
+                        @php
+                            $search = request('search');
+                            $filteredEmployees = $employees;
+                            if ($search) {
+                                $filteredEmployees = $employees->filter(function ($employee) use ($search) {
+                                    $search = strtolower($search);
+                                    return (
+                                        str_contains(strtolower($employee->full_name ?? $employee->name), $search) ||
+                                        str_contains(strtolower($employee->email), $search) ||
+                                        str_contains(strtolower($employee->phone), $search) ||
+                                        str_contains(strtolower(optional($employee->employeeDetail->department)->name), $search) ||
+                                        str_contains(strtolower(optional($employee->employeeDetail->designation)->name), $search)
+                                    );
+                                });
+                            }
+                        @endphp
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -29,7 +45,7 @@
                             </thead>
                             <tbody>
                                 @php $i = 1; @endphp
-                                @foreach($employees as $employee)
+                                @foreach($filteredEmployees as $employee)
                                     <tr>
                                         <td>{{ $i++ }}</td>
                                         <td>{{ $employee->full_name ?? $employee->name }}</td>
@@ -67,8 +83,9 @@
                         <input type="hidden" name="employee_id" id="modalEmployeeId">
                         <div class="mb-3">
                             <label>Select Evaluators:</label>
-                            <input type="text" class="form-control mb-2" id="modalEvaluatorSearch" placeholder="Search evaluators...">
-                            <div class="row" id="evaluatorList">
+                            <input type="text" class="form-control mb-2" id="modalEvaluatorSearch"
+                                placeholder="Search evaluators...">
+                            <div class="row flex-column" id="evaluatorList">
                                 @foreach($allEmployees as $evaluator)
                                     <div class="col-md-4 mb-2 evaluator-item">
                                         <div class="form-check">
@@ -112,9 +129,9 @@
             });
 
             // Modal search functionality
-            document.getElementById('modalEvaluatorSearch').addEventListener('input', function() {
+            document.getElementById('modalEvaluatorSearch').addEventListener('input', function () {
                 var search = this.value.toLowerCase();
-                document.querySelectorAll('#evaluatorList .evaluator-item').forEach(function(item) {
+                document.querySelectorAll('#evaluatorList .evaluator-item').forEach(function (item) {
                     var label = item.textContent.toLowerCase();
                     item.style.display = label.includes(search) ? '' : 'none';
                 });
