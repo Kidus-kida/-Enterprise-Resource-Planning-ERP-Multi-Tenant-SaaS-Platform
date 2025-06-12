@@ -31,9 +31,7 @@ class AppMenuListener
         $menu->add(
             Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span> ' . __('Dashboard') . '</span>')->setActive(route_is('dashboard'))
         );
-        $menu->add(
-            Link::toRoute('folders.index', '<i class="la la-folder"></i> <span> ' . __('File Management') . '</span>')->setActive(route_is('folders.index'))
-        );
+        
         $activeClass = route_is(["app.chat"]) ? "active" : "";
         $menu
             ->submenu(
@@ -106,6 +104,18 @@ class AppMenuListener
         $menu->addIfCan('view-assets',
             Link::toRoute('assets.index', '<i class="la la-object-ungroup"></i> <span>' . __('Assets') . '</span>')->setActive(route_is('assets.index'))
         );
+
+        $menu->add(
+
+            Link::toRoute('folders.index', '<i class="la la-folder"></i> <span> ' . __('File Management') . '</span>')->setActive(route_is('folders.index'))
+
+            Link::toRoute('evaluation.index', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation') . '</span>')->setActive(route_is('dashboard'))
+        );
+        $menu->add(
+            Link::toRoute('evaluation.assign-evaluator', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation Assignment') . '</span>')->setActive(route_is('dashboard'))
+
+        );
+
 
     }
 }
