@@ -24,16 +24,17 @@ use App\Http\Controllers\Admin\DesignationsController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
+use App\Http\Controllers\Admin\EvaluationController;
 
 include __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
+Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');
 
-    //  Route::get('files/{id}', [FileController::class, 'index'])->name('files.index');
-
-Route::resource('files', FileController::class);
+Route::resource('files', FileController::class);//file routes
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
@@ -48,7 +49,7 @@ Route::resource('files', FileController::class);
     Route::get('profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [UserProfileController::class, 'update']);
 
-    Route::group(['prefix' => 'apps'], function(){
+    Route::group(['prefix' => 'apps'], function () {
         Route::get('chat/{contact?}', [ChatAppController::class, 'index'])->name('app.chat');
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
@@ -68,8 +69,8 @@ Route::resource('files', FileController::class);
     Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
     Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
-    Route::group(['prefix' => 'payroll'], function(){
-        Route::get('items',[PayrollsController::class, 'items'])->name('payroll.items'); 
+    Route::group(['prefix' => 'payroll'], function () {
+        Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
         Route::resource('allowances', AllowancesController::class)->except(['show']);
         Route::resource('deductions', DeductionsController::class)->except(['show']);
         Route::resource('payslips', PayrollsController::class);
@@ -82,7 +83,7 @@ Route::resource('files', FileController::class);
     Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
     Route::resource('family-information', FamilyInfoController::class);
     Route::resource('assets', AssetsController::class);
-    Route::get('backups', fn() => view('pages.backups',[ 'pageTitle' => __('Backups')]))->name('backups.index');
+    Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
     Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
     Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
     Route::resource('tickets', TicketsController::class);
@@ -90,6 +91,13 @@ Route::resource('files', FileController::class);
     Route::post('assign-ticket', [TicketsController::class, 'assignUser'])->name('ticket.assign-user');
 
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
+
+
+    // evaluation
+    Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+    Route::get('assign-evaluator', [EvaluationController::class, 'assignEvaluatorView'])->name('evaluation.assign-evaluator');
+    // Route::get('evaluate/guide', [EvaluationController::class, 'showGuide'])->name('evaluation.guide');
+
 
     //settings
     Route::prefix('settings')->group(function () {
