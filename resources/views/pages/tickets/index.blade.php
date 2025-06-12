@@ -18,15 +18,19 @@
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn" data-ajax-modal="true"
-                        data-size="lg" data-title="{{ __('Add Ticket') }}">
+                    <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn"
+                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Ticket') }}">
                         <i class="fa-solid fa-plus"></i> {{ __('Add Ticket') }}
                     </a>
                 </div>
+
+
             </x-slot>
+
+
         </x-breadcrumb>
         <!-- /Page Header -->
-        
+
 
         <div class="row">
             <div class="col-md-12">
@@ -41,10 +45,10 @@
 
 
 @push('page-scripts')
-@vite([
-    "resources/js/datatables.js",
-    "resources/assets/css/ckeditor.css",
-    "resources/js/ckeditor.js"
-])
-{!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
+    @vite([
+        "resources/js/datatables.js",
+        "resources/assets/css/ckeditor.css",
+        "resources/js/ckeditor.js"
+    ])
+    {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
 @endpush
