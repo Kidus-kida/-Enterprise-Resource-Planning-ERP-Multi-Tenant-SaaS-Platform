@@ -109,10 +109,6 @@ class AppMenuListener
 
             Link::toRoute('folders.index', '<i class="la la-folder"></i> <span> ' . __('File Management') . '</span>')->setActive(route_is('folders.index'))
         );
-        $menu->add(
-            Link::toRoute('evaluation.assign-evaluator', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation Assignment') . '</span>')->setActive(route_is('dashboard'))
-
-        );
 
 
     }
