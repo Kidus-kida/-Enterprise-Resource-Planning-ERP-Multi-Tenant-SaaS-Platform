@@ -15,7 +15,7 @@ class FileController extends Controller
     public function index()
 {
     // List all files
-     $files= Files::all();
+     $files= File::all();
     return view("pages.file-management.files",compact('files'));
 }
 
@@ -70,11 +70,16 @@ public function create(Request $request)
      * Display the specified resource.
      */
 
-public function show($id)
-{
-    $folder = Folder::with('files')->findOrFail($id);
-    return view("pages.file-management.files", compact('folder'));
-}
+
+
+ public function show($id)
+    {
+        $folder = Folder::with(['files' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->findOrFail($id);
+        
+        return view("pages.file-management.files", compact('folder'));
+    }
 
     /**
      * Show the form for editing the specified resource.
