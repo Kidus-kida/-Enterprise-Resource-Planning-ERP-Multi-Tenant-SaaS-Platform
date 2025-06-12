@@ -1,16 +1,15 @@
 
 <div class="modal-body">
-    <form action="" enctype="multipart/form-data">
+    <form action="{{ route('files.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
+        <input type="hidden" name="folder_id" value="{{ $folder_id }}">
 
-        <x-form.input-block>
-            <x-form.label for="files">{{ __('Upload Files') }}</x-form.label>
-            <input type="file" name="files[]" id="files" class="form-control" multiple>
-            <small class="form-text text-muted">You can select multiple files (images, PDFs, etc).</small>
-        </x-form.input-block>
-
-        <div class="submit-section mb-3">
-            <x-form.button class="btn btn-primary submit-btn">{{ __('Submit') }}</x-form.button>
+        <div class="mb-3">
+            <label for="files" class="form-label">Upload Files</label>
+            <input type="file" name="files[]" id="files" class="form-control" multiple required>
+            <div class="form-text">Max 10MB per file</div>
         </div>
+
+        <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 </div>
