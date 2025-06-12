@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+   use Illuminate\Support\Facades\Storage; 
 
 use App\Models\Folder;
 use App\Models\File;
@@ -38,11 +39,13 @@ public function create(Request $request)
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+ public function store(Request $request)
 {
     $request->validate([
         'folder_id' => 'required|exists:folders,id',
-        'files.*' => 'required|file|max:10240', 
+        'files.*' => 'required|file|max:10240|mimes:jpg,jpeg,png,gif,bmp,svg,pdf,doc,docx,xls,xlsx,ppt,pptx,txt', 
+    ], [
+        'files.*.mimes' => 'Only image and document files are allowed.',
     ]);
 
     foreach ($request->file('files') as $uploadedFile) {
@@ -60,6 +63,7 @@ public function create(Request $request)
     return redirect()->route('files.show', $request->folder_id)
                      ->with('success', 'Files uploaded successfully.');
 }
+
 
 
     /**
@@ -91,8 +95,38 @@ public function show($id)
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
+ 
+public function destroy(string $id)
+{
+    $file = File::findOrFail($id);
+
+    
+    Storage::disk('public')->delete($file->path);
+
+    
+    $file->delete();
+
+    return redirect()->back()->with('success', 'File deleted successfully.');
+}
+
+
+// download 
+
+public function download(File $file)
+{
+    $path = storage_path('app/public/' . $file->path);
+
+    if (!file_exists($path)) {
+        abort(404);
     }
+
+    return response()->download($path, $file->title);
+}
+
+// view file 
+public function view(File $file)
+{
+    return view('pages.file-management.view-file', compact('file'));
+}
+
 }
