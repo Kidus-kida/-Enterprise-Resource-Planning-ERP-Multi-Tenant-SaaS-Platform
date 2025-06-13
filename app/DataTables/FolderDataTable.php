@@ -1,0 +1,107 @@
+<?php
+
+namespace App\DataTables;
+
+use App\Models\Folder;
+use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Builder as HtmlBuilder;
+use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Html\Editor\Editor;
+use Yajra\DataTables\Html\Editor\Fields;
+use Yajra\DataTables\Services\DataTable;
+
+class FolderDataTable extends DataTable
+{
+    /**
+     * Build the DataTable class.
+     *
+     * @param QueryBuilder $query Results from query() method.
+     */
+    public function dataTable(QueryBuilder $query): EloquentDataTable
+    {
+        return (new EloquentDataTable($query))
+            ->addIndexColumn()
+            ->editColumn('created_at', function($row){
+                return format_date($row->created_at);
+            })        
+            ->addColumn('action', function($row){
+                $isOwner = $row->members()
+                               ->where('user_id', auth()->id())
+                               ->where('is_owner', true)
+                               ->exists();
+                if ($isOwner) {
+                    $id = $row->id;
+                    return view('pages.file-management.actions', compact('id'));
+                }
+                return '';
+            })
+            
+            
+            ->editColumn('name', content: function ($row) {
+
+                $url = route('files.show', $row->id);
+
+                return '<a href="' . $url . '"><i class="la la-folder px-3 text-primary"></i><span class="text-decoration-none hover-underline">'.e($row->name).'</span></a>';
+            })
+            
+            ->rawColumns(['name','action'])
+            ->setRowId('id');
+    }
+
+    public function query(Folder $model): QueryBuilder
+    {
+        return $model->newQuery()
+            ->whereHas('members', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+    }
+
+    /**
+     * Optional method if you want to use the html builder.
+     */
+    public function html(): HtmlBuilder
+    {
+        return $this->builder()
+                    ->setTableId('folders-table')
+                    ->columns($this->getColumns())
+                    ->minifiedAjax()
+                    ->dom('Bfrtip')
+                    ->orderBy(1)
+                    ->buttons([
+                        // Button::make('excel'),
+                        // Button::make('csv'),
+                        // Button::make('pdf'),
+                        // Button::make('print'),
+                        // Button::make('reset'),
+                        // Button::make('reload')
+                    ]);
+    }
+
+    /**
+     * Get the dataTable columns definition.
+     */
+    public function getColumns(): array
+    {
+        return [
+            // Column::make('DT_RowIndex')->title('#'),
+            Column::make('name')->title('Folder')->searchable(),
+            // Column::make('location')->searchable(),
+            // Column::make('description'),
+            Column::make('created_at'),
+            Column::computed('action')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-center'),
+        ];
+    }
+
+    /**
+     * Get the filename for export.
+     */
+    protected function filename(): string
+    {
+        return 'folder_' . date('YmdHis');
+    }
+}

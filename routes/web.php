@@ -21,6 +21,8 @@ use App\Http\Controllers\Admin\FamilyInfoController;
 use App\Http\Controllers\Admin\AttendancesController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\DesignationsController;
+use App\Http\Controllers\FolderController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
 use App\Http\Controllers\AwardController;
 
@@ -29,6 +31,18 @@ include __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
+Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');
+
+Route::resource('files', FileController::class);//file routes
+    //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
+    //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
+    //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
+      Route::resource('folders',FolderController::class);
+      Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
+      Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
+      
+
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('profile', [UserProfileController::class, 'index'])->name('profile');
