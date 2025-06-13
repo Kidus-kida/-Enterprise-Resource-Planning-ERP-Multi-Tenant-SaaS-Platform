@@ -60,8 +60,12 @@ public function create(Request $request)
         ]);
     }
 
-    return redirect()->route('files.show', $request->folder_id)
-                     ->with('success', 'Files uploaded successfully.');
+    // return redirect()->route('files.show', $request->folder_id)
+    //                  ->with('success', 'Files uploaded successfully.');
+
+
+                       $notification = notify('File has been Created successfully');
+        return redirect()->route('files.show',$request->folder_id)->with($notification);
 }
 
 
@@ -110,8 +114,10 @@ public function destroy(string $id)
 
     
     $file->delete();
+    
+                   $notification = notify('File deleted successfully');
 
-    return redirect()->back()->with('success', 'File deleted successfully.');
+                  return redirect()->back()->with($notification);
 }
 
 

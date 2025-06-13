@@ -2,11 +2,11 @@
 @extends('layouts.app')
 
 @section('page-content')
-@if(session('success'))
+{{-- @if(session('success'))
     <div class="alert alert-success">
         {{ session('success') }}
     </div>
-@endif
+@endif --}}
 
 <div class="content container-fluid">
     <x-breadcrumb class="col">
@@ -73,13 +73,16 @@
                         <a href="{{ route('files.edit', $file->id) }}" class="btn btn-outline-primary btn-sm">
                             <i class="fa-regular fa-pen-to-square"></i> Edit
                         </a>
-                        <form action="{{ route('files.destroy', $file->id) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Are you sure?')">
-                                <i class="fa-regular fa-trash-can"></i> Delete
-                            </button>
-                        </form>
+                       <form action="{{ route('files.destroy', $file->id) }}" method="POST" class="delete-form">
+    @csrf
+    @method('DELETE')
+    <button type="button" class="btn btn-danger btn-sm deleteBtn" 
+        data-route="{{ route('files.destroy', $file->id) }}"
+        data-title="{{ __('Delete File') }}"
+        data-question="{{ __('Are you sure you want to delete this file?') }}">
+    <i class="fa-regular fa-trash-can"></i> Delete
+</button>
+</form>
                     </div>
                 </div>
             </div>
