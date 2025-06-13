@@ -146,7 +146,6 @@ class EmployeeAttendance extends Component
                     ->whereNotNull('attendance_id');
         $this->attendances = $attendances->get();
         $this->todayActivity = $attendances->whereDate('created_at', Carbon::today())->get();
-        
     }
 
     #[On('fetchStatistics')]
