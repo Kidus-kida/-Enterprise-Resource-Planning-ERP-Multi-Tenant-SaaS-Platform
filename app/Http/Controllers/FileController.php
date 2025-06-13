@@ -78,11 +78,11 @@ public function create(Request $request)
 
  public function show($id)
     {
-        $folder = Folder::with(['files' => function($query) {
-            $query->orderBy('created_at', 'desc');
-        }])->findOrFail($id);
+        $folder = Folder::findOrFail($id);
+
+        $files = File::where('folder_id',$id)->get();
         
-        return view("pages.file-management.files", compact('folder'));
+        return view("pages.file-management.files", compact('folder','files'));
     }
 
     /**

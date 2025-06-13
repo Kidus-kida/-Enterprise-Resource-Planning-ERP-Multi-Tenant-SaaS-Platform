@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            @forelse ($folder->files as $file)
+            @forelse ($files as $file)
             <div class="border-top pt-3 mt-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -70,26 +70,27 @@
                         </div>
                         <div class="upload-info mt-2">
         <small class="text-muted">
-            <i class="fa-regular fa-user"></i> Uploaded by: {{ $file->uploader->firstname ?? 'Aman' }}
+            <i class="fa-regular fa-user"></i> Uploaded by: {{ $file->uploader->firstname }}
             <span class="mx-2">•</span>
          <i class="fa-regular fa-calendar text-primary"></i> {{ $file->created_at->format('M d, Y \a\t h:i A') }}
         </small>
     </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('files.edit', $file->id) }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fa-regular fa-pen-to-square"></i> Edit
-                        </a>
-                       <form action="{{ route('files.destroy', $file->id) }}" method="POST" class="delete-form">
-    @csrf
-    @method('DELETE')
-    <button type="button" class="btn btn-danger btn-sm deleteBtn" 
-        data-route="{{ route('files.destroy', $file->id) }}"
-        data-title="{{ __('Delete File') }}"
-        data-question="{{ __('Are you sure you want to delete this file?') }}">
-    <i class="fa-regular fa-trash-can"></i> Delete
-</button>
-</form>
+                        
+                        @if( auth()->id() == $file->user_id || ($folder->isOwnedBy(auth()->user()) || auth()->user()->type === \App\Enums\UserType::SUPERADMIN))
+                        <form action="{{ route('files.destroy', $file->id) }}" method="POST" class="delete-form">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="btn btn-danger btn-sm deleteBtn" 
+                                data-route="{{ route('files.destroy', $file->id) }}"
+                                data-title="{{ __('Delete File') }}"
+                                data-question="{{ __('Are you sure you want to delete this file?') }}">
+                            <i class="fa-regular fa-trash-can"></i> Delete
+                        </button>
+                        </form>
+                        @endif
+                      
                     </div>
                 </div>
             </div>
