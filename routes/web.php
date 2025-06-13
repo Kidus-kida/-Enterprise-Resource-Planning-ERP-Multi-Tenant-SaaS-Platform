@@ -111,12 +111,4 @@ Route::resource('files', FileController::class);//file routes
 
     // awards
     Route::resource('awards', AwardController::class);
-
-    // Route::get('awards', [AwardController::class, 'index'])->name('award.index');
-
-    // // Update an award
-    // Route::put('award/update/{award}', [AwardController::class, 'update'])->name('award.update');
-
-    // // Delete an award
-    // Route::delete('award/delete/{award}', [AwardController::class, 'destroy'])->name('award.destroy');
 });
