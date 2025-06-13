@@ -68,6 +68,13 @@
                                <i class="fa-solid fa-download"></i> Download
                             </a>
                         </div>
+                        <div class="upload-info mt-2">
+        <small class="text-muted">
+            <i class="fa-regular fa-user"></i> Uploaded by: {{ $file->uploader->firstname ?? 'Aman' }}
+            <span class="mx-2">•</span>
+         <i class="fa-regular fa-calendar text-primary"></i> {{ $file->created_at->format('M d, Y \a\t h:i A') }}
+        </small>
+    </div>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{{ route('files.edit', $file->id) }}" class="btn btn-outline-primary btn-sm">
