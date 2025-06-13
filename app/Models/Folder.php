@@ -24,6 +24,19 @@ class Folder extends Model
         return $this->belongsToMany(User::class, 'member_folder');
     }
 
+    public function owners()
+    {
+        return $this->belongsToMany(User::class, 'member_folder')
+                    ->wherePivot('is_owner', true);
+    }
+
+    public function isOwnedBy(User $user)
+    {
+        return $this->owners->contains($user);
+    }
+
+
+
     public function syncMembers(array $userIds)
     {
         MemberFolder::where('folder_id', $this->id)

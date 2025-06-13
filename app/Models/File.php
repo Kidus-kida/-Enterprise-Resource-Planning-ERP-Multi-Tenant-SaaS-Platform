@@ -19,7 +19,7 @@ class File extends Model
 
     public function uploader()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
     }
 
     public function folder()
