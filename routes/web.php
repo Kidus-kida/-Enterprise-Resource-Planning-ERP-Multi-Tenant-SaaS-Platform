@@ -31,10 +31,12 @@ include __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // files route 
 Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
-Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');
-
+Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');// view file route
 Route::resource('files', FileController::class);//file routes
+
+// end of file routes
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
