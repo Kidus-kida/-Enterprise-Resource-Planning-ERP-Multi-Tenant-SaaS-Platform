@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AttendancesController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\DesignationsController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
+use App\Http\Controllers\AwardController;
 
 include __DIR__ . '/auth.php';
 
@@ -93,4 +94,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mail', [SettingsController::class, 'email'])->name('settings.mail');
         Route::post('mail', [SettingsController::class, 'updateEmail'])->name('settings.mail.update');
     });
+
+    // awards
+    Route::resource('awards', AwardController::class);
+
+    // Route::get('awards', [AwardController::class, 'index'])->name('award.index');
+
+    // // Update an award
+    // Route::put('award/update/{award}', [AwardController::class, 'update'])->name('award.update');
+
+    // // Delete an award
+    // Route::delete('award/delete/{award}', [AwardController::class, 'destroy'])->name('award.destroy');
 });

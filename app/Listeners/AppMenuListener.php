@@ -31,6 +31,7 @@ class AppMenuListener
         $menu->add(
             Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span> ' . __('Dashboard') . '</span>')->setActive(route_is('dashboard'))
         );
+     
         $activeClass = route_is(["app.chat"]) ? "active" : "";
         $menu
             ->submenu(
@@ -102,6 +103,10 @@ class AppMenuListener
         );
         $menu->addIfCan('view-assets',
             Link::toRoute('assets.index', '<i class="la la-object-ungroup"></i> <span>' . __('Assets') . '</span>')->setActive(route_is('assets.index'))
+        );
+
+        $menu->add(
+            Link::toRoute('awards.index', '<i class="fas fa-award"></i> <span>' . __('Awards') . '</span>')->setActive(route_is('awards.*'))
         );
 
     }
