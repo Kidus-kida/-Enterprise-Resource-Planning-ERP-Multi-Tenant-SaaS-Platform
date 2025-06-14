@@ -108,11 +108,15 @@ class AppMenuListener
         $menu->add(
             Link::toRoute('folders.index', '<i class="la la-folder"></i> <span> ' . __('File Management') . '</span>')->setActive(route_is('folders.index'))
         );
-      
-        $menu->add(
-            Link::toRoute('awards.index', '<i class="fas fa-award"></i> <span>' . __('Awards') . '</span>')->setActive(route_is('awards.*'))
-        );
 
+        // Using Permissions in Sidebar
+        if (auth()->user()->can('view-award')) {
+            $menu->add(
+                Link::toRoute('awards.index', '<i class="fas fa-award"></i> <span>' . __('Awards') . '</span>')
+                    ->setActive(route_is('awards.*'))
+            );
+        }
+ 
 
     }
 }
