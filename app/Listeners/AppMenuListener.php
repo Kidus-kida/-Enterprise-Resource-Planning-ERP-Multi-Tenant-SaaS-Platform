@@ -116,6 +116,13 @@ class AppMenuListener
                     ->setActive(route_is('awards.*'))
             );
         }
+
+         $menu->add(
+            Link::toRoute('evaluation.index', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation') . '</span>')->setActive(route_is('dashboard'))
+        );
+        $menu->add(
+            Link::toRoute('evaluation.assign-evaluator', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation Assignment') . '</span>')->setActive(route_is('dashboard'))
+        );
  
 
     }
