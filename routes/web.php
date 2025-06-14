@@ -25,6 +25,7 @@ use App\Http\Controllers\FolderController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
 use App\Http\Controllers\AwardController;
+use App\Http\Controllers\Admin\EvaluationController;
 
 include __DIR__ . '/auth.php';
 
