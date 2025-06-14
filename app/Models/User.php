@@ -112,4 +112,15 @@ class User extends Authenticatable
     {
         return !empty($this->phone_verified_at);
     }
+
+    public function evaluators()
+    {
+        // users assigned to evaluate this employee
+        return $this->belongsToMany(User::class, 'employee_evaluator', 'employee_id', 'evaluator_id');
+    }
+
+    public function evaluatees()
+    {
+        return $this->belongsToMany(User::class, 'employee_evaluator', 'evaluator_id', 'employee_id');
+    }
 }
