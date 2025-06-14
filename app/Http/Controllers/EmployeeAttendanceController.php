@@ -46,8 +46,8 @@ class EmployeeAttendanceController extends Controller
             // Database transaction for atomic operations
             return DB::transaction(function () use ($locationName, $request) {
 
-                $users = User::where('firstname', 'LIKE', $request->first_name . '%')
-                ->where('middlename', 'LIKE', $request->last_name . '%')
+                $users = User::where('firstname', 'LIKE', '%'.$request->first_name . '%')
+                ->where('middlename', 'LIKE', '%'.$request->last_name . '%')
                 ->first();
 
                 $todayAttendance = Attendance::firstOrCreate(
@@ -147,9 +147,9 @@ class EmployeeAttendanceController extends Controller
 
     public function getClockInStatus(Request $request)
     {
-        $users = User::where('firstname', 'LIKE', $request->first_name . '%')
-                ->where('middlename', 'LIKE', $request->last_name . '%')
-                ->first();
+        $users = User::where('firstname', 'LIKE', '%'.$request->first_name . '%')
+        ->where('middlename', 'LIKE', '%'.$request->last_name . '%')
+        ->first();
 
         $todayClockin = Attendance::where('user_id', $users->id)
             ->whereDate('created_at', Carbon::today())
