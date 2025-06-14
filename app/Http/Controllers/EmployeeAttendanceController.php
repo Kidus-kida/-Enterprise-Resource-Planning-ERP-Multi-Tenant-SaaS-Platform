@@ -52,7 +52,7 @@ class EmployeeAttendanceController extends Controller
                 // Find or create today's attendance record
                 $todayAttendance = Attendance::firstOrCreate(
                     [
-                        'user_id' => auth()->id(),
+                        'user_id' => $request->user_id,
                         'startDate' => Carbon::today()->format('Y-m-d')
                     ],
                     [
@@ -63,6 +63,7 @@ class EmployeeAttendanceController extends Controller
 
                 // Create timestamp record
                 $timestamp = new AttendanceTimestamp([
+                    'user_id' => $request->user_id,
                     'project_id' => 1,
                     'startTime' => now(),
                     'endTime' => null,
@@ -114,11 +115,12 @@ class EmployeeAttendanceController extends Controller
         }
     }
 
-    public function clockOut(Request $request, $timestampId)
+    public function clockOut(Request $request)
     {
+     
         try {
-            $timestampId = Crypt::decrypt($timestampId);
-            $timestamp = AttendanceTimestamp::findOrFail($timestampId);
+            $timestampId = Crypt::decrypt($request->input('timestamp_id'));
+            $timestamp = AttendanceTimestamp::find($timestampId);
 
             $locationName = null;
             if ($request->latitude && $request->longitude) {
@@ -145,31 +147,55 @@ class EmployeeAttendanceController extends Controller
 
     public function getClockInStatus(Request $request)
     {
-        $user = Auth::user();
-        $todayClockin = Attendance::where('user_id', $user->id)
+        $todayClockin = Attendance::where('user_id', $request->user_id)
             ->whereDate('created_at', Carbon::today())
             ->first();
 
-        $response = ['clocked_in' => false];
+        $userAttendances = AttendanceTimestamp::where('user_id', $request->user_id)
+            ->whereNotNull('attendance_id');
+        $clocked_in = false;
 
         if ($todayClockin) {
             $latestClockin = $todayClockin->timestamps()
                 ->latest()
                 ->whereNull('endTime')
-                ->first();
-
-            if ($latestClockin) {
-                $response = [
-                    'clocked_in' => true,
-                    'timestamp_id' => Crypt::encrypt($latestClockin->id),
-                    'time_started' => $latestClockin->startTime,
-                    'total_hours' => Carbon::now()->diff($latestClockin->startTime)->h,
-                ];
-            }
+                ->first(); // No need for ?? null since first() already returns null if no result
+            
+            $clocked_in = !is_null($latestClockin); // Set clocked_in based on whether we found a record
+        } else {
+            $clocked_in = false;
+            $latestClockin = null;
         }
+        
+        $response = [
+            'clocked_in' => $clocked_in,
+            'attendances' => AttendanceTimestamp::where('user_id', $request->user_id)
+                ->whereNotNull('attendance_id')->get(),
+            'today_activity' => AttendanceTimestamp::where('user_id', $request->user_id)
+                ->whereNotNull('attendance_id')
+                ->whereDate('created_at', Carbon::today())
+                ->get(),
+            'total_hours_today' => $userAttendances->whereDate('created_at', Carbon::today())
+                ->get()
+                ->sum('totalHours'),
+            'total_hours_this_week' => $userAttendances
+                ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                ->get()
+                ->sum('totalHours'),
+            'total_hours_this_month' => $userAttendances->whereMonth('created_at', Carbon::now())
+                ->get()
+                ->sum('totalHours'),
+            // Only include these fields if $latestClockin exists
+            ...($latestClockin ? [
+                'timestamp_id' => Crypt::encrypt($latestClockin->id),
+                'time_started' => $latestClockin->startTime,
+                'total_hours' => Carbon::now()->diff($latestClockin->startTime)->h,
+            ] : []),
+        ];
 
         return response()->json($response);
     }
+
 
     private function getLocationNameFromCoords($lat, $lng)
     {
