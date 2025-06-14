@@ -95,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
 
     Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+    Route::get('assign-evaluator', [EvaluationController::class, 'assignEvaluatorView'])->name('evaluation.assign-evaluator');
     Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
     Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
     Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
