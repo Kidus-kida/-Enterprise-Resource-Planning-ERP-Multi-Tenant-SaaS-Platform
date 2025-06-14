@@ -94,6 +94,11 @@ Route::resource('files', FileController::class);//file routes
 
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
 
+    Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
+    Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
+    Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
+    Route::delete('evaluation/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluation.delete');
+
     //settings
     Route::prefix('settings')->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
