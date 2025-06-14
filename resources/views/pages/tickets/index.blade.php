@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-
-
 @section('page-content')
     <div class="content container-fluid">
 
@@ -16,17 +14,22 @@
                     {{ __('Tickets') }}
                 </li>
             </ul>
-            <x-slot name="right">
-                <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn" data-ajax-modal="true"
-                        data-size="lg" data-title="{{ __('Add Ticket') }}">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Ticket') }}
-                    </a>
-                </div>
+            <x-slot name="buttons">
+                <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn"
+                    data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Ticket') }}">
+                    <i class="fa-solid fa-plus"></i> {{ __('Add Ticket') }}
+                </a>
+
+                {{-- <a href="{{ route('leavetypes.index') }}" class="btn btn-outline-primary">
+                    <i class="fa-solid fa-plus"></i> {{ __('Go Leav Request') }}
+                </a> --}}
+                <a href="javascript:void(0)" class="btn btn-outline-primary">
+                    <i class="fa-solid fa-filter"></i> {{ __('Filter') }}
+                </a>
             </x-slot>
         </x-breadcrumb>
         <!-- /Page Header -->
-        
+
 
         <div class="row">
             <div class="col-md-12">
@@ -41,10 +44,6 @@
 
 
 @push('page-scripts')
-@vite([
-    "resources/js/datatables.js",
-    "resources/assets/css/ckeditor.css",
-    "resources/js/ckeditor.js"
-])
-{!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
+    @vite(['resources/js/datatables.js', 'resources/assets/css/ckeditor.css', 'resources/js/ckeditor.js'])
+    {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
 @endpush
