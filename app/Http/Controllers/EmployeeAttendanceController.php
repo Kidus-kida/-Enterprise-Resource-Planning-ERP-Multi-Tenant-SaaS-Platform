@@ -47,7 +47,7 @@ class EmployeeAttendanceController extends Controller
             return DB::transaction(function () use ($locationName, $request) {
 
                 $users = User::where('firstname', 'LIKE', $request->first_name . '%')
-                ->where('lastname', 'LIKE', $request->last_name . '%')
+                ->where('middlename', 'LIKE', $request->last_name . '%')
                 ->first();
 
                 $todayAttendance = Attendance::firstOrCreate(
@@ -148,8 +148,8 @@ class EmployeeAttendanceController extends Controller
     public function getClockInStatus(Request $request)
     {
         $users = User::where('firstname', 'LIKE', $request->first_name . '%')
-        ->where('lastname', 'LIKE', $request->last_name . '%')
-        ->first();
+                ->where('middlename', 'LIKE', $request->last_name . '%')
+                ->first();
 
         $todayClockin = Attendance::where('user_id', $users->id)
             ->whereDate('created_at', Carbon::today())
