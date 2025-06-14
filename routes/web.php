@@ -32,18 +32,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // files route 
-Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
-Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');// view file route
-Route::resource('files', FileController::class);//file routes
+    Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
+    Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');// view file route
+    Route::resource('files', FileController::class);//file routes
 
-// end of file routes
+    // end of file routes
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
     //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
     //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
-      Route::resource('folders',FolderController::class);
-      Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
-      Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
-      
+    Route::resource('folders', FolderController::class);
+    Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
+    Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
+
 
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -51,7 +51,7 @@ Route::resource('files', FileController::class);//file routes
     Route::get('profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [UserProfileController::class, 'update']);
 
-    Route::group(['prefix' => 'apps'], function(){
+    Route::group(['prefix' => 'apps'], function () {
         Route::get('chat/{contact?}', [ChatAppController::class, 'index'])->name('app.chat');
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
@@ -71,8 +71,8 @@ Route::resource('files', FileController::class);//file routes
     Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
     Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
-    Route::group(['prefix' => 'payroll'], function(){
-        Route::get('items',[PayrollsController::class, 'items'])->name('payroll.items'); 
+    Route::group(['prefix' => 'payroll'], function () {
+        Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
         Route::resource('allowances', AllowancesController::class)->except(['show']);
         Route::resource('deductions', DeductionsController::class)->except(['show']);
         Route::resource('payslips', PayrollsController::class);
@@ -85,7 +85,7 @@ Route::resource('files', FileController::class);//file routes
     Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
     Route::resource('family-information', FamilyInfoController::class);
     Route::resource('assets', AssetsController::class);
-    Route::get('backups', fn() => view('pages.backups',[ 'pageTitle' => __('Backups')]))->name('backups.index');
+    Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
     Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
     Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
     Route::resource('tickets', TicketsController::class);
@@ -94,6 +94,7 @@ Route::resource('files', FileController::class);//file routes
 
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
 
+    Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
     Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
     Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
     Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
