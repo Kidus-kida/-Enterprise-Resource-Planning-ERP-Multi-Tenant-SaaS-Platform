@@ -3,7 +3,7 @@ name: Deploy Laravel App via FTP
 on:
   push:
     branches:
-      - main  # or your deploy branch
+      - main2  # or your deploy branch
 
 jobs:
   deploy:
