@@ -29,7 +29,6 @@ class AutoClockoutUnsignedAttendances implements ShouldQueue
         $timestamps = AttendanceTimestamp::whereNotNull('attendance_id')
             ->whereNull('endTime')
             ->get();
-        
         foreach($timestamps as $timestamp){
             $timestamp->update([
                 'endTime' => now(),
