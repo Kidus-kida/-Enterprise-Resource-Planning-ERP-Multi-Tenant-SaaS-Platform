@@ -98,6 +98,6 @@ class DashboardController extends BaseController
         $this->data['tickets'] = (!empty($tickets) && $tickets->count() > 0) ? $tickets: null;
         $this->data['projects'] = $projects;
         $this->data['recentProjects'] = $recentProjects;
-        return view('pages.dashboard');
+        return view('pages.dashboard', $this->data);
     }
 }
