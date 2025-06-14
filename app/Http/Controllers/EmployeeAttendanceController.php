@@ -158,6 +158,7 @@ class EmployeeAttendanceController extends Controller
         $userAttendances = AttendanceTimestamp::where('user_id', $users->id)
             ->whereNotNull('attendance_id');
         $clocked_in = false;
+        $timeStarted = null;
 
         if ($todayClockin) {
             $latestClockin = $todayClockin->timestamps()
@@ -166,6 +167,7 @@ class EmployeeAttendanceController extends Controller
                 ->first(); 
 
             $clocked_in = !is_null($latestClockin); 
+            $timeStarted = $latestClockin->startTime;
         } else {
             $clocked_in = false;
             $latestClockin = null;
@@ -179,6 +181,7 @@ class EmployeeAttendanceController extends Controller
                 ->whereNotNull('attendance_id')
                 ->whereDate('created_at', Carbon::today())
                 ->get(),
+            'time_started'=>  $timeStarted,
             'total_hours_today' => $userAttendances->whereDate('created_at', Carbon::today())
                 ->get()
                 ->sum('totalHours'),
