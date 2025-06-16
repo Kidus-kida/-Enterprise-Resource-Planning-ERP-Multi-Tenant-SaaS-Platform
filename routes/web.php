@@ -22,10 +22,15 @@ use App\Http\Controllers\Admin\FamilyInfoController;
 use App\Http\Controllers\Admin\AttendancesController;
 use App\Http\Controllers\Admin\DepartmentsController;
 use App\Http\Controllers\Admin\DesignationsController;
+use App\Http\Controllers\FolderController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
+
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\LeaveRequestController;
 
+use App\Http\Controllers\AwardController;
+use App\Http\Controllers\Admin\EvaluationController;
 
 
 include __DIR__ . '/auth.php';
@@ -33,6 +38,20 @@ include __DIR__ . '/auth.php';
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // files route 
+    Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');// download file routes
+    Route::get('/files/{file}/view', [FileController::class, 'view'])->name('files.view');// view file route
+    Route::resource('files', FileController::class);//file routes
+
+    // end of file routes
+    //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
+    //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
+    //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
+    Route::resource('folders', FolderController::class);
+    Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
+    Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
+
+
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('profile', [UserProfileController::class, 'index'])->name('profile');
@@ -87,10 +106,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
         ->name('leaverequests.myleaverequests');
 
+
     Route::resource('annual_leaves', AnunalLeaveController::class);
-
-
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
+
+    Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+    Route::get('assign-evaluator', [EvaluationController::class, 'assignEvaluatorView'])->name('evaluation.assign-evaluator');
+    Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
+    Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
+    Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
+    Route::delete('evaluation/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluation.delete');
+
+
     //settings
     Route::prefix('settings')->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
@@ -107,4 +134,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mail', [SettingsController::class, 'email'])->name('settings.mail');
         Route::post('mail', [SettingsController::class, 'updateEmail'])->name('settings.mail.update');
     });
+
+    // awards
+    Route::resource('awards', AwardController::class);
 });
