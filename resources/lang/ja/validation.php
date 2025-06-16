@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+
     'accepted'               => ':attributeを承認してください。',
     'accepted_if'            => ':otherが:valueの場合、:attributeを承認する必要があります。',
     'active_url'             => ':attributeは、有効なURLではありません。',
