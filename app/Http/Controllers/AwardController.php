@@ -12,6 +12,14 @@ use App\DataTables\AwardDataTable;
 
 class AwardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view-award')->only('index');
+        $this->middleware('permission:create-award')->only(['create', 'store']);
+        $this->middleware('permission:edit-award')->only(['edit', 'update']);
+        $this->middleware('permission:delete-award')->only('destroy');
+    }
+    
     /**
      * Display a listing of the resource.
      */
