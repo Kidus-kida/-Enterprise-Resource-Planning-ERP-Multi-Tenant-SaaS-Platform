@@ -1,4 +1,4 @@
-{{-- <div class="page-header">
+<div class="page-header">
     <div class="row {{ $alignment ?? '' }}">
         <div class="{{ $class ?? 'col-sm-12' }}">
             @isset($title)
@@ -11,25 +11,5 @@
         @isset($right)
             {!! $right !!}
         @endisset
-    </div>
-</div> --}}
-
-
-<div class="page-header">
-    <div class="row {{ $alignment ?? '' }}">
-        <div class="{{ $class ?? 'col-sm-12' }}">
-            @isset($title)
-                <h3 class="page-title">{{ $title }}</h3>
-            @endisset
-            <ul class="breadcrumb">
-                {{ $slot }}
-            </ul>
-
-            @isset($buttons)
-                <div class="d-flex gap-2 justify-content-end">
-                    {!! $buttons !!}
-                </div>
-            @endisset
-        </div>
     </div>
 </div>
