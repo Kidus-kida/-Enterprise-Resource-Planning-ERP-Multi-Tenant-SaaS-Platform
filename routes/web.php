@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnunalLeaveController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -24,8 +25,13 @@ use App\Http\Controllers\Admin\DesignationsController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Admin\EmployeeDetailsController;
+
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\LeaveRequestController;
+
 use App\Http\Controllers\AwardController;
 use App\Http\Controllers\Admin\EvaluationController;
+
 
 include __DIR__ . '/auth.php';
 
@@ -93,6 +99,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('assigned-tickets', [TicketsController::class, 'assignedTickets'])->name('assigned-tickets');
     Route::post('assign-ticket', [TicketsController::class, 'assignUser'])->name('ticket.assign-user');
 
+    Route::resource('leavetypes', LeaveTypeController::class);
+    Route::resource('leaverequests', LeaveRequestController::class);
+    Route::put('/leaverequests/{leaverequest}/{employee}', [LeaveRequestController::class, 'update'])
+        ->name('leaverequests.update');
+    Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
+        ->name('leaverequests.myleaverequests');
+
+
+    Route::resource('annual_leaves', AnunalLeaveController::class);
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
 
     Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
@@ -101,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
     Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
     Route::delete('evaluation/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluation.delete');
+
 
     //settings
     Route::prefix('settings')->group(function () {

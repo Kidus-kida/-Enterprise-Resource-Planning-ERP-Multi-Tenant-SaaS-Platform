@@ -43,6 +43,7 @@ class AppMenuListener
                     ->addParentClass('submenu')
             );
 
+<<<<<<< middlewarePermission
         if (auth()->user()->canAny([
             'view-employees',
             'view-attendances',
@@ -50,6 +51,17 @@ class AppMenuListener
             'view-designations',
             'view-holidays'
         ])) {
+=======
+        if (
+            auth()->user()->canAny([
+                'view-employees',
+                'view-attendances',
+                'view-departments',
+                'view-designations',
+                'view-holidays'
+            ])
+        ) {
+>>>>>>> main
             $menu->html('<span>Employees</span>', ['class' => 'menu-title']);
             $activeClass = route_is(['employees.index', 'employees.list', 'departments.index', 'designations.index', 'holidays.*']) ? "active" : "";
             $menu
@@ -62,8 +74,36 @@ class AppMenuListener
                         ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : ''))
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : ''))
                         ->addIfCan('view-holidays', Link::toRoute('holidays.index', __('Holidays'))->addClass(route_is('holidays.*') ? 'active' : ''))
+<<<<<<< middlewarePermission
+=======
                 );
         }
+
+        // leave requests 
+        if (
+            auth()->user()->canAny([
+                'manage-leaverequest',
+                'my-leaverequest',
+
+            ])
+        ) {
+            $activeClass = route_is(['leaverequests.index', 'leavetypes.index',]) ? "active" : "";
+            $menu
+                ->submenu(
+                    Html::raw('<a href="#" class="' . $activeClass . '" class="noti-dot"><i class="la la-user"></i> <span> ' . __('Leave Requests') . '</span><span class="menu-arrow"></span></a>'),
+                    Menu::new()
+                        ->addParentClass('submenu')
+                        ->addIfCan('all-leaverequest', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
+                        ->addIfCan('my-leaverequest', Link::toRoute('leaverequests.myleaverequests', __('My Leave '))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : ''))
+
+                        ->addIfCan('manage-leaverequest', Link::toRoute('leavetypes.index', __('Leave Types '))->addClass(route_is(['leavetypes.index']) ? 'active' : ''))
+                        ->addIfCan('manage-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave '))->addClass(route_is(['annual_leaves.index']) ? 'active' : ''))
+
+>>>>>>> main
+                );
+        }
+        //end leave requests
+
         $menu->addIfCan(
             'view-clients',
             Link::toRoute('clients.index', '<i class="la la-group"></i> <span>' . __('Clients') . '</span>')->setActive(route_is('clients.*'))
