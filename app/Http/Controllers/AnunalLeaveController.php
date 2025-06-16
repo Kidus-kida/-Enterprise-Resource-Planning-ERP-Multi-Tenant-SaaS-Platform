@@ -6,12 +6,17 @@ use App\Models\AnunalLeave;
 use Illuminate\Http\Request;
 use Auth;
 use App\DataTables\AnnualLeaveDataTable;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+use App\Models\User;      // adjust namespace if different
+
 class AnunalLeaveController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-   public function index(AnnualLeaveDataTable $dataTable)
+    public function index(AnnualLeaveDataTable $dataTable)
     {
 
         $pageTitle = __("Leave Request");
@@ -31,10 +36,61 @@ class AnunalLeaveController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // spelling kept to match your table
+
     public function store(Request $request)
     {
-        //
+        // 1. Which “leave year” are we generating?   (defaults to current year)
+        $year = (int) $request->input('year', now()->year);
+
+        // 2. Policy constants
+        $PER_YEAR = 16;                           // total entitlement
+        $PER_MONTH = round($PER_YEAR / 12, 2);     // 1.33
+        $now = Carbon::now();                // single timestamp for every row
+
+        // 3. One DB transaction for the whole batch
+        DB::transaction(function () use ($year, $PER_YEAR, $PER_MONTH, $now) {
+
+            // Tip: scope to “active” employees if you have such a scope/column
+            User::query()
+                // ->active()                       // ← if you have a scope
+                // ->where('status', 'active')      // ← or a simple column filter
+                ->each(function ($employee) use ($year, $PER_YEAR, $PER_MONTH, $now) {
+
+                    // Carry‑forward from previous year ─ if that row exists
+                    $prevRecord = AnunalLeave::where('employee_id', $employee->id)
+                        ->where('year_bpy', $year - 1)
+                        ->first();
+
+                    $previousYearDays = $prevRecord?->current_year ?? 0;
+
+                    /* -----------------------------------------------------------------
+                     |  Insert a fresh record OR update an existing one for this year.
+                     |  updateOrCreate() avoids duplicates and lets you re‑run safely.
+                     *------------------------------------------------------------------*/
+                    AnunalLeave::updateOrCreate(
+                        [
+                            'employee_id' => $employee->id,
+                            'year_bpy' => $year,
+                        ],
+                        [
+                            'current_year' => $PER_YEAR,
+                            'previous_year' => $previousYearDays,
+                            'per_month' => $PER_MONTH,
+                            'per_year' => $PER_YEAR,
+                            'total_anunal_leave' => $PER_YEAR + $previousYearDays,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]
+                    );
+                });
+        });
+
+        return back()->with(
+            notify(__('Annual‑leave balances generated for :year', ['year' => $year]))
+        );
     }
+
 
     /**
      * Display the specified resource.

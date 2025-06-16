@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->integer('employee_id');
             $table->decimal('current_year')->default(0.00);
             $table->decimal('previous_year')->default(0.00);
-            $table->decimal('year_bpy')->default(0.00);
+            $table->string('year_bpy')->default(2025);
             $table->decimal('per_month')->default(0.00);
             $table->integer('per_year')->default(0);
             $table->integer('total_anunal_leave')->default(0);

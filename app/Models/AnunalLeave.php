@@ -6,20 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class AnunalLeave extends Model
 {
-     protected $fillable = [
+    /* -----------------------------------------------------------------
+    |  Database
+    |------------------------------------------------------------------*/
+    protected $table = 'anunal_leaves';       // adjust if your table name differs
+
+    /** Allow everything or explicitly whitelist; choose ONE style */
+    // protected $guarded = [];               // ← simplest (unguarded)
+    protected $fillable = [
         'employee_id',
-        'leave_type_id',
-        'leave_start_date',
-        'leave_end_date',
-        'request_reason',
-        'attachements',
+        'current_year',
+        'previous_year',
+        'year_bpy',
+        'per_month',
+        'per_year',
+        'total_anunal_leave',
+    ];
 
-        'half_day',
-        'multiple_day',
-        'reject_reason',
-        'attended_by',
-        'status'
-
+    /** Keep 2‑decimal precision when attributes are cast to/from PHP */
+    protected $casts = [
+        'current_year' => 'decimal:2',
+        'previous_year' => 'decimal:2',
+        'per_month' => 'decimal:2',
+        'per_year' => 'decimal:2',
+        'total_anunal_leave' => 'decimal:2',
     ];
     public function employee()
     {

@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AnunalLeave;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use Illuminate\Http\Request;
 use Auth;
 use App\DataTables\LeaveRequestDataTable;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Carbon\Carbon;
+use App\DataTables\myLeaveDataTable;
+
+use Carbon\Carbon;         // spel
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 class LeaveRequestController extends Controller
 {
 
@@ -25,13 +28,28 @@ class LeaveRequestController extends Controller
 
         ));
     }
+    public function myLeaveRequests(myLeaveDataTable $dataTable)
+    {
+        $pageTitle = __("Leave Request");
+
+        return $dataTable->render('pages.leaveRequest.myleave', compact(
+            'pageTitle',
+
+        ));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $leavetypes = LeaveType::where('status', '=', 'allowed')->get();
-        return view('pages.leaveRequest.create', compact('leavetypes'));
+        $leavetypes = LeaveType::where('status', 'allowed')->get();
+
+        // fetch the single balance row (or null if none exists)
+        $balance = AnunalLeave::where('employee_id', Auth::id())->first();
+
+        // dd($balance);
+        return view('pages.leaveRequest.create', compact('leavetypes', 'balance'));
     }
 
     /**
@@ -110,36 +128,61 @@ class LeaveRequestController extends Controller
         ));
     }
 
-
     /**
      * Update the specified resource in storage.
      */
+    // ← spelling kept to match your table
 
 
-    public function update(Request $request, $id)   // $ticket is just the ID
+    public function update(Request $request, $id, $employee_id)
     {
         $validated = $request->validate([
-            'status' => 'required',
-            'reject_reason' => 'nullable',
+            'status' => 'required|in:approved,rejected',
+            'reject_reason' => 'nullable|string',
         ]);
 
-        $leaverequest = LeaveRequest::findOrFail($id);          // 🔍 convert to model
+        $leaveRequest = LeaveRequest::findOrFail($id);
 
-        $description = html_entity_decode(strip_tags($validated['reject_reason'] ?? ''));
-        $leaverequest->update([
-            'attended_by' => Auth::id(),
-            'reject_reason' => $description,
-            'status' => $request->status,
-        ]);
+        DB::transaction(function () use ($leaveRequest, $validated, $employee_id) {
 
-        $notification = notify(__('Leave Request has been updated'));
-        return back()->with($notification);
+            $leaveRequest->update([
+                'attended_by' => Auth::id(),
+                'reject_reason' => html_entity_decode(strip_tags($validated['reject_reason'] ?? '')),
+                'status' => $validated['status'],
+            ]);
+            if ($validated['status'] === 'approved') {
+
+                $balance = AnunalLeave::where('employee_id', $employee_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                /* ---- Calculate number of leave days (inclusive) ---- */
+                $days = Carbon::parse($leaveRequest->leave_start_date)
+                    ->diffInDays(Carbon::parse($leaveRequest->leave_end_date)) + 1;
+
+                /* ---- Safeguard: enough combined balance? ---- */
+                $totalAvailable = $balance->previous_year + $balance->current_year; // or use $balance->total_anunal_leave
+                if ($days > $totalAvailable) {
+                    throw ValidationException::withMessages([
+                        'status' => ['Not enough annual‑leave balance.'],
+                    ]);
+                }
+                $usePrev = min($days, $balance->previous_year);
+                $useCurr = $days - $usePrev;
+
+                if ($usePrev > 0) {
+                    $balance->decrement('previous_year', $usePrev);
+                }
+                if ($useCurr > 0) {
+                    $balance->decrement('current_year', $useCurr);
+                }
+                $balance->decrement('total_anunal_leave', $days);
+            }
+        });
+
+        return back()->with(notify(__('Leave Request has been updated')));
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(LeaveRequest $leaveRequest)
     {
         //

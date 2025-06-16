@@ -1,6 +1,6 @@
 {{-- resources/views/leaverequests/edit.blade.php --}}
 <div class="modal-body">
-    <form action="{{ route('leaverequests.update', $leaverequest->id) }}" method="post" enctype="multipart/form-data">
+    <form action="{{ route('leaverequests.update', [$leaverequest->id, $leaverequest->employee_id]) }}" method="POST">
         @csrf
         @method('PUT')
 

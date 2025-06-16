@@ -5,25 +5,24 @@
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Annual Leave') }}</x-slot>
+            <x-slot name="title">{{ __('Leave  Request') }}</x-slot>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
                 </li>
                 <li class="breadcrumb-item active">
-                    {{ __('Employee Annual Leaves') }}
+                    {{ __('Leave Request') }}
                 </li>
             </ul>
             <x-slot name="buttons">
-                {{-- POST request => generates balances for ALL employees --}}
-                <form action="{{ route('annual_leaves.store') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-plus"></i> {{ __('Generate Annual Leave') }}
-                    </button>
-                </form>
-            </x-slot>
 
+                <a href="javascript:void(0)" data-url="{{ route('leaverequests.create') }}" class="btn add-btn"
+                    data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Leave Request') }}">
+                    <i class="fa-solid fa-plus"></i> {{ __('Add Leav Request') }}
+                </a>
+
+              
+            </x-slot>
         </x-breadcrumb>
         <!-- /Page Header -->
 
@@ -37,6 +36,8 @@
         </div>
     </div>
 @endsection
+
+
 
 @push('page-scripts')
     @vite(['resources/js/datatables.js', 'resources/assets/css/ckeditor.css', 'resources/js/ckeditor.js'])

@@ -79,8 +79,10 @@ class AppMenuListener
                 ->submenu(
                     Html::raw('<a href="#" class="' . $activeClass . '" class="noti-dot"><i class="la la-user"></i> <span> ' . __('Leave Requests') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
-                        ->addParentClass('submenu')  
-                        ->addIfCan('my-leaverequest', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
+                        ->addParentClass('submenu')
+                        ->addIfCan('all-leaverequest', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
+                        ->addIfCan('my-leaverequest', Link::toRoute('leaverequests.myleaverequests', __('My Leave '))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : ''))
+
                         ->addIfCan('manage-leaverequest', Link::toRoute('leavetypes.index', __('Leave Types '))->addClass(route_is(['leavetypes.index']) ? 'active' : ''))
                         ->addIfCan('manage-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave '))->addClass(route_is(['annual_leaves.index']) ? 'active' : ''))
 

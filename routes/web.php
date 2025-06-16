@@ -82,8 +82,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('leavetypes', LeaveTypeController::class);
     Route::resource('leaverequests', LeaveRequestController::class);
-    Route::put('/leaverequests/{ticket}', [LeaveRequestController::class, 'update'])
-     ->name('leaverequests.update');
+    Route::put('/leaverequests/{leaverequest}/{employee}', [LeaveRequestController::class, 'update'])
+        ->name('leaverequests.update');
+    Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
+        ->name('leaverequests.myleaverequests');
 
     Route::resource('annual_leaves', AnunalLeaveController::class);
 

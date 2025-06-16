@@ -1,14 +1,43 @@
-{{-- resources/views/leaverequests/create.blade.php --}}
-{{-- <div class="modal-header">
-    <h5 class="modal-title">{{ __('Add Leave Request') }}</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div> --}}
-
 <div class="modal-body">
     <form action="{{ route('leaverequests.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         <div class="row">
             <!-- Leave Type -->
+            <div class="col-md-12">
+                @if ($balance)
+                    <div class="mb-2">
+                        <strong>{{ __('Remaining  Previous year Leave:') }}</strong>
+                        <span style="color: rgb(255, 3, 158)"> {{ $balance->previous_year }}</span>
+                        {{ __('day(s)') }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>{{ __('Remaining Current year Leave:') }}</strong>
+                        <span style="color: rgb(255, 3, 158)">{{ $balance->current_year }}</span>
+                        {{ __('day(s)') }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>{{ __('Remaining Total Annual Leave:') }}</strong>
+                        <span style="color: rgb(255, 3, 158)">{{ $balance->total_anunal_leave }}</span>
+                        {{ __('day(s)') }}
+                    </div>
+                @else
+                    <div class="mb-2 text-danger">
+                        {{ __('No leave‑balance record found for your account.') }}
+                    </div>
+                @endif
+            </div>
+            {{-- <div class="col-md-6">
+                <div class="input-block mb-3">
+                    <x-form.label>{{ __('Leave Type') }}</x-form.label>
+                    <select name="annual_leave_year" class="form-control">
+                        <option value="">{{ __('--- Select Leave Year ---') }}</option>
+                        <option value="previous_year">previous year</option>
+                        <option value="current_year">current year</option>
+                        <option value="total_anunal_leave">total anunal leave</option>
+                    </select>
+                </div>
+            </div> --}}
+
             <div class="col-md-6">
                 <div class="input-block mb-3">
                     <x-form.label>{{ __('Leave Type') }}</x-form.label>
@@ -34,8 +63,6 @@
                     </div>
                 </div>
             </div>
-
-
 
             <!-- Half‑Day time -->
             <div class="col-md-6" id="half-day-time-section" style="display:none;">
