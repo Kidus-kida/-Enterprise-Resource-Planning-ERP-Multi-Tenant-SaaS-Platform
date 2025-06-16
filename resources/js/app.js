@@ -19,9 +19,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import { jsPDF } from "jspdf";
-import * as bootstrap from 'bootstrap';
 
-window.bootstrap = bootstrap;
+
 window.intlTelInput = intlTelInput;
 window.NProgress = nProgress;
 window.moment = moment;
