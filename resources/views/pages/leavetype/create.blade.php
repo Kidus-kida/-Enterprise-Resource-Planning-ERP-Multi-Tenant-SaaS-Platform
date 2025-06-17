@@ -3,31 +3,17 @@
         @csrf
 
         <div class="row">
-            <div class="col-md-12">
-                <div class="input-block mb-3">
-                    <x-form.label>{{ __('Leave Type Name') }}</x-form.label>
-                    <x-form.input type="text" name="type_name"  required/>
-                </div>
-            </div>
             <div class="col-md-6">
                 <div class="input-block mb-3">
-                    <x-form.label>{{ __('Leave allowed Interval') }}</x-form.label>
-                    <select name="leave_allowed_interval" class="form-control">
-                        <option value="">{{ __('Select leave allowed interval') }}</option>
-                        {{-- @foreach (\App\Enums\GeneralPriority::cases() as $item)
-                            <option value="{{ $item->value }}">{{ $item->name }}</option>
-                        @endforeach --}}
-                        <option value="This Year">{{ __('This Year') }}</option>
-                        <option value="Curent Financial Year">{{ __('Curent Financial Year') }}</option>
-                        <option value="Last Year">{{ __('Last Year') }}</option>
-                    </select>
+                    <x-form.label>{{ __('Leave Type Name') }}</x-form.label>
+                    <x-form.input type="text" name="type_name" required />
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="input-block mb-3">
                     <x-form.label>{{ __('Maximum Date Allowed ') }}</x-form.label>
-                    <x-form.input type="number" name="max_date_allowed" required/>
+                    <x-form.input type="number" name="max_date_allowed" required />
                 </div>
             </div>
 
