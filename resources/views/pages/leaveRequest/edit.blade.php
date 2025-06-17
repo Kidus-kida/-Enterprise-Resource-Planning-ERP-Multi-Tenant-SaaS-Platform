@@ -1,32 +1,51 @@
-{{-- resources/views/leaverequests/edit.blade.php --}}
+<script>
+    (function($) {
+        /* ── helper ───────────────────────────────────────── */
+        function toggleRejectReason($modal) {
+            const $select = $modal.find('#statusSelect');
+            const $row = $modal.find('#reject-reason-section');
+            const show = $select.val() === 'rejected';
+            $row.toggle(show);
+        }
+        /* ── delegated change on the <select> ─────────────── */
+        $(document).on('change', '#statusSelect', function() {
+            toggleRejectReason($(this).closest('.modal'));
+        });
+        /* ── when ANY modal opens, sync its initial state ─── */
+        $('#ajaxModal').on('shown.bs.modal', function() {
+            toggleRejectReason($(this));
+        });
+    })(jQuery);
+</script>
+
 <div class="modal-body">
     <form action="{{ route('leaverequests.update', [$leaverequest->id, $leaverequest->employee_id]) }}" method="POST">
         @csrf
         @method('PUT')
 
         <div class="row">
-            @can('edit-ticket')
-                <!-- Start + End date (readonly) -->
-                <div class="col-md-6">
-                    <div class="input-block mb-3">
-                        <x-form.label>{{ __('Leave Start Date —— Leave End Date') }}</x-form.label>
-                        <x-form.input type="text" name="leave_start_date" readonly
-                            value="{{ $leaverequest->leave_start_date }}  —  {{ $leaverequest->leave_end_date }}" />
-                    </div>
-                </div>
 
-                <!-- Approve / Reject select -->
-                <div class="col-md-6">
-                    <div class="input-block mb-3">
-                        <x-form.label for="statusSelect">{{ __('Action') }}</x-form.label>
-                        <select name="status" id="statusSelect" class="form-control">
-                            <option value="">{{ __('—  Select Approve / Reject  —') }}</option>
-                            <option value="approved">approve</option>
-                            <option value="rejected">reject</option>
-                        </select>
-                    </div>
+            <!-- Start + End date (readonly) -->
+            <div class="col-md-6">
+                <div class="input-block mb-3">
+                    <x-form.label>{{ __('Leave Start Date —— Leave End Date') }}</x-form.label>
+                    <x-form.input type="text" name="leave_start_date" readonly
+                        value="{{ $leaverequest->leave_start_date }}  —  {{ $leaverequest->leave_end_date }}" />
                 </div>
-            @endcan
+            </div>
+
+            <!-- Approve / Reject select -->
+            <div class="col-md-6">
+                <div class="input-block mb-3">
+                    <x-form.label for="statusSelect">{{ __('Action') }}</x-form.label>
+                    <select name="status" id="statusSelect" class="form-control">
+                        <option value="">{{ __('—  Select Approve / Reject  —') }}</option>
+                        <option value="approved">approve</option>
+                        <option value="rejected">reject</option>
+                    </select>
+                </div>
+            </div>
+
         </div>
 
         <!-- Reject‑reason section (hidden by default) -->

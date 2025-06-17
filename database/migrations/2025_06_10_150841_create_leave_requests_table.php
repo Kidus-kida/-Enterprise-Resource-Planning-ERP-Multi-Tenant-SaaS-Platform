@@ -16,13 +16,11 @@ return new class extends Migration {
             $table->integer('leave_type_id');
             $table->date('leave_start_date')->nullable();
             $table->date('leave_end_date')->nullable();
-            $table->string('request_reason')->nullable();
-
+            $table->longText('request_reason')->nullable();
             $table->json('attachements')->nullable();
-
             $table->string('half_day')->nullable();
             $table->integer('multiple_day')->default(0);
-            $table->string('reject_reason')->nullable();
+            $table->longText('reject_reason')->nullable();
             $table->integer('attended_by')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();

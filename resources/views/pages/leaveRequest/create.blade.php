@@ -1,3 +1,50 @@
+<script>
+    (function($) {
+        function toggleHalfDay($modal) {
+            const checked = $modal.find('#halfDay').is(':checked');
+            if (checked) {
+                $modal.find('#half-day-time-section').show();
+                $modal.find('#leave-end-date-section').hide();
+                const start = $modal.find('#leave_start_date').val();
+                if (start) $modal.find('#leave_end_date').val(start);
+            } else {
+                $modal.find('#half-day-time-section').hide();
+                $modal.find('#leave-end-date-section').show();
+                $modal.find('#leave_end_date').val('');
+            }
+        }
+
+        $(document).on('click', '[data-ajax-modal="true"]', function(e) {
+            e.preventDefault();
+            const $link = $(this);
+            $.get($link.data('url'), function(html) {
+                const $modal = $('#ajaxModal');
+                $modal.find('.modal-dialog')
+                    .removeClass('modal-sm modal-md modal-lg modal-xl')
+                    .addClass('modal-' + ($link.data('size') || 'md'));
+                $modal.find('.modal-content').html(html);
+                $modal.modal('show');
+            });
+        });
+
+        $(document)
+            .on('change', '#halfDay', function() {
+                toggleHalfDay($(this).closest('.modal'));
+            })
+            .on('change', '#leave_start_date', function() {
+                const $m = $(this).closest('.modal');
+                if ($m.find('#halfDay').is(':checked')) {
+                    $m.find('#leave_end_date').val($(this).val());
+                }
+            });
+
+        $('#ajaxModal').on('shown.bs.modal', function() {
+            toggleHalfDay($(this));
+        });
+    })(jQuery);
+</script>
+
+
 <div class="modal-body">
     <form action="{{ route('leaverequests.store') }}" method="post" enctype="multipart/form-data">
         @csrf
@@ -76,7 +123,7 @@
                 </div>
             </div>
 
-            @can('edit-ticket')
+          
                 <!-- Start Date -->
                 <div class="col-md-6">
                     <div class="input-block mb-3">
@@ -92,7 +139,7 @@
                         <input class="form-control datepicker" type="text" name="leave_end_date" id="leave_end_date">
                     </div>
                 </div>
-            @endcan
+           
         </div>
 
         <div class="row">

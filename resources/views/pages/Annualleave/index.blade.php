@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('page-content')
     <div class="content container-fluid">
 
@@ -14,19 +13,20 @@
                     {{ __('Employee Annual Leaves') }}
                 </li>
             </ul>
-            <x-slot name="buttons">
-                {{-- POST request => generates balances for ALL employees --}}
-                <form action="{{ route('annual_leaves.store') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-plus"></i> {{ __('Generate Annual Leave') }}
-                    </button>
-                </form>
-            </x-slot>
+            <x-slot name="right">
+                <div class="col-auto float-end ms-auto">
+                    {{-- POST request => generates balances for ALL employees --}}
+                    <form action="{{ route('annual_leaves.store') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> {{ __('Generate Annual Leave') }}
+                        </button>
+                    </form>
 
+                </div>
+            </x-slot>
         </x-breadcrumb>
         <!-- /Page Header -->
-
 
         <div class="row">
             <div class="col-md-12">

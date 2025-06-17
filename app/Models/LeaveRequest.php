@@ -13,7 +13,6 @@ class LeaveRequest extends Model
         'leave_end_date',
         'request_reason',
         'attachements',
-
         'half_day',
         'multiple_day',
         'reject_reason',
@@ -28,6 +27,11 @@ class LeaveRequest extends Model
     {
         return $this->belongsTo(User::class, 'employee_id');
     }
+     public function admin()
+    {
+        return $this->belongsTo(User::class, 'attended_by');
+    }
+    
 
     public function leaveType()
     {

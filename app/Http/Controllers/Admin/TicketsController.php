@@ -164,6 +164,7 @@ class TicketsController extends Controller
      */
     public function destroy(Ticket $ticket)
     {
+        
         $ticket->delete();
         $notification = notify(__('Ticket has been deleted'));
         return back()->with($notification);

@@ -70,9 +70,10 @@ class AppMenuListener
         // leave requests 
         if (
             auth()->user()->canAny([
-                'manage-leaverequest',
-                'my-leaverequest',
-
+                'view-request',
+                'edit-request',
+                'create-annual-leave',
+                'create-leave-type'
             ])
         ) {
             $activeClass = route_is(['leaverequests.index', 'leavetypes.index',]) ? "active" : "";
@@ -81,16 +82,13 @@ class AppMenuListener
                     Html::raw('<a href="#" class="' . $activeClass . '" class="noti-dot"><i class="la la-user"></i> <span> ' . __('Leave Requests') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
-                        ->addIfCan('all-leaverequest', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
-                        ->addIfCan('my-leaverequest', Link::toRoute('leaverequests.myleaverequests', __('My Leave '))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : ''))
-
-                        ->addIfCan('manage-leaverequest', Link::toRoute('leavetypes.index', __('Leave Types '))->addClass(route_is(['leavetypes.index']) ? 'active' : ''))
-                        ->addIfCan('manage-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave '))->addClass(route_is(['annual_leaves.index']) ? 'active' : ''))
-
+                        ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
+                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leave '))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : ''))
+                        ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types '))->addClass(route_is(['leavetypes.index']) ? 'active' : ''))
+                        ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave '))->addClass(route_is(['annual_leaves.index']) ? 'active' : ''))
                 );
         }
         //end leave requests
-
         $menu->addIfCan(
             'view-clients',
             Link::toRoute('clients.index', '<i class="la la-group"></i> <span>' . __('Clients') . '</span>')->setActive(route_is('clients.*'))
@@ -151,13 +149,13 @@ class AppMenuListener
             );
         }
 
-         $menu->add(
+        $menu->add(
             Link::toRoute('evaluation.index', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation') . '</span>')->setActive(route_is('dashboard'))
         );
         $menu->add(
             Link::toRoute('evaluation.assign-evaluator', '<i class="la la-check-circle"></i> <span> ' . __('Evaluation Assignment') . '</span>')->setActive(route_is('dashboard'))
         );
- 
+
 
     }
 }

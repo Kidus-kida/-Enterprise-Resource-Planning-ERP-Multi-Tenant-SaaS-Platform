@@ -1,6 +1,5 @@
 @extends('layouts.app',['pageTitle' => __('Assets')])
 
-
 @section('page-content')
     <div class="content container-fluid">
 

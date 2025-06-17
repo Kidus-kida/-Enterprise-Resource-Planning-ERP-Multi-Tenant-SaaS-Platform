@@ -1,4 +1,4 @@
-{{-- <div class="page-header">
+<div class="page-header">
     <div class="row {{ $alignment ?? '' }}">
         <div class="{{ $class ?? 'col-sm-12' }}">
             @isset($title)
@@ -12,10 +12,10 @@
             {!! $right !!}
         @endisset
     </div>
-</div> --}}
+</div>
 
 
-<div class="page-header">
+{{-- <div class="page-header">
     <div class="row {{ $alignment ?? '' }}">
         <div class="{{ $class ?? 'col-sm-12' }}">
             @isset($title)
@@ -32,4 +32,4 @@
             @endisset
         </div>
     </div>
-</div>
+</div> --}}
