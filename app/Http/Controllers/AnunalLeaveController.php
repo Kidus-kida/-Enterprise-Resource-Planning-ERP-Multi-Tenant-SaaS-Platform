@@ -40,34 +40,24 @@ class AnunalLeaveController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Which “leave year” are we generating?   (defaults to current year)
         $year = (int) $request->input('year', now()->year);
 
         // 2. Policy constants
-        $PER_YEAR = 16;                           // total entitlement
-        $PER_MONTH = round($PER_YEAR / 12, 2);     // 1.33
-        $now = Carbon::now();                // single timestamp for every row
+        $PER_YEAR = 16;
+        $PER_MONTH = round($PER_YEAR / 12, 2);     // 1.33 per month
+        $now = Carbon::now();
 
-        // 3. One DB transaction for the whole batch
+
         DB::transaction(function () use ($year, $PER_YEAR, $PER_MONTH, $now) {
 
-            // Tip: scope to “active” employees if you have such a scope/column
             User::query()
-                // ->active()                       // ← if you have a scope
-                // ->where('status', 'active')      // ← or a simple column filter
                 ->each(function ($employee) use ($year, $PER_YEAR, $PER_MONTH, $now) {
 
-                    // Carry‑forward from previous year ─ if that row exists
                     $prevRecord = AnunalLeave::where('employee_id', $employee->id)
                         ->where('year_bpy', $year - 1)
                         ->first();
 
                     $previousYearDays = $prevRecord?->current_year ?? 0;
-
-                    /* -----------------------------------------------------------------
-                     |  Insert a fresh record OR update an existing one for this year.
-                     |  updateOrCreate() avoids duplicates and lets you re‑run safely.
-                     *------------------------------------------------------------------*/
                     AnunalLeave::updateOrCreate(
                         [
                             'employee_id' => $employee->id,

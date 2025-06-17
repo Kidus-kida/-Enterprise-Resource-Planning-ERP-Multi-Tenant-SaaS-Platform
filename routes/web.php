@@ -105,6 +105,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('leaverequests.update');
     Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
         ->name('leaverequests.myleaverequests');
+    // Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])
+    //     ->name('leaverequests.show');
+
 
 
     Route::resource('annual_leaves', AnunalLeaveController::class);

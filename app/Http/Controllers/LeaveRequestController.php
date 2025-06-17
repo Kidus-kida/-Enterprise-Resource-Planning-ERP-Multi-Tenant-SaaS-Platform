@@ -111,9 +111,13 @@ class LeaveRequestController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(LeaveRequest $leaveRequest)
+
+
+    public function show(LeaveRequest $leaverequest)
     {
-        //
+        return view('pages.leaveRequest.show', compact(
+            'leaverequest'
+        ));
     }
 
     /**
@@ -183,8 +187,14 @@ class LeaveRequestController extends Controller
         return back()->with(notify(__('Leave Request has been updated')));
     }
 
-    public function destroy(LeaveRequest $leaveRequest)
+    public function destroy(LeaveRequest $leaveRequest,$id)
     {
-        //
+        // dd( $id);
+        
+        $leaveRequest = LeaveRequest::findOrFail($id);
+        $leaveRequest->delete();
+        $notification = notify(__('LeaveRequest has been deleted'));
+        return back()->with($notification);
     }
+
 }

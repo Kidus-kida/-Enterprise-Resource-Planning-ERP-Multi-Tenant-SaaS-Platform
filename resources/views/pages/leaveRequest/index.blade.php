@@ -14,14 +14,20 @@
                     {{ __('Leave Request') }}
                 </li>
             </ul>
-            <x-slot name="buttons">
 
-                <a href="javascript:void(0)" data-url="{{ route('leaverequests.create') }}" class="btn add-btn"
-                    data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Leave Request') }}">
-                    <i class="fa-solid fa-plus"></i> {{ __('Add Leav Request') }}
-                </a>
-
-              
+            <x-slot name="right">
+                <div class="col-auto float-end ms-auto">
+                    <a href="javascript:void(0)" data-url="{{ route('leaverequests.create') }}" class="btn add-btn"
+                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Leave Request') }}">
+                        <i class="fa-solid fa-plus"></i> {{ __('Add Leav Request') }}
+                    </a>
+                    <div class="view-icons">
+                        <a href="{{ route('leaverequests.index') }}" class="grid-view btn btn-link"><i
+                                class="fa fa-th"></i></a>
+                        <a href="{{ route('leaverequests.index') }}" class="list-view btn btn-link active"><i
+                                class="fa-solid fa-bars"></i></a>
+                    </div>
+                </div>
             </x-slot>
         </x-breadcrumb>
         <!-- /Page Header -->

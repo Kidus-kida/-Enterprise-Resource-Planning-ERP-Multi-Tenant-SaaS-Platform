@@ -38,7 +38,11 @@ class myLeaveDataTable extends DataTable
             ->rawColumns(['request_reason']) // Add this to allow HTML rendering
             ->editColumn('created_at', fn($row) => $row->created_at->format('Y-m-d H:i'))
             ->editColumn('status', fn($row) => ucfirst($row->status))
-        ;
+            ->addColumn('action', function ($row) {
+                $id = $row->id;
+                return view('pages.leaveRequest.action', compact('id'));
+            });
+
     }
     /**
      * Get the query source of dataTable.
@@ -101,6 +105,11 @@ class myLeaveDataTable extends DataTable
             Column::make('request_reason'),
             Column::make('created_at'),
             Column::make('status'),
+            Column::computed('action')
+                ->exportable(false)
+                ->printable(false)
+                ->width(60)
+                ->addClass('text-end'),
 
         ];
     }
