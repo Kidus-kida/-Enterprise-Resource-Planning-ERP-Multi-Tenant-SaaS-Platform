@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\LeaveType;
 use Illuminate\Http\Request;
 
-use App\DataTables\LeaveTypeDataTable;
+use App\DataTables\leaveTypeDataTable;
 class LeaveTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(LeaveTypeDataTable $dataTable)
+    public function index(leaveTypeDataTable $dataTable)
     {
         $pageTitle = __("LeaveTypes");
         return $dataTable->render('pages.leavetype.index', compact(
