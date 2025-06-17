@@ -15,7 +15,7 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 
-class LeaveTypeDataTable extends DataTable
+class leaveTypeDataTable extends DataTable
 {
     /**
      * Build the DataTable class.
