@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'localization.cookie'    => LocalizationByCookie::class,
             'localization.session'   => LocalizationBySession::class,
             'localization.model'     => LocalizationByModel::class,
+
+            //  Spatie permission middleware
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

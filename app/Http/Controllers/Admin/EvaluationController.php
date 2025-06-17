@@ -10,6 +10,20 @@ use App\Models\Performance;
 
 class EvaluationController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('permission:view-evaluation')->only('index');
+        $this->middleware('permission:create-evaluation')->only(['showEvaluationForm', 'submitEvaluation']);
+        $this->middleware('permission:edit-evaluation')->only(['showEvaluationForm', 'submitEvaluation']);
+        $this->middleware('permission:delete-evaluation')->only('destroy');
+
+        $this->middleware('permission:view-evaluation-assignment')->only('assignEvaluatorView');
+        $this->middleware('permission:create-evaluation-assignment')->only('assignEvaluator');
+        $this->middleware('permission:edit-evaluation-assignment')->only('assignEvaluator');
+        $this->middleware('permission:delete-evaluation-assignment')->only('destroy');
+    }
+    
     public function index()
     {
         $assignedEmployees = auth()->user()->evaluatees()->with(['employeeDetail.department', 'employeeDetail.designation'])->get();
@@ -34,7 +48,11 @@ class EvaluationController extends Controller
 
         $employee = User::findOrFail($request->employee_id);
         $employee->evaluators()->sync($request->evaluators);
-        return redirect()->back()->with('success', 'Evaluators Assigned Successfully');
+
+        // Notify the evaluators
+        $notification = notify(__('Evaluators Assigned Successfully'));
+        return back()->with($notification);
+        // return redirect()->back()->with('success', 'Evaluators Assigned Successfully');
     }
 
     public function showEvaluationForm($employeeId)
@@ -113,7 +131,11 @@ class EvaluationController extends Controller
         $performance->average_score = $total / count($criteria);
         $performance->percentage_score = $percentage;
         $performance->save();
-        return redirect()->route('evaluation.index')->with('success', 'Evaluation submitted successfully.');
+
+        $notification = notify(__('Evaluation submitted successfully.'));
+        return back()->with($notification);
+
+        // return redirect()->route('evaluation.index')->with('success', 'Evaluation submitted successfully.');
     }
 
     public function destroy(Performance $evaluation)

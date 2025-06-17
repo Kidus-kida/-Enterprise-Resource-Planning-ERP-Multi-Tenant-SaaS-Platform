@@ -15,12 +15,12 @@
     <div class="page-wrapper">
         <div id="loader-wrapper">
             <div id="loader">
-                <div class="loader-ellips">
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                    <span class="loader-ellips__dot"></span>
-                </div>
+              <div class="loader-ellips">
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+                <span class="loader-ellips__dot"></span>
+              </div>
             </div>
         </div>
         <!-- Page Content -->
@@ -58,6 +58,6 @@
             </div>
         </div>
     </div>
+    <!-- /Delete Modal -->
 
-   
-@endsection {{-- <- keep your original @endsection --}}
+
