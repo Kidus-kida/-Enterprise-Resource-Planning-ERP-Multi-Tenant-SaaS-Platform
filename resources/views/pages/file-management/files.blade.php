@@ -21,14 +21,15 @@
         </ul>
         <x-slot name="right">
             <div class="col-auto float-end ms-auto">
-                <a data-url="{{ route('files.create', ['folder' => $folder->id]) }}" 
-                   href="javascript:void(0)" 
-                   class="btn add-btn"
-                   data-ajax-modal="true"
-                   data-size="md" 
-                   data-title="Add Files">
-                   <i class="fa-solid fa-plus"></i> {{ __('Add Files') }}
-                </a>
+             
+                <a data-url="{{ URL::signedRoute('files.create', ['folder' => $folder->id]) }}" 
+   href="javascript:void(0)" 
+   class="btn add-btn"
+   data-ajax-modal="true"
+   data-size="md" 
+   data-title="Add Files">
+   <i class="fa-solid fa-plus"></i> {{ __('Add Files') }}
+</a>
             </div>
         </x-slot>
     </x-breadcrumb>
@@ -50,24 +51,18 @@
                     <div>
                         <h5 class="mb-1">{{ $file->title }}</h5>
                         <small class="text-muted">{{ $file->description }}</small>
-                        <div class="file-actions mt-2">
-                           
-                            {{-- <a href="{{ asset('storage/'.$file->path) }}" 
-                               target="_blank" 
-                               class="btn btn-sm btn-outline-info me-2">
-                               <i class="fa-regular fa-eye"></i> View
-                            </a> --}}
-                            <a href="{{ route('files.view', $file->id) }}" class="btn btn-sm btn-outline-info me-2">
-    <i class="fa-regular fa-eye"></i> View
-</a>
+                       <div class="file-actions mt-2">
+   
+    <a href="{{ URL::signedRoute('files.view', ['file' => $file->id]) }}" 
+       class="btn btn-sm btn-outline-info me-2">
+       <i class="fa-regular fa-eye"></i> View
+    </a>
 
-                            
-                            
-                            <a href="{{ route('files.download', $file->id) }}" 
-                               class="btn btn-sm btn-outline-success">
-                               <i class="fa-solid fa-download"></i> Download
-                            </a>
-                        </div>
+    <a href="{{ URL::signedRoute('files.download', ['file' => $file->id]) }}" 
+       class="btn btn-sm btn-outline-success">
+       <i class="fa-solid fa-download"></i> Download
+    </a>
+</div>
                         <div class="upload-info mt-2">
         <small class="text-muted">
             <i class="fa-regular fa-user"></i> Uploaded by: {{ $file->uploader->firstname }}
