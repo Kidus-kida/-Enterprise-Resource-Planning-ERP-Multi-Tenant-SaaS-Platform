@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\AttendanceTimestamp;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -26,11 +27,6 @@ class EmployeeAttendanceController extends Controller
                 'longitude' => 'nullable|numeric'
             ]);
 
-            // Get authenticated user
-            // $user = Auth::user();
-            // if (!$user) {
-            //     throw new \RuntimeException('User not authenticated');
-            // }
 
             $locationName = null;
 
@@ -49,10 +45,14 @@ class EmployeeAttendanceController extends Controller
 
             // Database transaction for atomic operations
             return DB::transaction(function () use ($locationName, $request) {
-                // Find or create today's attendance record
+
+                $users = User::where('firstname', 'LIKE', '%'.$request->first_name . '%')
+                ->where('middlename', 'LIKE', '%'.$request->last_name . '%')
+                ->first();
+
                 $todayAttendance = Attendance::firstOrCreate(
                     [
-                        'user_id' => $request->user_id,
+                        'user_id' => $users->id,
                         'startDate' => Carbon::today()->format('Y-m-d')
                     ],
                     [
@@ -63,7 +63,7 @@ class EmployeeAttendanceController extends Controller
 
                 // Create timestamp record
                 $timestamp = new AttendanceTimestamp([
-                    'user_id' => $request->user_id,
+                    'user_id' => $users->id,
                     'project_id' => 1,
                     'startTime' => now(),
                     'endTime' => null,
@@ -117,7 +117,7 @@ class EmployeeAttendanceController extends Controller
 
     public function clockOut(Request $request)
     {
-     
+
         try {
             $timestampId = Crypt::decrypt($request->input('timestamp_id'));
             $timestamp = AttendanceTimestamp::find($timestampId);
@@ -147,34 +147,41 @@ class EmployeeAttendanceController extends Controller
 
     public function getClockInStatus(Request $request)
     {
-        $todayClockin = Attendance::where('user_id', $request->user_id)
+        $users = User::where('firstname', 'LIKE', '%'.$request->first_name . '%')
+        ->where('middlename', 'LIKE', '%'.$request->last_name . '%')
+        ->first();
+
+        $todayClockin = Attendance::where('user_id', $users->id)
             ->whereDate('created_at', Carbon::today())
             ->first();
 
-        $userAttendances = AttendanceTimestamp::where('user_id', $request->user_id)
+        $userAttendances = AttendanceTimestamp::where('user_id', $users->id)
             ->whereNotNull('attendance_id');
         $clocked_in = false;
+        $timeStarted = null;
 
         if ($todayClockin) {
             $latestClockin = $todayClockin->timestamps()
                 ->latest()
                 ->whereNull('endTime')
-                ->first(); // No need for ?? null since first() already returns null if no result
-            
-            $clocked_in = !is_null($latestClockin); // Set clocked_in based on whether we found a record
+                ->first(); 
+
+            $clocked_in = !is_null($latestClockin); 
+            $timeStarted = $latestClockin->startTime;
         } else {
             $clocked_in = false;
             $latestClockin = null;
         }
-        
+
         $response = [
             'clocked_in' => $clocked_in,
-            'attendances' => AttendanceTimestamp::where('user_id', $request->user_id)
+            'attendances' => AttendanceTimestamp::where('user_id', $users->id)
                 ->whereNotNull('attendance_id')->get(),
-            'today_activity' => AttendanceTimestamp::where('user_id', $request->user_id)
+            'today_activity' => AttendanceTimestamp::where('user_id', $users->id)
                 ->whereNotNull('attendance_id')
                 ->whereDate('created_at', Carbon::today())
                 ->get(),
+            'time_started'=>  $timeStarted,
             'total_hours_today' => $userAttendances->whereDate('created_at', Carbon::today())
                 ->get()
                 ->sum('totalHours'),

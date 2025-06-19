@@ -1,31 +1,28 @@
 @extends('layouts.app')
-
 @section('page-content')
     <div class="content container-fluid">
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Tickets') }}</x-slot>
+            <x-slot name="title">{{ __('Annual Leave') }}</x-slot>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
                 </li>
                 <li class="breadcrumb-item active">
-                    {{ __('Tickets') }}
+                    {{ __('Employee Annual Leaves') }}
                 </li>
             </ul>
-
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn"
-                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Ticket') }}">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Ticket') }}
-                    </a>
-                    <div class="view-icons">
-                        <a href="{{ route('tickets.index') }}" class="grid-view btn btn-link"><i class="fa fa-th"></i></a>
-                        <a href="{{ route('tickets.index') }}" class="list-view btn btn-link active"><i
-                                class="fa-solid fa-bars"></i></a>
-                    </div>
+                    {{-- POST request => generates balances for ALL employees --}}
+                    <form action="{{ route('annual_leaves.store') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> {{ __('Generate Annual Leave') }}
+                        </button>
+                    </form>
+
                 </div>
             </x-slot>
         </x-breadcrumb>
@@ -40,8 +37,6 @@
         </div>
     </div>
 @endsection
-
-
 
 @push('page-scripts')
     @vite(['resources/js/datatables.js', 'resources/assets/css/ckeditor.css', 'resources/js/ckeditor.js'])

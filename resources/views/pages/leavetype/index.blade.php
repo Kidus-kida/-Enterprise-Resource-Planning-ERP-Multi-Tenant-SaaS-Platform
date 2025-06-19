@@ -5,31 +5,33 @@
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Tickets') }}</x-slot>
+            <x-slot name="title">{{ __('Leave Types') }}</x-slot>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
                 </li>
                 <li class="breadcrumb-item active">
-                    {{ __('Tickets') }}
+                    {{ __('Leave Types') }}
                 </li>
             </ul>
 
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('tickets.create') }}" class="btn add-btn"
-                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Ticket') }}">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Ticket') }}
+                    <a href="javascript:void(0)" data-url="{{ route('leavetypes.create') }}" class="btn add-btn"
+                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Leave Type') }}">
+                        <i class="fa-solid fa-plus"></i> {{ __('Add Leav Type') }}
                     </a>
                     <div class="view-icons">
-                        <a href="{{ route('tickets.index') }}" class="grid-view btn btn-link"><i class="fa fa-th"></i></a>
-                        <a href="{{ route('tickets.index') }}" class="list-view btn btn-link active"><i
+                        <a href="{{ route('leavetypes.index') }}" class="grid-view btn btn-link"><i
+                                class="fa fa-th"></i></a>
+                        <a href="{{ route('leavetypes.index') }}" class="list-view btn btn-link active"><i
                                 class="fa-solid fa-bars"></i></a>
                     </div>
                 </div>
             </x-slot>
         </x-breadcrumb>
         <!-- /Page Header -->
+
 
         <div class="row">
             <div class="col-md-12">
