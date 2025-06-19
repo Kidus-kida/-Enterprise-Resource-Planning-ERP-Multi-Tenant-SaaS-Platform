@@ -62,19 +62,34 @@ class FileController extends Controller
         }
 
         $notification = notify('File has been created successfully');
-        return redirect()->route('files.show', $request->folder_id)->with($notification);
+        // return redirect()->route('files.show', $request->folder_id)->with($notification);
+         return redirect()->to(
+        URL::signedRoute('files.show', ['folder' => $request->folder_id])
+    )->with($notification);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id)
-    {
-        $folder = Folder::findOrFail($id);
-        $files = File::where('folder_id', $id)->get();
+    // public function show($id)
+    // {
+    //     $folder = Folder::findOrFail($id);
+    //     $files = File::where('folder_id', $id)->get();
         
-        return view("pages.file-management.files", compact('folder', 'files'));
+    //     return view("pages.file-management.files", compact('folder', 'files'));
+    // }
+    public function show($id)
+{
+    // Verify the signed URL first
+    if (!request()->hasValidSignature()) {
+        abort(403, 'Invalid or expired link');
     }
+
+    $folder = Folder::findOrFail($id);
+    $files = File::where('folder_id', $id)->get();
+    
+    return view("pages.file-management.files", compact('folder', 'files'));
+}
 
     /**
      * Show the form for editing the specified resource.
