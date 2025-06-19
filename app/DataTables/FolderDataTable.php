@@ -11,6 +11,7 @@ use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Editor\Editor;
 use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
+use Illuminate\Support\Facades\URL;
 
 class FolderDataTable extends DataTable
 {
@@ -41,8 +42,8 @@ class FolderDataTable extends DataTable
             
             ->editColumn('name', content: function ($row) {
 
-                $url = route('files.show', $row->id);
-
+                // $url = route('files.show', $row->id);
+$url = URL::signedRoute('files.show', $row->id);
                 return '<a href="' . $url . '"><i class="la la-folder px-3 text-primary"></i><span class="text-decoration-none hover-underline">'.e($row->name).'</span></a>';
             })
             
