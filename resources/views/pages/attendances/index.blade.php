@@ -77,7 +77,7 @@
                     <table class="table table-striped custom-table table-nowrap mb-0">
                         <thead>
                             <tr>
-                                <th>{{ __('Employee') }}</th>
+                                <th class="sticky-col">{{ __('Employee') }}</th>
                                 @for ($day = 1; $day <= $days_in_month; $day++)
                                 <th>{{$day}}</th>
                                 @endfor
@@ -87,7 +87,7 @@
                             @if (!empty($employees))
                                 @foreach ($employees as $employee)
                                 <tr>
-                                    <td>    
+                                    <td class="sticky-col">    
                                     @php
                                         $img = !empty($employee->avatar) ? asset('storage/users/'.$employee->avatar): asset('images/user.jpg');
                                         $link = route('employees.show', ['employee' => Crypt::encrypt($employee->id)]);
@@ -121,6 +121,18 @@
 
     </div>
 @endsection
+
+<style>
+    .sticky-col {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+    }
+
+    thead .sticky-col {
+        z-index: 2; /* Ensure the header column is above */
+    }
+</style>
 
 
 @push('page-scripts')
