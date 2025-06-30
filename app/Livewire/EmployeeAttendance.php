@@ -74,7 +74,7 @@ class EmployeeAttendance extends Component
 
             // check if user is clocked in
             $existingActiveTimestamp = AttendanceTimestamp::where('user_id', $user->id)
-            ->whereDate('startTime', Carbon::today())
+            ->whereDate('created_at', Carbon::today())
             ->whereNull('endTime')
             ->first();
 
@@ -116,7 +116,7 @@ class EmployeeAttendance extends Component
             $this->dispatch('IsClockedIn');
             $this->dispatch('refreshAttendance');
             $this->dispatch('Notification',__('You have clockin successfully'));
-            $this->js("bootstrap.Modal.getInstance(document.getElementById('clockin_modal')).hide()");
+            // $this->js("bootstrap.Modal.getInstance(document.getElementById('clockin_modal')).hide()");
             $this->latitude = null;
             $this->longitude = null;
         }catch(\Exception $e){
