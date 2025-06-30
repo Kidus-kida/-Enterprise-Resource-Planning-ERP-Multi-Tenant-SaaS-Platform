@@ -71,6 +71,19 @@ class EmployeeAttendance extends Component
             }
             // dd($locationName);
             $user  = auth()->user();
+
+            // check if user is clocked in
+            $existingActiveTimestamp = AttendanceTimestamp::where('user_id', $user->id)
+            ->whereDate('startTime', Carbon::today())
+            ->whereNull('endTime')
+            ->first();
+
+            if ($existingActiveTimestamp) {
+                $this->dispatch('Notification', __('You are already clocked in.'));
+                return;
+            }
+
+
             if($this->forProject){
                 $this->validate([
                     'project' => 'required',
