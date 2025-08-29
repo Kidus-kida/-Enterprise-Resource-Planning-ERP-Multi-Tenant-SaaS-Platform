@@ -46,6 +46,7 @@ Route::group(['middleware' => 'signed'], function() {
     Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');
     Route::get('files/{file}/view', [FileController::class, 'view'])->name('files.view');
     Route::get('files/{folder}', [FileController::class, 'show'])->name('files.show'); 
+    Route::delete('files/{folder}', [FileController::class, 'show'])->name('files.destroy'); 
 });
 
 
