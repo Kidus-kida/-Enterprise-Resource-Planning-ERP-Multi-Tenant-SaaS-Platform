@@ -3,5 +3,6 @@
     "Roles": true,
     "Project": true,
     "Sales": true,
-    "Accounting": true
+    "Accounting": true,
+    "ToolCRM": true
 }

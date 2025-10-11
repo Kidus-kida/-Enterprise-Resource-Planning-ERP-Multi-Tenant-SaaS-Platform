@@ -1,0 +1,11 @@
+{
+    "name": "ToolCRM",
+    "alias": "toolcrm",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ToolCRM\\Providers\\ToolCRMServiceProvider"
+    ],
+    "files": []
+}
