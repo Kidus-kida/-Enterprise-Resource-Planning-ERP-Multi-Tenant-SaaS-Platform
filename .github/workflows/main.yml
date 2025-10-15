@@ -18,9 +18,14 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
+        extensions: mbstring, bcmath, intl, pdo, mysql
+        tools: composer
 
     - name: Install Composer dependencies
       run: composer install --no-dev --optimize-autoloader
+
+    - name: Generate optimized autoload files
+      run: composer dump-autoload -o
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -32,7 +37,7 @@ jobs:
         rm -rf node_modules package-lock.json
 
     - name: Install NPM dependencies
-      run: npm install
+      run: npm ci
 
     - name: Build assets
       run: npm run build
@@ -44,7 +49,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
-        server-dir: /  # Change to your path (e.g., / or /smarthr/)
+        server-dir: /smarthr.tewostechsolutions.com/  # ✅ update to your exact path
         local-dir: ./  # Upload everything from repo root
         exclude: |
           **/.git*
@@ -52,7 +57,5 @@ jobs:
           **/tests/**
           **/.github/**
           **/storage/**
-          **/vendor/**
           .env
           .env.*
-
