@@ -55,6 +55,12 @@
                         account_balance_wallet
                     </span>
                 </a>
+                <a class="nav-link" id="v-pills-crm-tab" title="Crm" data-bs-toggle="pill"
+                    href="#v-pills-crm" role="tab" aria-controls="v-pills-crm" aria-selected="false">
+                    <span class="material-icons-outlined">
+                        Crm
+                    </span>
+                </a>
                 <a class="nav-link" id="v-pills-payroll-tab" title="Payroll" data-bs-toggle="pill"
                     href="#v-pills-payroll" role="tab" aria-controls="v-pills-payroll" aria-selected="false">
                     <span class="material-icons-outlined"> request_quote </span>
