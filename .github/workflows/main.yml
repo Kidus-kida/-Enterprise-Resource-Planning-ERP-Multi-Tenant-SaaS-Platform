@@ -49,7 +49,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftp
-        server-dir: /smarthr.tewostechsolutions.com/  # ✅ update to your exact path
+        server-dir: /
         local-dir: ./  # Upload everything from repo root
         exclude: |
           **/.git*
