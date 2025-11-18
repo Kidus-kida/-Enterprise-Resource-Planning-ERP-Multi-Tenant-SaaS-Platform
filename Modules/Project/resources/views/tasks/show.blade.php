@@ -263,14 +263,14 @@
                             <div class="feed-item">
                                 <div class="feed-user">{{ $comment->user->fullname }} <span class="feed-date">{{ $comment->created_at->diffForHumans() }}</span></div>
                                 <div class="feed-body">
-                                    <p>{{ $comment->message }}</p>
+                                    {!! $comment->message !!}
                                 </div>
                             </div>
                             @endforeach
                         </div>
-                        <div class="input-group mt-4">
-                            <input type="text" class="form-control" name="comment" placeholder="{{ __('Add a comment') }}">
-                            <button type="submit" name="action" value="add_comment" class="btn btn-primary">{{ __('Comment') }}</button>
+                        <div class="mt-4">
+                            <textarea id="comment-editor" name="comment" class="form-control" placeholder="{{ __('Add a comment') }}"></textarea>
+                            <button type="submit" name="action" value="add_comment" class="btn btn-primary mt-2">{{ __('Comment') }}</button>
                         </div>
                     </div>
                 </div>
@@ -409,6 +409,12 @@
         $('#assigned_to_select').on('change', function (e) {
             $(this).closest('form').submit();
         });
+
+        ClassicEditor
+            .create(document.querySelector('#comment-editor'))
+            .catch(error => {
+                console.error(error);
+            });
     });
 </script>
 @endpush
