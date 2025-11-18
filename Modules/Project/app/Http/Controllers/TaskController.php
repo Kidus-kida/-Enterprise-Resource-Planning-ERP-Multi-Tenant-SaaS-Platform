@@ -122,11 +122,11 @@ class TaskController extends Controller
             $task->addMediaFromRequest('file')->toMediaCollection('task_files');
         }
 
-        if ($request->has('comment')) {
+        if ($request->filled('comment')) {
             TaskComment::create([
                 'task_id' => $task->id,
                 'user_id' => auth()->id(),
-                'comment' => $request->comment,
+                'message' => $request->comment,
             ]);
         }
 
