@@ -129,13 +129,60 @@
         border-bottom: none;
     }
     .sidebar-section .nav-tabs .nav-link {
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1rem; /* Adjusted padding for icons */
         border: none;
         border-bottom: 2px solid transparent;
+        background-color: #f0f2f5; /* Default background for inactive tabs */
+        margin-right: 2px; /* Small gap between tabs */
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .sidebar-section .nav-tabs .nav-link.active {
         border-bottom-color: #007bff;
-        background-color: #f8f9fa;
+        background-color: #e9ecef; /* Lighter background for active tab */
+        color: #007bff; /* Active icon color */
+    }
+    .sidebar-section .nav-tabs .nav-link i {
+        font-size: 1.2rem; /* Adjust icon size */
+    }
+
+    .history-feed .history-item {
+        position: relative;
+        padding-bottom: 1rem;
+        border-left: 2px solid #e3e3e3;
+        margin-left: 0.5rem;
+    }
+    .history-feed .history-item:last-child {
+        border-left: none;
+        padding-bottom: 0;
+    }
+    .history-feed .history-item::before {
+        content: '';
+        position: absolute;
+        left: -7px; /* Adjust to center on the line */
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #007bff;
+    }
+    .history-feed .history-user {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-left: 1.5rem;
+    }
+    .history-feed .history-date {
+        font-weight: normal;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-left: 0.5rem;
+    }
+    .history-feed .history-body {
+        margin-left: 1.5rem;
+        font-size: 0.9rem;
+        color: #333;
     }
 
 </style>
@@ -235,8 +282,9 @@
                 <div class="task-section sidebar-section">
                     <div class="card-header">
                         <ul class="nav nav-tabs nav-tabs-solid nav-justified">
-                            <li class="nav-item"><a class="nav-link active" href="#task-details" data-bs-toggle="tab">{{ __('Details') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#task-attachments" data-bs-toggle="tab">{{ __('Attachments') }}</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="#task-details" data-bs-toggle="tab" title="{{ __('Details') }}"><i class="fa fa-clipboard-list"></i></a></li>
+                            <li class="nav-item"><a class="nav-link" href="#task-attachments" data-bs-toggle="tab" title="{{ __('Attachments') }}"><i class="fa fa-paperclip"></i></a></li>
+                            <li class="nav-item"><a class="nav-link" href="#task-history" data-bs-toggle="tab" title="{{ __('History') }}"><i class="fa fa-history"></i></a></li>
                         </ul>
                     </div>
                     <div class="task-section-body">
@@ -282,6 +330,31 @@
                                 <div class="input-group mt-3">
                                     <input type="file" class="form-control" name="file">
                                     <button type="submit" name="action" value="upload_file" class="btn btn-primary">{{ __('Upload') }}</button>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="task-history">
+                                <div class="history-feed">
+                                    @forelse($task->history as $activity)
+                                        <div class="history-item">
+                                            <div class="history-user">
+                                                {{ $activity->user->fullname ?? 'System' }}
+                                                <span class="history-date">{{ $activity->created_at->diffForHumans() }}</span>
+                                            </div>
+                                            <div class="history-body">
+                                                @if($activity->field == 'title')
+                                                    changed the title from <strong>{{ $activity->old_value }}</strong> to <strong>{{ $activity->new_value }}</strong>
+                                                @elseif($activity->field == 'description')
+                                                    updated the description.
+                                                @elseif($activity->field == 'state')
+                                                    moved this task from <strong>{{ $activity->old_value }}</strong> to <strong>{{ $activity->new_value }}</strong>
+                                                @else
+                                                    updated the {{ $activity->field }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="text-muted">{{ __('No history found.') }}</p>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>

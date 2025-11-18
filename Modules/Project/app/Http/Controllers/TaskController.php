@@ -14,6 +14,8 @@ use Modules\Project\Models\Project;
 use Modules\Project\Models\TaskFollower;
 use Modules\Project\Models\SubTask;
 use Modules\Project\Models\TaskComment;
+use Modules\Project\Models\ProjectTaskBoard;
+use Modules\Project\Models\TaskHistory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class TaskController extends Controller
@@ -56,6 +58,7 @@ class TaskController extends Controller
         $pageTitle = __('Task Detail');
         $taskBoards = $task->project->taskBoard;
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
+        $task->load('history.user'); // Eager load history and the user who made the change
         return view('project::tasks.show', compact('task', 'pageTitle', 'taskBoards', 'employees'));
     }
 
@@ -95,8 +98,34 @@ class TaskController extends Controller
             'priority' => 'sometimes|required|string|in:low,medium,high',
             'followers' => 'sometimes|array',
             'followers.*' => 'integer|exists:users,id',
-            'description' => 'sometimes|required|string',
+            'description' => 'sometimes|nullable|string',
         ]);
+
+        // Track name change
+        if ($request->has('name') && $task->name != $request->name) {
+            TaskHistory::create([
+                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'title',
+                'old_value' => $task->name, 'new_value' => $request->name
+            ]);
+        }
+
+        // Track description change
+        if ($request->has('description') && $task->description != $request->description) {
+            TaskHistory::create([
+                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'description',
+                'old_value' => 'Previous description', 'new_value' => 'New description'
+            ]);
+        }
+
+        // Track state change
+        if ($request->has('project_task_board_id') && $task->project_task_board_id != $request->project_task_board_id) {
+            $old_board_name = $task->taskBoard->name ?? 'N/A';
+            $new_board_name = ProjectTaskBoard::find($request->project_task_board_id)->name ?? 'N/A';
+            TaskHistory::create([
+                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'state',
+                'old_value' => $old_board_name, 'new_value' => $new_board_name
+            ]);
+        }
 
         $task->update($request->except('followers'));
 
