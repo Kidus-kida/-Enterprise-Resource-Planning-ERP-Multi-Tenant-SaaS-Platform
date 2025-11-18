@@ -260,7 +260,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">{{ __('Assigned To') }}</label>
-                                    <select class="form-select" name="followers[]" multiple onchange="this.form.submit()">
+                                    <select id="assigned_to_select" class="form-control" name="followers[]" multiple>
                                         @foreach($employees as $employee)
                                             <option value="{{ $employee->id }}" @if($task->followers->contains('user_id', $employee->id)) selected @endif>{{ $employee->fullname }}</option>
                                         @endforeach
@@ -326,5 +326,16 @@
 
         form.submit();
     }
+
+    $(document).ready(function() {
+        $('#assigned_to_select').select2({
+            placeholder: 'Select followers',
+            width: '100%'
+        });
+
+        $('#assigned_to_select').on('change', function (e) {
+            $(this).closest('form').submit();
+        });
+    });
 </script>
 @endpush
