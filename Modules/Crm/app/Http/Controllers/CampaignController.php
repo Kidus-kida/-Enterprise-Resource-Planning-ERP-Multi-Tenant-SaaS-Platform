@@ -11,91 +11,70 @@ use Modules\Crm\Models\Campaign;
 
 class CampaignController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+  
     public function index(Request $request)
     {
+        $campaigns = Campaign::latest()->paginate(10);
         $pageTitle = __('Campaigns');
-        if($request->ajax()){
-            $categories = Campaign::get();
-            return DataTables::of($categories)
-                ->addIndexColumn()
-                ->addColumn('action',function ($row){
-                    $id = $row->id;
-                    return view('crm::categories.actions',compact(
-                        'id'
-                    ));
-                })
-                ->rawColumns(['action'])
-                ->make();
-        }
-        return view('crm::categories.index',compact(
-            'pageTitle'
-        ));
+        return view('crm::campaigns.index', compact('campaigns', 'pageTitle'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+  
     public function create()
     {
-        return view('crm::categories.create');
+        return view('crm::campaigns.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+ 
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required'
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'status' => 'required|in:draft,active,paused,completed'
         ]);
-        Campaign::create([
-            'title' => $request->title,
-            'description' => $request->description
-        ]);
+        
+        Campaign::create($request->all());
         $notification = notify(__("Campaign has been created"));
         return back()->with($notification);
     }
 
    
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Campaign $category, $id)
+   
+    public function show($id)
     {
-        $category = Campaign::findOrFail($id);
-        return view('crm::categories.edit',compact(
-            'category'
-        ));
+        $campaign = Campaign::findOrFail(decrypt($id));
+        $pageTitle = $campaign->title;
+        return view('crm::campaigns.show', compact('campaign', 'pageTitle'));
+    }
+    
+    public function edit(Campaign $campaign)
+    {
+        return view('crm::campaigns.edit', compact('campaign'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+  
+    public function update(Request $request, Campaign $campaign)
     {
-        
         $request->validate([
-            'title' => 'required',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'status' => 'required|in:draft,active,paused,completed'
         ]);
-        $category = Campaign::findOrFail($id);
-        $category->update([
-            'title' => $request->title,
-            'description' => $request->description
-        ]);
+        
+        $campaign->update($request->all());
         $notification = notify(__('Campaign has been updated'));
         return back()->with($notification);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Campaign $category, $id)
+   
+    public function destroy(Campaign $campaign)
     {
-        $category = Campaign::findOrFail($id);
-        $category->delete();
+        $campaign->delete();
         $notification = notify(__("Campaign has been deleted"));
         return back()->with($notification);
     }

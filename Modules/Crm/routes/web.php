@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Crm\Http\Controllers\CampaignController;
+use Modules\Crm\Http\Controllers\LeadController;
+use Modules\Crm\Http\Controllers\FollowUpController;
+use Modules\Crm\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +19,7 @@ use Modules\Crm\Http\Controllers\CampaignController;
 
 Route::group(['prefix' => 'crm','middleware' => ['auth']], function () {
     Route::resource('campaigns', CampaignController::class)->names('campaigns');
+    Route::resource('leads', LeadController::class)->names('leads');
+    Route::resource('follow-ups', FollowUpController::class)->names('follow-ups');
+    Route::get('reports', [ReportController::class, 'index'])->name('crm-reports.index');
 });
