@@ -89,7 +89,7 @@
                         <div class="card panel" style="color: {{ $board->color ?? '#42a5f5' }} !important;" data-id="{{ $task->priority }}" data-task="{{ $task->id }}" data-board="{{ $board->id }}">
                             <div class="kanban-box">
                                 <div class="task-board-header">
-                                    <span class="status-title"><a href="javascript:void(0);">{{ $task->name }}</a></span>
+                                    <span class="status-title"><a href="{{ route('tasks.show', $task->id) }}">{{ $task->name }}</a></span>
                                     <div class="dropdown kanban-task-action">
                                         <a href="#" data-bs-toggle="dropdown">
                                             <i class="fa-solid fa-angle-down"></i>

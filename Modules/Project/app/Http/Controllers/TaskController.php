@@ -1,0 +1,145 @@
+<?php
+
+namespace Modules\Project\Http\Controllers;
+
+use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Modules\Project\Models\Task;
+
+use App\Models\User;
+use App\Enums\UserType;
+use Illuminate\Support\Facades\Crypt;
+use Modules\Project\Models\Project;
+use Modules\Project\Models\TaskFollower;
+use Modules\Project\Models\SubTask;
+use Modules\Project\Models\TaskComment;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+
+class TaskController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     * @return Renderable
+     */
+    public function index()
+    {
+        return view('project::index');
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     * @return Renderable
+     */
+    public function create()
+    {
+        return view('project::create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     * @param Request $request
+     * @return Renderable
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Show the specified resource.
+     * @param int $id
+     * @return Renderable
+     */
+    public function show(Task $task)
+    {
+        $pageTitle = __('Task Detail');
+        $taskBoards = $task->project->taskBoard;
+        $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
+        return view('project::tasks.show', compact('task', 'pageTitle', 'taskBoards', 'employees'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * @param int $id
+     * @return Renderable
+     */
+    public function edit($id)
+    {
+        return view('project::edit');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     * @param Request $request
+     * @param Task $task
+     * @return Renderable
+     */
+    public function update(Request $request, Task $task)
+    {
+        if ($request->has('delete_file_id')) {
+            $file = Media::find($request->delete_file_id);
+            $file->delete();
+            return redirect()->route('tasks.show', $task->id);
+        }
+
+        if ($request->has('subtask_id')) {
+            $subtask = SubTask::find($request->subtask_id);
+            $subtask->update(['status' => $request->subtask_status]);
+            return redirect()->route('tasks.show', $task->id);
+        }
+
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'project_task_board_id' => 'sometimes|required|integer|exists:project_task_boards,id',
+            'priority' => 'sometimes|required|string|in:low,medium,high',
+            'followers' => 'sometimes|array',
+            'followers.*' => 'integer|exists:users,id',
+            'description' => 'sometimes|required|string',
+        ]);
+
+        $task->update($request->except('followers'));
+
+        if ($request->has('followers')) {
+            $task->followers()->delete();
+            foreach ($request->followers as $followerId) {
+                TaskFollower::create([
+                    'task_id' => $task->id,
+                    'user_id' => $followerId,
+                ]);
+            }
+        }
+
+        if ($request->has('subtask_name')) {
+            SubTask::create([
+                'task_id' => $task->id,
+                'name' => $request->subtask_name,
+                'status' => 'incomplete',
+            ]);
+        }
+
+        if ($request->hasFile('file')) {
+            $task->addMediaFromRequest('file')->toMediaCollection('task_files');
+        }
+
+        if ($request->has('comment')) {
+            TaskComment::create([
+                'task_id' => $task->id,
+                'user_id' => auth()->id(),
+                'comment' => $request->comment,
+            ]);
+        }
+
+        return redirect()->route('tasks.show', $task->id);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * @param int $id
+     * @return Renderable
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}
