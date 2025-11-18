@@ -156,11 +156,12 @@
 @push('page-scripts')
 <script src="https://cdn.ckeditor.com/ckeditor5/35.3.2/classic/ckeditor.js"></script>
 <script>
-    ClassicEditor
-        .create( document.querySelector( '#editor' ) )
-        .catch( error => {
-            console.error( error );
-        } );
+            // The CKEditor is initialized by the global app.js file
+            // ClassicEditor
+            //     .create(document.querySelector('#editor'))
+            //     .catch(error => {
+            //         console.error(error);
+            //     });
 
     function updateSubtaskStatus(subtaskId, isChecked) {
         let form = document.querySelector('form');
