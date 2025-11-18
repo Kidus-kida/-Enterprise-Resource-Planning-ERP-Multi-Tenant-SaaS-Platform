@@ -23,8 +23,10 @@ class ProjectTaskBoardController extends Controller
         $pageTitle = __('Taskboard');
         $project = Project::findOrFail(Crypt::decrypt($id));
         $taskBoards = $project->taskBoard()->orderBy('priority')->get();
-        return view('project::tasks.index',compact(
-            'project','pageTitle','taskBoards'
+        return view('project::tasks.index', compact(
+            'project',
+            'pageTitle',
+            'taskBoards'
         ));
     }
 
@@ -33,7 +35,7 @@ class ProjectTaskBoardController extends Controller
      */
     public function index(string $id)
     {
-        
+
     }
 
     /**
@@ -44,8 +46,10 @@ class ProjectTaskBoardController extends Controller
         $project_id = $project->id;
         $board = $request->board;
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
-        return view('project::tasks.create',compact(
-            'project_id','board','employees'
+        return view('project::tasks.create', compact(
+            'project_id',
+            'board',
+            'employees'
         ));
     }
 
@@ -71,8 +75,8 @@ class ProjectTaskBoardController extends Controller
             'created_by' => auth()->user()->id
         ]);
         $team = $request->team;
-        if(!empty($team) && count($team) > 0){
-            foreach($team as $member){
+        if (!empty($team) && count($team) > 0) {
+            foreach ($team as $member) {
                 TaskFollower::create([
                     'task_id' => $task->id,
                     'user_id' => $member
@@ -98,8 +102,9 @@ class ProjectTaskBoardController extends Controller
     {
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
 
-        return view('project::tasks.edit',compact(
-            'task','employees'
+        return view('project::tasks.edit', compact(
+            'task',
+            'employees'
         ));
     }
 
@@ -129,8 +134,9 @@ class ProjectTaskBoardController extends Controller
     }
 
 
-    public function draggable(Request $request){
-        if($request->ajax()){
+    public function draggable(Request $request)
+    {
+        if ($request->ajax()) {
             $task = Task::find($request->task);
             $task->update([
                 'project_task_board_id' => $request->board ?? $task->project_task_board_id,
