@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @push('page-styles')
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <style>
         .kanban-list {
             min-width: 300px; /* Ensure lists have a minimum width */
@@ -106,7 +105,7 @@
 
         <div class="row board-view-header mb-3">
             <div class="col-12 col-md-8">
-                <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET" class="d-flex gap-2">
+                <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET" class="d-flex gap-2 align-items-center">
                     <div style="min-width: 200px;">
                         <select name="person" id="person-filter-select" class="form-control">
                             <option value="">{{ __('All People') }}</option>
@@ -115,8 +114,11 @@
                             @endforeach
                         </select>
                     </div>
-                    <div style="min-width: 200px;">
-                        <input type="text" name="date_range" class="form-control" id="task-date-range" value="{{ request('date_range') }}" placeholder="Select Date Range">
+                    <div style="min-width: 150px;">
+                        <input type="text" name="start_date" class="form-control datetimepicker" value="{{ request('start_date') }}" placeholder="Start Date">
+                    </div>
+                    <div style="min-width: 150px;">
+                        <input type="text" name="end_date" class="form-control datetimepicker" value="{{ request('end_date') }}" placeholder="End Date">
                     </div>
                     <button type="submit" class="btn btn-primary">{{ __('Filter') }}</button>
                     <a href="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" class="btn btn-outline-secondary">{{ __('Clear') }}</a>
@@ -168,16 +170,19 @@
                                     });
                                 }
 
-                                if (request('date_range')) {
-                                    $dates = explode(' - ', request('date_range'));
-                                    if (count($dates) == 2) {
-                                        $startDate = \Carbon\Carbon::parse($dates[0])->startOfDay();
-                                        $endDate = \Carbon\Carbon::parse($dates[1])->endOfDay();
-                                        $taskQuery->where(function($q) use ($startDate, $endDate) {
-                                            $q->whereBetween('startDate', [$startDate, $endDate])
-                                              ->orWhereBetween('endDate', [$startDate, $endDate]);
-                                        });
-                                    }
+                                if (request('start_date') && request('end_date')) {
+                                    $startDate = \Carbon\Carbon::parse(request('start_date'))->startOfDay();
+                                    $endDate = \Carbon\Carbon::parse(request('end_date'))->endOfDay();
+                                    $taskQuery->where(function($q) use ($startDate, $endDate) {
+                                        $q->whereBetween('startDate', [$startDate, $endDate])
+                                          ->orWhereBetween('endDate', [$startDate, $endDate]);
+                                    });
+                                } elseif (request('start_date')) {
+                                    $startDate = \Carbon\Carbon::parse(request('start_date'))->startOfDay();
+                                    $taskQuery->where('endDate', '>=', $startDate);
+                                } elseif (request('end_date')) {
+                                    $endDate = \Carbon\Carbon::parse(request('end_date'))->endOfDay();
+                                    $taskQuery->where('startDate', '<=', $endDate);
                                 }
 
                                 $tasks = $taskQuery->get();
@@ -289,29 +294,14 @@
             });
         }
     </script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(function() {
-            $('#task-date-range').daterangepicker({
-                autoUpdateInput: false,
-                locale: {
-                    cancelLabel: 'Clear'
-                }
-            });
-
-            $('#task-date-range').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-            });
-
-            $('#task-date-range').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-
             // Initialize Select2 for person filter
             $('#person-filter-select').select2({
                 placeholder: 'Select a person',
-                allowClear: true, // Allows clearing the selection
-                width: '100%'
+                allowClear: true,
+                width: '100%',
+                minimumResultsForSearch: 0 // Ensure search is enabled
             });
         });
     </script>
