@@ -47,6 +47,11 @@ class Task extends Model implements HasMedia
     {
         return $this->hasMany(SubTask::class);
     }
+
+    public function history()
+    {
+        return $this->hasMany(TaskHistory::class)->latest();
+    }
     
     
 }

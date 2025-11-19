@@ -16,9 +16,13 @@ use Modules\Project\Http\Controllers\ProjectTaskBoardController;
 |
 */
 
+use Modules\Project\Http\Controllers\TaskController;
+
 Route::group([], function () {
     Route::resource('task-boards', TaskBoardController::class);
     Route::resource('projects', ProjectController::class);
+    Route::resource('tasks', TaskController::class);
+    Route::post('tasks/upload-image', [TaskController::class, 'uploadImage'])->name('tasks.upload-image');
     Route::get('project-list', [ProjectController::class,'list'])->name('projects.list');
     Route::get('project-taskboard/{id}', [ProjectTaskBoardController::class, 'board'])->name('project.taskboard');
     Route::get('project-tasks/{project}/create', [ProjectTaskBoardController::class, 'create'])->name('project-tasks.create');
