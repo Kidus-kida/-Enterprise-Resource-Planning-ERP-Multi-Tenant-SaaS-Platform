@@ -23,10 +23,12 @@ class ProjectTaskBoardController extends Controller
         $pageTitle = __('Taskboard');
         $project = Project::findOrFail(Crypt::decrypt($id));
         $taskBoards = $project->taskBoard()->orderBy('priority')->get();
+        $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
         return view('project::tasks.index', compact(
             'project',
             'pageTitle',
-            'taskBoards'
+            'taskBoards',
+            'employees'
         ));
     }
 

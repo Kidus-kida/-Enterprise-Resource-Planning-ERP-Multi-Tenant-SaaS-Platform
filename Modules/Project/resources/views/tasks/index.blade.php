@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @push('page-styles')
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <style>
         .kanban-list {
             min-width: 300px; /* Ensure lists have a minimum width */
@@ -103,40 +104,25 @@
         </x-breadcrumb>
         <!-- /Page Header -->
 
-        <div class="row board-view-header">
-            <div class="col-4">
-                <div class="pro-teams">
-                    <div class="pro-team-lead">
-                        <h4>{{ __('Lead') }}</h4>
-                        <div class="avatar-group">
-                            <div class="avatar">
-                                <img class="avatar-img rounded-circle border border-white"
-                                    src="{{ !empty($project->leader->avatar) ? uploadedAsset($project->leader->avatar, 'users') : asset('images/user.jpg') }}"
-                                    alt="{{ __('avatar') }}">
-                            </div>
-                        </div>
+        <div class="row board-view-header mb-3">
+            <div class="col-12 col-md-8">
+                <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET" class="d-flex gap-2">
+                    <div style="min-width: 200px;">
+                        <select name="person" id="person-filter-select" class="form-control">
+                            <option value="">{{ __('All People') }}</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" @if(request('person') == $employee->id) selected @endif>{{ $employee->fullname }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    @php
-                        $projectTeam = $project->team;
-                    @endphp
-                    @if (!empty($projectTeam) && $projectTeam->count())
-                        <div class="pro-team-members">
-                            <h4>{{ __('Team') }}</h4>
-                            <div class="avatar-group">
-                                @foreach ($projectTeam as $member)
-                                    <div class="avatar">
-                                        <img class="avatar-img rounded-circle border border-white"
-                                            src="{{ !empty($member->user->avatar) ? uploadedAsset($member->user->avatar, 'users') : asset('images/user.jpg') }}"
-                                            alt="{{ $member->user->fullname . ' avatar' }}">
-                                    </div>
-                                @endforeach
-
-                            </div>
-                        </div>
-                    @endif
-                </div>
+                    <div style="min-width: 200px;">
+                        <input type="text" name="date_range" class="form-control" id="task-date-range" value="{{ request('date_range') }}" placeholder="Select Date Range">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ __('Filter') }}</button>
+                    <a href="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" class="btn btn-outline-secondary">{{ __('Clear') }}</a>
+                </form>
             </div>
-            <div class="col-8 text-end">
+            <div class="col-12 col-md-4 text-end">
                 <a href="javascript:void(0)" class="btn btn-white float-end ms-2"
                     data-url="{{ route('task-boards.create', ['project_id' => $project->id]) }}" data-ajax-modal="true"
                     data-size="md" data-title="Add Task Board">
@@ -174,7 +160,27 @@
                                 </div>
                             </div>
                             @php
-                                $tasks = $board->tasks()->orderBy('priority')->get()
+                                $taskQuery = $board->tasks()->orderBy('priority');
+
+                                if (request('person')) {
+                                    $taskQuery->whereHas('followers', function($q) {
+                                        $q->where('user_id', request('person'));
+                                    });
+                                }
+
+                                if (request('date_range')) {
+                                    $dates = explode(' - ', request('date_range'));
+                                    if (count($dates) == 2) {
+                                        $startDate = \Carbon\Carbon::parse($dates[0])->startOfDay();
+                                        $endDate = \Carbon\Carbon::parse($dates[1])->endOfDay();
+                                        $taskQuery->where(function($q) use ($startDate, $endDate) {
+                                            $q->whereBetween('startDate', [$startDate, $endDate])
+                                              ->orWhereBetween('endDate', [$startDate, $endDate]);
+                                        });
+                                    }
+                                }
+
+                                $tasks = $taskQuery->get();
                             @endphp
                             <div class="kanban-wrap" data-board="{{ $board->id }}">
                                 @foreach ($tasks as $task)
@@ -282,6 +288,32 @@
                 },
             });
         }
+    </script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script>
+        $(function() {
+            $('#task-date-range').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear'
+                }
+            });
+
+            $('#task-date-range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#task-date-range').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+
+            // Initialize Select2 for person filter
+            $('#person-filter-select').select2({
+                placeholder: 'Select a person',
+                allowClear: true, // Allows clearing the selection
+                width: '100%'
+            });
+        });
     </script>
     <!-- /Page Js -->
 @endpush
