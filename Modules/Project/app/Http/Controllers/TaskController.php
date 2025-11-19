@@ -14,6 +14,7 @@ use Modules\Project\Models\Project;
 use Modules\Project\Models\TaskFollower;
 use Modules\Project\Models\SubTask;
 use Modules\Project\Models\TaskComment;
+use Illuminate\Support\Facades\Storage;
 use Modules\Project\Models\ProjectTaskBoard;
 use Modules\Project\Models\TaskHistory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -160,6 +161,38 @@ class TaskController extends Controller
         }
 
         return redirect()->route('tasks.show', $task->id);
+    }
+
+    public function uploadImage(Request $request)
+    {
+        try {
+            $request->validate([
+                'upload' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+
+            $path = $request->file('upload')->store('public/uploads');
+            $url = Storage::url($path);
+
+            return response()->json([
+                'url' => $url
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => [
+                    'message' => $e->errors()['upload'][0] ?? 'A validation error occurred.'
+                ]
+            ], 422);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error('CKEditor image upload failed: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => [
+                    'message' => 'The image upload failed on the server. Please check server logs.'
+                ]
+            ], 500);
+        }
     }
 
     /**
