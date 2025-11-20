@@ -19,6 +19,9 @@ use Modules\Project\Models\ProjectTaskBoard;
 use Modules\Project\Models\TaskHistory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+use Illuminate\Support\Facades\Mail;
+use Modules\Project\Mail\UserAssignedToTask;
+
 class TaskController extends Controller
 {
     /**
@@ -105,16 +108,22 @@ class TaskController extends Controller
         // Track name change
         if ($request->has('name') && $task->name != $request->name) {
             TaskHistory::create([
-                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'title',
-                'old_value' => $task->name, 'new_value' => $request->name
+                'task_id' => $task->id,
+                'user_id' => auth()->id(),
+                'field' => 'title',
+                'old_value' => $task->name,
+                'new_value' => $request->name
             ]);
         }
 
         // Track description change
         if ($request->has('description') && $task->description != $request->description) {
             TaskHistory::create([
-                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'description',
-                'old_value' => 'Previous description', 'new_value' => 'New description'
+                'task_id' => $task->id,
+                'user_id' => auth()->id(),
+                'field' => 'description',
+                'old_value' => 'Previous description',
+                'new_value' => 'New description'
             ]);
         }
 
@@ -123,20 +132,37 @@ class TaskController extends Controller
             $old_board_name = $task->taskBoard->name ?? 'N/A';
             $new_board_name = ProjectTaskBoard::find($request->project_task_board_id)->name ?? 'N/A';
             TaskHistory::create([
-                'task_id' => $task->id, 'user_id' => auth()->id(), 'field' => 'state',
-                'old_value' => $old_board_name, 'new_value' => $new_board_name
+                'task_id' => $task->id,
+                'user_id' => auth()->id(),
+                'field' => 'state',
+                'old_value' => $old_board_name,
+                'new_value' => $new_board_name
             ]);
         }
 
         $task->update($request->except('followers'));
 
         if ($request->has('followers')) {
-            $task->followers()->delete();
-            foreach ($request->followers as $followerId) {
+            $existingFollowerIds = $task->followers()->pluck('user_id')->toArray();
+            $newFollowerIds = $request->followers;
+
+            // Add new followers
+            $addedFollowerIds = array_diff($newFollowerIds, $existingFollowerIds);
+            foreach ($addedFollowerIds as $followerId) {
                 TaskFollower::create([
                     'task_id' => $task->id,
                     'user_id' => $followerId,
                 ]);
+
+                $user = User::find($followerId);
+
+                Mail::to($user)->send(new UserAssignedToTask($task, $user));
+            }
+
+            // Remove old followers
+            $removedFollowerIds = array_diff($existingFollowerIds, $newFollowerIds);
+            if (!empty($removedFollowerIds)) {
+                $task->followers()->whereIn('user_id', $removedFollowerIds)->delete();
             }
         }
 
