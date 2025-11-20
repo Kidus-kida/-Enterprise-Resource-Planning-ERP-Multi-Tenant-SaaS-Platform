@@ -193,6 +193,11 @@
                                     <div class="kanban-box">
                                         <div class="task-card-header d-flex justify-content-between align-items-start">
                                             <h6 class="task-title flex-grow-1 mb-0"><a href="{{ route('tasks.show', $task->id) }}">{{ $task->name }}</a></h6>
+                                            <div class="d-flex flex-wrap mt-2">
+                                                @foreach($task->labels as $label)
+                                                    <span class="badge me-1" style="background-color: {{ $label->color }}">{{ $label->name }}</span>
+                                                @endforeach
+                                            </div>
                                             <div class="dropdown kanban-task-action">
                                                 <a href="#" data-bs-toggle="dropdown">
                                                     <i class="fa-solid fa-ellipsis-vertical"></i>

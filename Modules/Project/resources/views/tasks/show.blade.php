@@ -148,6 +148,12 @@
                                             @foreach($employees as $employee) <option value="{{ $employee->id }}" @if($task->followers->contains('user_id', $employee->id)) selected @endif>{{ $employee->fullname }}</option> @endforeach
                                         </select>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ __('Labels') }}</label>
+                                        <select id="labels_select" class="form-control" name="labels[]" multiple>
+                                            @foreach($labels as $label) <option value="{{ $label->name }}" @if($task->labels->contains('id', $label->id)) selected @endif>{{ $label->name }}</option> @endforeach
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="tab-pane" id="task-attachments">
                                     <ul class="list-unstyled">
@@ -215,6 +221,15 @@
             width: '100%'
         });
         $('#assigned_to_select').on('change', function (e) {
+            $(this).closest('form').submit();
+        });
+
+        $('#labels_select').select2({
+            placeholder: 'Select labels',
+            width: '100%',
+            tags: true
+        });
+        $('#labels_select').on('change', function (e) {
             $(this).closest('form').submit();
         });
 

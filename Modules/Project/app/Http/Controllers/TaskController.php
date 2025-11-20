@@ -22,6 +22,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\Mail;
 use Modules\Project\Mail\UserAssignedToTask;
 
+use App\Models\Label;
+
 class TaskController extends Controller
 {
     /**
@@ -62,8 +64,9 @@ class TaskController extends Controller
         $pageTitle = __('Task Detail');
         $taskBoards = $task->project->taskBoard;
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
+        $labels = Label::all();
         $task->load('history.user'); // Eager load history and the user who made the change
-        return view('project::tasks.show', compact('task', 'pageTitle', 'taskBoards', 'employees'));
+        return view('project::tasks.show', compact('task', 'pageTitle', 'taskBoards', 'employees', 'labels'));
     }
 
     /**
@@ -140,7 +143,7 @@ class TaskController extends Controller
             ]);
         }
 
-        $task->update($request->except('followers'));
+        $task->update($request->except(['followers', 'labels']));
 
         if ($request->has('followers')) {
             $existingFollowerIds = $task->followers()->pluck('user_id')->toArray();
@@ -164,6 +167,18 @@ class TaskController extends Controller
             if (!empty($removedFollowerIds)) {
                 $task->followers()->whereIn('user_id', $removedFollowerIds)->delete();
             }
+        }
+        
+        if ($request->has('labels')) {
+            $labels = [];
+            foreach ($request->labels as $labelName) {
+                $label = Label::firstOrCreate(
+                    ['name' => $labelName],
+                    ['color' => sprintf('#%06X', mt_rand(0, 0xFFFFFF))]
+                );
+                $labels[] = $label->id;
+            }
+            $task->labels()->sync($labels);
         }
 
         if ($request->has('subtask_name')) {
