@@ -14,7 +14,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card p-3">
+            <div class="card ">
                 <div class="card-header">
                     <h4 class="card-title">{{ __('Leads') }}</h4>
                     <a href="javascript:void(0)" class="btn btn-primary float-end" 
@@ -23,7 +23,7 @@
                         <i class="fa fa-plus"></i> {{ __('Add Lead') }}
                     </a>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body ">
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
