@@ -1,6 +1,7 @@
 <form action="{{ route('leads.store') }}" method="POST">
     @csrf
-    <div class="row">
+   <div class="modal-body p-3">
+        <div class="row g-3">
         <div class="col-md-6">
             <div class="form-group">
                 <label>{{ __('Name') }} <span class="text-danger">*</span></label>
@@ -54,4 +55,5 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
         <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
     </div>
+   </div>
 </form>
