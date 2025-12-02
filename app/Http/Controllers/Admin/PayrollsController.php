@@ -32,10 +32,32 @@ class PayrollsController extends Controller
 
     public function items(){
         $pageTitle = __('Payroll Items');
-        $allowances = EmployeeAllowance::get();
-        $deductions = EmployeeDeduction::get();
+        
+        // Get all active employees
+        $employees = User::where('type', UserType::EMPLOYEE)
+            ->whereHas('employeeDetail')
+            ->where('is_active', true)
+            ->with('employeeDetail')
+            ->get();
+        
+        // Get unique allowance types, default to "Transport Allowance" if none exist
+        $allowanceTypes = EmployeeAllowance::select('name')->distinct()->pluck('name');
+        if ($allowanceTypes->isEmpty()) {
+            $allowanceTypes = collect(['Transport Allowance']);
+        }
+        
+        // Get unique deduction types, default to "Loan" if none exist
+        $deductionTypes = EmployeeDeduction::select('name')->distinct()->pluck('name');
+        if ($deductionTypes->isEmpty()) {
+            $deductionTypes = collect(['Loan']);
+        }
+        
+        // Get all allowances and deductions
+        $allowances = EmployeeAllowance::all();
+        $deductions = EmployeeDeduction::all();
+        
         return view('pages.payroll.items',compact(
-            'pageTitle','allowances','deductions'
+            'pageTitle','employees','allowanceTypes','deductionTypes','allowances','deductions'
         ));
     }
 

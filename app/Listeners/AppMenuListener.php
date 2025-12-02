@@ -118,6 +118,10 @@ class AppMenuListener
                             Link::toRoute('payroll.items', __('Payroll Items'))->addClass(route_is(['payroll.items']) ? 'active' : '')
                         )
                         ->addIfCan(
+                            "view-payrolls",
+                            Link::toRoute('payroll.processing.index', __('Payroll Processing'))->addClass(route_is(['payroll.processing.*']) ? 'active' : '')
+                        )
+                        ->addIfCan(
                             "view-payslips",
                             Link::toRoute('payslips.index', __('Payslip'))->addClass(route_is(['payslips.*']) ? 'active' : '')
                         )

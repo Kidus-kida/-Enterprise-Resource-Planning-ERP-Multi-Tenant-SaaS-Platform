@@ -90,4 +90,43 @@ class DeductionsController extends Controller
         $notification = notify(__('Deduction has been deleted'));
         return back()->with($notification);
     }
+
+    /**
+     * Update or create deduction via AJAX for inline editing
+     */
+    public function updateOrCreate(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee_details,id',
+            'name' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        EmployeeDeduction::updateOrCreate(
+            [
+                'employee_detail_id' => $request->employee_id,
+                'name' => $request->name
+            ],
+            ['amount' => $request->amount]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Deduction updated successfully']);
+    }
+
+    /**
+     * Delete deduction via AJAX (when cell is cleared)
+     */
+    public function deleteByEmployeeAndName(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee_details,id',
+            'name' => 'required|string',
+        ]);
+
+        EmployeeDeduction::where('employee_detail_id', $request->employee_id)
+            ->where('name', $request->name)
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Deduction deleted successfully']);
+    }
 }

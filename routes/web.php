@@ -86,8 +86,22 @@ Route::group(['middleware' => 'signed'], function() {
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
     Route::group(['prefix' => 'payroll'], function () {
         Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
+        
+        // Payroll Processing
+        Route::get('processing', [\App\Http\Controllers\PayrollProcessingController::class, 'index'])->name('payroll.processing.index');
+        Route::get('processing/create', [\App\Http\Controllers\PayrollProcessingController::class, 'create'])->name('payroll.processing.create');
+        Route::post('processing/select-employees', [\App\Http\Controllers\PayrollProcessingController::class, 'selectEmployees'])->name('payroll.processing.select-employees');
+        Route::post('processing/store', [\App\Http\Controllers\PayrollProcessingController::class, 'store'])->name('payroll.processing.store');
+        Route::get('processing/{batch}', [\App\Http\Controllers\PayrollProcessingController::class, 'show'])->name('payroll.processing.show');
+        Route::get('processing/{batch}/export', [\App\Http\Controllers\PayrollProcessingController::class, 'export'])->name('payroll.processing.export');
+        Route::post('processing/{batch}/approve', [\App\Http\Controllers\PayrollProcessingController::class, 'approve'])->name('payroll.processing.approve');
+        
         Route::resource('allowances', AllowancesController::class)->except(['show']);
+        Route::post('allowances/update-or-create', [AllowancesController::class, 'updateOrCreate'])->name('allowances.updateOrCreate');
+        Route::delete('allowances/delete-by-employee', [AllowancesController::class, 'deleteByEmployeeAndName'])->name('allowances.deleteByEmployee');
         Route::resource('deductions', DeductionsController::class)->except(['show']);
+        Route::post('deductions/update-or-create', [DeductionsController::class, 'updateOrCreate'])->name('deductions.updateOrCreate');
+        Route::delete('deductions/delete-by-employee', [DeductionsController::class, 'deleteByEmployeeAndName'])->name('deductions.deleteByEmployee');
         Route::resource('payslips', PayrollsController::class);
     });
 
@@ -142,6 +156,9 @@ Route::group(['middleware' => 'signed'], function() {
         Route::post('salary', [SettingsController::class, 'updateSalarySettings'])->name('settings.salary.update');
         Route::get('mail', [SettingsController::class, 'email'])->name('settings.mail');
         Route::post('mail', [SettingsController::class, 'updateEmail'])->name('settings.mail.update');
+        Route::get('payroll', [SettingsController::class, 'payroll'])->name('settings.payroll');
+        Route::post('payroll', [SettingsController::class, 'updatePayrollSettings'])->name('settings.payroll.update');
+        Route::post('payroll/tax-brackets', [SettingsController::class, 'updateTaxBrackets'])->name('settings.payroll.tax-brackets.update');
     });
 
     // tax calculation
