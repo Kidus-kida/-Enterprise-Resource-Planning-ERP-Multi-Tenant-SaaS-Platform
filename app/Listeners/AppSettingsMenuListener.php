@@ -44,6 +44,10 @@ class AppSettingsMenuListener
             ->add(
                 Link::toRoute('app.logs', '<i class="la la-warning"></i> <span>' . ("App Logs") . '</span>')->setActive(route_is('app.logs'))
             )
+            ->add(
+                Link::toRoute('payroll.tax.index', '<i class="la la-money"></i> <span>' . ("Tax  Range") . '</span>')->setActive(route_is('payroll.tax.index'))
+            )
             ;
+            
     }
 }

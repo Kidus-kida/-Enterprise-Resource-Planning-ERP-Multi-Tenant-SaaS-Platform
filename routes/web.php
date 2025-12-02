@@ -31,7 +31,7 @@ use App\Http\Controllers\LeaveRequestController;
 
 use App\Http\Controllers\AwardController;
 use App\Http\Controllers\Admin\EvaluationController;
-
+use App\Http\Controllers\TaxCalculationController;
 
 include __DIR__ . '/auth.php';
 
@@ -143,6 +143,15 @@ Route::group(['middleware' => 'signed'], function() {
         Route::get('mail', [SettingsController::class, 'email'])->name('settings.mail');
         Route::post('mail', [SettingsController::class, 'updateEmail'])->name('settings.mail.update');
     });
+
+    // tax calculation
+  Route::prefix('payroll')->group(function () {
+
+    Route::resource('tax', TaxCalculationController::class)
+        ->names('payroll.tax');
+
+});
+
 
     // awards
     Route::resource('awards', AwardController::class);
