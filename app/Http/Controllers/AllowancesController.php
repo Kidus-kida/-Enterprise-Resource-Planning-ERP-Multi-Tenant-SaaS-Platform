@@ -97,4 +97,43 @@ class AllowancesController extends Controller
         $notification = notify(__('Allowance has been deleted'));
         return back()->with($notification);
     }
+
+    /**
+     * Update or create allowance via AJAX for inline editing
+     */
+    public function updateOrCreate(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee_details,id',
+            'name' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        EmployeeAllowance::updateOrCreate(
+            [
+                'employee_detail_id' => $request->employee_id,
+                'name' => $request->name
+            ],
+            ['amount' => $request->amount]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Allowance updated successfully']);
+    }
+
+    /**
+     * Delete allowance via AJAX (when cell is cleared)
+     */
+    public function deleteByEmployeeAndName(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employee_details,id',
+            'name' => 'required|string',
+        ]);
+
+        EmployeeAllowance::where('employee_detail_id', $request->employee_id)
+            ->where('name', $request->name)
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Allowance deleted successfully']);
+    }
 }

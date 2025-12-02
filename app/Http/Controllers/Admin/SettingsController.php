@@ -226,5 +226,77 @@ class SettingsController extends Controller
         $notification = notify(__('Salary settings has been updated'));
         return back()->with($notification);
     }
+
+    /**
+     * Show payroll settings page
+     */
+    public function payroll()
+    {
+        $pageTitle = __('Payroll Settings');
+        $taxBrackets = \App\Models\PayrollTaxBracket::orderBy('order')->get();
+        
+        // Get settings or use defaults
+        $defaults = \App\Models\PayrollSetting::defaults();
+        $settings = \App\Models\PayrollSetting::all_settings();
+        $settings = array_merge($defaults, $settings);
+        
+        return view('pages.settings.payroll', compact('pageTitle', 'taxBrackets', 'settings'));
+    }
+
+    /**
+     * Update payroll settings
+     */
+    public function updatePayrollSettings(Request $request)
+    {
+        $request->validate([
+            'pension_employee_percent' => 'required|numeric|min:0|max:100',
+            'pension_employer_percent' => 'required|numeric|min:0|max:100',
+            'overtime_regular_rate' => 'required|numeric|min:1',
+            'overtime_sunday_rate' => 'required|numeric|min:1',
+            'overtime_holiday_rate' => 'required|numeric|min:1',
+            'taxable_allowance_regular' => 'required|numeric|min:0',
+            'taxable_allowance_managerial' => 'required|numeric|min:0',
+            'pay_period' => 'nullable|string',
+            'working_days_per_week' => 'nullable|numeric|min:1|max:7',
+            'working_hours_per_day' => 'nullable|numeric|min:1|max:24',
+        ]);
+        
+        // Save each setting
+        foreach ($request->except('_token', '_method') as $key => $value) {
+            \App\Models\PayrollSetting::set($key, $value);
+        }
+        
+        $notification = notify(__('Payroll settings updated successfully'));
+        return back()->with($notification);
+    }
+
+    /**
+     * Update tax brackets
+     */
+    public function updateTaxBrackets(Request $request)
+    {
+        $request->validate([
+            'brackets' => 'required|array',
+            'brackets.*.min_amount' => 'required|numeric|min:0',
+            'brackets.*.max_amount' => 'nullable|numeric',
+            'brackets.*.tax_rate' => 'required|numeric|min:0|max:100',
+        ]);
+        
+        // Delete existing brackets
+        \App\Models\PayrollTaxBracket::truncate();
+        
+        // Create new brackets
+        foreach ($request->brackets as $index => $bracket) {
+            \App\Models\PayrollTaxBracket::create([
+                'min_amount' => $bracket['min_amount'],
+                'max_amount' => $bracket['max_amount'] ?? null,
+                'tax_rate' => $bracket['tax_rate'],
+                'order' => $index + 1,
+            ]);
+        }
+        
+        $notification = notify(__('Tax brackets updated successfully'));
+        return back()->with($notification);
+    }
     
 }
