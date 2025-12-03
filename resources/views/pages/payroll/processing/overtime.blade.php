@@ -35,6 +35,7 @@
                                         <tr>
                                             <th>{{ __('Employee') }}</th>
                                             <th>{{ __('Basic Salary') }}</th>
+                                            <th>{{ __('Working Days') }} <i class="fa fa-info-circle text-muted" data-bs-toggle="tooltip" title="Calculated from period days minus holidays and approved leaves. Sundays are counted as worked days."></i></th>
                                             <th>{{ __('Regular OT (Hours)') }} <small class="text-muted">x{{ \App\Models\PayrollSetting::get('overtime_regular_rate', 1.5) }}</small></th>
                                             <th>{{ __('Sunday OT (Hours)') }} <small class="text-muted">x{{ \App\Models\PayrollSetting::get('overtime_sunday_rate', 2.0) }}</small></th>
                                             <th>{{ __('Holiday OT (Hours)') }} <small class="text-muted">x{{ \App\Models\PayrollSetting::get('overtime_holiday_rate', 2.5) }}</small></th>
@@ -52,6 +53,9 @@
                                                 </td>
                                                 <td>
                                                     {{ LocaleSettings('currency_symbol') }} {{ number_format($employee->employeeDetail->salaryDetails->base_salary ?? 0, 2) }}
+                                                </td>
+                                                <td>
+                                                    <input type="number" step="0.5" min="0" name="working_days[{{ $employee->employeeDetail->id }}]" class="form-control" value="{{ $workingDaysData[$employee->employeeDetail->id] ?? 0 }}" style="width: 80px;">
                                                 </td>
                                                 <td>
                                                     <input type="number" step="0.5" min="0" name="overtime_regular[{{ $employee->employeeDetail->id }}]" class="form-control" value="0" style="width: 100px;">

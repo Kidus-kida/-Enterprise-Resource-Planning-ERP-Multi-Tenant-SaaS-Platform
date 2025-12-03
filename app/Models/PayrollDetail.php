@@ -18,6 +18,7 @@ class PayrollDetail extends Model
         'overtime_regular_hours',
         'overtime_sunday_hours',
         'overtime_holiday_hours',
+        'working_days',
         'overtime_pay',
         'gross_salary',
         'taxable_income',
@@ -36,6 +37,7 @@ class PayrollDetail extends Model
         'overtime_regular_hours' => 'decimal:2',
         'overtime_sunday_hours' => 'decimal:2',
         'overtime_holiday_hours' => 'decimal:2',
+        'working_days' => 'decimal:2',
         'overtime_pay' => 'decimal:2',
         'gross_salary' => 'decimal:2',
         'taxable_income' => 'decimal:2',
@@ -64,9 +66,82 @@ class PayrollDetail extends Model
     }
 
     /**
+     * Calculate working days for an employee during a period
+     * Based on actual attendance records
+     * Sundays are counted as worked days (automatically added)
+     * 
+     * @param int $employeeId Employee Detail ID
+     * @param string $periodStart Start date (Y-m-d)
+     * @param string $periodEnd End date (Y-m-d)
+     * @return float Working days
+     */
+    public static function calculateWorkingDays($employeeId, $periodStart, $periodEnd)
+    {
+        $employee = EmployeeDetail::with('user')->find($employeeId);
+        if (!$employee || !$employee->user) {
+            return 0;
+        }
+
+        $userId = $employee->user->id;
+        $start = new \DateTime($periodStart);
+        $end = new \DateTime($periodEnd);
+        
+        // Get all attendance timestamps for this user within the period
+        $attendanceRecords = AttendanceTimestamp::where('user_id', $userId)
+            ->whereBetween('created_at', [$periodStart . ' 00:00:00', $periodEnd . ' 23:59:59'])
+            ->get();
+        
+        // Count unique dates when the employee attended
+        $attendedDates = [];
+        foreach ($attendanceRecords as $record) {
+            $date = \Carbon\Carbon::parse($record->created_at)->format('Y-m-d');
+            $attendedDates[$date] = true;
+        }
+        
+        // Count Sundays in the period and add them as attended days
+        $current = clone $start;
+        while ($current <= $end) {
+            $dayOfWeek = $current->format('w'); // 0 = Sunday, 6 = Saturday
+            if ($dayOfWeek == 0) { // Sunday
+                $dateStr = $current->format('Y-m-d');
+                $attendedDates[$dateStr] = true;
+            }
+            $current->modify('+1 day');
+        }
+        
+        // Subtract leave days (even if they attended, leave takes priority)
+        $leaveRequests = LeaveRequest::where('employee_id', $userId)
+            ->where('status', 'approved')
+            ->where(function($query) use ($periodStart, $periodEnd) {
+                $query->whereBetween('leave_start_date', [$periodStart, $periodEnd])
+                      ->orWhereBetween('leave_end_date', [$periodStart, $periodEnd])
+                      ->orWhere(function($q) use ($periodStart, $periodEnd) {
+                          $q->where('leave_start_date', '<=', $periodStart)
+                            ->where('leave_end_date', '>=', $periodEnd);
+                      });
+            })->get();
+        
+        $leaveDays = 0;
+        foreach ($leaveRequests as $leave) {
+            if ($leave->half_day) {
+                $leaveDays += 0.5;
+            } else {
+                $leaveStart = max(new \DateTime($leave->leave_start_date), $start);
+                $leaveEnd = min(new \DateTime($leave->leave_end_date), $end);
+                $leaveInterval = $leaveStart->diff($leaveEnd);
+                $leaveDays += $leaveInterval->days + 1;
+            }
+        }
+        
+        $workingDays = count($attendedDates) - $leaveDays;
+        
+        return max(0, $workingDays); // Ensure non-negative
+    }
+
+    /**
      * Calculate payroll for an employee
      */
-    public static function calculatePayroll($employeeId, $overtimeData = [])
+    public static function calculatePayroll($employeeId, $overtimeData = [], $workingDays = null)
     {
         $employee = EmployeeDetail::with(['user', 'allowances', 'deductions', 'salaryDetails'])->find($employeeId);
         
@@ -75,7 +150,17 @@ class PayrollDetail extends Model
         }
 
         // Get basic salary
-        $basicSalary = $employee->salaryDetails->base_salary ?? 0;
+        $baseSalary = $employee->salaryDetails->base_salary ?? 0;
+
+        // Prorate basic salary based on working days (out of 30 days expected)
+        // Use provided working_days or fallback to default calculation
+        if ($workingDays === null) {
+            $workingDaysPerWeek = PayrollSetting::get('working_days_per_week', 5);
+            $workingDays = $workingDaysPerWeek * 4; // Approximate monthly
+        }
+        
+        $expectedWorkingDays = 30; // Standard monthly working days
+        $basicSalary = ($baseSalary / $expectedWorkingDays) * $workingDays;
 
         // Get allowances
         $totalAllowances = $employee->allowances->sum('amount');
@@ -91,10 +176,9 @@ class PayrollDetail extends Model
         $nonTaxableAllowances = min($totalAllowances, $threshold);
         $taxableAllowances = max(0, $totalAllowances - $threshold);
 
-        // Calculate overtime
-        $workingDays = PayrollSetting::get('working_days_per_week', 5) * 4; // Approximate monthly
+        // Calculate overtime using base salary and expected working days
         $workingHours = PayrollSetting::get('working_hours_per_day', 8);
-        $hourlyRate = $basicSalary / ($workingDays * $workingHours);
+        $hourlyRate = $baseSalary / ($expectedWorkingDays * $workingHours);
 
         $regularHours = $overtimeData['regular'] ?? 0;
         $sundayHours = $overtimeData['sunday'] ?? 0;
@@ -108,16 +192,16 @@ class PayrollDetail extends Model
                        ($sundayHours * $hourlyRate * $sundayRate) +
                        ($holidayHours * $hourlyRate * $holidayRate);
 
-        // Calculate gross salary
+        // Calculate gross salary (using prorated basic salary)
         $grossSalary = $basicSalary + $totalAllowances + $overtimePay;
 
-        // Calculate taxable income
+        // Calculate taxable income (using prorated basic salary)
         $taxableIncome = $basicSalary + $taxableAllowances + $overtimePay;
 
         // Calculate income tax
         $incomeTax = PayrollTaxBracket::calculateTax($taxableIncome);
 
-        // Calculate pension
+        // Calculate pension (based on prorated basic salary)
         $pensionEmployeePercent = PayrollSetting::get('pension_employee_percent', 7);
         $pensionEmployerPercent = PayrollSetting::get('pension_employer_percent', 11);
         
@@ -141,6 +225,7 @@ class PayrollDetail extends Model
             'overtime_regular_hours' => $regularHours,
             'overtime_sunday_hours' => $sundayHours,
             'overtime_holiday_hours' => $holidayHours,
+            'working_days' => $workingDays,
             'overtime_pay' => $overtimePay,
             'gross_salary' => $grossSalary,
             'taxable_income' => $taxableIncome,
