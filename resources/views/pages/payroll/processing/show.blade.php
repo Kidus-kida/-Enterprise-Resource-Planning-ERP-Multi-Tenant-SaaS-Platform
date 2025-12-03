@@ -60,6 +60,7 @@
                                         <th>#</th>
                                         <th>{{ __('Employee') }}</th>
                                         <th class="text-end">{{ __('Basic Salary') }}</th>
+                                        <th class="text-end">{{ __('Working Days') }}</th>
                                         <th class="text-end">{{ __('Allowances') }}</th>
                                         <th class="text-end">{{ __('Overtime') }}</th>
                                         <th class="text-end">{{ __('Gross Salary') }}</th>
@@ -81,6 +82,7 @@
                                                 </h2>
                                             </td>
                                             <td class="text-end">{{ number_format($detail->basic_salary, 2) }}</td>
+                                            <td class="text-end">{{ number_format($detail->working_days, 2) }}</td>
                                             <td class="text-end">
                                                 {{ number_format($detail->taxable_allowances + $detail->non_taxable_allowances, 2) }}
                                                 @if($detail->non_taxable_allowances > 0)
@@ -106,6 +108,7 @@
                                     <tr class="fw-bold bg-light">
                                         <td colspan="2" class="text-end">{{ __('Totals:') }}</td>
                                         <td class="text-end">{{ number_format($batch->details->sum('basic_salary'), 2) }}</td>
+                                        <td class="text-end">{{ number_format($batch->details->sum('working_days'), 2) }}</td>
                                         <td class="text-end">{{ number_format($batch->details->sum('taxable_allowances') + $batch->details->sum('non_taxable_allowances'), 2) }}</td>
                                         <td class="text-end">{{ number_format($batch->details->sum('overtime_pay'), 2) }}</td>
                                         <td class="text-end">{{ number_format($batch->total_gross, 2) }}</td>

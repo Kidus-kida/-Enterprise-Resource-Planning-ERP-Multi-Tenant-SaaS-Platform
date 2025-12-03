@@ -73,13 +73,25 @@ class PayrollProcessingController extends Controller
             ->with(['employeeDetail.salaryDetails', 'employeeDetail.allowances', 'employeeDetail.deductions'])
             ->get();
 
+        // Calculate working days for each employee
+        $workingDaysData = [];
+        foreach ($employees as $employee) {
+            if ($employee->employeeDetail) {
+                $workingDaysData[$employee->employeeDetail->id] = PayrollDetail::calculateWorkingDays(
+                    $employee->employeeDetail->id,
+                    $request->period_start,
+                    $request->period_end
+                );
+            }
+        }
+
         $pageTitle = __('Enter Overtime Details');
         $periodStart = $request->period_start;
         $periodEnd = $request->period_end;
         $payDate = $request->pay_date;
 
         return view('pages.payroll.processing.overtime', compact(
-            'pageTitle', 'employees', 'periodStart', 'periodEnd', 'payDate'
+            'pageTitle', 'employees', 'periodStart', 'periodEnd', 'payDate', 'workingDaysData'
         ));
     }
 
@@ -118,7 +130,9 @@ class PayrollProcessingController extends Controller
                 'holiday' => $request->input("overtime_holiday.{$employeeId}", 0),
             ];
 
-            $payrollData = PayrollDetail::calculatePayroll($employeeId, $overtimeData);
+            $workingDays = $request->input("working_days.{$employeeId}");
+
+            $payrollData = PayrollDetail::calculatePayroll($employeeId, $overtimeData, $workingDays);
 
             if ($payrollData) {
                 $payrollData['payroll_batch_id'] = $batch->id;
@@ -193,10 +207,10 @@ class PayrollProcessingController extends Controller
         // Set headers
         $row = 4;
         $headers = [
-            'No', 'Employee Name', 'Account Number', 'Basic Salary', 'Taxable Allowances', 
-            'Non-Taxable Allowances', 'Regular OT', 'Sunday OT', 'Holiday OT', 
-            'Gross Salary', 'Income Tax', 'Pension (Employee)', 'Other Deductions', 
-            'Total Deductions', 'Net Salary'
+            'No', 'Employee Name', 'Account Number', 'Basic Salary', 'Working Days',
+            'Taxable Allowances', 'Non-Taxable Allowances', 'Regular OT', 'Sunday OT', 
+            'Holiday OT', 'Gross Salary', 'Income Tax', 'Pension (Employee)', 
+            'Other Deductions', 'Total Deductions', 'Net Salary'
         ];
         
         $col = 'A';
@@ -217,20 +231,21 @@ class PayrollProcessingController extends Controller
             $sheet->setCellValue('B' . $row, $detail->employee->user->fullname ?? 'N/A');
             $sheet->setCellValue('C' . $row, $detail->employee->salaryDetails->account_number ?? 'N/A');
             $sheet->setCellValue('D' . $row, $detail->basic_salary);
-            $sheet->setCellValue('E' . $row, $detail->taxable_allowances);
-            $sheet->setCellValue('F' . $row, $detail->non_taxable_allowances);
-            $sheet->setCellValue('G' . $row, $detail->overtime_regular_hours . ' hrs');
-            $sheet->setCellValue('H' . $row, $detail->overtime_sunday_hours . ' hrs');
-            $sheet->setCellValue('I' . $row, $detail->overtime_holiday_hours . ' hrs');
-            $sheet->setCellValue('J' . $row, $detail->gross_salary);
-            $sheet->setCellValue('K' . $row, $detail->income_tax);
-            $sheet->setCellValue('L' . $row, $detail->pension_employee);
-            $sheet->setCellValue('M' . $row, $detail->other_deductions);
-            $sheet->setCellValue('N' . $row, $detail->total_deductions);
-            $sheet->setCellValue('O' . $row, $detail->net_salary);
+            $sheet->setCellValue('E' . $row, $detail->working_days);
+            $sheet->setCellValue('F' . $row, $detail->taxable_allowances);
+            $sheet->setCellValue('G' . $row, $detail->non_taxable_allowances);
+            $sheet->setCellValue('H' . $row, $detail->overtime_regular_hours . ' hrs');
+            $sheet->setCellValue('I' . $row, $detail->overtime_sunday_hours . ' hrs');
+            $sheet->setCellValue('J' . $row, $detail->overtime_holiday_hours . ' hrs');
+            $sheet->setCellValue('K' . $row, $detail->gross_salary);
+            $sheet->setCellValue('L' . $row, $detail->income_tax);
+            $sheet->setCellValue('M' . $row, $detail->pension_employee);
+            $sheet->setCellValue('N' . $row, $detail->other_deductions);
+            $sheet->setCellValue('O' . $row, $detail->total_deductions);
+            $sheet->setCellValue('P' . $row, $detail->net_salary);
 
             // Format currency columns
-            foreach (['D', 'E', 'F', 'J', 'K', 'L', 'M', 'N', 'O'] as $currencyCol) {
+            foreach (['D', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P'] as $currencyCol) {
                 $sheet->getStyle($currencyCol . $row)->getNumberFormat()
                     ->setFormatCode('#,##0.00');
             }
@@ -247,21 +262,22 @@ class PayrollProcessingController extends Controller
         $sheet->setCellValue('D' . $row, '=SUM(D5:D' . $lastDataRow . ')');
         $sheet->setCellValue('E' . $row, '=SUM(E5:E' . $lastDataRow . ')');
         $sheet->setCellValue('F' . $row, '=SUM(F5:F' . $lastDataRow . ')');
-        $sheet->setCellValue('J' . $row, '=SUM(J5:J' . $lastDataRow . ')');
+        $sheet->setCellValue('G' . $row, '=SUM(G5:G' . $lastDataRow . ')');
         $sheet->setCellValue('K' . $row, '=SUM(K5:K' . $lastDataRow . ')');
         $sheet->setCellValue('L' . $row, '=SUM(L5:L' . $lastDataRow . ')');
         $sheet->setCellValue('M' . $row, '=SUM(M5:M' . $lastDataRow . ')');
         $sheet->setCellValue('N' . $row, '=SUM(N5:N' . $lastDataRow . ')');
         $sheet->setCellValue('O' . $row, '=SUM(O5:O' . $lastDataRow . ')');
+        $sheet->setCellValue('P' . $row, '=SUM(P5:P' . $lastDataRow . ')');
         
-        $sheet->getStyle('A' . $row . ':O' . $row)->getFont()->setBold(true);
-        foreach (['D', 'E', 'F', 'J', 'K', 'L', 'M', 'N', 'O'] as $currencyCol) {
+        $sheet->getStyle('A' . $row . ':P' . $row)->getFont()->setBold(true);
+        foreach (['D', 'F', 'G', 'K', 'L', 'M', 'N', 'O', 'P'] as $currencyCol) {
             $sheet->getStyle($currencyCol . $row)->getNumberFormat()
                 ->setFormatCode('#,##0.00');
         }
 
         // Auto-size columns
-        foreach (range('A', 'O') as $columnID) {
+        foreach (range('A', 'P') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
