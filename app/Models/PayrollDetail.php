@@ -86,16 +86,17 @@ class PayrollDetail extends Model
         $start = new \DateTime($periodStart);
         $end = new \DateTime($periodEnd);
         
-        // Get all attendance timestamps for this user within the period
-        $attendanceRecords = AttendanceTimestamp::where('user_id', $userId)
-            ->whereBetween('created_at', [$periodStart . ' 00:00:00', $periodEnd . ' 23:59:59'])
+        // Get all attendance records for this user within the period
+        // Using the attendances table with startDate field
+        $attendanceRecords = Attendance::where('user_id', $userId)
+            ->whereBetween('startDate', [$periodStart, $periodEnd])
             ->get();
         
         // Count unique dates when the employee attended
         $attendedDates = [];
         foreach ($attendanceRecords as $record) {
-            $date = \Carbon\Carbon::parse($record->created_at)->format('Y-m-d');
-            $attendedDates[$date] = true;
+            // startDate is already in Y-m-d format
+            $attendedDates[$record->startDate] = true;
         }
         
         // Count Sundays in the period and add them as attended days
