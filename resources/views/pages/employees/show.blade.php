@@ -478,6 +478,18 @@
                         </select>
                       </div>
                     </div>
+                    <div class="col-sm-4">
+                      <div class="input-block mb-3">
+                        <label class="col-form-label">{{ __('Account Number') }}</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          placeholder="Enter bank account number"
+                          name="account_number"
+                          value="{{ !empty($employee->salaryDetails) ? $employee->salaryDetails->account_number : '' }}"
+                        />
+                      </div>
+                    </div>
                   </div>
                   @if (!empty(SalarySettings('enable_esi_fund')))
                   <hr />

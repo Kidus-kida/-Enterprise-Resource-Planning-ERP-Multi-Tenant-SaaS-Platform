@@ -123,6 +123,7 @@ class EmployeeDetailsController extends BaseController
             'basis' => $request->basis ?? SalaryType::Monthly,
             'base_salary' => $request->base_salary,
             'payment_method' => $request->payment_method ?? PaymentMethod::BankTransfer,
+            'account_number' => $request->account_number,
             'pf_contribution' => $request->pf_contribution ?? 0,
             'pf_number' => $request->pf_number,
             'additional_pf' => $request->additional_pf_rate ?? 0.00,
