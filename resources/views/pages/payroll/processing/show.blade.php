@@ -2,7 +2,39 @@
 
 @section('page-content')
     <div class="content container-fluid">
-        <!-- Page Header -->
+
+        
+        <style>
+            .underline-menu-icon {
+                letter-spacing: 3px;
+                font-size: 22px;
+                line-height: 10px;
+                font-weight: bold;
+            }
+
+            .dropdown-item.approve {
+                background: #28a745 !important; 
+                color: white !important;
+                border-radius: 5px;
+                margin: 5px;
+            }
+
+            .dropdown-item.excel {
+                background: #fd7e14 !important; 
+                color: white !important;
+                border-radius: 5px;
+                margin: 5px;
+            }
+
+            .dropdown-item.print {
+                background: #6c757d !important;
+                color: white !important;
+                border-radius: 5px;
+                margin: 5px;
+            }
+        </style>
+
+    
         <x-breadcrumb>
             <x-slot name="title">{{ __('Payroll Details') }}</x-slot>
             <ul class="breadcrumb">
@@ -13,18 +45,28 @@
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    @if($batch->status == 'draft')
-                        <form action="{{ route('payroll.processing.approve', $batch->id) }}" method="POST" class="d-inline-block">
-                            @csrf
-                            <button type="submit" class="btn btn-success" onclick="return confirm('{{ __('Are you sure you want to approve this payroll? This action cannot be undone.') }}')">
-                                <i class="fa fa-check"></i> {{ __('Approve Payroll') }}
-                            </button>
-                        </form>
-                    @endif
-                    <a href="{{ route('payroll.processing.export', $batch->id) }}" class="btn btn-primary">
-                        <i class="fa fa-download"></i> {{ __('Export to Excel') }}
-                    </a>
-                    <button class="btn btn-white" onclick="window.print()"><i class="fa fa-print"></i> {{ __('Print') }}</button>
+                    <div class="dropdown">
+                        
+                       <button class="btn" 
+        style="background: rgb(229, 33, 76); 
+               color: white; 
+               font-size: 30px; /* bigger ☰ */
+               width: 40px;      /* square button */
+               height: 40px;     /* square button */
+               display: flex; 
+               align-items: center; 
+               justify-content: center; 
+               border-radius: 10px;" 
+        type="button" 
+        data-bs-toggle="dropdown">
+    ☰
+</button><ul class="dropdown-menu dropdown-menu-end">
+
+                    @if($batch->status == 'draft')<li>                        <form action="{{ route('payroll.processing.approve', $batch->id) }}" method="POST">                           @csrf                            <button type="submit" class="dropdown-item approve" onclick="return confirm('Are you sure you want to approve this payroll? This action cannot be undone.')">
+                                Approve Payroll
+                            </button>                        </form>
+                     </li>@endif<li> <a class="dropdown-item excel"href="{{ route('payroll.processing.export', $batch->id) }}">Export to Excel
+                           </a></li><li><button class="dropdown-item print" onclick="window.print()">Print</button></li></ul></div>
                 </div>
             </x-slot>
         </x-breadcrumb>
