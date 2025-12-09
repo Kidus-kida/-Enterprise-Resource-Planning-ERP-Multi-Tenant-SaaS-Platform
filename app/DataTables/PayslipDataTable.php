@@ -71,7 +71,9 @@ class PayslipDataTable extends DataTable
      */
     public function query(Payslip $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->select('id', 'ps_id', 'employee_id', 'type', 'net_pay', 'payslip_date', 'created_at')
+            ->with(['employee:id,user_id', 'employee.user:id,firstname,middlename,lastname,avatar'])
+            ->newQuery();
     }
 
     /**

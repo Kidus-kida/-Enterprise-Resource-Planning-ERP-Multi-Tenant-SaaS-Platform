@@ -45,8 +45,9 @@ class EmployeesController extends Controller
      */
     public function create()
     {
-        $departments = Department::get();
-        $designations = Designation::get();
+        // Cache departments and designations as they rarely change
+        $departments = cache()->remember('departments.all', 3600, fn() => Department::all());
+        $designations = cache()->remember('designations.all', 3600, fn() => Designation::all());
         return view('pages.employees.create', compact(
             'departments',
             'designations'
@@ -109,7 +110,19 @@ class EmployeesController extends Controller
     public function show(string $employee)
     {
         $id = Crypt::decrypt($employee);
-        $user = User::findOrFail($id);
+        // Eager load all relationships needed for the profile page
+        $user = User::with([
+            'employeeDetail.designation',
+            'employeeDetail.department',
+            'employeeDetail.salaryDetails',
+            'employeeDetail.allowances',
+            'employeeDetail.deductions',
+            'employeeDetail.education',
+            'employeeDetail.workExperience',
+            'family',
+            'assets',
+            'attendances'
+        ])->findOrFail($id);
         $employee = $user->employeeDetail;
         $pageTitle = __('Employee Profile');
         return view('pages.employees.show', compact(
@@ -125,9 +138,11 @@ class EmployeesController extends Controller
     public function edit(string $employee)
     {
         $userId = Crypt::decrypt($employee);
-        $employee = User::findOrFail($userId);
-        $departments = Department::get();
-        $designations = Designation::get();
+        // Eager load employee details for the edit form
+        $employee = User::with('employeeDetail')->findOrFail($userId);
+        // Cache departments and designations as they rarely change
+        $departments = cache()->remember('departments.all', 3600, fn() => Department::all());
+        $designations = cache()->remember('designations.all', 3600, fn() => Designation::all());
         return view('pages.employees.edit', compact(
             'departments',
             'designations',

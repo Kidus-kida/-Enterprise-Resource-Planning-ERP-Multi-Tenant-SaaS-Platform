@@ -27,7 +27,7 @@ class TicketDataTable extends DataTable
         return (new EloquentDataTable($query))
             ->addIndexColumn()
             ->addColumn('last_reply', function($row){
-                $reply = $row->replies()->latest()->first();
+                $reply = $row->replies->first();
                 if(!empty($reply)){
                     return $reply->created_at->diffForHumans();
                 }
@@ -71,15 +71,23 @@ class TicketDataTable extends DataTable
      */
     public function query()
     {
+        $query = Ticket::select('id', 'tk_id', 'subject', 'user_id', 'created_by', 'status', 'priority', 'created_at', 'avatar')
+            ->with([
+                'user:id,firstname,middlename,lastname,avatar',
+                'replies' => function($q) {
+                    $q->latest()->limit(1)->select('id', 'ticket_id', 'created_at');
+                }
+            ]);
+        
         if(auth()->user()->type === UserType::SUPERADMIN){
-            return Ticket::query();
+            return $query->newQuery();
         }
         if(route_is('assigned-tickets')){
-            return Ticket::where('user_id', auth()->user()->id)
+            return $query->where('user_id', auth()->user()->id)
                 ->where('created_by', '!=', auth()->user()->id)
                 ->newQuery();
         }
-        return Ticket::where('created_by', auth()->user()->id)->newQuery();
+        return $query->where('created_by', auth()->user()->id)->newQuery();
     }
 
     /**

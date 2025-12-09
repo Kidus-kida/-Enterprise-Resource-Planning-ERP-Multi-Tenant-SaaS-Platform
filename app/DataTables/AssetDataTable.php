@@ -50,7 +50,9 @@ class AssetDataTable extends DataTable
      */
     public function query(Asset $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->select('id', 'user_id', 'name', 'ast_id', 'purchase_date', 'warranty', 'cost', 'status', 'created_at')
+            ->with('user:id,firstname,middlename,lastname,name')
+            ->newQuery();
     }
 
     /**

@@ -29,7 +29,7 @@
                     <div class="card-body">
                         <span class="dash-widget-icon"><i class="fa-solid fa-cubes"></i></span>
                         <div class="dash-widget-info">
-                            <h3>{{ !empty($projects) ? $projects->count(): 0 }}</h3>
+                            <h3>{{ $projects ?? 0 }}</h3>
                             <span>{{ __('Projects') }}</span>
                         </div>
                     </div>
@@ -41,7 +41,7 @@
                     <div class="card-body">
                         <span class="dash-widget-icon"><i class="fa-solid fa-dollar-sign"></i></span>
                         <div class="dash-widget-info">
-                            <h3>{{ !empty($clients) ? $clients->count() : 0 }}</h3>
+                            <h3>{{ $clientCount ?? 0 }}</h3>
                             <span>{{ __('Clients') }}</span>
                         </div>
                     </div>
@@ -52,7 +52,7 @@
                     <div class="card-body">
                         <span class="dash-widget-icon"><i class="fa-regular fa-gem"></i></span>
                         <div class="dash-widget-info">
-                            <h3>{{ !empty($tickets) ? $tickets->count(): 0 }}</h3>
+                            <h3>{{ $ticketCount ?? 0 }}</h3>
                             <span>{{ __('Tickets') }}</span>
                         </div>
                     </div>
@@ -63,7 +63,7 @@
                     <div class="card-body">
                         <span class="dash-widget-icon"><i class="fa-solid fa-user"></i></span>
                         <div class="dash-widget-info">
-                            <h3>{{ !empty($employees) ? $employees->count(): 0 }}</h3>
+                            <h3>{{ $employeeCount ?? 0 }}</h3>
                             <span>{{ __('Employees') }}</span>
                         </div>
                     </div>
@@ -463,18 +463,9 @@
                         element: 'bar-charts',
                         redrawOnParentResize: true,
                         data: [
-                            { y: 'Jan', a: "{{$budget_collection->get(0)->sum('total_revenue')}}", b: "{{$budget_collection->get(0)->sum('total_expense')}}" },
-                            { y: 'Feb', a: "{{$budget_collection->get(1)->sum('total_revenue')}}", b: "{{$budget_collection->get(1)->sum('total_expense')}}" },
-                            { y: 'Mar', a: "{{$budget_collection->get(2)->sum('total_revenue')}}", b: "{{$budget_collection->get(2)->sum('total_expense')}}" },
-                            { y: 'Apr', a: "{{$budget_collection->get(3)->sum('total_revenue')}}", b: "{{$budget_collection->get(3)->sum('total_expense')}}"},
-                            { y: 'May', a: "{{$budget_collection->get(4)->sum('total_revenue')}}", b: "{{$budget_collection->get(4)->sum('total_expense')}}" },
-                            { y: 'Jun', a: "{{$budget_collection->get(5)->sum('total_revenue')}}", b: "{{$budget_collection->get(5)->sum('total_expense')}}"},
-                            { y: 'Jul', a: "{{$budget_collection->get(6)->sum('total_revenue')}}", b: "{{$budget_collection->get(6)->sum('total_expense')}}" },
-                            { y: 'Aug', a: "{{$budget_collection->get(7)->sum('total_revenue')}}", b: "{{$budget_collection->get(7)->sum('total_expense')}}"},
-                            { y: 'Sept', a: "{{$budget_collection->get(8)->sum('total_revenue')}}", b: "{{$budget_collection->get(8)->sum('total_expense')}}"},
-                            { y: 'Oct', a: "{{$budget_collection->get(9)->sum('total_revenue')}}", b: "{{$budget_collection->get(9)->sum('total_expense')}}"},
-                            { y: 'Nov', a: "{{$budget_collection->get(10)->sum('total_revenue')}}", b: "{{$budget_collection->get(10)->sum('total_expense')}}"},
-                            { y: 'Dec', a: "{{$budget_collection->get(11)->sum('total_revenue')}}", b: "{{$budget_collection->get(11)->sum('total_expense')}}"},
+                            @for($i = 1; $i <= 12; $i++)
+                            { y: '{{ date("M", mktime(0, 0, 0, $i, 1)) }}', a: 0, b: 0 },
+                            @endfor
                         ],
                         xkey: 'y',
                         ykeys: ['a', 'b'],
@@ -492,18 +483,9 @@
                         element: 'line-charts',
                         redrawOnParentResize: true,
                         data: [
-                            { y: 1, a: "{{$invoice_collection->get(0)->sum('grand_total')}}", b: "{{$estimates_collection->get(0)->sum('grand_total')}}" },
-                            { y: 2, a: "{{$invoice_collection->get(1)->sum('grand_total')}}", b: "{{$estimates_collection->get(1)->sum('grand_total')}}" },
-                            { y: 3, a: "{{$invoice_collection->get(2)->sum('grand_total')}}", b: "{{$estimates_collection->get(2)->sum('grand_total')}}" },
-                            { y: 4, a: "{{$invoice_collection->get(3)->sum('grand_total')}}", b: "{{$estimates_collection->get(3)->sum('grand_total')}}"},
-                            { y: 5, a: "{{$invoice_collection->get(4)->sum('grand_total')}}", b: "{{$estimates_collection->get(4)->sum('grand_total')}}" },
-                            { y: 6, a: "{{$invoice_collection->get(5)->sum('grand_total')}}", b: "{{$estimates_collection->get(5)->sum('grand_total')}}"},
-                            { y: 7, a: "{{$invoice_collection->get(6)->sum('grand_total')}}", b: "{{$estimates_collection->get(6)->sum('grand_total')}}" },
-                            { y: 8, a: "{{$invoice_collection->get(7)->sum('grand_total')}}", b: "{{$estimates_collection->get(7)->sum('grand_total')}}"},
-                            { y: 9, a: "{{$invoice_collection->get(8)->sum('grand_total')}}", b: "{{$estimates_collection->get(8)->sum('grand_total')}}"},
-                            { y: 10, a: "{{$invoice_collection->get(9)->sum('grand_total')}}", b: "{{$estimates_collection->get(9)->sum('grand_total')}}"},
-                            { y: 11, a: "{{$invoice_collection->get(10)->sum('grand_total')}}", b: "{{$estimates_collection->get(10)->sum('grand_total')}}"},
-                            { y: 12, a: "{{$invoice_collection->get(11)->sum('grand_total')}}", b: "{{$estimates_collection->get(11)->sum('grand_total')}}"},
+                            @for($i = 1; $i <= 12; $i++)
+                            { y: {{ $i }}, a: "{{ $invoice_collection[$i] ?? 0 }}", b: "{{ $estimates_collection[$i] ?? 0 }}" },
+                            @endfor
                         ],
                         xkey: 'y',
                         ykeys: ['a', 'b'],
@@ -518,14 +500,9 @@
                     Morris.Bar({
                         element: 'monthly_expense_barchart',
                         data: [
-                            @if(!empty($monthly_expense))
-                            @foreach ($monthly_expense as $key => $expense)
-                            @php
-                                $m = $key;
-                            @endphp
-                            { y: "{{ \Carbon\Carbon::create(0,$m,1)->format('M') }}", a: "{{ !empty($expense->get($key)) ? $expense->get($key)->sum('amount'): 0}}", b: "{{ !empty($expense->get($key)) ? $expense->get($key)->count() : 0}}"},
-                            @endforeach
-                            @endif
+                            @for($i = 1; $i <= 12; $i++)
+                            { y: "{{ date("M", mktime(0, 0, 0, $i, 1)) }}", a: "{{ $monthly_expense[$i] ?? 0 }}", b: 0},
+                            @endfor
                         ],
                         xkey: 'y',
                         ykeys: ['a', 'b'],

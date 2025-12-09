@@ -55,7 +55,10 @@ class EmployeeDataTable extends DataTable
      */
     public function query(): QueryBuilder
     {
-        return User::where('type','=',UserType::EMPLOYEE)->newQuery();
+        return User::select('id', 'firstname', 'middlename', 'lastname', 'email', 'username', 'phone', 'dial_code', 'avatar', 'created_at')
+            ->with('employeeDetail:id,user_id,emp_id')
+            ->where('type', '=', UserType::EMPLOYEE)
+            ->newQuery();
     }
 
     /**

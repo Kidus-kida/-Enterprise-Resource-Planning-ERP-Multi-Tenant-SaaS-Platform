@@ -122,7 +122,7 @@ Route::group(['middleware' => 'signed'], function() {
     Route::resource('leavetypes', LeaveTypeController::class);
     Route::resource('leaverequests', LeaveRequestController::class);
     Route::put('/leaverequests/{leaverequest}/{employee}', [LeaveRequestController::class, 'update'])
-        ->name('leaverequests.update');
+        ->name('leaverequests.update_status');
     Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
         ->name('leaverequests.myleaverequests');
     // Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])

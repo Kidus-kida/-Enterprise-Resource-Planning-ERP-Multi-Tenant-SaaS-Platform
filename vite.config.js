@@ -20,14 +20,42 @@ async function getConfig() {
                 refresh: true,
             }),
         ],
+        build: {
+            // Enable CSS code splitting
+            cssCodeSplit: true,
+            // Use terser for minification with optimizations
+            minify: 'terser',
+            terserOptions: {
+                compress: {
+                    drop_console: true,
+                    drop_debugger: true,
+                },
+            },
+            // Code splitting configuration
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        // Vendor chunks for better caching
+                        'vendor-jquery': ['jquery'],
+                        'vendor-bootstrap': ['bootstrap'],
+                        'vendor-datatables': ['datatables.net-bs5', 'datatables.net-buttons-bs5'],
+                    },
+                },
+            },
+            // Generate source maps for debugging
+            sourcemap: false,
+            // Target modern browsers
+            target: 'es2015',
+        },
         define: {
             "process.env.IS_PREACT": JSON.stringify("true"),
         },
         optimizeDeps: {
             exclude: ["js-big-decimal"],
         },
-        assetsInlineLimit: 0
+        assetsInlineLimit: 0,
     });
 }
 
 export default getConfig();
+

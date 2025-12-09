@@ -69,7 +69,10 @@ class UsersDataTable extends DataTable
      */
     public function query(User $model): QueryBuilder
     {
-        return $model->where('type',UserType::SUPERADMIN)->newQuery();
+        return $model->select('id', 'firstname', 'middlename', 'lastname', 'email', 'username', 'phone', 'dial_code', 'avatar', 'created_at')
+            ->with('roles:id,name')
+            ->where('type', UserType::SUPERADMIN)
+            ->newQuery();
     }
 
     /**

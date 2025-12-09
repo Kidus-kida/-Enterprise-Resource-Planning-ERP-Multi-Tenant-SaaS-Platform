@@ -48,7 +48,11 @@ class LeaveRequestDataTable extends DataTable
 
     public function query()
     {
-        $query = LeaveRequest::with(['employee', 'leaveType']);
+        $query = LeaveRequest::select('id', 'employee_id', 'leave_type_id', 'leave_start_date', 'leave_end_date', 'request_reason', 'status', 'created_at')
+            ->with([
+                'employee:id,name',
+                'leaveType:id,type_name'
+            ]);
 
         if (auth()->user()->type === UserType::SUPERADMIN) {
             return $query;

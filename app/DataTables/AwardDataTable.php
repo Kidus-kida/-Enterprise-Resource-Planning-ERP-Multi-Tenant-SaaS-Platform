@@ -102,15 +102,18 @@ class AwardDataTable extends DataTable
      */
     public function query()
     {
+        $query = Award::select('id', 'employee_id', 'awarded_by', 'title', 'description', 'award_type', 'awarded_at', 'award_file', 'created_by')
+            ->with('user:id,firstname,middlename,lastname,name');
+        
         if (auth()->user()->type === UserType::SUPERADMIN) {
-            return Award::query();
+            return $query->newQuery();
         }
         if (route_is('assigned-tickets')) {
-            return Award::where('user_id', auth()->user()->id)
+            return $query->where('user_id', auth()->user()->id)
                 ->where('created_by', '!=', auth()->user()->id)
                 ->newQuery();
         }
-        return Award::where('created_by', auth()->user()->id)->newQuery();
+        return $query->where('created_by', auth()->user()->id)->newQuery();
     }
 
     /**

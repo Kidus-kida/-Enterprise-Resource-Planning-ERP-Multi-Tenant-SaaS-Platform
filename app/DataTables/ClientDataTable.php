@@ -55,7 +55,10 @@ class ClientDataTable extends DataTable
      */
     public function query(User $model): QueryBuilder
     {
-        return $model->where('type',UserType::CLIENT)->newQuery();
+        return $model->select('id', 'firstname', 'middlename', 'lastname', 'email', 'username', 'phone', 'dial_code', 'avatar', 'created_at')
+            ->with('clientDetail:id,user_id,clt_id')
+            ->where('type', UserType::CLIENT)
+            ->newQuery();
     }
 
     /**

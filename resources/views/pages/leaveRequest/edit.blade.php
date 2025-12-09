@@ -19,7 +19,7 @@
 </script>
 
 <div class="modal-body">
-    <form action="{{ route('leaverequests.update', [$leaverequest->id, $leaverequest->employee_id]) }}" method="POST">
+    <form action="{{ route('leaverequests.update_status', [$leaverequest->id, $leaverequest->employee_id]) }}" method="POST">
         @csrf
         @method('PUT')
 
