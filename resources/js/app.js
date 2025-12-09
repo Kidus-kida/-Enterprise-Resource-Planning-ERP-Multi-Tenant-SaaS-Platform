@@ -39,7 +39,6 @@ const AppAssets = import.meta.glob([
     '../assets/js/**',
     '../assets/plugins/**/**',
 ])
-console.log(AppAssets);
 $(document).on("click", ".deleteBtn", function () {
     let title = $(this).data("title");
     let url = $(this).data("route");

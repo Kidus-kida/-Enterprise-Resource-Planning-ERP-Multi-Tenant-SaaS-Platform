@@ -23,14 +23,8 @@ async function getConfig() {
         build: {
             // Enable CSS code splitting
             cssCodeSplit: true,
-            // Use terser for minification with optimizations
-            minify: 'terser',
-            terserOptions: {
-                compress: {
-                    drop_console: true,
-                    drop_debugger: true,
-                },
-            },
+            // Use esbuild for fast minification
+            minify: 'esbuild',
             // Code splitting configuration
             rollupOptions: {
                 output: {
