@@ -228,7 +228,7 @@
                 <div class="card flex-fill">
                     <div class="card-body">
                         <h4 class="card-title">{{ __('Today Absent') }} <span class="badge bg-inverse-danger ms-2">{{ $absentees->count() }}</span></h4>
-                        @foreach ($absentees as $user)
+                        @foreach ($absentees->take(5) as $user)
                         <div class="leave-info-box">
                             <div class="media d-flex align-items-center">
                                 <a @can('show-Employeeprofile') href="{{ route('employees.index') }}" @else href="#" @endcan class="avatar"><img src="{{ !empty($user->avatar) ? asset('storage/users/'.$user->avatar) : asset('images/user.jpg') }}" alt="{{ __('Image') }}"></a>
@@ -237,12 +237,15 @@
                                 </div>
                             </div>
                         </div>
-                        @endforeach     
-                        @can('view-attendances')                  
+                        @endforeach
+                        
+                        @if($absentees->count() > 5)
                         <div class="load-more text-center">
-                            <a class="text-dark" href="{{ route('attendances.index') }}">{{ __('Load More') }}</a>
+                            <a class="text-dark" href="#" data-bs-toggle="modal" data-bs-target="#absenteesModal">{{ __('Load More') }} ({{ $absentees->count() - 5 }} {{ __('more') }})</a>
                         </div>
-                        @endcan
+                        @endif
+                        
+                       
                     </div>
                 </div>
             </div>
@@ -510,7 +513,6 @@
                         lineColors: ['#ff9b44','#fc6075'],
                         lineWidth: '3px',
                         barColors: ['#ff9b44','#fc6075'],
-                        resize: true,
                         redraw: true
                     });
                     @endif
@@ -523,4 +525,41 @@
 
 
     </div>
+    
+    <!-- Today Absent Modal -->
+    @if (!empty($absentees) && $absentees->count() > 5)
+    <div class="modal fade" id="absenteesModal" tabindex="-1" aria-labelledby="absenteesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="absenteesModalLabel">{{ __('Today Absent') }} <span class="badge bg-danger ms-2">{{ $absentees->count() }}</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @foreach ($absentees as $user)
+                    <div class="leave-info-box mb-3">
+                        <div class="media d-flex align-items-center">
+                            <a @can('show-Employeeprofile') href="{{ route('employees.index') }}" @else href="#" @endcan class="avatar">
+                                <img src="{{ !empty($user->avatar) ? asset('storage/users/'.$user->avatar) : asset('images/user.jpg') }}" alt="{{ __('Image') }}">
+                            </a>
+                            <div class="media-body flex-grow-1 ms-3">
+                                <div class="text-sm my-0 fw-bold">{{ $user->fullname }}</div>
+                                @if(!empty($user->employeeDetail->designation))
+                                <div class="text-muted" style="font-size: 0.85rem;">{{ $user->employeeDetail->designation->name ?? '' }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="modal-footer">
+                    @can('view-attendances')
+                    <a href="{{ route('attendances.index') }}" class="btn btn-primary">{{ __('View All Attendances') }}</a>
+                    @endcan
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 @endsection
