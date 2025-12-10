@@ -219,7 +219,9 @@ class AppMenuListener
         // Chat is now in the Apps section managed by Whiteboard module
 
         // ==================== SYSTEM ====================
-        $menu->html('<span>Settings & Admin</span>', ['class' => 'menu-title']);
+        if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles', 'view-backups', 'view-settings'])) {
+            $menu->html('<span>Settings & Admin</span>', ['class' => 'menu-title']);
+        }
         
         // Administration
         if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles'])) {
