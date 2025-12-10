@@ -9,6 +9,7 @@ async function getConfig() {
         "resources/assets/css/bootstrap.min.css",
         "resources/assets/css/line-awesome.min.css",
         "resources/assets/css/material.css",
+        "resources/assets/css/ckeditor.css",
         "resources/assets/plugins/bootstrap-tagsinput/bootstrap-tagsinput.css",
         "resources/assets/css/style.css",
         "resources/js/app.js",
