@@ -4,5 +4,6 @@
     "Project": true,
     "Sales": true,
     "Accounting": true,
-    "Crm": true
+    "Crm": true,
+    "Purchase": true
 }
