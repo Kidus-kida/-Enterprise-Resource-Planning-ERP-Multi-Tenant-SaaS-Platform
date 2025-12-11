@@ -170,6 +170,15 @@ Route::group(['middleware' => 'signed'], function() {
 });
 
 
+    // Accounting Module
+    Route::prefix('accounting-module')->name('accounting.')->group(function () {
+        Route::resource('accounts', \App\Http\Controllers\AccountController::class);
+        Route::get('accounts/{id}/balance', [\App\Http\Controllers\AccountController::class, 'getBalance'])->name('accounts.balance');
+        
+        Route::resource('account-types', \App\Http\Controllers\AccountTypeController::class);
+        Route::resource('account-groups', \App\Http\Controllers\AccountGroupController::class);
+    });
+
     // awards
     Route::resource('awards', AwardController::class);
 });

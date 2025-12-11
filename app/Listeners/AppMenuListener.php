@@ -161,12 +161,15 @@ class AppMenuListener
         }
 
         // Accounting
-        if(auth()->user()->canAny(['view-budgetCategories','view-budgets','view-budgetExpenses','view-budgetRevenues'])){
-            $activeClass = route_is(["budget.categories.*","budgets.*","budget.expenses.*","budget.revenue.*"]) ? "active" : "";
+        if(auth()->user()->canAny(['view-budgetCategories','view-budgets','view-budgetExpenses','view-budgetRevenues', 'view-accounts'])){
+            $activeClass = route_is(["budget.categories.*","budgets.*","budget.expenses.*","budget.revenue.*", "accounting.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calculator"></i><span>' . __("Accounting") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Categories'))->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
+                    ->add(Link::toRoute('accounting.accounts.index', __('Accounts'))->addClass(route_is(['accounting.accounts.*']) ? 'active' : ''))
+                    ->add(Link::toRoute('accounting.account-types.index', __('Account Types'))->addClass(route_is(['accounting.account-types.*']) ? 'active' : ''))
+                    ->add(Link::toRoute('accounting.account-groups.index', __('Account Groups'))->addClass(route_is(['accounting.account-groups.*']) ? 'active' : ''))
+                    ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Budget Categories'))->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
                     ->addIfCan('view-budgets', Link::toRoute('budgets.index', __('Budgets'))->addClass(route_is(['budgets.*']) ? 'active' : ''))
                     ->addIfCan('view-budgetExpenses', Link::toRoute('budget.expense.index', __('Budget Expenses'))->addClass(route_is(['budget.expense.*']) ? 'active' : ''))
                     ->addIfCan('view-budgetRevenues', Link::toRoute('budget.revenue.index', __('Budget Revenue'))->addClass(route_is(['budget.revenue.*']) ? 'active' : ''))
