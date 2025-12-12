@@ -9,10 +9,11 @@
             <td colspan="{{$colspan}}">
             <div style="display: flex; width: 100%;">
                 @can('product.delete')
-                    {!! Form::open(['url' => action([\App\Http\Controllers\ProductController::class, 'massDestroy']), 'method' => 'post', 'id' => 'mass_delete_form' ]) !!}
-                    {!! Form::hidden('selected_rows', null, ['id' => 'selected_rows']); !!}
-                    {!! Form::submit(__('lang_v1.delete_selected'), array('class' => 'btn btn-xs btn-danger', 'id' => 'delete-selected')) !!}
-                    {!! Form::close() !!}
+                    <form action="{{ action([\Modules\Products\Http\Controllers\ProductController::class, 'massDestroy']) }}" method="post" id="mass_delete_form">
+                        @csrf
+                        <input type="hidden" name="selected_rows" id="selected_rows">
+                        <button type="submit" class="btn btn-xs btn-danger" id="delete-selected">{{__('lang_v1.delete_selected')}}</button>
+                    </form>
                 @endcan
 
                 
@@ -20,10 +21,11 @@
                     
                         @if(config('constants.enable_product_bulk_edit'))
                             &nbsp;
-                            {!! Form::open(['url' => action([\App\Http\Controllers\ProductController::class, 'bulkEdit']), 'method' => 'post', 'id' => 'bulk_edit_form' ]) !!}
-                            {!! Form::hidden('selected_products', null, ['id' => 'selected_products_for_edit']); !!}
-                            <button type="submit" class="btn btn-xs btn-primary" id="edit-selected"> <i class="fa fa-edit"></i>{{__('lang_v1.bulk_edit')}}</button>
-                            {!! Form::close() !!}
+                            <form action="{{ action([\Modules\Products\Http\Controllers\ProductController::class, 'bulkEdit']) }}" method="post" id="bulk_edit_form">
+                                @csrf
+                                <input type="hidden" name="selected_products" id="selected_products_for_edit">
+                                <button type="submit" class="btn btn-xs btn-primary" id="edit-selected"> <i class="fa fa-edit"></i>{{__('lang_v1.bulk_edit')}}</button>
+                            </form>
                         @endif
                         &nbsp;
                         <button type="button" class="btn btn-xs btn-success update_product_location" data-type="add">@lang('lang_v1.add_to_location')</button>
@@ -32,10 +34,11 @@
                     @endcan
                 
                 &nbsp;
-                {!! Form::open(['url' => action([\App\Http\Controllers\ProductController::class, 'massDeactivate']), 'method' => 'post', 'id' => 'mass_deactivate_form' ]) !!}
-                {!! Form::hidden('selected_products', null, ['id' => 'selected_products']); !!}
-                {!! Form::submit(__('lang_v1.deactivate_selected'), array('class' => 'btn btn-xs btn-warning', 'id' => 'deactivate-selected')) !!}
-                {!! Form::close() !!} @show_tooltip(__('lang_v1.deactive_product_tooltip'))
+                <form action="{{ action([\Modules\Products\Http\Controllers\ProductController::class, 'massDeactivate']) }}" method="post" id="mass_deactivate_form">
+                    @csrf
+                    <input type="hidden" name="selected_products" id="selected_products">
+                    <button type="submit" class="btn btn-xs btn-warning" id="deactivate-selected">{{__('lang_v1.deactivate_selected')}}</button>
+                </form> @show_tooltip(__('lang_v1.deactive_product_tooltip'))
                 &nbsp;
                 @if($is_woocommerce)
                     <button type="button" class="btn btn-xs btn-warning toggle_woocomerce_sync">

@@ -1,5 +1,6 @@
 <div class="modal fade" id ="woocommerce_sync_modal" tabindex="-1" role="dialog">
-    {!! Form::open(['url' => action([\App\Http\Controllers\ProductController::class, 'toggleWooCommerceSync']), 'method' => 'post', 'id' => 'toggle_woocommerce_sync_form' ]) !!}
+    <form action="{{ action([\Modules\Products\Http\Controllers\ProductController::class, 'toggleWooCommerceSync']) }}" method="post" id="toggle_woocommerce_sync_form">
+        @csrf
         <div class="modal-dialog" role="document">
             <div class="modal-content">
               <div class="modal-header">
@@ -36,5 +37,5 @@
               </div>
             </div>
         </div>
-    {!! Form::close() !!}
+    </form>
 </div>

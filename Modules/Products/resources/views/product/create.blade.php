@@ -30,6 +30,7 @@
     <form action="{{ route('products.store') }}" method="POST" id="product_add_form"
         class="product_form {{ $form_class }}" enctype="multipart/form-data">
         @csrf
+        <input type="hidden" name="submit_type" id="submit_type" value="">
 
         <!-- Basic Product Information -->
         <div class="row">
@@ -42,7 +43,7 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="name">{{ __('product.product_name') }} <span
+                                    <label class="form-label" for="name">Product Name <span
                                             class="text-danger">*</span></label>
                                     <input type="text" name="name" id="name" class="form-control" required
                                         value="{{ old('name', !empty($duplicate_product->name) ? $duplicate_product->name : null) }}"
@@ -52,7 +53,7 @@
 
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="sku">{{ __('product.sku') }}</label>
+                                    <label class="form-label" for="sku">SKU</label>
                                     <input type="text" name="sku" id="sku" class="form-control"
                                         value="{{ old('sku') }}" placeholder="{{ __('product.sku') }}">
                                     <small class="text-muted">{{ __('tooltip.sku') }}</small>
@@ -61,7 +62,7 @@
 
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="barcode_type">{{ __('product.barcode_type') }} <span
+                                    <label class="form-label" for="barcode_type">Barcode Type <span
                                             class="text-danger">*</span></label>
                                     <select name="barcode_type" id="barcode_type" class="form-control select2" required>
                                         @foreach ($barcode_types as $key => $type)
@@ -76,15 +77,15 @@
 
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="semi_finished">{{ __('unit.semi_finished') }} <span
+                                    <label class="form-label" for="semi_finished">Semi Finished <span
                                             class="text-danger">*</span></label>
                                     <select name="semi_finished" id="semi_finished" class="form-control" required>
-                                        <option value="">{{ __('messages.please_select') }}</option>
+                                        <option value="">Please Select</option>
                                         <option value="1" {{ old('semi_finished') == '1' ? 'selected' : '' }}>
-                                            {{ __('messages.yes') }}
+                                            Yes
                                         </option>
                                         <option value="0" {{ old('semi_finished', '0') == '0' ? 'selected' : '' }}>
-                                            {{ __('messages.no') }}
+                                            No
                                         </option>
                                     </select>
                                 </div>
@@ -94,7 +95,7 @@
                         <div class="row g-3 mt-2">
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="unit_id">{{ __('product.unit') }} <span
+                                    <label class="form-label" for="unit_id">Unit <span
                                             class="text-danger">*</span></label>
                                     <select name="unit_id" id="unit_id" class="form-control select2" required>
                                         @foreach ($units as $id => $unit)
@@ -125,7 +126,7 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="secondary_unit_id">{{ __('lang_v1.secondary_unit') }}</label>
                                         <select name="secondary_unit_id" id="secondary_unit_id" class="form-control select2">
-                                            <option value="">{{ __('messages.please_select') }}</option>
+                                            <option value="">Please Select</option>
                                             @foreach ($units as $id => $unit)
                                                 <option value="{{ $id }}"
                                                     {{ old('secondary_unit_id', !empty($duplicate_product->secondary_unit_id) ? $duplicate_product->secondary_unit_id : null) == $id ? 'selected' : '' }}>
@@ -139,9 +140,9 @@
 
                             <div class="col-md-3 @if (!$business->enable_brand) d-none @endif">
                                 <div class="mb-3">
-                                    <label class="form-label" for="brand_id">{{ __('product.brand') }}</label>
+                                    <label class="form-label" for="brand_id">Brand</label>
                                     <select name="brand_id" id="brand_id" class="form-control select2">
-                                        <option value="">{{ __('messages.please_select') }}</option>
+                                        <option value="">Please Select</option>
                                         @foreach ($brands as $id => $brand)
                                             <option value="{{ $id }}"
                                                 {{ old('brand_id', !empty($duplicate_product->brand_id) ? $duplicate_product->brand_id : null) == $id ? 'selected' : '' }}>
@@ -153,9 +154,9 @@
 
                             <div class="col-md-3 @if (!$business->enable_category) d-none @endif">
                                 <div class="mb-3">
-                                    <label class="form-label" for="category_id">{{ __('product.category') }}</label>
+                                    <label class="form-label" for="category_id">Category</label>
                                     <select name="category_id" id="category_id" class="form-control select2">
-                                        <option value="">{{ __('messages.please_select') }}</option>
+                                        <option value="">Please Select</option>
                                         @foreach ($categories as $id => $category)
                                             <option value="{{ $id }}"
                                                 {{ old('category_id', !empty($duplicate_product->category_id) ? $duplicate_product->category_id : null) == $id ? 'selected' : '' }}>
@@ -168,9 +169,9 @@
                             <div
                                 class="col-md-3 @if (!($business->enable_category && $business->enable_sub_category)) d-none @endif">
                                 <div class="mb-3">
-                                    <label class="form-label" for="sub_category_id">{{ __('product.sub_category') }}</label>
+                                    <label class="form-label" for="sub_category_id">Sub Category</label>
                                     <select name="sub_category_id" id="sub_category_id" class="form-control select2">
-                                        <option value="">{{ __('messages.please_select') }}</option>
+                                        <option value="">Please Select</option>
                                         @foreach ($sub_categories as $id => $sub_cat)
                                             <option value="{{ $id }}"
                                                 {{ old('sub_category_id', !empty($duplicate_product->sub_category_id) ? $duplicate_product->sub_category_id : null) == $id ? 'selected' : '' }}>
@@ -191,7 +192,7 @@
                             @endphp
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="product_locations">{{ __('business.business_locations') }}</label>
+                                    <label class="form-label" for="product_locations">Business Locations</label>
                                     <select name="product_locations[]" id="product_locations" class="form-control select2"
                                         multiple>
                                         @foreach ($business_locations as $id => $location)
@@ -212,7 +213,7 @@
                                             value="1"
                                             {{ old('enable_stock', !empty($duplicate_product) ? $duplicate_product->enable_stock : true) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="enable_stock">
-                                            <strong>{{ __('product.manage_stock') }}</strong>
+                                            <strong>Manage Stock?</strong>
                                         </label>
                                     </div>
                                     <small class="text-muted"><i>{{ __('product.enable_stock_help') }}</i></small>
@@ -227,7 +228,7 @@
                                             value="1"
                                             {{ old('vat_claimed', !empty($duplicate_product) ? $duplicate_product->vat_claimed : true) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="vat_claimed">
-                                            <strong>{{ __('product.vat_input_claimed') }}</strong>
+                                            <strong>VAT Input Claimed</strong>
                                         </label>
                                     </div>
                                 </div>
@@ -236,11 +237,11 @@
                             <div class="col-md-3 @if (!empty($duplicate_product) && $duplicate_product->enable_stock == 0) d-none @endif"
                                 id="alert_quantity_div">
                                 <div class="mb-3">
-                                    <label class="form-label" for="alert_quantity">{{ __('product.alert_quantity') }}</label>
+                                    <label class="form-label" for="alert_quantity">Alert Quantity</label>
                                     <input type="text" name="alert_quantity" id="alert_quantity"
                                         class="form-control input_number" min="0"
                                         value="{{ old('alert_quantity', !empty($duplicate_product->alert_quantity) ? @format_quantity($duplicate_product->alert_quantity) : null) }}"
-                                        placeholder="{{ __('product.alert_quantity') }}">
+                                        placeholder="Alert Quantity">
                                     <small class="text-muted">{{ __('tooltip.alert_quantity') }}</small>
                                 </div>
                             </div>
@@ -250,7 +251,7 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="warranty_id">{{ __('lang_v1.warranty') }}</label>
                                         <select name="warranty_id" id="warranty_id" class="form-control select2">
-                                            <option value="">{{ __('messages.please_select') }}</option>
+                                            <option value="">Please Select</option>
                                             @foreach ($warranties as $id => $warranty)
                                                 <option value="{{ $id }}">{{ $warranty }}</option>
                                             @endforeach
@@ -264,9 +265,9 @@
                             <div class="col-md-3 @if (!empty($duplicate_product) && $duplicate_product->enable_stock == 0) d-none @endif"
                                 id="raw_material_div">
                                 <div class="mb-3">
-                                    <label class="form-label" for="stock_type">{{ __('product.stock_type') }}</label>
-                                    <select name="stock_type" id="stock_type" class="form-control select2" required>
-                                        <option value="">{{ __('product.please_select') }}</option>
+                                    <label class="form-label" for="stock_type">Stock Account</label>
+                                    <select name="stock_type" id="stock_type" class="form-control select2">
+                                        <option value="">Please Select</option>
                                         @foreach ($accounts as $id => $account)
                                             <option value="{{ $id }}">{{ $account }}</option>
                                         @endforeach
@@ -284,7 +285,7 @@
 
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label" for="upload_image">{{ __('lang_v1.product_image') }}</label>
+                                    <label class="form-label" for="upload_image">Product Image</label>
                                     <input type="file" name="image" id="upload_image" accept="image/*"
                                         {{ $is_image_required ? 'required' : '' }} class="form-control">
                                     <small class="text-muted">
@@ -389,13 +390,18 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4 @if (!$business->enable_price_tax) d-none @endif">
                                 <div class="mb-3">
-                                    <label class="form-label" for="tax">{{ __('product.applicable_tax') }}</label>
-                                    <select name="tax" id="tax" class="form-control select2"
-                                        @foreach ($tax_attributes as $k => $v) data-{{ $k }}="{{ $v }}" @endforeach>
-                                        <option value="">{{ __('messages.please_select') }}</option>
-                                        @foreach ($taxes as $id => $tax_name)
-                                            <option value="{{ $id }}"
-                                                {{ old('tax', !empty($duplicate_product->tax) ? $duplicate_product->tax : null) == $id ? 'selected' : '' }}>
+                                    <label class="form-label" for="tax">Applicable Tax</label>
+                                    <select name="tax" id="tax" class="form-control select2">
+                                        <option value="" data-rate="0">Please Select</option>
+                                        @foreach ($taxes as $tax_id => $tax_name)
+                                            @php
+                                                // Get tax rate from TaxRate model
+                                                $tax_rate = \App\TaxRate::find($tax_id);
+                                                $rate = $tax_rate ? $tax_rate->amount : 0;
+                                            @endphp
+                                            <option value="{{ $tax_id }}" 
+                                                data-rate="{{ $rate }}"
+                                                {{ old('tax', !empty($duplicate_product->tax) ? $duplicate_product->tax : null) == $tax_id ? 'selected' : '' }}>
                                                 {{ $tax_name }}</option>
                                         @endforeach
                                     </select>
@@ -404,7 +410,7 @@
 
                             <div class="col-md-4 @if (!$business->enable_price_tax) d-none @endif">
                                 <div class="mb-3">
-                                    <label class="form-label" for="tax_type">{{ __('product.selling_price_tax_type') }} <span
+                                    <label class="form-label" for="tax_type">Selling Price Tax Type <span
                                             class="text-danger">*</span></label>
                                     <select name="tax_type" id="tax_type" class="form-control select2" required>
                                         <option value="inclusive"
@@ -419,7 +425,7 @@
 
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label class="form-label" for="type">{{ __('product.product_type') }} <span
+                                    <label class="form-label" for="type">Product Type <span
                                             class="text-danger">*</span></label>
                                     <select name="type" id="type" class="form-control select2" required
                                         data-action="{{ !empty($duplicate_product) ? 'duplicate' : 'add' }}"
@@ -476,11 +482,11 @@
                             @endcan
 
                             <button type="submit" value="save_n_add_another" class="btn btn-success submit_product_form">
-                                <i class="fa fa-plus-circle"></i> {{ __('lang_v1.save_n_add_another') }}
+                                <i class="fa fa-plus-circle"></i> Save & Add Another
                             </button>
 
                             <button type="submit" value="submit" class="btn btn-primary submit_product_form">
-                                <i class="fa fa-save"></i> {{ __('messages.save') }}
+                                <i class="fa fa-save"></i> Save
                             </button>
                         </div>
                     </div>
@@ -491,14 +497,80 @@
 </div>
 @endsection
 
-@section('javascript')
-    @php $asset_v = env('APP_VERSION'); @endphp
-    <script src="{{ asset('js/product.js?v=' . $asset_v) }}"></script>
+@push('page-scripts')
+    <script>
+    // Wait for page to fully load (including Vite bundle with jQuery)
+    window.addEventListener('load', function() {
+        // Load product.js after jQuery is available
+        var productScript = document.createElement('script');
+        productScript.src = '{{ asset("js/product.js?v=" . env("APP_VERSION")) }}';
+        productScript.onload = function() {
+            // Product.js is loaded, now run page-specific code
+            initializeProductForm();
+        };
+        document.body.appendChild(productScript);
+    });
+    
+    function initializeProductForm() {
+        // Language variables for product.js
+        window.LANG = {
+            sure: "{{ __('Are you sure?') }}",
+            sku_already_exists: "{{ __('product.sku_already_exists') }}",
+            file_browse_label: "{{ __('Browse') }}",
+            remove: "{{ __('Remove') }}",
+            inc_tax: "{{ __('product.inc_of_tax') }}",
+            exc_tax: "{{ __('product.exc_of_tax') }}",
+            sp_inc_tax: "{{ __('product.selling_price_inc_tax') }}",
+            sp_exc_tax: "{{ __('product.selling_price_exc_tax') }}"
+        };
 
-    <script type="text/javascript">
         $(document).ready(function() {
             // Initialize select2
             $('.select2').select2();
+
+            // Handle select2 change events for tax dropdowns (select2 blocks native change events)
+            $('#tax').on('select2:select', function (e) {
+                $(this).trigger('change');
+            });
+            
+            $('#sale_tax').on('select2:select', function (e) {
+                $(this).trigger('change');
+            });
+            
+            $('#tax_type').on('select2:select', function (e) {
+                $(this).trigger('change');
+            });
+
+            // Handle enable_stock checkbox for Bootstrap 5
+            $('#enable_stock').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#alert_quantity_div').removeClass('d-none').show();
+                    $('#raw_material_div').removeClass('d-none').show();
+                    
+                    // Enable expiry selection
+                    if ($('#expiry_period_type').length) {
+                        $('#expiry_period_type').removeAttr('disabled');
+                    }
+                    
+                    if ($('#opening_stock_button').length) {
+                        $('#opening_stock_button').removeAttr('disabled');
+                    }
+                } else {
+                    $('#alert_quantity_div').addClass('d-none').hide();
+                    $('#raw_material_div').addClass('d-none').hide();
+                    $('#alert_quantity').val(0);
+                    
+                    // Disable expiry selection
+                    if ($('#expiry_period_type').length) {
+                        $('#expiry_period_type').val('').change();
+                        $('#expiry_period_type').attr('disabled', true);
+                    }
+                    
+                    if ($('#opening_stock_button').length) {
+                        $('#opening_stock_button').attr('disabled', true);
+                    }
+                }
+            });
 
             // Page leave confirmation
             let formChanged = false;
@@ -518,19 +590,59 @@
                 formChanged = false;
             });
 
-            // Barcode scanner
-            onScan.attachTo(document, {
-                suffixKeyCodes: [13],
-                reactToPaste: true,
-                onScan: function(sCode, iQty) {
-                    $('input#sku').val(sCode);
-                },
-                onScanError: function(oDebug) {
-                    console.log(oDebug);
-                },
-                minLength: 2,
-                ignoreIfFocusOn: ['input', '.form-control']
+            // Barcode scanner (if onScan library is available)
+            if (typeof onScan !== 'undefined') {
+                onScan.attachTo(document, {
+                    suffixKeyCodes: [13],
+                    reactToPaste: true,
+                    onScan: function(sCode, iQty) {
+                        $('input#sku').val(sCode);
+                    },
+                    onScanError: function(oDebug) {
+                        console.log(oDebug);
+                    },
+                    minLength: 2,
+                    ignoreIfFocusOn: ['input', '.form-control']
+                });
+            }
+            
+            // Debug: Log when page is ready
+            console.log('Products create page ready');
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Tax dropdown found:', $('#tax').length);
+            console.log('Purchase price field found:', $('#single_dpp').length);
+            console.log('Submit buttons found:', $('.submit_product_form').length);
+            console.log('jQuery validate available:', typeof $.fn.validate !== 'undefined');
+            console.log('Product.js loaded:', typeof window.productJsLoaded !== 'undefined');
+            
+            // Fallback click handler if product.js doesn't load properly
+            $('.submit_product_form').off('click').on('click', function(e) {
+                e.preventDefault();
+                console.log('Submit button clicked');
+                
+                var submit_type = $(this).val();
+                $('#submit_type').val(submit_type);
+                
+                // Basic form validation
+                var form = $('#product_add_form')[0];
+                if (!form.checkValidity()) {
+                    console.log('Form validation failed');
+                    // Find the first invalid field
+                    var invalidFields = form.querySelectorAll(':invalid');
+                    console.log('Invalid fields:', invalidFields);
+                    if (invalidFields.length > 0) {
+                        console.log('First invalid field:', invalidFields[0].name, invalidFields[0].validationMessage);
+                    }
+                    form.reportValidity();
+                    return false;
+                }
+                
+                console.log('Form is valid, submitting...');
+                $('#product_add_form').submit();
             });
+            
+            console.log('Click handlers attached');
         });
+    }
     </script>
-@endsection
+@endpush

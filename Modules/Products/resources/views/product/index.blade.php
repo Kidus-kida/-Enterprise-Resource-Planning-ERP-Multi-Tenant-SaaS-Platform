@@ -1,154 +1,205 @@
 @extends('layouts.app')
 @section('title', __('sale.products'))
 
-@section('content')
+@section('page-content')
 
 @php
     $business_id = request()->session()->get('user.business_id');
-    $subscription = Modules\Superadmin\Entities\Subscription::current_subscription($business_id);
     $pacakge_details = array();
-    
-    if (!empty($subscription)) {
-        $pacakge_details = $subscription->package_details;
-    }
+    $asset_v = env('APP_VERSION', '1');
 @endphp
 
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>@lang('sale.products')
-        <small>@lang('lang_v1.manage_products')</small>
-    </h1>
-    <!-- <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> Level</a></li>
-        <li class="active">Here</li>
-    </ol> -->
-</section>
-
-<!-- Main content -->
-<section class="content">
-<div class="row">
-    <div class="col-md-12">
-    @component('components.filters', ['title' => __('report.filters')])
-        <div class="col-md-3">
-            <div class="form-group">
-                {!! Form::label('type', __('product.product_type') . ':') !!}
-                {!! Form::select('type', ['single' => __('lang_v1.single'), 'variable' => __('lang_v1.variable'), 'combo' => __('lang_v1.combo')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_type', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="form-group">
-                {!! Form::label('category_id', __('product.category') . ':') !!}
-                {!! Form::select('category_id', $categories, null, ['class' => 'category_id form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_category_id', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-              <div class="form-group">
-                  {!! Form::label('sub_category_id', __('product.sub_category') . ':') !!}
-                  {!! Form::select('sub_category_id', $sub_categories, null, ['class' => 'form-control select2
-                  sub_category_id', 'style' =>
-                  'width:100%', 'id' => 'product_list_filter_sub_category_id', 'placeholder' => __('lang_v1.all')]);
-                  !!}
-              </div>
-          </div>
-          
-          <div class="col-md-3">
-              <div class="form-group">
-                  {!! Form::label('semi_finished', __('unit.semi_finished') . ':') !!}
-                  {!! Form::select('semi_finished', ['1' => __('messages.yes'), '0' => __('messages.no')], null, ['class' => 'form-control select2 semi_finished',
-                  'style' =>
-                  'width:100%', 'id' => 'product_list_filter_semi_finished', 'placeholder' => __('lang_v1.all')]); !!}
-              </div>
-          </div>
-          
-          <div class="col-md-3">
-              <div class="form-group">
-                  {!! Form::label('product_id', __('lang_v1.products') . ':') !!}
-                  {!! Form::select('product_id', $products, null, ['class' => 'form-control select2 product_id',
-                  'style' =>
-                  'width:100%', 'id' => 'product_list_filter_product_id', 'placeholder' => __('lang_v1.all')]); !!}
-              </div>
-          </div>
-
-        <div class="col-md-3">
-            <div class="form-group">
-                {!! Form::label('unit_id', __('product.unit') . ':') !!}
-                {!! Form::select('unit_id', $units, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_unit_id', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="form-group">
-                {!! Form::label('tax_id', __('product.tax') . ':') !!}
-                {!! Form::select('tax_id', $taxes, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_tax_id', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="form-group">
-                {!! Form::label('brand_id', __('product.brand') . ':') !!}
-                {!! Form::select('brand_id', $brands, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_brand_id', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        <div class="col-md-3" id="location_filter">
-            <div class="form-group">
-                {!! Form::label('location_id',  __('purchase.business_location') . ':') !!}
-                {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-        <div class="col-md-3">
-            <br>
-            <div class="form-group">
-                {!! Form::select('active_state', ['active' => __('business.is_active'), 'inactive' => __('lang_v1.inactive')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'active_state', 'placeholder' => __('lang_v1.all')]); !!}
-            </div>
-        </div>
-
-        <!-- include module filter -->
-        @if(!empty($pos_module_data))
-            @foreach($pos_module_data as $key => $value)
-                @if(!empty($value['view_path']))
-                    @includeIf($value['view_path'], ['view_data' => $value['view_data']])
+<div class="content container-fluid">
+    <!-- Page Header -->
+    <x-breadcrumb class="col">
+        <x-slot name="title">{{ __('sale.products') }}</x-slot>
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
+            </li>
+            <li class="breadcrumb-item active">
+                {{ __('sale.products') }}
+            </li>
+        </ul>
+        <x-slot name="right">
+            <div class="col-auto float-end ms-auto">
+                @can('product.create')
+                    <a href="{{action([\Modules\Products\Http\Controllers\ProductController::class, 'create'])}}" class="btn add-btn">
+                        <i class="fa-solid fa-plus"></i> {{ __('messages.add') }}
+                    </a>
+                @endcan
+                @if($is_admin)
+                <a class="btn btn-success" href="{{action([\Modules\Products\Http\Controllers\ProductController::class, 'downloadExcel'])}}">
+                    <i class="fa fa-download"></i> @lang('lang_v1.download_excel')
+                </a>
                 @endif
-            @endforeach
-        @endif
-
-        <div class="col-md-3">
-          <div class="form-group">
-            <br>
-            <label>
-              {!! Form::checkbox('not_for_selling', 1, false, ['class' => 'input-icheck', 'id' => 'not_for_selling']); !!} <strong>@lang('lang_v1.not_for_selling')</strong>
-            </label>
-          </div>
-        </div>
-        @if($is_woocommerce)
-            <div class="col-md-3">
-                <div class="form-group">
-                    <br>
-                    <label>
-                      {!! Form::checkbox('woocommerce_enabled', 1, false, 
-                      [ 'class' => 'input-icheck', 'id' => 'woocommerce_enabled']); !!} {{ __('lang_v1.woocommerce_enabled') }}
-                    </label>
-                </div>
             </div>
-        @endif
-    @endcomponent
+        </x-slot>
+    </x-breadcrumb>
+    <!-- /Page Header -->
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="card-title mb-0">@lang('report.filters')</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_type">@lang('product.product_type'):</label>
+                        <select class="form-control select2" style="width:100%" id="product_list_filter_type" name="type">
+                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="single">@lang('lang_v1.single')</option>
+                            <option value="variable">@lang('lang_v1.variable')</option>
+                            <option value="combo">@lang('lang_v1.combo')</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_category_id">@lang('product.category'):</label>
+                        <select class="form-control select2 category_id" style="width:100%" id="product_list_filter_category_id" name="category_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($categories as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_sub_category_id">@lang('product.sub_category'):</label>
+                        <select class="form-control select2 sub_category_id" style="width:100%" id="product_list_filter_sub_category_id" name="sub_category_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($sub_categories as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_semi_finished">@lang('unit.semi_finished'):</label>
+                        <select class="form-control select2 semi_finished" style="width:100%" id="product_list_filter_semi_finished" name="semi_finished">
+                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="1">@lang('messages.yes')</option>
+                            <option value="0">@lang('messages.no')</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_product_id">@lang('lang_v1.products'):</label>
+                        <select class="form-control select2 product_id" style="width:100%" id="product_list_filter_product_id" name="product_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($products as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_unit_id">@lang('product.unit'):</label>
+                        <select class="form-control select2" style="width:100%" id="product_list_filter_unit_id" name="unit_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($units as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_tax_id">@lang('product.tax'):</label>
+                        <select class="form-control select2" style="width:100%" id="product_list_filter_tax_id" name="tax_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($taxes as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="product_list_filter_brand_id">@lang('product.brand'):</label>
+                        <select class="form-control select2" style="width:100%" id="product_list_filter_brand_id" name="brand_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($brands as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3" id="location_filter">
+                    <div class="mb-3">
+                        <label class="form-label" for="location_id">@lang('purchase.business_location'):</label>
+                        <select class="form-control select2" style="width:100%" id="location_id" name="location_id">
+                            <option value="">@lang('lang_v1.all')</option>
+                            @foreach($business_locations as $key => $value)
+                                <option value="{{$key}}">{{$value}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label" for="active_state">Status:</label>
+                        <select class="form-control select2" style="width:100%" id="active_state" name="active_state">
+                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="active">@lang('business.is_active')</option>
+                            <option value="inactive">@lang('lang_v1.inactive')</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- include module filter -->
+                @if(!empty($pos_module_data))
+                    @foreach($pos_module_data as $key => $value)
+                        @if(!empty($value['view_path']))
+                            @includeIf($value['view_path'], ['view_data' => $value['view_data']])
+                        @endif
+                    @endforeach
+                @endif
+
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" name="not_for_selling" value="1" class="form-check-input input-icheck" id="not_for_selling">
+                        <label class="form-check-label" for="not_for_selling"><strong>@lang('lang_v1.not_for_selling')</strong></label>
+                    </div>
+                </div>
+                @if($is_woocommerce)
+                    <div class="col-md-3">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" name="woocommerce_enabled" value="1" class="form-check-input input-icheck" id="woocommerce_enabled">
+                            <label class="form-check-label" for="woocommerce_enabled">{{ __('lang_v1.woocommerce_enabled') }}</label>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
-</div>
-@can('product.view')
-    <div class="row">
-        <div class="col-md-12">
-           <!-- Custom Tabs -->
-            <div class="nav-tabs-custom">
-                <ul class="nav nav-tabs">
-                    
+
+    @can('product.view')
+        <div class="card">
+            <div class="card-body">
+                <!-- Custom Tabs -->
+                <ul class="nav nav-tabs mb-3" role="tablist">
                     @if((array_key_exists('products_all_products',$pacakge_details) && !empty($pacakge_details['products_all_products'])) || !array_key_exists('products_all_products',$pacakge_details) )
-                        <li class="active">
-                            <a href="#product_list_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-cubes" aria-hidden="true"></i> @lang('lang_v1.all_products')</a>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#product_list_tab" data-bs-toggle="tab">
+                                <i class="fa fa-cubes" aria-hidden="true"></i> @lang('lang_v1.all_products')
+                            </a>
                         </li>
                     @endif
                     
                     @if((array_key_exists('products_stock_report',$pacakge_details) && !empty($pacakge_details['products_stock_report'])) || !array_key_exists('products_stock_report',$pacakge_details) )
                         @can('stock_report.view')
-                        <li>
-                            <a href="#product_stock_report" data-toggle="tab" aria-expanded="true"><i class="fa fa-hourglass-half" aria-hidden="true"></i> @lang('report.stock_report')</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#product_stock_report" data-bs-toggle="tab">
+                                <i class="fa fa-hourglass-half" aria-hidden="true"></i> @lang('report.stock_report')
+                            </a>
                         </li>
                         @endcan
                     @endif
@@ -156,31 +207,27 @@
 
                 <div class="tab-content">
                     @if((array_key_exists('products_all_products',$pacakge_details) && !empty($pacakge_details['products_all_products'])) || !array_key_exists('products_all_products',$pacakge_details) )
-                        <div class="tab-pane active" id="product_list_tab">
-                            @if($is_admin)
-                                <a class="btn btn-success pull-right margin-left-10" href="{{action([\App\Http\Controllers\ProductController::class, 'downloadExcel'])}}"><i class="fa fa-download"></i> @lang('lang_v1.download_excel')</a>
-                            @endif
-                            @can('product.create')                            
-                                <a class="btn btn-primary pull-right" href="{{action([\App\Http\Controllers\ProductController::class, 'create'])}}">
-                                            <i class="fa fa-plus"></i> @lang('messages.add')</a>
-                                <br><br>
-                            @endcan
-                            @include('product.partials.product_list')
+                        <div class="tab-pane show active" id="product_list_tab">
+                            <div class="table-responsive">
+                                @include('products::product.partials.product_list')
+                            </div>
                         </div>
                     @endif
                     
                     @if((array_key_exists('products_stock_report',$pacakge_details) && !empty($pacakge_details['products_stock_report'])) || !array_key_exists('products_stock_report',$pacakge_details) )
                         @can('stock_report.view')
                         <div class="tab-pane" id="product_stock_report">
-                            @include('report.partials.stock_report_table')
+                            {{-- @include('report.partials.stock_report_table') --}}
+                <div class="alert alert-warning">Stock Report Table is not available in this version.</div>
                         </div>
                         @endcan
                     @endif
                 </div>
             </div>
         </div>
-    </div>
-@endcan
+    @endcan
+</div>
+
 <input type="hidden" id="is_rack_enabled" value="{{$rack_enabled}}">
 
 <div class="modal fade product_modal" tabindex="-1" role="dialog" 
@@ -196,20 +243,41 @@
 </div>
 
 @if($is_woocommerce)
-    @include('product.partials.toggle_woocommerce_sync_modal')
+        @include('products::product.partials.toggle_woocommerce_sync_modal')
 @endif
-@include('product.partials.edit_product_location_modal')
-
-</section>
-<!-- /.content -->
+    @include('products::product.partials.edit_product_location_modal')
 
 @endsection
 
-@section('javascript')
-    <script src="{{ asset('js/product.js?v=' . $asset_v) }}"></script>
-    <script src="{{ asset('js/opening_stock.js?v=' . $asset_v) }}"></script>
-    <script type="text/javascript">
-        $(document).ready( function(){
+@push('page-scripts')
+    @vite(["resources/js/datatables.js"])
+    <script>
+        window.addEventListener('load', function() {
+            // Load helpers.js, product.js and opening_stock.js dynamically after jQuery is available
+            $.getScript("{{ asset('js/helpers.js') }}", function() {
+                $.getScript("{{ asset('js/product.js?v=' . $asset_v) }}", function() {
+                    $.getScript("{{ asset('js/opening_stock.js?v=' . $asset_v) }}", function() {
+                         initializeProductIndex();
+                    });
+                });
+            });
+        });
+
+        function initializeProductIndex() {
+            // Language variables for product.js
+            window.LANG = {
+                sure: "{{ __('Are you sure?') }}",
+                no_row_selected: "{{ __('lang_v1.no_row_selected') }}",
+                sku_already_exists: "{{ __('product.sku_already_exists') }}",
+                file_browse_label: "{{ __('Browse') }}",
+                remove: "{{ __('Remove') }}",
+                inc_tax: "{{ __('product.inc_of_tax') }}",
+                exc_tax: "{{ __('product.exc_of_tax') }}",
+                sp_inc_tax: "{{ __('product.selling_price_inc_tax') }}",
+                sp_exc_tax: "{{ __('product.selling_price_exc_tax') }}"
+            };
+
+            $(document).ready( function(){
             product_table = $('#product_table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -549,14 +617,15 @@
             function(){
                 var div = $(this).find('#view_product_stock_details');
             if (div.length) {
-                $.ajax({
-                    url: "{{action([\App\Http\Controllers\ReportController::class, 'getStockReport'])}}"  + '?for=view_product&product_id=' + div.data('product_id'),
-                    dataType: 'html',
-                    success: function(result) {
-                        div.html(result);
-                        __currency_convert_recursively(div);
-                    },
-                });
+                // $.ajax({
+                //     url: "#",
+                //     dataType: 'html',
+                //     success: function(result) {
+                //         div.html(result);
+                //         __currency_convert_recursively(div);
+                //     },
+                // });
+                console.log('Stock Report details disabled: ReportController missing');
             }
             __currency_convert_recursively($(this));
         });
@@ -596,8 +665,8 @@
                             scrollCollapse: false,
                             fixedHeader: false,
                             ajax: {
-                                url: '/reports/stock-report',
-                                data: function(d) {
+                                "url": "/reports/stock-report",
+                                "data": function(d) {
                                     d.type = $('#product_list_filter_type').val();
                                     d.product_id = $('#product_list_filter_product_id').val();
                                     d.location_id = $('#location_id').val();
@@ -756,5 +825,6 @@
             },
         });
     });
+        }
     </script>
-@endsection
+@endpush
