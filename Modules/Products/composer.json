@@ -1,0 +1,14 @@
+{
+    "name": "modules/products",
+    "description": "Products management module",
+    "authors": [
+        {
+            "name": "ERP Team"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Modules\\Products\\": "app/"
+        }
+    }
+}
