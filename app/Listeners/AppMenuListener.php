@@ -118,6 +118,9 @@ class AppMenuListener
 
         // ==================== BUSINESS ====================
         $menu->html('<span>Business</span>', ['class' => 'menu-title']);
+
+        // Contacts
+
         
         // Projects
         if(auth()->user()->canAny(['view-projects','view-taskboards'])){
