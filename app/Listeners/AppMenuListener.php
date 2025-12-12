@@ -152,8 +152,8 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('Taxes'))->addClass(route_is(['taxes.*']) ? 'active' : ''))
-                    ->addIfCan('view-expenses', Link::toRoute('expenses.index', __('Expenses'))->addClass(route_is(['expenses.*']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : ''))
+                    ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('estimates.index', __('Estimates'))->addClass(route_is(['estimates.*']) ? 'active' : ''))
                     ->addIfCan('view-invoices', Link::toRoute('invoices.index', __('Invoices'))->addClass(route_is(['invoices.*']) ? 'active' : ''))
                     ->addParentClass('submenu')
@@ -219,9 +219,7 @@ class AppMenuListener
         // Chat is now in the Apps section managed by Whiteboard module
 
         // ==================== SYSTEM ====================
-        if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles', 'view-backups', 'view-settings'])) {
-            $menu->html('<span>Settings & Admin</span>', ['class' => 'menu-title']);
-        }
+        $menu->html('<span>Settings & Admin</span>', ['class' => 'menu-title']);
         
         // Administration
         if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles'])) {

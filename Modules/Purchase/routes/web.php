@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Purchase\Http\Controllers\PurchaseController;
+use Modules\Purchase\Http\Controllers\SupplierController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +17,5 @@ use Modules\Purchase\Http\Controllers\PurchaseController;
 
 Route::group([], function () {
     Route::resource('purchase', PurchaseController::class)->names('purchase');
+    Route::resource('supplier', SupplierController::class);
 });

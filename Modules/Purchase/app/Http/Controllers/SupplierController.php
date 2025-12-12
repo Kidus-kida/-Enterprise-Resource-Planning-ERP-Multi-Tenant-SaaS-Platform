@@ -7,14 +7,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class PurchaseController extends Controller
+class SupplierController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return view('purchase::index');
+        return view('purchase::supplier.index');
     }
 
     /**
@@ -22,31 +22,7 @@ class PurchaseController extends Controller
      */
     public function create()
     {
-        $Purchase_No = 'PUR-' . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-        $products = [
-        [
-            "id" => 1,
-            "name" => "Laptop Lenovo ThinkPad",
-            "code" => "LP-001",
-            "description" => "14-inch business laptop",
-            "price" => 45000,
-        ],
-        [
-            "id" => 2,
-            "name" => "HP LaserJet Printer",
-            "code" => "PR-105",
-            "description" => "Monochrome laser printer",
-            "price" => 18000,
-        ],
-        [
-            "id" => 3,
-            "name" => "USB Flash Drive 32GB",
-            "code" => "FD-032",
-            "description" => "High-speed USB 3.0 flash drive",
-            "price" => 600,
-        ]
-    ];
-        return view('purchase::create', compact('Purchase_No', 'products'));
+        return view('purchase::supplier.create');
     }
 
     /**
@@ -55,7 +31,6 @@ class PurchaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         //
-        dd($request->all());
     }
 
     /**
@@ -63,7 +38,7 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        return view('purchase::show');
+        return view('purchase::supplier.show');
     }
 
     /**
@@ -71,7 +46,7 @@ class PurchaseController extends Controller
      */
     public function edit($id)
     {
-        return view('purchase::edit');
+        return view('purchase::supplier.edit');
     }
 
     /**
