@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', __('sale.products'))
+@section('title', 'Products')
 
 @section('page-content')
 
@@ -12,25 +12,25 @@
 <div class="content container-fluid">
     <!-- Page Header -->
     <x-breadcrumb class="col">
-        <x-slot name="title">{{ __('sale.products') }}</x-slot>
+        <x-slot name="title">Products</x-slot>
         <ul class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
+                <a href="{{ route('dashboard') }}">Dashboard</a>
             </li>
             <li class="breadcrumb-item active">
-                {{ __('sale.products') }}
+                Products
             </li>
         </ul>
         <x-slot name="right">
             <div class="col-auto float-end ms-auto">
                 @can('product.create')
                     <a href="{{action([\Modules\Products\Http\Controllers\ProductController::class, 'create'])}}" class="btn add-btn">
-                        <i class="fa-solid fa-plus"></i> {{ __('messages.add') }}
+                        <i class="fa-solid fa-plus"></i> Add
                     </a>
                 @endcan
                 @if($is_admin)
                 <a class="btn btn-success" href="{{action([\Modules\Products\Http\Controllers\ProductController::class, 'downloadExcel'])}}">
-                    <i class="fa fa-download"></i> @lang('lang_v1.download_excel')
+                    <i class="fa fa-download"></i> Download Excel
                 </a>
                 @endif
             </div>
@@ -41,26 +41,26 @@
     <!-- Filters -->
     <div class="card mb-3">
         <div class="card-header">
-            <h5 class="card-title mb-0">@lang('report.filters')</h5>
+            <h5 class="card-title mb-0">Filters</h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_type">@lang('product.product_type'):</label>
+                        <label class="form-label" for="product_list_filter_type">Product Type:</label>
                         <select class="form-control select2" style="width:100%" id="product_list_filter_type" name="type">
-                            <option value="">@lang('lang_v1.all')</option>
-                            <option value="single">@lang('lang_v1.single')</option>
-                            <option value="variable">@lang('lang_v1.variable')</option>
-                            <option value="combo">@lang('lang_v1.combo')</option>
+                            <option value="">All</option>
+                            <option value="single">Single</option>
+                            <option value="variable">Variable</option>
+                            <option value="combo">Combo</option>
                         </select>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_category_id">@lang('product.category'):</label>
+                        <label class="form-label" for="product_list_filter_category_id">Category:</label>
                         <select class="form-control select2 category_id" style="width:100%" id="product_list_filter_category_id" name="category_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($categories as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -69,9 +69,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_sub_category_id">@lang('product.sub_category'):</label>
+                        <label class="form-label" for="product_list_filter_sub_category_id">Sub Category:</label>
                         <select class="form-control select2 sub_category_id" style="width:100%" id="product_list_filter_sub_category_id" name="sub_category_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($sub_categories as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -80,19 +80,19 @@
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_semi_finished">@lang('unit.semi_finished'):</label>
+                        <label class="form-label" for="product_list_filter_semi_finished">Semi Finished:</label>
                         <select class="form-control select2 semi_finished" style="width:100%" id="product_list_filter_semi_finished" name="semi_finished">
-                            <option value="">@lang('lang_v1.all')</option>
-                            <option value="1">@lang('messages.yes')</option>
-                            <option value="0">@lang('messages.no')</option>
+                            <option value="">All</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
                         </select>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_product_id">@lang('lang_v1.products'):</label>
+                        <label class="form-label" for="product_list_filter_product_id">Products:</label>
                         <select class="form-control select2 product_id" style="width:100%" id="product_list_filter_product_id" name="product_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($products as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -101,9 +101,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_unit_id">@lang('product.unit'):</label>
+                        <label class="form-label" for="product_list_filter_unit_id">Unit:</label>
                         <select class="form-control select2" style="width:100%" id="product_list_filter_unit_id" name="unit_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($units as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -112,9 +112,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_tax_id">@lang('product.tax'):</label>
+                        <label class="form-label" for="product_list_filter_tax_id">Tax:</label>
                         <select class="form-control select2" style="width:100%" id="product_list_filter_tax_id" name="tax_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($taxes as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -123,9 +123,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="mb-3">
-                        <label class="form-label" for="product_list_filter_brand_id">@lang('product.brand'):</label>
+                        <label class="form-label" for="product_list_filter_brand_id">Brand:</label>
                         <select class="form-control select2" style="width:100%" id="product_list_filter_brand_id" name="brand_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($brands as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -134,9 +134,9 @@
                 </div>
                 <div class="col-md-3" id="location_filter">
                     <div class="mb-3">
-                        <label class="form-label" for="location_id">@lang('purchase.business_location'):</label>
+                        <label class="form-label" for="location_id">Business Location:</label>
                         <select class="form-control select2" style="width:100%" id="location_id" name="location_id">
-                            <option value="">@lang('lang_v1.all')</option>
+                            <option value="">All</option>
                             @foreach($business_locations as $key => $value)
                                 <option value="{{$key}}">{{$value}}</option>
                             @endforeach
@@ -147,9 +147,9 @@
                     <div class="mb-3">
                         <label class="form-label" for="active_state">Status:</label>
                         <select class="form-control select2" style="width:100%" id="active_state" name="active_state">
-                            <option value="">@lang('lang_v1.all')</option>
-                            <option value="active">@lang('business.is_active')</option>
-                            <option value="inactive">@lang('lang_v1.inactive')</option>
+                            <option value="">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
                     </div>
                 </div>
@@ -166,14 +166,14 @@
                 <div class="col-md-3">
                     <div class="form-check mt-4">
                         <input type="checkbox" name="not_for_selling" value="1" class="form-check-input input-icheck" id="not_for_selling">
-                        <label class="form-check-label" for="not_for_selling"><strong>@lang('lang_v1.not_for_selling')</strong></label>
+                        <label class="form-check-label" for="not_for_selling"><strong>Not For Selling</strong></label>
                     </div>
                 </div>
                 @if($is_woocommerce)
                     <div class="col-md-3">
                         <div class="form-check mt-4">
                             <input type="checkbox" name="woocommerce_enabled" value="1" class="form-check-input input-icheck" id="woocommerce_enabled">
-                            <label class="form-check-label" for="woocommerce_enabled">{{ __('lang_v1.woocommerce_enabled') }}</label>
+                            <label class="form-check-label" for="woocommerce_enabled">Woocommerce Enabled</label>
                         </div>
                     </div>
                 @endif
@@ -189,7 +189,7 @@
                     @if((array_key_exists('products_all_products',$pacakge_details) && !empty($pacakge_details['products_all_products'])) || !array_key_exists('products_all_products',$pacakge_details) )
                         <li class="nav-item">
                             <a class="nav-link active" href="#product_list_tab" data-bs-toggle="tab">
-                                <i class="fa fa-cubes" aria-hidden="true"></i> @lang('lang_v1.all_products')
+                                <i class="fa fa-cubes" aria-hidden="true"></i> All Products
                             </a>
                         </li>
                     @endif
@@ -198,7 +198,7 @@
                         @can('stock_report.view')
                         <li class="nav-item">
                             <a class="nav-link" href="#product_stock_report" data-bs-toggle="tab">
-                                <i class="fa fa-hourglass-half" aria-hidden="true"></i> @lang('report.stock_report')
+                                <i class="fa fa-hourglass-half" aria-hidden="true"></i> Stock Report
                             </a>
                         </li>
                         @endcan
@@ -266,15 +266,15 @@
         function initializeProductIndex() {
             // Language variables for product.js
             window.LANG = {
-                sure: "{{ __('Are you sure?') }}",
-                no_row_selected: "{{ __('lang_v1.no_row_selected') }}",
-                sku_already_exists: "{{ __('product.sku_already_exists') }}",
-                file_browse_label: "{{ __('Browse') }}",
-                remove: "{{ __('Remove') }}",
-                inc_tax: "{{ __('product.inc_of_tax') }}",
-                exc_tax: "{{ __('product.exc_of_tax') }}",
-                sp_inc_tax: "{{ __('product.selling_price_inc_tax') }}",
-                sp_exc_tax: "{{ __('product.selling_price_exc_tax') }}"
+                sure: "Are you sure?",
+                no_row_selected: "No row selected. Please select at least one row.",
+                sku_already_exists: "SKU already exists.",
+                file_browse_label: "Browse",
+                remove: "Remove",
+                inc_tax: "Inc. of Tax",
+                exc_tax: "Exc. of Tax",
+                sp_inc_tax: "Selling Price Inc. Tax",
+                sp_exc_tax: "Selling Price Exc. Tax"
             };
 
             $(document).ready( function(){

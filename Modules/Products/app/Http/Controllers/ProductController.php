@@ -629,9 +629,9 @@ class ProductController extends Controller
                     'semi_finished',
                     function ($row) {
                         if ($row->semi_finished == 0) {
-                            return __('messages.no');
+                            return "No";
                         } else {
-                            return __('messages.yes');
+                            return "Yes";
                         }
                     }
                 )
@@ -648,27 +648,27 @@ class ProductController extends Controller
 
 
                         $html =
-                            '<div class="btn-group"><button type="button" class="btn btn-info dropdown-toggle btn-xs" data-toggle="dropdown" aria-expanded="false">' . __('messages.actions') . '<span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu dropdown-menu-left" role="menu" style="overflow-y: auto !important">';
+                            '<div class="btn-group"><button type="button" class="btn btn-info dropdown-toggle btn-xs" data-toggle="dropdown" aria-expanded="false">Actions<span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu dropdown-menu-left" role="menu" style="overflow-y: auto !important">';
                             // <li><a href="' . action([\App\Http\Controllers\LabelsController::class, 'show']) . '?product_id=' . $row->id . '" data-toggle="tooltip" title="' . __('lang_v1.label_help') . '"><i class="fa fa-barcode"></i> ' . __('barcode.labels') . '</a></li>';
 
                         if (auth()->user()->can('product.view')) {
                             $html .=
-                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'show'], [$row->id]) . '" class="view-product"><i class="fa fa-eye"></i> ' . __('messages.view') . '</a></li>';
+                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'show'], [$row->id]) . '" class="view-product"><i class="fa fa-eye"></i> View</a></li>';
                         }
 
                         if (auth()->user()->can('product.update')) {
                             $html .=
-                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'edit'], [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> ' . __('messages.edit') . '</a></li>';
+                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'edit'], [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> Edit</a></li>';
                         }
 
                         if (auth()->user()->can('product.delete')) {
                             $html .=
-                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'destroy'], [$row->id]) . '" class="delete-product"><i class="fa fa-trash"></i> ' . __('messages.delete') . '</a></li>';
+                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'destroy'], [$row->id]) . '" class="delete-product"><i class="fa fa-trash"></i> Delete</a></li>';
                         }
 
                         if ($row->is_inactive == 1) {
                             $html .=
-                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'activate'], [$row->id]) . '" class="activate-product"><i class="fas fa-check-circle"></i> ' . __('lang_v1.reactivate') . '</a></li>';
+                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'activate'], [$row->id]) . '" class="activate-product"><i class="fas fa-check-circle"></i> Reactivate</a></li>';
                         }
 
                         $html .= '<li class="divider"></li>';
@@ -680,28 +680,28 @@ class ProductController extends Controller
                             }
                         }
 
-                        $html .= '<li><a href="#" data-href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'disable'], [$row->id]) . '" class="add-opening-stock"><i class="fa fa-times"></i> ' . __('product.disable') . '</a></li>';
+                        $html .= '<li><a href="#" data-href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'disable'], [$row->id]) . '" class="add-opening-stock"><i class="fa fa-times"></i> Disable</a></li>';
 
                         if ((array_key_exists('products_stock_history', $pacakge_details) && !empty($pacakge_details['products_stock_history'])) || !array_key_exists('products_stock_history', $pacakge_details)) {
                             if (auth()->user()->can('product.view') && $row->category != 'Fuel') {
                                 $html .=
-                                    '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'productStockHistory'], [$row->id]) . '"><i class="fas fa-history"></i> ' . __('lang_v1.product_stock_history') . '</a></li>';
+                                    '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'productStockHistory'], [$row->id]) . '"><i class="fas fa-history"></i> Product Stock History</a></li>';
                             }
                         }
 
                         if (auth()->user()->can('product.create')) {
                             if ($selling_price_group_count > 0) {
                                 $html .=
-                                    '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'addSellingPrices'], [$row->id]) . '"><i class="fas fa-money-bill-alt"></i> ' . __('lang_v1.add_selling_price_group_prices') . '</a></li>';
+                                    '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'addSellingPrices'], [$row->id]) . '"><i class="fas fa-money-bill-alt"></i> Add Selling Price Group Prices</a></li>';
                             }
 
                             $html .=
-                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'create'], ['d' => $row->id]) . '"><i class="fa fa-copy"></i> ' . __('lang_v1.duplicate_product') . '</a></li>';
+                                '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'create'], ['d' => $row->id]) . '"><i class="fa fa-copy"></i> Duplicate Product</a></li>';
                         }
 
                         if (!empty($row->media->first())) {
                             $html .=
-                                '<li><a href="' . $row->media->first()->display_url . '" download="' . $row->media->first()->display_name . '"><i class="fas fa-download"></i> ' . __('lang_v1.product_brochure') . '</a></li>';
+                                '<li><a href="' . $row->media->first()->display_url . '" download="' . $row->media->first()->display_name . '"><i class="fas fa-download"></i> Product Brochure</a></li>';
                         }
 
                         $html .= '</ul></div>';
@@ -710,10 +710,9 @@ class ProductController extends Controller
                     }
                 )
                 ->editColumn('product', function ($row) use ($is_woocommerce) {
-                    $product = $row->is_inactive == 1 ? $row->product . ' <span class="label bg-gray">' . __('lang_v1.inactive') . '</span>' : $row->product;
+                    $product = $row->is_inactive == 1 ? $row->product . ' <span class="label bg-gray">Inactive</span>' : $row->product;
 
-                    $product = $row->not_for_selling == 1 ? $product . ' <span class="label bg-gray">' . __('lang_v1.not_for_selling') .
-                        '</span>' : $product;
+                    $product = $row->not_for_selling == 1 ? $product . ' <span class="label bg-gray">Not for Selling</span>' : $product;
 
                     if ($is_woocommerce && !$row->woocommerce_disable_sync) {
                         $product = $product . '<br><i class="fab fa-wordpress"></i>';
@@ -724,7 +723,9 @@ class ProductController extends Controller
                 ->editColumn('image', function ($row) {
                     return '<div style="display: flex;"><img src="' . $row->image_url . '" alt="Product image" class="product-thumbnail-small"></div>';
                 })
-                ->editColumn('type', '@lang("lang_v1." . $type)')
+                ->editColumn('type', function ($row) {
+                    return ucfirst($row->type);
+                })
                 ->addColumn('mass_delete', function ($row) {
                     return '<input type="checkbox" class="row-select" value="' . $row->id . '">';
                 })
@@ -744,11 +745,11 @@ class ProductController extends Controller
                 })
                 ->addColumn(
                     'purchase_price',
-                    '<div style="white-space: nowrap;">@format_currency($min_purchase_price) @if($max_purchase_price != $min_purchase_price && $type == "variable") -  @format_currency($max_purchase_price)@endif </div>'
+                    '<div style="white-space: nowrap;">Br {{ number_format($min_purchase_price, 2) }} @if($max_purchase_price != $min_purchase_price && $type == "variable") -  Br {{ number_format($max_purchase_price, 2) }}@endif </div>'
                 )
                 ->addColumn(
                     'selling_price',
-                    '<div style="white-space: nowrap;">@format_currency($min_price) @if($max_price != $min_price && $type == "variable") -  @format_currency($max_price)@endif </div>'
+                    '<div style="white-space: nowrap;">Br {{ number_format($min_price, 2) }} @if($max_price != $min_price && $type == "variable") -  Br {{ number_format($max_price, 2) }}@endif </div>'
                 )
                 ->filterColumn('products.sku', function ($query, $keyword) {
                     $query->whereHas('variations', function ($q) use ($keyword) {
@@ -782,7 +783,7 @@ class ProductController extends Controller
         $taxes = $tax_dropdown['tax_rates'];
 
         $business_locations = BusinessLocation::forDropdown($business_id);
-        $business_locations->prepend(__('lang_v1.none'), 'none');
+        $business_locations->prepend('None', 'none');
 
         if ($this->moduleUtil->isModuleInstalled('Manufacturing') && (auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'manufacturing_module'))) {
             $show_manufacturing_data = true;
