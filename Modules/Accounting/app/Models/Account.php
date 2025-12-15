@@ -270,4 +270,12 @@ class Account extends Model
 
         return "Ok";
     }
+
+    public static function getAccountByAccountName($account_name)
+    {
+        $business_id = request()->session()->get('business.id') ?? 1;
+        $account = Account::where(DB::raw("REPLACE(`name`, '  ', ' ')"), $account_name)->where('business_id', $business_id)->first();
+
+        return $account;
+    }
 }
