@@ -118,7 +118,7 @@ class AppMenuListener
 
         // ==================== BUSINESS ====================
         $menu->html('<span>Business</span>', ['class' => 'menu-title']);
-
+        
         // Projects
         if (auth()->user()->canAny(['view-projects', 'view-taskboards'])) {
             $activeClass = route_is(["projects.*", "task-boards.*"]) ? "active" : "";
