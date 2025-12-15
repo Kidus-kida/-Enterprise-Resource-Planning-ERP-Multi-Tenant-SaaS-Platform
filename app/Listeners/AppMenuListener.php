@@ -118,10 +118,10 @@ class AppMenuListener
 
         // ==================== BUSINESS ====================
         $menu->html('<span>Business</span>', ['class' => 'menu-title']);
-        
+
         // Projects
-        if(auth()->user()->canAny(['view-projects','view-taskboards'])){
-            $activeClass = route_is(["projects.*","task-boards.*"]) ? "active" : "";
+        if (auth()->user()->canAny(['view-projects', 'view-taskboards'])) {
+            $activeClass = route_is(["projects.*", "task-boards.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-rocket"></i><span>' . __("Projects") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
@@ -147,8 +147,8 @@ class AppMenuListener
         }
 
         // Sales
-        if(auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
-            $activeClass = route_is(["taxes.*","expenses.*","estimates.*","invoices.*"]) ? "active" : "";
+        if (auth()->user()->canAny(['view-taxes', 'view-expenses', 'view-estimates', 'view-invoices'])) {
+            $activeClass = route_is(["taxes.*", "expenses.*", "estimates.*", "invoices.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-cart"></i><span>' . __("Sales") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
@@ -161,19 +161,103 @@ class AppMenuListener
         }
 
         // Accounting
-        if(auth()->user()->canAny(['view-budgetCategories','view-budgets','view-budgetExpenses','view-budgetRevenues'])){
-            $activeClass = route_is(["budget.categories.*","budgets.*","budget.expenses.*","budget.revenue.*"]) ? "active" : "";
+        if (auth()->user()->canAny([
+            'view-budgetCategories',
+            'view-budgets',
+            'view-budgetExpenses',
+            'view-budgetRevenues',
+            // Add any other permission that should grant access to the full Accounting menu
+            // e.g., 'view-accounts', 'view-journals', etc., if needed
+        ])) {
+            // Determine if any accounting-related route is active — broader match
+            $isAccountingActive = route_is([
+                'budget.categories.*',
+                'budgets.*',
+                'budget.expense.*',
+                'budget.revenue.*',
+                'account.*',
+                'journal.*',
+                'accounting.income-statement',
+                'accounting.balance-sheet*',
+                'accounting.trial-balance*',
+                'accounting.cash-flow',
+                'accounting.payment-account-report',
+                'fixed-asset.*',
+                'post-dated-cheques.*',
+                'pdc.*',
+                'account-types.*',
+                'account-groups.*',
+                'account-settings.*'
+            ]);
+
             $menu->submenu(
-                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calculator"></i><span>' . __("Accounting") . '</span><span class="menu-arrow"></span></a>'),
+                Html::raw('<a href="#" class="' . ($isAccountingActive ? 'active' : '') . '"><i class="la la-calculator"></i><span>' . __("Accounting") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Categories'))->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
-                    ->addIfCan('view-budgets', Link::toRoute('budgets.index', __('Budgets'))->addClass(route_is(['budgets.*']) ? 'active' : ''))
-                    ->addIfCan('view-budgetExpenses', Link::toRoute('budget.expense.index', __('Budget Expenses'))->addClass(route_is(['budget.expense.*']) ? 'active' : ''))
-                    ->addIfCan('view-budgetRevenues', Link::toRoute('budget.revenue.index', __('Budget Revenue'))->addClass(route_is(['budget.revenue.*']) ? 'active' : ''))
+
+                    // Core accounting items (adjust permissions as needed — currently no gate; add if required)
+                    ->add(Link::toRoute('account.index', __('Accounts'))
+                        ->addClass(route_is(['account.index', 'account.show']) ? 'active' : ''))
+                    ->add(Link::toRoute('journal.index', __('Journals'))
+                        ->addClass(route_is(['journal.*']) ? 'active' : ''))
+
+                    // Financial Reports Submenu
+                    ->submenu(
+                        Html::raw('<a href="#"><span>' . __('Financial Reports') . '</span><span class="menu-arrow"></span></a>'),
+                        Menu::new()
+                            ->add(Link::toRoute('accounting.income-statement', __('Income Statement'))
+                                ->addClass(route_is(['accounting.income-statement']) ? 'active' : ''))
+                            ->add(Link::toRoute('accounting.balance-sheet', __('Balance Sheet'))
+                                ->addClass(route_is(['accounting.balance-sheet*']) ? 'active' : ''))
+                            ->add(Link::toRoute('accounting.trial-balance', __('Trial Balance'))
+                                ->addClass(route_is(['accounting.trial-balance*']) ? 'active' : ''))
+                            ->add(Link::toRoute('accounting.cash-flow', __('Cash Flow'))
+                                ->addClass(route_is(['accounting.cash-flow']) ? 'active' : ''))
+                            ->add(Link::toRoute('accounting.payment-account-report', __('Payment Account Report'))
+                                ->addClass(route_is(['accounting.payment-account-report']) ? 'active' : ''))
+                            ->addParentClass('submenu')
+                    )
+
+                    // Fixed Assets
+                    ->add(Link::toRoute('fixed-asset.index', __('Fixed Assets'))
+                        ->addClass(route_is(['fixed-asset.*']) ? 'active' : ''))
+
+                    // Post-Dated Cheques
+                    ->add(Link::toRoute('post-dated-cheques.index', __('Post-Dated Cheques'))
+                        ->addClass(route_is(['post-dated-cheques.*', 'pdc.*']) ? 'active' : ''))
+
+                    // Settings Submenu
+                    // ->submenu(
+                    //     Html::raw('<a href="#"><span>' . __('Settings') . '</span><span class="menu-arrow"></span></a>'),
+                    //     Menu::new()
+                    //         ->add(Link::toRoute('account-types.index', __('Account Types'))
+                    //             ->addClass(route_is(['account-types.*']) ? 'active' : ''))
+                    //         ->add(Link::toRoute('account-groups.index', __('Account Groups'))
+                    //             ->addClass(route_is(['account-groups.*']) ? 'active' : ''))
+                    //         ->add(Link::toRoute('account-settings.index', __('Account Settings'))
+                    //             ->addClass(route_is(['account-settings.*']) ? 'active' : ''))
+                    //         ->addParentClass('submenu')
+                    // )
+
+                    // Budgets Submenu
+                    ->submenu(
+                        Html::raw('<a href="#"><span>' . __('Budgets') . '</span><span class="menu-arrow"></span></a>'),
+                        Menu::new()
+                            ->addIfCan('view-budgets', Link::toRoute('budgets.index', __('Budgets'))
+                                ->addClass(route_is(['budgets.*']) ? 'active' : ''))
+                            ->addIfCan('view-budgetExpenses', Link::toRoute('budget.expense.index', __('Budget Expenses'))
+                                ->addClass(route_is(['budget.expense.*']) ? 'active' : ''))
+                            ->addIfCan('view-budgetRevenues', Link::toRoute('budget.revenue.index', __('Budget Revenue'))
+                                ->addClass(route_is(['budget.revenue.*']) ? 'active' : ''))
+                            ->addParentClass('submenu')
+                    )
+                    // Budget-related items (permission-gated)
+                    ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Categories'))
+                        ->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
+
+
                     ->addParentClass('submenu')
             );
         }
-
         // ==================== OPERATIONS ====================
         $operationsActive = route_is(['assets.*', 'folders.*', 'tickets.*', 'assigned-tickets']);
         $menu->submenu(
@@ -183,7 +267,7 @@ class AppMenuListener
                 ->addIfCan('view-assets', Link::toRoute('assets.index', __('Assets'))->addClass(route_is('assets.*') ? 'active' : ''))
                 ->add(Link::toRoute('folders.index', __('File Manager'))->addClass(route_is('folders.*') ? 'active' : ''))
                 ->addIf(
-                    function() {
+                    function () {
                         return auth()->user()->type === UserType::EMPLOYEE;
                     },
                     Menu::new()
@@ -195,7 +279,7 @@ class AppMenuListener
                         )
                 )
                 ->addIf(
-                    function() {
+                    function () {
                         return auth()->user()->type !== UserType::EMPLOYEE;
                     },
                     Link::toRoute('tickets.index', __('Tickets'))->addClass(route_is('tickets.*') ? 'active' : '')
@@ -208,7 +292,7 @@ class AppMenuListener
         if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles', 'view-backups', 'view-settings'])) {
             $menu->html('<span>Settings & Admin</span>', ['class' => 'menu-title']);
         }
-        
+
         // Administration
         if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles'])) {
             $activeClass = route_is(['holidays.*', 'users.*', 'roles.*']) ? "active" : "";
