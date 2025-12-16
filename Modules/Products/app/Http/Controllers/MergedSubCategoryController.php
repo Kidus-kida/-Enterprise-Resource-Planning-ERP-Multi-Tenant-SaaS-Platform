@@ -80,7 +80,7 @@ class MergedSubCategoryController extends Controller
                 ->make(true);
         }
 
-        return view('products::merged_sub_categories.index');
+        return view('Products::merged_sub_categories.index');
     }
 
     /**
@@ -95,7 +95,7 @@ class MergedSubCategoryController extends Controller
             ->where('parent_id', 0)
             ->pluck('name', 'id');
 
-        return view('products::merged_sub_categories.create')
+        return view('Products::merged_sub_categories.create')
             ->with(compact('categories'));
     }
 
@@ -164,7 +164,7 @@ class MergedSubCategoryController extends Controller
             ->pluck('name', 'id');
 
 
-        return view('products::merged_sub_categories.edit')
+        return view('Products::merged_sub_categories.edit')
             ->with(compact('categories', 'sub_categories', 'merge'));
     }
 

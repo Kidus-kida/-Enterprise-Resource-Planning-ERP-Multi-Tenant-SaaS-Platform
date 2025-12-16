@@ -2,9 +2,9 @@
 
 namespace Modules\Products\Http\Controllers;
 
-use App\Account;
-use App\AccountGroup;
-use App\AccountType;
+use Modules\Accounting\Models\Account;
+use Modules\Accounting\Models\AccountGroup;
+use Modules\Accounting\Models\AccountType;
 use App\Category;
 use App\Product;
 use App\Transaction;
@@ -15,7 +15,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Modules\Superadmin\Entities\HelpExplanation;
+// use Modules\Superadmin\Entities\HelpExplanation;
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
@@ -204,7 +204,8 @@ class CategoryController extends Controller
             }
         }
 
-        $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        // $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        $help_explanations = [];
 
         return view('products::category.create')
             ->with(compact('parent_categories', 'account_access', 'cogs_accounts', 'sale_income_accounts', 'expense_accounts', 'income_accounts', 'help_explanations'));

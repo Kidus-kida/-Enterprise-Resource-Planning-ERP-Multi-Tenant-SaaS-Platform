@@ -67,7 +67,7 @@ class SellingPriceGroupController extends Controller
                 ->make(true);
         }
 
-        return view('products::selling_price_group.index');
+        return view('Products::selling_price_group.index');
     }
 
     /**
@@ -81,7 +81,7 @@ class SellingPriceGroupController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return view('products::selling_price_group.create');
+        return view('Products::selling_price_group.create');
     }
 
     /**
@@ -150,7 +150,7 @@ class SellingPriceGroupController extends Controller
             $business_id = request()->session()->get('user.business_id');
             $spg = SellingPriceGroup::where('business_id', $business_id)->find($id);
 
-            return view('products::selling_price_group.edit')
+            return view('Products::selling_price_group.edit')
                 ->with(compact('spg'));
         }
     }

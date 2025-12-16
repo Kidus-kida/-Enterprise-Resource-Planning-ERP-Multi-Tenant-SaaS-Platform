@@ -10,7 +10,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Http\Request;
 
 use App\Utils\Util;
-use Modules\Superadmin\Entities\HelpExplanation;
+// use Modules\Superadmin\Entities\HelpExplanation;
 
 class UnitController extends Controller
 {
@@ -102,7 +102,8 @@ class UnitController extends Controller
                 ->make(true);
         }
 
-        $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        // $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        $help_explanations = [];
 
         return view('products::unit.index')->with(compact('help_explanations'));
     }
@@ -131,12 +132,13 @@ class UnitController extends Controller
             $units = Unit::forDropdown($business_id);
 
         }
-        $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        // $help_explanations = HelpExplanation::pluck('value', 'help_key');
+        $help_explanations = [];
 
         $sale_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'sale_module');
         $property_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'property_module');
 
-        return view('products::unit.create')
+        return view('Products::unit.create')
                 ->with(compact('quick_add', 'units', 'help_explanations', 'is_property', 'sale_module', 'property_module'));
     }
 
@@ -224,7 +226,7 @@ class UnitController extends Controller
 
             $sale_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'sale_module');
             $property_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'property_module');
-            return view('products::unit.edit')
+            return view('Products::unit.edit')
                 ->with(compact('unit', 'units', 'sale_module', 'property_module'));
         }
     }
