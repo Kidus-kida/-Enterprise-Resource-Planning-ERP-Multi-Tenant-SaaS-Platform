@@ -1,0 +1,11 @@
+{
+    "name": "ProductCatalogue",
+    "alias": "productcatalogue",
+    "description": "Catalogue & Menu module",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ProductCatalogue\\Providers\\ProductCatalogueServiceProvider"
+    ],
+    "files": []
+}

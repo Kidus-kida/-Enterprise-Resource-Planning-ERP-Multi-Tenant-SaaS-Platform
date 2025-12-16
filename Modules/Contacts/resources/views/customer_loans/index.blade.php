@@ -25,6 +25,41 @@
         </x-breadcrumb>
         <!-- /Page Header -->
 
+        <!-- Search Filter -->
+        <div class="row filter-row">
+            <div class="col-sm-6 col-md-3">
+                <div class="input-block mb-3 form-focus">
+                     <div class="cal-icon">
+                        <input class="form-control floating datepicker" type="text" id="filter_start_date" placeholder="Start Date">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                 <div class="input-block mb-3 form-focus">
+                    <div class="cal-icon">
+                        <input class="form-control floating datepicker" type="text" id="filter_end_date" placeholder="End Date">
+                    </div>
+                 </div>
+            </div>
+             <div class="col-sm-6 col-md-3">
+                <div class="input-block mb-3 form-focus select-focus">
+                    <select class="select floating" id="filter_customer">
+                        <option value=""> -- Select Customer -- </option>
+                        @foreach(Modules\Contacts\Models\Contact::where('type', 'customer')->get() as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="focus-label">Customer</label>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="d-grid">
+                    <a href="javascript:void(0)" class="btn btn-success" id="btn-filter"> Search </a>
+                </div>
+            </div>
+        </div>
+        <!-- /Search Filter -->
+
         <div class="row">
             <div class="col-md-12">
                 <div class="table-responsive">
@@ -41,3 +76,36 @@
 ])
 {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
 @endpush
+
+@push('scripts')
+<script>
+    $(document).ready(function(){
+        if($('.datepicker').length > 0) {
+            $('.datepicker').datetimepicker({
+                format: 'YYYY-MM-DD',
+                icons: {
+                    up: "fa fa-angle-up",
+                    down: "fa fa-angle-down",
+                    next: 'fa fa-angle-right',
+                    previous: 'fa fa-angle-left'
+                }
+            });
+        }
+        if($('.select').length > 0) {
+            $('.select').select2({
+                minimumResultsForSearch: -1,
+                width: '100%'
+            });
+        }
+
+        $('#btn-filter').on('click', function(){
+            var table = $('#customer-loan-table').DataTable();
+            table.on('preXhr.dt', function ( e, settings, data ) {
+                data.start_date = $('#filter_start_date').val();
+                data.end_date = $('#filter_end_date').val();
+                data.contact_id = $('#filter_customer').val();
+            });
+            table.ajax.reload();
+        });
+    });
+</script>

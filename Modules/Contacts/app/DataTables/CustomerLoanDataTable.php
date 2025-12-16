@@ -42,9 +42,24 @@ class CustomerLoanDataTable extends DataTable
      */
     public function query(Transaction $model): QueryBuilder
     {
-        return $model->newQuery()
+        $query = $model->newQuery()
                     ->with('contact')
-                    ->where('type', 'direct_customer_loan'); // Filtering for loans
+                    ->where('type', 'direct_customer_loan')
+                    ->where('business_id', auth()->user()->business_id); // Filtering for loans
+        
+        if (request()->has('contact_id') && !empty(request()->contact_id)) {
+            $query->where('contact_id', request()->contact_id);
+        }
+        
+        if (request()->has('start_date') && !empty(request()->start_date)) {
+            $query->whereDate('transaction_date', '>=', request()->start_date);
+        }
+
+        if (request()->has('end_date') && !empty(request()->end_date)) {
+            $query->whereDate('transaction_date', '<=', request()->end_date);
+        }
+
+        return $query;
     }
 
     /**
@@ -75,7 +90,7 @@ class CustomerLoanDataTable extends DataTable
         return [
             Column::make('transaction_date')->title('Date'),
             Column::make('ref_no')->title('Ref No'),
-            Column::make('contact_id')->title('Customer'),
+            Column::make('contact_name')->title('Customer')->name('contact.name'),
             Column::make('transaction_note')->title('Note'),
             Column::make('approved_user')->title('Approved By'),
             Column::make('final_total')->title('Amount'),

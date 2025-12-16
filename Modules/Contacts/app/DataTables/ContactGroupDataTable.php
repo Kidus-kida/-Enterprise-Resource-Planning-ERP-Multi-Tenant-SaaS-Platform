@@ -24,14 +24,15 @@ class ContactGroupDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->editColumn('amount', function ($row) {
-                return $row->amount; 
+                return number_format($row->amount, 2); 
             })
             ->editColumn('created_at', function ($row) {
                 return format_date($row->created_at);
             })
             ->addColumn('action', function ($row) {
-                return view('contacts::contact_groups.action', ['id' => $row->id]);
-            })->rawColumns(['action']);
+                return view('contacts::contact_groups.action', ['id' => $row->id, 'name' => $row->name]);
+            })
+            ->rawColumns(['action']);
     }
 
     /**
@@ -39,7 +40,29 @@ class ContactGroupDataTable extends DataTable
      */
     public function query(ContactGroup $model): QueryBuilder
     {
-        return $model->newQuery();
+        $business_id = auth()->user()->business_id;
+        $type = request()->get('type');
+
+        $query = $model->newQuery()
+            ->where('contact_groups.business_id', $business_id)
+            ->select([
+                'contact_groups.id',
+                'contact_groups.name', 
+                'contact_groups.type', 
+                'contact_groups.amount',
+                'contact_groups.account_type_id',
+                'contact_groups.interest_account_id', 
+                'contact_groups.created_at'
+            ]);
+
+        if (!empty($type)) {
+            $query->where(function ($q) use ($type) {
+                 $q->where('contact_groups.type', $type)
+                   ->orWhere('contact_groups.type', 'both');
+            });
+        }
+
+        return $query;
     }
 
     /**
@@ -51,15 +74,7 @@ class ContactGroupDataTable extends DataTable
                     ->setTableId('contact-group-table')
                     ->columns($this->getColumns())
                     ->minifiedAjax()
-                    ->orderBy(1)
-                    ->buttons([
-                        Button::make('excel'),
-                        Button::make('csv'),
-                        Button::make('pdf'),
-                        Button::make('print'),
-                        Button::make('reset'),
-                        Button::make('reload')
-                    ]);
+                    ->orderBy(1);
     }
 
     /**
@@ -68,10 +83,10 @@ class ContactGroupDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('name')->title('Name'),
-            Column::make('type')->title('Type'),
-            Column::make('amount')->title('Amount'),
-            Column::make('created_at')->title('Created At'),
+            Column::make('name')->title(__('Name')),
+            Column::make('type')->title(__('Type')),
+            Column::make('amount')->title(__('Amount')),
+            Column::make('created_at')->title(__('Created At')),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)

@@ -2,7 +2,7 @@
 
 namespace App\DataTables;
 
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\EloquentDataTable;
@@ -78,13 +78,20 @@ class ContactDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('contact_id')->title('#'),
+            Column::make('contact_id')->title('contact ID'),
             Column::make('name')->title('Name'),
             Column::make('supplier_business_name')->title('Business Name'),
             Column::make('email'),
             Column::make('mobile'),
-            Column::make('type'),
-            Column::make('created_at'),
+             Column::make('supplier group'),
+            Column::make('assign to'),
+            Column::make('pay to'),
+             Column::make('pay term'),
+             Column::make('total purchase due'),
+            Column::make('total purchase return due'),
+            Column::make('opening balance'),
+            Column::make('tax number'),
+            Column::make('adeded on')->title('Added On')->data('created_at'),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)

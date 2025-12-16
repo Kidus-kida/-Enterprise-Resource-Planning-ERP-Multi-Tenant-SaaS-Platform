@@ -3,7 +3,7 @@
 namespace Modules\Contacts\DataTables;
 
 use Modules\Contacts\Models\TransactionPayment;
-use App\Models\Contact; // Added this import
+use Modules\Contacts\Models\Contact; // Updated import
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\EloquentDataTable;
@@ -36,7 +36,7 @@ class CustomerPaymentDataTable extends DataTable
              ->addColumn('contact_name', function ($row) {
                  // Try to get contact from payment directly or via transaction
                  if($row->payment_for){
-                      $contact = \App\Models\Contact::find($row->payment_for);
+                      $contact = Contact::find($row->payment_for);
                       return $contact ? $contact->name : '';
                  }
                  return $row->transaction && $row->transaction->contact ? $row->transaction->contact->name : '';
@@ -56,10 +56,29 @@ class CustomerPaymentDataTable extends DataTable
         // OR directly linked to customer (advance).
         // For simplicity, we query payments where the related transaction is a SELL or Loan, OR the payment_for is a customer.
         
-        return $model->newQuery()
+        $query = $model->newQuery()
                     ->with(['transaction.contact', 'contact'])
+                    ->where('business_id', auth()->user()->business_id) 
                     ->select('transaction_payments.*');
-                    // Add more strict filtering if needed to separate Supplier payments
+
+        if (request()->has('contact_id') && !empty(request()->contact_id)) {
+            $query->where('payment_for', request()->contact_id);
+            // OR whereHas transaction.contact... but 'payment_for' covers direct payments
+        }
+        
+        if (request()->has('start_date') && !empty(request()->start_date)) {
+            $query->whereDate('paid_on', '>=', request()->start_date);
+        }
+
+        if (request()->has('end_date') && !empty(request()->end_date)) {
+            $query->whereDate('paid_on', '<=', request()->end_date);
+        }
+
+        if (request()->has('method') && !empty(request()->method)) {
+            $query->where('method', request()->method);
+        }
+
+        return $query;
     }
 
     /**
@@ -90,7 +109,7 @@ class CustomerPaymentDataTable extends DataTable
         return [
             Column::make('paid_on')->title('Date'),
             Column::make('payment_ref_no')->title('Ref No'),
-            Column::make('customer_name')->title('Customer'),
+            Column::make('contact_name')->title('Customer')->name('contact.name'),
             Column::make('amount')->title('Amount'),
             Column::make('method')->title('Method'),
             Column::make('note')->title('Note'),
