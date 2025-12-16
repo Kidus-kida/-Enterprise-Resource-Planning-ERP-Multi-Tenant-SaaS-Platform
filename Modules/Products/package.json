@@ -1,0 +1,14 @@
+{
+    "name": "products",
+    "version": "1.0.0",
+    "description": "Products module assets",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "laravel-vite-plugin": "^1.0"
+    }
+}
