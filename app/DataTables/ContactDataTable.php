@@ -2,7 +2,7 @@
 
 namespace App\DataTables;
 
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\EloquentDataTable;

@@ -5,7 +5,7 @@ namespace Modules\Contacts\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Contacts\Models\Transaction;
 use Modules\Contacts\Models\TransactionPayment;
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 use Illuminate\Http\Request;
 use Modules\Contacts\DataTables\CustomerPaymentDataTable;
 
@@ -26,7 +26,7 @@ class CustomerPaymentController extends Controller
     public function create()
     {
         $customers = Contact::where('type', 'customer')->pluck('name', 'id');
-        return view('pages.customer_payments.create', compact('customers'));
+        return view('contacts::customer_payments.create', compact('customers'));
     }
 
     /**
@@ -42,9 +42,14 @@ class CustomerPaymentController extends Controller
         ]);
 
         $input = $request->except(['_token']);
-        $input['business_id'] = 1; 
+        $input['business_id'] = auth()->user()->business_id; 
         $input['created_by'] = auth()->id();
         
+        // Generate Payment Ref No
+        if(empty($input['payment_ref_no'])){
+             $input['payment_ref_no'] = 'SP-' . time();
+        }
+
         // Logic: if this is a "Due Payment", we might need to find transactions to pay off. 
         // For "Customer Payments" module often implies receiving money.
         // For simplicity, we create a standalone payment record linked to the customer.
@@ -62,7 +67,7 @@ class CustomerPaymentController extends Controller
     {
         $payment = TransactionPayment::findOrFail($id);
         $customers = Contact::where('type', 'customer')->pluck('name', 'id');
-        return view('pages.customer_payments.edit', compact('payment', 'customers'));
+        return view('contacts::customer_payments.edit', compact('payment', 'customers'));
     }
 
     /**

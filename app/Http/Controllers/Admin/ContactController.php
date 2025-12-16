@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 use Illuminate\Http\Request;
 use App\DataTables\ContactDataTable;
 use Illuminate\Support\Facades\Crypt;

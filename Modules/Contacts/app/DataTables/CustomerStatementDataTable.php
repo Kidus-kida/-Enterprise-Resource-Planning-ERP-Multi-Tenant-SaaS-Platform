@@ -45,7 +45,22 @@ class CustomerStatementDataTable extends DataTable
      */
     public function query(CustomerStatement $model): QueryBuilder
     {
-        return $model->newQuery()->with(['contact', 'user']);
+        $business_id = auth()->user()->business_id;
+        $query = $model->newQuery()->with(['contact', 'user'])->where('business_id', $business_id);
+
+        if (request()->has('customer_id') && !empty(request()->customer_id)) {
+            $query->where('customer_id', request()->customer_id);
+        }
+
+        if (request()->has('start_date') && !empty(request()->start_date)) {
+            $query->whereDate('date_from', '>=', request()->start_date);
+        }
+
+        if (request()->has('end_date') && !empty(request()->end_date)) {
+            $query->whereDate('date_to', '<=', request()->end_date);
+        }
+        
+        return $query;
     }
 
     /**

@@ -4,7 +4,7 @@ namespace Modules\Contacts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Contacts\Models\Transaction;
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 use Illuminate\Http\Request;
 use Modules\Contacts\DataTables\CustomerLoanDataTable;
 
@@ -25,7 +25,7 @@ class CustomerLoanController extends Controller
     public function create()
     {
         $customers = Contact::where('type', 'customer')->pluck('name', 'id');
-        return view('pages.customer_loans.create', compact('customers'));
+        return view('contacts::customer_loans.create', compact('customers'));
     }
 
     /**
@@ -37,14 +37,21 @@ class CustomerLoanController extends Controller
             'contact_id' => 'required|exists:contacts,id',
             'final_total' => 'required|numeric',
             'transaction_date' => 'required|date',
+            'approved_user' => 'nullable|string', 
+            'transaction_note' => 'nullable|string',
         ]);
 
         $input = $request->except(['_token']);
-        $input['business_id'] = 1; // Default
+        $input['business_id'] = auth()->user()->business_id;
         $input['created_by'] = auth()->id();
         $input['type'] = 'direct_customer_loan';
         $input['status'] = 'final';
-        $input['payment_status'] = 'due'; 
+        $input['payment_status'] = 'due';
+        
+        // Generate Ref No if not present
+        if(empty($input['ref_no'])){
+            $input['ref_no'] = 'CL-' . time(); // Simple generation, typically use a Util
+        }
 
         Transaction::create($input);
 
@@ -59,7 +66,7 @@ class CustomerLoanController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
         $customers = Contact::where('type', 'customer')->pluck('name', 'id');
-        return view('pages.customer_loans.edit', compact('transaction', 'customers'));
+        return view('contacts::customer_loans.edit', compact('transaction', 'customers'));
     }
 
     /**
