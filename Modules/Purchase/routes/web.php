@@ -15,7 +15,14 @@ use Modules\Purchase\Http\Controllers\SupplierController;
 |
 */
 
-Route::group([], function () {
-    Route::resource('purchase', PurchaseController::class)->names('purchase');
+Route::middleware(['web', 'auth'])->group(function () {
+    // AJAX routes for purchase creation
+    Route::post('purchases/get_purchase_entry_row', [PurchaseController::class, 'getPurchaseEntryRow'])->name('purchase.get_purchase_entry_row');
+    Route::post('purchases/get_payment_row', [PurchaseController::class, 'getPaymentRow'])->name('purchase.get_payment_row');
+    Route::get('purchases/get_products', [PurchaseController::class, 'getProducts'])->name('purchase.get_products');
+    Route::get('purchases/get_suppliers', [PurchaseController::class, 'getSuppliers'])->name('purchase.get_suppliers');
+    Route::get('purchases/cheque-list', [PurchaseController::class, 'getChequeList'])->name('purchase.cheque_list');
+    
+    Route::resource('purchase', PurchaseController::class);
     Route::resource('supplier', SupplierController::class);
 });

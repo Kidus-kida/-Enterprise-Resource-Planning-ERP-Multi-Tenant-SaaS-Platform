@@ -71,6 +71,7 @@
                             <div class="input-block mb-3">
                                 <x-form.label>{{ __('Purchase No') }}</x-form.label>
                                 <x-form.input type="text" name="invoice_no" value="{{ $purchase_no }}" disabled />
+                                    <input type="hidden" name="invoice_no" value="{{ $purchase_no }}">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -88,9 +89,9 @@
 
                                     <!-- Overlapping plus button -->
                                     <button type="button"
-                                        class="btn btn-outline-primary position-absolute end-0 top-0 h-100 d-flex align-items-center px-3"
+                                        class="btn btn-outline-primary position-absolute end-0 top-0 d-flex align-items-center px-3"
                                         data-url="{{ route('supplier.create') }}" data-ajax-modal="true" data-size="lg"
-                                        data-title="Add Supplier" style="border-radius: 0 .375rem .375rem 0;">
+                                        data-title="Add Supplier" style="height: 44px; border-radius: 0 .375rem .375rem 0;">
                                         +
                                     </button>
                                 </div>
@@ -228,91 +229,13 @@
                                     </tr>
                                 </thead>
                                 <tbody id="product-table-body">
-                                    <!-- Example Row 1 -->
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Lanka Kerosene Oil<br><small>(A0017L99)</small></td>
-                                        <td>
-                                            <input type="number" class="form-control" value="1.00" step="0.01"
-                                                min="0">
-                                            <select class="form-select mt-1">
-                                                <option>Ltrs</option>
-                                                <option>Kg</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-secondary mt-1">Free Qty</button>
+                                     <!-- Placeholder row when no items exist -->
+                                    <tr id="no-items-row">
+                                        <td colspan="14" class="text-center py-4 text-muted">
+                                            <i class="fas fa-box-open fa-2x mb-2"></i>
+                                            <br>
+                                            {{ __('No items added yet. Search and select products above to add them.') }}
                                         </td>
-                                        <td><input type="text" class="form-control bg-light" value="-363.68" readonly>
-                                        </td>
-                                        <td><input type="number" class="form-control" value="289.1" step="0.01"
-                                                min="0"></td>
-                                        <td><input type="number" class="form-control" value="10" step="0.01"
-                                                min="0"></td>
-                                        <td><input type="number" class="form-control" value="260.19" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="260.19" step="0.01"
-                                                min="0" readonly></td>
-                                        <td>
-                                            <select class="form-select">
-                                                <option>GST.</option>
-                                                <option>VAT</option>
-                                            </select>
-                                        </td>
-                                        <td><input type="number" class="form-control" value="288.81" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="288.81" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="2.14" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="295.00" step="0.01"
-                                                min="0"></td>
-                                        <td><button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Example Row 2 -->
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Lanka Auto Diesel<br><small>(A0013L99)</small></td>
-                                        <td>
-                                            <input type="number" class="form-control" value="1.00" step="0.01"
-                                                min="0">
-                                            <select class="form-select mt-1">
-                                                <option>Ltrs</option>
-                                                <option>Kg</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-secondary mt-1">Free Qty</button>
-                                        </td>
-                                        <td><input type="text" class="form-control bg-light" value="3254.41" readonly>
-                                        </td>
-                                        <td><input type="number" class="form-control" value="292.79" step="0.01"
-                                                min="0"></td>
-                                        <td><input type="number" class="form-control" value="0" step="0.01"
-                                                min="0"></td>
-                                        <td><input type="number" class="form-control" value="292.790000" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="292.79" step="0.01"
-                                                min="0" readonly></td>
-                                        <td>
-                                            <select class="form-select">
-                                                <option>GST.</option>
-                                                <option>VAT</option>
-                                            </select>
-                                        </td>
-                                        <td><input type="number" class="form-control" value="325.00" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="325.00" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="2.84" step="0.01"
-                                                min="0" readonly></td>
-                                        <td><input type="number" class="form-control" value="334.23" step="0.01"
-                                                min="0"></td>
-                                        <td><button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Placeholder row when no items exist -->
-                                    <tr id="no-items-row" style="display: none;">
-                                        <td colspan="14" class="text-center">{{ __('No items added') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -358,52 +281,20 @@
 
                         <!-- Payment Methods Section -->
                         <div class="col-md-12 mb-4">
-                            <h5 class="mb-3">{{ __('Payment Details') }}</h5>
-                            <div id="payment-methods-container">
-                                <!-- Initial payment row -->
-                                <div class="payment-row row mb-3 p-3 border rounded shadow-sm">
-                                    <div class="col-12 mt-2 d-flex justify-content-end">
-                                        <button type="button"
-                                            class="btn btn-danger btn-sm remove-payment">&times;</button>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <x-form.label>{{ __('Payment Amount') }}</x-form.label>
-                                        <x-form.input type="number" step="0.01" class="form-control payment-amount"
-                                            name="payments[0][amount]" value="0.00" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <x-form.label>{{ __('Payment Method') }}</x-form.label>
-                                        <x-form.select class="form-control payment-method" name="payments[0][method]">
-                                            <option value="" disabled selected>{{ __('Select Method') }}</option>
-                                            <option value="cash">{{ __('Cash') }}</option>
-                                            <option value="own_cards">{{ __('Own Cards') }}</option>
-                                            <option value="bank_transfer">{{ __('Bank Transfer') }}</option>
-                                            <option value="credit_purchase">{{ __('Credit Purchase') }}</option>
-                                        </x-form.select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <x-form.label>{{ __('Accounting Module') }}</x-form.label>
-                                        <x-form.select class="form-control" name="payments[0][accounting_module]">
-                                            <option value="">{{ __('None') }}</option>
-                                            <option value="sales">{{ __('Sales') }}</option>
-                                            <option value="purchase">{{ __('Purchase') }}</option>
-                                            <option value="expense">{{ __('Expense') }}</option>
-                                        </x-form.select>
-                                    </div>
-                                    <div class="col-md-4 mt-2 cheque-fields d-none">
-                                        <x-form.label>{{ __('Cheque Number') }}</x-form.label>
-                                        <x-form.input type="text" class="form-control"
-                                            name="payments[0][cheque_number]" />
-                                    </div>
-                                    <div class="col-md-4 mt-2 bank-fields d-none">
-                                        <x-form.label>{{ __('Bank Name') }}</x-form.label>
-                                        <x-form.input type="text" class="form-control"
-                                            name="payments[0][bank_name]" />
-                                    </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">{{ __('Payment Details') }}</h5>
+                                <div>
+                                    <strong>{{ __('Payment Due') }}:</strong>
+                                    <span id="payment_due" class="text-danger fs-5">0.00</span>
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-outline-secondary" id="add-payment-btn">
+                            <div id="payment_rows_div">
+                                {{-- Initial payment row --}}
+                                @include('purchase::partials.payment_row', ['row_index' => 0, 'payment_types' => $payment_types ?? [], 'accounts' => $accounts ?? []])
+                            </div>
+
+                            <button type="button" class="btn btn-primary btn-block mt-3" id="add-payment-row">
                                 <i class="fa fa-plus"></i> {{ __('Add Payment Method') }}
                             </button>
                         </div>
@@ -420,185 +311,12 @@
 @endsection
 
 @push('page-script')
-    <script>
-        const products = @json($products ?? []);
-    </script>
-    <script>
-        let paymentIndex = 1;
-
-        document.getElementById('add-payment-btn').addEventListener('click', function() {
-            const container = document.getElementById('payment-methods-container');
-
-            const newRow = document.createElement('div');
-            newRow.className = 'payment-row row mb-3 p-3 border rounded shadow-sm';
-
-            newRow.innerHTML = `
-            <div class="col-12 mt-2 d-flex justify-content-end">
-                <button type="button" class="btn btn-danger btn-sm remove-payment">&times;</button>
-            </div>
-            <div class="col-md-4">
-                <x-form.label>Payment Amount</x-form.label>
-                <x-form.input type="number" step="0.01" class="form-control payment-amount" name="payments[${paymentIndex}][amount]" value="0.00" />
-            </div>
-            <div class="col-md-4">
-                <x-form.label>Payment Method</x-form.label>
-                <x-form.select class="form-control payment-method" name="payments[${paymentIndex}][method]">
-                    <option value="" disabled selected>Select Method</option>
-                    <option value="cash">Cash</option>
-                    <option value="own_cards">Own Cards</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="credit_purchase">Credit Purchase</option>
-                </x-form.select>
-            </div>
-            <div class="col-md-4">
-                <x-form.label>Accounting Module</x-form.label>
-                <x-form.select class="form-control" name="payments[${paymentIndex}][accounting_module]">
-                    <option value="">None</option>
-                    <option value="sales">Sales</option>
-                    <option value="purchase">Purchase</option>
-                    <option value="expense">Expense</option>
-                </x-form.select>
-            </div>
-            <div class="col-md-4 mt-2 cheque-fields d-none">
-                <x-form.label>Cheque Number</x-form.label>
-                <x-form.input type="text" class="form-control" name="payments[${paymentIndex}][cheque_number]"/>
-            </div>
-            <div class="col-md-4 mt-2 bank-fields d-none">
-                <x-form.label>Bank Name</x-form.label>
-                <x-form.input type="text" class="form-control" name="payments[${paymentIndex}][bank_name]"/>
-            </div>
-        `;
-
-            container.appendChild(newRow);
-            paymentIndex++;
-
-            // Attach event to new select
-            const newSelect = newRow.querySelector('.payment-method');
-            newSelect.addEventListener('change', togglePaymentFields);
-        });
-
-        // Toggle cheque/bank fields on method change (for existing and new rows)
-        function togglePaymentFields(event) {
-            const row = event.target.closest('.payment-row');
-            const method = event.target.value;
-            const chequeFields = row.querySelector('.cheque-fields');
-            const bankFields = row.querySelector('.bank-fields');
-
-            // Hide both first
-            chequeFields.classList.add('d-none');
-            bankFields.classList.add('d-none');
-
-            if (method === 'cheque') {
-                chequeFields.classList.remove('d-none');
-                bankFields.classList.remove('d-none');
-            } else if (method === 'bank_transfer') {
-                bankFields.classList.remove('d-none');
-            }
-        }
-
-        // Initial event listeners
-        document.querySelectorAll('.payment-method').forEach(select => {
-            select.addEventListener('change', togglePaymentFields);
-        });
-
-        // Remove payment row (but not the first one)
-        document.getElementById('payment-methods-container').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-payment')) {
-                const rows = document.querySelectorAll('.payment-row');
-                if (rows.length > 1) {
-                    e.target.closest('.payment-row').remove();
-                } else {
-                    alert('{{ __('At least one payment method is required.') }}');
-                }
-            }
-        });
-    </script>
-    <script>
-        const filterInput = document.getElementById('product-filter');
-        const productSelect = document.getElementById('product-select');
-
-        /* 🔍 Filter products with Debounce */
-        let debounceTimeout;
-
-        filterInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-
-            // Hide list if query is empty
-            if (!query) {
-                productSelect.style.display = 'none';
-                return;
-            }
-
-            clearTimeout(debounceTimeout);
-
-            debounceTimeout = setTimeout(() => {
-                let hasResults = false;
-
-                Array.from(productSelect.options).forEach(option => {
-                    if (!option.value) return;
-
-                    const text = option.text.toLowerCase();
-                    const match = text.includes(query);
-                    option.style.display = match ? 'block' : 'none';
-                    if (match) hasResults = true;
-                });
-
-                // Show select only if we have results
-                productSelect.style.display = hasResults ? 'block' : 'none';
-
-                // Reset scroll position
-                productSelect.scrollTop = 0;
-
-                // Auto-size based on results (up to max-height defined in CSS)
-                productSelect.size = Math.min(productSelect.options.length, 10);
-
-            }, 500); // 500ms debounce delay
-        });
-
-        /* 🖱️ Close list when clicking outside */
-        document.addEventListener('click', function(e) {
-            if (!filterInput.contains(e.target) && !productSelect.contains(e.target)) {
-                productSelect.style.display = 'none';
-            }
-        });
-
-        /* ✅ On select product */
-        productSelect.addEventListener('click',
-        function() { // Changed from 'change' to 'click' for better UX with floating list
-            const option = this.selectedOptions[
-            0]; // Or rely on event target if options are divs, but here they are <option>
-
-            // For single click on option in a size>1 select, 'change' triggers, but 'click' is safer for immediate selection
-            if (!this.value) return;
-
-            // Find the selected option element explicitly if needed, but 'this.value' works for select
-            const selectedOption = this.options[this.selectedIndex];
-
-            if (!selectedOption) return;
-
-            const productId = selectedOption.value;
-            const productName = selectedOption.dataset.name;
-            const productCode = selectedOption.dataset.code;
-
-            addProductToTable(productId, productName, productCode);
-
-            // Reset search
-            filterInput.value = '';
-
-            // Hide list
-            this.style.display = 'none';
-
-            // Reset selection
-            this.selectedIndex = -1;
-        });
-
-        /* 🔧 Your table logic placeholder */
-        function addProductToTable(id, name, code) {
-            console.log('Added product:', id, name, code);
-
-            // TODO:
-            // 1. Prevent duplicates
-            // 2. Append row to purchase table
-        }
-    </script>
+    {{-- Include jQuery if not already loaded --}}
+    @if(!isset($jquery_loaded))
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        @php $jquery_loaded = true; @endphp
+    @endif
+    
+    {{-- Purchase creation JavaScript --}}
+    <script src="{{ asset('modules/purchase/assets/js/purchase.js') }}"></script>
 @endpush

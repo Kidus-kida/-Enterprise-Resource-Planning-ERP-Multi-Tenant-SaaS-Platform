@@ -30,4 +30,14 @@ class Transaction extends Model
         // return $this->belongsTo(Business::class);
         // Assuming Business model implementation comes later or uses User business_id
     }
+
+    public function purchase_lines()
+    {
+        return $this->hasMany(\Modules\Purchase\Models\PurchaseLine::class, 'transaction_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(\Modules\Contacts\Models\TransactionPayment::class, 'transaction_id');
+    }
 }
