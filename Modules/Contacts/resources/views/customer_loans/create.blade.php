@@ -34,6 +34,13 @@
            
            <div class="col-md-12">
                 <div class="input-block mb-3">
+                    <x-form.label>{{ __('Approved By') }}</x-form.label>
+                    <x-form.input type="text" name="approved_user" />
+                </div>
+           </div>
+           
+           <div class="col-md-12">
+                <div class="input-block mb-3">
                     <x-form.label>{{ __('Note') }}</x-form.label>
                     <textarea class="form-control" name="transaction_note"></textarea>
                 </div>

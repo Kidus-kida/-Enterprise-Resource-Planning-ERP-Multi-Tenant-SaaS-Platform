@@ -2,7 +2,7 @@
 
 namespace Modules\Contacts\Models;
 
-use App\Models\Contact;
+use Modules\Contacts\Models\Contact;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
