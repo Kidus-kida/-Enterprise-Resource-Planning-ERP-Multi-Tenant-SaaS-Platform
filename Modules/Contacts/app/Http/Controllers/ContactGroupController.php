@@ -4,8 +4,8 @@ namespace Modules\Contacts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Contacts\Models\ContactGroup;
-// use Modules\Accounting\Models\Account; // TODO: Uncomment when Accounting module is migrated
-// use Modules\Accounting\Models\AccountType; // TODO: Uncomment when Accounting module is migrated
+use Modules\Accounting\Models\Account;
+use Modules\Accounting\Models\AccountType;
 use Illuminate\Http\Request;
 use Modules\Contacts\DataTables\ContactGroupDataTable;
 use Illuminate\Support\Facades\DB;
@@ -30,11 +30,9 @@ class ContactGroupController extends Controller
         $type = request()->type;
         $business_id = auth()->user()->business_id;
         
-        // TODO: Fetch accounts for dropdowns when Accounting module is migrated
-        // $allAccounts = Account::where('account_type_id', 3)->get();
-        // $allAccountsType = AccountType::all();
-        $allAccounts = [];
-        $allAccountsType = [];
+        // Fetch accounts for dropdowns
+        $allAccounts = Account::where('account_type_id', 3)->get();
+        $allAccountsType = AccountType::all();
         
         $price_groups = []; // SellingPriceGroup::forDropdown($business_id, false); 
         $user_groups = []; // User::forDropdown($business_id);
@@ -90,15 +88,12 @@ class ContactGroupController extends Controller
         
         $type = $contact_group->type;
         
-        // TODO: Fetch accounts when Accounting module is migrated
-        // $allAccounts = Account::where('account_type_id', $contact_group->account_type_id)->get();
-        // $allAccountsType = AccountType::all();
-        // $selectedAccount = $contact_group->interest_account_id ? Account::find($contact_group->interest_account_id) : null;
-        // $selectedAccountType = $contact_group->account_type_id ? Account::find($contact_group->account_type_id) : null;
-        $allAccounts = [];
-        $allAccountsType = [];
-        $selectedAccount = null;
-        $selectedAccountType = null;
+        $allAccounts = Account::where('account_type_id', $contact_group->account_type_id)->get();
+        $allAccountsType = AccountType::all();
+        
+        // Handling nulls if linked accounts are deleted or missing
+        $selectedAccount = $contact_group->interest_account_id ? Account::find($contact_group->interest_account_id) : null;
+        $selectedAccountType = $contact_group->account_type_id ? AccountType::find($contact_group->account_type_id) : null;
         
         $selectedSupGroupId = $contact_group->supplier_group_id ?? null;
         $price_groups = []; // SellingPriceGroup::forDropdown($business_id, false);
