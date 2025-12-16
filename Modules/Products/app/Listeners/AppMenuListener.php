@@ -36,6 +36,24 @@ class AppMenuListener
                     ->add(
                         Link::toRoute('products.create', __('Add Product'))->addClass(route_is(['products.create']) ? 'active' : ''),
                     )
+                    ->add(
+                        Link::toRoute('products.variations.index', __('Variations'))->addClass(route_is(['products.variations.index']) ? 'active' : ''),
+                    )
+                    ->add(
+                        Link::toRoute('products.brands.index', __('Brands'))->addClass(route_is(['products.brands.index']) ? 'active' : ''),
+                    )
+                    ->add(
+                        Link::toRoute('products.categories.index', __('Categories'))->addClass(route_is(['products.categories.index']) ? 'active' : ''),
+                    )
+                    ->add(
+                        Link::toRoute('products.units.index', __('Units'))->addClass(route_is(['products.units.index']) ? 'active' : ''),
+                    )
+                    ->add(
+                        Link::toRoute('products.selling-price-group.index', __('Selling Price Groups'))->addClass(route_is(['products.selling-price-group.index']) ? 'active' : ''),
+                    )
+                    ->add(
+                        Link::toRoute('products.merged-sub-categories.index', __('Merged Sub Categories'))->addClass(route_is(['products.merged-sub-categories.index']) ? 'active' : ''),
+                    )
                     ->addParentClass('submenu')
             );
     }

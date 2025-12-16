@@ -12,6 +12,12 @@
 */
 
 use Modules\Products\Http\Controllers\ProductController;
+use Modules\Products\Http\Controllers\VariationTemplateController;
+use Modules\Products\Http\Controllers\BrandController;
+use Modules\Products\Http\Controllers\CategoryController;
+use Modules\Products\Http\Controllers\UnitController;
+use Modules\Products\Http\Controllers\SellingPriceGroupController;
+use Modules\Products\Http\Controllers\MergedSubCategoryController;
 
 Route::middleware(['web', 'auth'])->prefix('products')->name('products.')->group(function () {
 
@@ -83,6 +89,29 @@ Route::middleware(['web', 'auth'])->prefix('products')->name('products.')->group
 
     // User activity report
     Route::get('/user_activity', [ProductController::class, 'getUserActivityReport'])->name('user-activity');
+
+    // Variation Template
+    Route::resource('variations', VariationTemplateController::class);
+
+    // Brand
+    Route::resource('brands', BrandController::class);
+
+    // Category
+    Route::resource('categories', CategoryController::class);
+
+    // Unit
+    Route::get('/units/get-sub-units', [UnitController::class, 'getSubUnits'])->name('units.get-sub-units');
+    Route::resource('units', UnitController::class);
+
+    // Selling Price Group
+    Route::get('/selling-price-group/export', [SellingPriceGroupController::class, 'export'])->name('selling-price-group.export');
+    Route::post('/selling-price-group/import', [SellingPriceGroupController::class, 'import'])->name('selling-price-group.import');
+    Route::get('/selling-price-group/toggle-activate/{id}', [SellingPriceGroupController::class, 'toggleActivate'])->name('selling-price-group.toggle-activate');
+    Route::resource('selling-price-group', SellingPriceGroupController::class);
+
+    // Merged Sub Categories
+    Route::get('/merged-sub-categories/get-sub-categories/{id}', [MergedSubCategoryController::class, 'getSubCategories'])->name('merged-sub-categories.get-sub-categories');
+    Route::resource('merged-sub-categories', MergedSubCategoryController::class);
 
     // Resource routes (index, create, store, show, edit, update, destroy)
     Route::resource('/', ProductController::class)->parameters(['' => 'product']);
