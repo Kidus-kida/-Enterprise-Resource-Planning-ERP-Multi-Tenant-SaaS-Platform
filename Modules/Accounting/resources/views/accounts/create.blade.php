@@ -4,7 +4,7 @@
             <h5 class="modal-title">{{ isset($account) ? __('Edit Account') : __('Add New Account') }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form id="accountForm" method="POST" action="{{ isset($account) ? route('account.update', $account->id) : route('account.store') }}">
+        <form id="accountForm" method="POST" action="{{ isset($account) ? route('accounts.update', $account->id) : route('accounts.store') }}">
             @csrf
             @if(isset($account))
                 @method('PUT')
