@@ -28,6 +28,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>{{ __('Name') }}</th>
+                                        <th>{{ __('Parent Type') }}</th>
                                         <th>{{ __('Description') }}</th>
                                         <th class="text-end">{{ __('Action') }}</th>
                                     </tr>
@@ -44,43 +45,65 @@
 @endsection
 
 @push('page-scripts')
-@vite(["resources/js/datatables.js"])
-<script type="module">
-    $(document).ready(function(){
-        if ($.fn.DataTable.isDataTable('.datatable')) {
-            $('.datatable').DataTable().destroy();
-        }
-        
-        $('.datatable').DataTable({
-            processing: true,
-            serverSide: true,
-            destroy: true,
-            ajax: "{{route('account-types.index')}}",
-            columns: [
-                {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                {data: 'name', name: 'name'},
-                {data: 'description', name: 'description'},
-                {data: 'action', name: 'action', orderable: false, searchable: false},
-            ]
-        });
-    });
+    @vite(['resources/js/datatables.js'])
+    <script type="module">
+        $(document).ready(function() {
+            if ($.fn.DataTable.isDataTable('.datatable')) {
+                $('.datatable').DataTable().destroy();
+            }
 
-    function deleteType(id) {
-        if(confirm('Are you sure you want to delete this account type?')) {
-            $.ajax({
-                url: '/accounting/account-types/' + id,
-                type: 'DELETE',
-                data: { _token: '{{ csrf_token() }}' },
-                success: function(response) {
-                    if(response.success) {
-                        toastr.success(response.message);
-                        $('.datatable').DataTable().ajax.reload();
-                    } else {
-                        toastr.error(response.message);
-                    }
-                }
+            $('.datatable').DataTable({
+                processing: true,
+                serverSide: true,
+                destroy: true,
+                ajax: "{{ route('account-types.index') }}",
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'parent_type',
+                        name: 'parent_type',
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'description',
+                        name: 'description'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                ]
             });
+        });
+
+        function deleteType(id) {
+            if (confirm('Are you sure you want to delete this account type?')) {
+                $.ajax({
+                    url: '/accounting/account-types/' + id,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('.datatable').DataTable().ajax.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    }
+                });
+            }
         }
-    }
-</script>
+    </script>
 @endpush

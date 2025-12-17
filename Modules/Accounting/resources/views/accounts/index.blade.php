@@ -5,7 +5,7 @@
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Chart of Accounts') }}</x-slot>
+
             <ul class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
@@ -14,22 +14,12 @@
                     <a href="#">{{ __('Accounting') }}</a>
                 </li>
             </ul>
-            <x-slot name="right">
-                <div class="col-auto float-end ms-auto">
-                    <a data-url="{{ route('account.create') }}" href="javascript:void(0)" class="btn add-btn"
-                        data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Account') }}">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Account') }}
-                    </a>
-                    <a href="{{ route('accounts.import') }}" class="btn btn-primary">
-                        <i class="fa-solid fa-file-import"></i> {{ __('Import Accounts') }}
-                    </a>
-                </div>
-            </x-slot>
+
         </x-breadcrumb>
         <!-- /Page Header -->
 
         <!-- Tabs Navigation -->
-        <div class="row mb-3">
+        <div class="row mb-1">
             <div class="col-12">
                 <ul class="nav nav-tabs nav-tabs-solid">
                     <li class="nav-item">
@@ -47,6 +37,21 @@
                             <i class="fa fa-folder"></i> {{ __('Account Groups') }}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#account-settings-tab" data-bs-toggle="tab">
+                            <i class="fa fa-cogs"></i> {{ __('Account Settings') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#deposits-transfers-tab" data-bs-toggle="tab">
+                            <i class="fa fa-exchange-alt"></i> {{ __('Deposits & Transfers') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#cheques-ob-tab" data-bs-toggle="tab">
+                            <i class="fa fa-money-check"></i> {{ __('Cheques in Hand') }}
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -57,26 +62,93 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-12 text-end">
+                                        <button type="button" class="btn btn-success btn-sm me-2"
+                                            data-url="{{ route('account.deposit', ['type' => 'cash']) }}"
+                                            data-ajax-modal="true" data-title="Cash Deposit">
+                                            <i class="fa fa-money-bill"></i> Cash Deposit
+                                        </button>
+
+                                        <button type="button" class="btn btn-primary btn-sm me-2"
+                                            data-url="{{ route('account.cheque-deposit') }}" data-ajax-modal="true"
+                                            data-title="Cheque Deposit">
+                                            <i class="fa fa-money-check"></i> Cheque Deposit
+                                        </button>
+
+                                        <button type="button" class="btn btn-warning btn-sm me-2"
+                                            data-url="{{ route('account.deposit', ['type' => 'card']) }}"
+                                            data-ajax-modal="true" data-title="Card Deposit">
+                                            <i class="fa fa-credit-card"></i> Card Deposit
+                                        </button>
+
+                                        <a data-url="{{ route('accounts.create') }}" href="javascript:void(0)"
+                                            class="btn btn-warning btn-sm" data-ajax-modal="true" data-size="lg"
+                                            data-title="Add Account"
+                                            style="background-color: #fd7e14; border-color: #fd7e14; color: white;">
+                                            <i class="fa-solid fa-plus"></i> Add Account
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="card-body">
                                 <!-- Filter Section -->
-                                <div class="row mb-3">
-                                    <div class="col-md-3">
-                                        <select id="account_type_filter" class="form-select">
-                                            <option value="">{{ __('All Account Types') }}</option>
-                                        </select>
+                                <div class="row mb-1">
+                                    <div class="col-md-12">
+                                        <h5><i class="fa fa-filter"></i> {{ __('Filters') }}</h5>
                                     </div>
                                     <div class="col-md-3">
-                                        <select id="account_group_filter" class="form-select">
-                                            <option value="">{{ __('All Account Groups') }}</option>
-                                        </select>
+                                        <div class="form-group">
+                                            <label class="form-label">{{ __('Account Type') }}:</label>
+                                            <select id="account_type_filter" class="form-select select2"
+                                                style="width: 100%;">
+                                                <option value="">{{ __('All') }}</option>
+                                                @foreach ($account_types as $id => $name)
+                                                    <option value="{{ $id }}">{{ $name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <select id="status_filter" class="form-select">
-                                            <option value="active">{{ __('Active Accounts') }}</option>
-                                            <option value="all">{{ __('All Accounts') }}</option>
-                                            <option value="closed">{{ __('Closed Accounts') }}</option>
-                                            <option value="disabled">{{ __('Disabled Accounts') }}</option>
-                                        </select>
+                                        <div class="form-group">
+                                            <label class="form-label">{{ __('Account Sub Type') }}:</label>
+                                            <select id="account_sub_type_filter" class="form-select select2"
+                                                style="width: 100%;">
+                                                <option value="">{{ __('All') }}</option>
+                                                @if (isset($account_sub_types))
+                                                    @foreach ($account_sub_types as $id => $name)
+                                                        <option value="{{ $id }}">{{ $name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label class="form-label">{{ __('Account Group') }}:</label>
+                                            <select id="account_group_filter" class="form-select select2"
+                                                style="width: 100%;">
+                                                <option value="">{{ __('All') }}</option>
+                                                @foreach ($account_groups as $id => $name)
+                                                    <option value="{{ $id }}">{{ $name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label class="form-label">{{ __('Account Name') }}:</label>
+                                            <select id="account_name_filter" class="form-select select2"
+                                                style="width: 100%;">
+                                                <option value="">{{ __('All') }}</option>
+                                                @if (isset($accounts))
+                                                    @foreach ($accounts as $id => $name)
+                                                        <option value="{{ $id }}">{{ $name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -86,13 +158,13 @@
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th>{{ __('Account Number') }}</th>
-                                                <th>{{ __('Account Name') }}</th>
-                                                <th>{{ __('Account Type') }}</th>
+                                                <th>{{ __('Name') }}</th>
+                                                <th>{{ __('Type') }}</th>
+                                                <th>{{ __('Sub Type') }}</th>
                                                 <th>{{ __('Account Group') }}</th>
-                                                <th>{{ __('Current Balance') }}</th>
-                                                <th>{{ __('Status') }}</th>
-                                                <th class="text-end">{{ __('Action') }}</th>
+                                                <th>{{ __('Account Number') }}</th>
+                                                <th>{{ __('Balance') }}</th>
+                                                <th class="text-end" data-orderable="false">{{ __('Action') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -171,6 +243,21 @@
                     </div>
                 </div>
             </div><!-- /Account Groups Tab -->
+
+            <!-- Account Settings Tab -->
+            <div class="tab-pane fade" id="account-settings-tab">
+                @includeIf('accounting::account-settings.index')
+            </div>
+
+            <!-- Deposits & Transfers Tab -->
+            <div class="tab-pane fade" id="deposits-transfers-tab">
+                @includeIf('accounting::accounts.list_deposit_transfer')
+            </div>
+
+            <!-- Cheques in Hand Tab -->
+            <div class="tab-pane fade" id="cheques-ob-tab">
+                @includeIf('accounting::accounts.cheques_opening_balance_details')
+            </div>
         </div><!-- /Tab Content -->
     </div>
 @endsection
@@ -190,11 +277,12 @@
                 serverSide: true,
                 destroy: true,
                 ajax: {
-                    url: "{{ route('account.index') }}",
+                    url: "{{ route('accounts.index') }}",
                     data: function(d) {
                         d.account_type = $('#account_type_filter').val();
+                        d.account_sub_type = $('#account_sub_type_filter').val();
                         d.account_group = $('#account_group_filter').val();
-                        d.status = $('#status_filter').val();
+                        d.account_name = $('#account_name_filter').val();
                     }
                 },
                 columns: [{
@@ -202,10 +290,6 @@
                         name: 'DT_RowIndex',
                         orderable: false,
                         searchable: false
-                    },
-                    {
-                        data: 'account_number',
-                        name: 'account_number'
                     },
                     {
                         data: 'name',
@@ -216,8 +300,18 @@
                         name: 'account_type'
                     },
                     {
+                        data: 'parent_account_type_name',
+                        name: 'parent_account_type_name',
+                        defaultContent: ''
+                    },
+                    {
                         data: 'account_group',
                         name: 'account_group'
+                    },
+                 
+                    {
+                        data: 'account_number',
+                        name: 'account_number'
                     },
                     {
                         data: 'balance',
@@ -225,14 +319,10 @@
                         className: 'text-end'
                     },
                     {
-                        data: 'status',
-                        name: 'status'
-                    },
-                    {
                         data: 'action',
                         name: 'action',
-                        orderable: false,
-                        searchable: false
+                        orderable: true,
+                        searchable: true
                     },
                 ],
                 initComplete: function() {
