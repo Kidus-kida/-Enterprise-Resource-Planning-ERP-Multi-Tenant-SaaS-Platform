@@ -41,7 +41,7 @@ class MergedSubCategoryController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             $enable_petro_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'enable_petro_module');
 
             $merged_sub_category = MergedSubCategory::leftjoin('categories', 'merged_sub_categories.category_id', 'categories.id')
@@ -49,38 +49,49 @@ class MergedSubCategoryController extends Controller
                 ->where('merged_sub_categories.business_id', $business_id)
                 ->select('merged_sub_categories.*', 'categories.name as category_name', 'users.username');
 
-            return DataTables::of($merged_sub_category)
-                ->addColumn(
-                    'action',
-                    '
-                    @can("category.update")
-                    <button data-href="{{action([\Modules\Products\Http\Controllers\MergedSubCategoryController::class, \'edit\'], [$id])}}" class="btn btn-xs btn-primary edit_category_button"><i class="glyphicon glyphicon-edit"></i>  Edit</button>
-                        &nbsp;
-                    @endcan
-                    @can("category.delete")
-                        <a href="{{action([\Modules\Products\Http\Controllers\MergedSubCategoryController::class, \'destroy\'], [$id])}}" class="btn btn-xs btn-danger delete_merge_button"><i class="glyphicon glyphicon-trash"></i> Delete</a>
-                    @endcan
-                  
-                    '
-                )
-                ->editColumn('merged_sub_categories', function ($row) {
-                    $cat = Category::whereIn('id', $row->sub_categories)->pluck('name')->toArray();
-                    return $cat;
-                    return implode(',', $cat);
-                })
-                ->editColumn('status', function ($row) {
-                    if ($row->status == 0) {
-                        return 'Inactive';
-                    } else {
-                        return 'Active';
-                    }
-                })
-                ->removeColumn('id')
-                ->rawColumns(['action', 'merged_sub_categories'])
-                ->make(true);
+            try {
+                return DataTables::of($merged_sub_category)
+                    ->addColumn(
+                        'action',
+                        '
+                        @can("category.update")
+                        <button data-href="{{action([\Modules\Products\Http\Controllers\MergedSubCategoryController::class, \'edit\'], [$id])}}" class="btn btn-xs btn-primary edit_category_button"><i class="glyphicon glyphicon-edit"></i>  Edit</button>
+                            &nbsp;
+                        @endcan
+                        @can("category.delete")
+                            <a href="{{action([\Modules\Products\Http\Controllers\MergedSubCategoryController::class, \'destroy\'], [$id])}}" class="btn btn-xs btn-danger delete_merge_button"><i class="glyphicon glyphicon-trash"></i> Delete</a>
+                        @endcan
+                    
+                        '
+                    )
+                    ->editColumn('merged_sub_categories', function ($row) {
+                        $sub_cat_ids = $row->sub_categories;
+                        if (is_string($sub_cat_ids)) {
+                            $sub_cat_ids = json_decode($sub_cat_ids, true);
+                        }
+                        if (is_array($sub_cat_ids)) {
+                            $cat = Category::whereIn('id', $sub_cat_ids)->pluck('name')->toArray();
+                            return implode(', ', $cat);
+                        }
+                        return '';
+                    })
+                    ->editColumn('status', function ($row) {
+                        if ($row->status == 0) {
+                            return 'Inactive';
+                        } else {
+                            return 'Active';
+                        }
+                    })
+                    ->removeColumn('id')
+                    ->rawColumns(['action', 'merged_sub_categories'])
+                    ->make(true);
+            } catch (\Exception $e) {
+                \Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
+                return response()->json(['error' => $e->getMessage()]);
+            }
         }
 
-        return view('Products::merged_sub_categories.index');
+        return view('products::merged_sub_categories.index');
     }
 
     /**
@@ -90,12 +101,12 @@ class MergedSubCategoryController extends Controller
      */
     public function create()
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
         $categories = Category::where('business_id', $business_id)
             ->where('parent_id', 0)
             ->pluck('name', 'id');
 
-        return view('Products::merged_sub_categories.create')
+        return view('products::merged_sub_categories.create')
             ->with(compact('categories'));
     }
 
@@ -108,13 +119,23 @@ class MergedSubCategoryController extends Controller
     public function store(Request $request)
     {
         try {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
+
+            // Parse date - handle different formats
+            $dateTime = $request->date_and_time;
+            try {
+                $parsedDate = Carbon::parse($dateTime)->format('Y-m-d');
+            } catch (\Exception $e) {
+                // If parsing fails, try to use current date
+                $parsedDate = Carbon::now()->format('Y-m-d');
+            }
+
             $data = array(
                 'business_id' => $business_id,
-                'date_and_time' => Carbon::parse($request->date_and_time)->format('Y-m-d'),
+                'date_and_time' => $parsedDate,
                 'category_id' => $request->category_id,
                 'merged_sub_category_name' => $request->merged_sub_category_name,
-                'sub_categories' => $request->sub_categories,
+                'sub_categories' => json_encode($request->sub_categories),
                 'status' => $request->status,
                 'created_by' => Auth::user()->id
             );
@@ -154,17 +175,24 @@ class MergedSubCategoryController extends Controller
      */
     public function edit($id)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
         $categories = Category::where('business_id', $business_id)
             ->where('parent_id', 0)
             ->pluck('name', 'id');
-        $merge = MergedSubCategory::find($id);
+
+        $merge = MergedSubCategory::where('business_id', $business_id)->findOrFail($id);
+
+        // Decode sub_categories if it's JSON
+        if (is_string($merge->sub_categories)) {
+            $merge->sub_categories = json_decode($merge->sub_categories, true);
+        }
+
         $sub_categories = Category::where('business_id', $business_id)
-            ->where('parent_id',  $merge->category_id)
+            ->where('parent_id', $merge->category_id)
             ->pluck('name', 'id');
 
 
-        return view('Products::merged_sub_categories.edit')
+        return view('products::merged_sub_categories.edit')
             ->with(compact('categories', 'sub_categories', 'merge'));
     }
 
@@ -178,7 +206,7 @@ class MergedSubCategoryController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             $data = array(
                 'business_id' => $business_id,
                 'date_and_time' => Carbon::parse($request->date_and_time)->format('Y-m-d'),

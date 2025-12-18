@@ -18,6 +18,7 @@ use Modules\Products\Http\Controllers\CategoryController;
 use Modules\Products\Http\Controllers\UnitController;
 use Modules\Products\Http\Controllers\SellingPriceGroupController;
 use Modules\Products\Http\Controllers\MergedSubCategoryController;
+use Modules\Products\Http\Controllers\VariationTransferController;
 
 Route::middleware(['web', 'auth'])->prefix('products')->name('products.')->group(function () {
 
@@ -112,6 +113,12 @@ Route::middleware(['web', 'auth'])->prefix('products')->name('products.')->group
     // Merged Sub Categories
     Route::get('/merged-sub-categories/get-sub-categories/{id}', [MergedSubCategoryController::class, 'getSubCategories'])->name('merged-sub-categories.get-sub-categories');
     Route::resource('merged-sub-categories', MergedSubCategoryController::class);
+
+    // Variation Transfer
+    Route::get('/variation-transfer/get-store/{id}', [VariationTransferController::class, 'getTransferStoreId'])->name('variation-transfer.get-store');
+    Route::get('/variation-transfer/get-variation-by-category', [VariationTransferController::class, 'getVariationByCategory'])->name('variation-transfer.get-variation-by-category');
+    Route::get('/variation-transfer/get-variation-of-product/{id}', [VariationTransferController::class, 'getVariationOfProduct'])->name('variation-transfer.get-variation-of-product');
+    Route::resource('variation-transfer', VariationTransferController::class);
 
     // Resource routes (index, create, store, show, edit, update, destroy)
     Route::resource('/', ProductController::class)->parameters(['' => 'product']);
