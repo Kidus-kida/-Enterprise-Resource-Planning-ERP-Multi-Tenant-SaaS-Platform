@@ -44,18 +44,18 @@ class SellingPriceGroupController extends Controller
         }
 
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
 
             $price_groups = SellingPriceGroup::where('business_id', $business_id)
-                ->select('name', 'description', 'id', 'active');
+                ->select('name', 'description', 'id', 'is_active');
 
             return Datatables::of($price_groups)
                 ->addColumn(
                     'action',
-                    '<button data-href="{{action([\Modules\Products\Http\Controllers\SellingPriceGroupController::class, \'edit\'], [$id])}}" class="btn btn-xs btn-primary btn-modal" data-container=".view_modal"><i class="glyphicon glyphicon-edit"></i> Edit</button>
+                    '<button data-url="{{action([\Modules\Products\Http\Controllers\SellingPriceGroupController::class, \'edit\'], [$id])}}" class="btn btn-xs btn-primary" data-ajax-modal="true" data-title="Edit Selling Price Group" data-container=".view_modal"><i class="glyphicon glyphicon-edit"></i> Edit</button>
                         &nbsp;
                         <button data-href="{{action([\Modules\Products\Http\Controllers\SellingPriceGroupController::class, \'destroy\'], [$id])}}" class="btn btn-xs btn-danger delete_spg_button"><i class="glyphicon glyphicon-trash"></i> Delete</button> &nbsp;
-                        @if($active)
+                        @if($is_active)
                         <button data-href="{{action([\Modules\Products\Http\Controllers\SellingPriceGroupController::class, \'toggleActivate\'], [$id])}}" class="btn btn-xs btn-danger delete_total_activate"><i class="fa fa-times"></i> Deactivate </button>
                         @else
                         <button data-href="{{action([\Modules\Products\Http\Controllers\SellingPriceGroupController::class, \'toggleActivate\'], [$id])}}" class="btn btn-xs btn-success delete_total_activate"><i class="fa fa-check"></i> Activate </button>
@@ -67,7 +67,7 @@ class SellingPriceGroupController extends Controller
                 ->make(true);
         }
 
-        return view('Products::selling_price_group.index');
+        return view('products::selling_price_group.index');
     }
 
     /**
@@ -81,7 +81,7 @@ class SellingPriceGroupController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return view('Products::selling_price_group.create');
+        return view('products::selling_price_group.create');
     }
 
     /**
@@ -98,8 +98,10 @@ class SellingPriceGroupController extends Controller
 
         try {
             $input = $request->only(['name', 'description']);
-            $business_id = $request->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             $input['business_id'] = $business_id;
+            $input['created_by'] = auth()->user()->id;
+            $input['is_active'] = 1;
 
             $spg = SellingPriceGroup::create($input);
 
@@ -147,10 +149,10 @@ class SellingPriceGroupController extends Controller
         }
 
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             $spg = SellingPriceGroup::where('business_id', $business_id)->find($id);
 
-            return view('Products::selling_price_group.edit')
+            return view('products::selling_price_group.edit')
                 ->with(compact('spg'));
         }
     }
@@ -168,31 +170,29 @@ class SellingPriceGroupController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (request()->ajax()) {
-            try {
-                $input = $request->only(['name', 'description']);
-                $business_id = $request->session()->get('user.business_id');
+        try {
+            $input = $request->only(['name', 'description']);
+            $business_id = auth()->user()->business_id;
 
-                $spg = SellingPriceGroup::where('business_id', $business_id)->findOrFail($id);
-                $spg->name = $input['name'];
-                $spg->description = $input['description'];
-                $spg->save();
+            $spg = SellingPriceGroup::where('business_id', $business_id)->findOrFail($id);
+            $spg->name = $input['name'];
+            $spg->description = $input['description'];
+            $spg->save();
 
-                $output = [
-                    'success' => true,
-                    'msg' => __("lang_v1.updated_success")
-                ];
-            } catch (\Exception $e) {
-                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            $output = [
+                'success' => true,
+                'msg' => __("lang_v1.updated_success")
+            ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
 
-                $output = [
-                    'success' => false,
-                    'msg' => __("messages.something_went_wrong")
-                ];
-            }
-
-            return $output;
+            $output = [
+                'success' => false,
+                'msg' => __("messages.something_went_wrong")
+            ];
         }
+
+        return $output;
     }
 
     /**
@@ -265,7 +265,8 @@ class SellingPriceGroupController extends Controller
             $export_data[] = $temp;
         }
 
-        if (ob_get_contents()) ob_end_clean();
+        if (ob_get_contents())
+            ob_end_clean();
         ob_start();
         return collect($export_data)->downloadExcel(
             'product_group_prices.xlsx',
@@ -382,7 +383,7 @@ class SellingPriceGroupController extends Controller
         try {
             $selling_price_group = SellingPriceGroup::findOrFail($id);
 
-            $selling_price_group->active = !$selling_price_group->active;
+            $selling_price_group->is_active = !$selling_price_group->is_active;
             $selling_price_group->save();
 
             $output = [

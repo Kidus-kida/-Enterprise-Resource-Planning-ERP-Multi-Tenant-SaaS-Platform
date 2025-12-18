@@ -1,4 +1,6 @@
-@php if(!isset($business)) { $business = \App\Business::find(session('user.business_id')); } @endphp
+@php if (!isset($business)) {
+    $business = \App\Business::find(session('user.business_id'));
+} @endphp
 @if(!$business->enable_price_tax)
     @php
         $default = 0;
@@ -19,8 +21,7 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label" for="single_dpp">Exc. Tax <span
-                            class="text-danger">*</span></label>
+                    <label class="form-label" for="single_dpp">Exc. Tax <span class="text-danger">*</span></label>
                     <input type="text" name="single_dpp" id="single_dpp" value="{{ old('single_dpp', $default) }}"
                         class="form-control dpp input_number" placeholder="Exc. Tax" required>
                 </div>
@@ -43,11 +44,11 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label" for="profit_percent">x Margin (%) (%)</label>
+                    <label class="form-label" for="profit_percent">Profit Margin (%)</label>
                     <input type="text" name="profit_percent" id="profit_percent"
                         value="{{ old('profit_percent', $profit_percent ?? 0) }}" class="form-control input_number"
                         required>
-                    <small class="text-muted">{{ __('tooltip.profit_percent') }}</small>
+                    <small class="text-muted">{{ __('Manage your profit margin') }}</small>
                 </div>
             </div>
         </div>
@@ -69,8 +70,7 @@
 
                 <div class="mb-3">
                     <label class="form-label" for="single_dsp_inc_tax">
-                        <span class="dsp_inc_label">Inc. Tax</span> <span
-                            class="text-danger">*</span>
+                        <span class="dsp_inc_label">Inc. Tax</span> <span class="text-danger">*</span>
                     </label>
                     <input type="text" name="single_dsp_inc_tax" id="single_dsp_inc_tax"
                         value="{{ old('single_dsp_inc_tax', $default) }}" class="form-control input_number"
@@ -92,8 +92,8 @@
                         <input type="file" name="variation_images[]" id="variation_images"
                             class="form-control variation_images" accept="image/*" multiple>
                         <small class="text-muted">
-                            {{ __('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)]) }}
-                            <br>{{ __('lang_v1.aspect_ratio_should_be_1_1') }}
+                            {{ __('Max file size: :sizeMB', ['size' => (config('constants.document_size_limit') / 1000000)]) }}
+                            <br>{{ __('Aspect ratio should be 1:1') }}
                         </small>
                     </div>
                 </div>
