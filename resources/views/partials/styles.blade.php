@@ -1,6 +1,7 @@
 <!-- Favicon -->
 <link rel="shortcut icon" type="image/x-icon" href="{{ Vite::asset('resources/assets/img/favicon.png') }}">
 <link rel="stylesheet" href="{{ asset('js/plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css') }}">
+<link rel="stylesheet" href="{{ asset('js/plugins/bootstrap-fileinput/fileinput.min.css') }}">
 @vite([
     'resources/assets/css/bootstrap.min.css',
     'resources/assets/css/line-awesome.min.css',
