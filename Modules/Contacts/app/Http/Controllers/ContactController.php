@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Modules\Contacts\Models\Contact;
 use Modules\Contacts\Models\Customer;
 use Modules\Contacts\Models\Media;
+use Modules\Contacts\Models\AccountTransaction;
 use Illuminate\Http\Request;
 use Modules\Contacts\Models\UserContactAccess;
 use App\DataTables\ContactDataTable;
@@ -46,36 +47,82 @@ class ContactController extends Controller
     /**
      * Display a listing of the resource.
      */
+   
     public function index(ContactDataTable $dataTable)
     {
-        $pageTitle = __("Contacts");
-        return $dataTable->render('pages.contacts.index', compact(
-            'pageTitle'
-        ));
+ $pageTitle = __("Contacts");
+        $type = request()->get('type');
+        $types = ['supplier', 'customer'];
+        $business_id = request()->session()->get('user.business_id');
+        if (empty($type) || !in_array($type, $types)) {
+            return redirect()->back();
+        }
+
+        if (request()->ajax()) {
+            return $type == 'supplier' ? $this->indexSupplier() : ($type == 'customer' ? $this->indexCustomer() : abort(404));
+        }
+        $reward_enabled = (request()->session()->get('business.enable_rp') == 1 && $type == 'customer');
+
+        // Get contact fields from session or set to empty array
+        $contact_fields = session('business.contact_fields', []);
+
+        // Get user groups for dropdown
+        $user_groups = User::forDropdown($business_id);
+
+        // Check if it's a property customer
+        $is_property = isset($is_property_customer);
+
+        // Check customer code and get contact ID
+         $contact_id = $this->businessUtil->check_customer_code($business_id);
+return $dataTable->render('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups','contact_id','pageTitle'));
+    
+
+
+        // return view('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups', ));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+   
+ public function create()
     {
-        $pageTitle = __("Add Contact");
-        $types = Contact::typeDropdown(false);
-        
-        // Fetch groups and users for dropdowns
-        $customer_groups = ContactGroup::forDropdown(true, 'customer');
-        $supplier_groups = ContactGroup::forDropdown(true, 'supplier');
-        
-        // Get users for assigned_to dropdown
-        $user_groups = User::all()->pluck('name', 'id');
+        if (!auth()->user()->can('supplier.create') && !auth()->user()->can('customer.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        $mode = request()->mode;
+        $type = request()->type;
+        $business_id = request()->session()->get('user.business_id');
+        //Check if subscribed or not
+        if (!$this->moduleUtil->isSubscribed($business_id)) {
+            return $this->moduleUtil->expiredResponse();
+        }
+        $types = [];
+        if (auth()->user()->can('supplier.create')) {
+            $types['supplier'] = __('report.supplier');
+        }
+        if (auth()->user()->can('customer.create')) {
+            $types['customer'] = __('report.customer');
+        }
+        if (auth()->user()->can('supplier.create') && auth()->user()->can('customer.create')) {
+            $types['both'] = __('lang_v1.both_supplier_customer');
+        }
+        $customer_groups = ContactGroup::forDropdown($business_id);
+        $supplier_groups = ContactGroup::forDropdown($business_id, true, false, 'supplier');
+        $contact_id = $this->businessUtil->check_customer_code($business_id);
+        $user_groups = User::forDropdown($business_id);
 
-        // Generate ID
-        $count = Contact::where('business_id', 1)->count() + 1;
-        $contact_id = 'CO-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        if($type == 'customer'){
+            $notifications = NotificationTemplate::customerNotifications();
+        }else{
+            $notifications = NotificationTemplate::supplierNotifications();
+        }
+        
+        $customers = Contact::customersDropdown($business_id, false);
 
-        return view('pages.contacts.create', compact('pageTitle', 'types', 'customer_groups', 'supplier_groups', 'user_groups', 'contact_id'));
+        return view('pages.contacts.create')
+            ->with(compact('notifications','types','customers', 'customer_groups', 'supplier_groups', 'contact_id', 'type','user_groups', 'mode'));
     }
-
     /**
      * Store a newly created resource in storage.
      */

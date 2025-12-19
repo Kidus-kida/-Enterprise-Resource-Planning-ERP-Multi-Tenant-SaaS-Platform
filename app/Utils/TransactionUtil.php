@@ -1,12 +1,13 @@
 <?php
 namespace App\Utils;
-use App\AccountTransaction;
+use Modules\Contacts\Models\AccountTransaction;
 use App\Account;
 use App\AccountType;
 use Modules\Fleet\Entities\Fleet;
 use App\Business;
 use Modules\Contacts\Models\BusinessLocation;
 use App\Category;
+
 use Modules\Contacts\Models\Contact;
 use App\ContactLedger;
 use App\Currency;
