@@ -1,0 +1,11 @@
+{
+    "name": "Products",
+    "alias": "products",
+    "description": "Complete product management module with variations, stock, pricing and more",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Products\\Providers\\ProductsServiceProvider"
+    ],
+    "files": []
+}

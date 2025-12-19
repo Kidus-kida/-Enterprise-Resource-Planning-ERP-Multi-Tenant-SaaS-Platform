@@ -2,6 +2,8 @@
     "Whiteboard": true,
     "Roles": true,
     "Project": true,
+    "ProductCatalogue": true,
+    "Products": true,
     "Sales": true,
     "Accounting": true,
     "Crm": true,

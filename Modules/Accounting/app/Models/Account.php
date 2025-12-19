@@ -109,6 +109,7 @@ class Account extends Model
 
         $account_type_name = optional($account->accountType)->name ?? "";
         $business_id = session()->get('user.business_id');
+        // dd($business_id);
         
         $account_query = self::leftjoin('account_transactions as AT', 'AT.account_id', '=', 'accounts.id')
             ->whereNull('AT.deleted_at')
@@ -136,8 +137,8 @@ class Account extends Model
         $account_query->where('is_closed', 0);
         
         $result = $account_query->select(
-            DB::raw("SUM(IF(AT.transaction_type='credit',amount, 0)) as creditSum"),
-            DB::raw("SUM(IF(AT.transaction_type='debit', amount, 0)) as debitSum")
+            DB::raw("SUM(IF(AT.type='credit',amount, 0)) as creditSum"),
+            DB::raw("SUM(IF(AT.type='debit', amount, 0)) as debitSum")
         )->first();
         
         // Calculate balance based on account type
