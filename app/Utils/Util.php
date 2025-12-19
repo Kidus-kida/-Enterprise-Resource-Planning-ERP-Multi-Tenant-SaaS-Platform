@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Utils;
-
+use Carbon\Carbon;
 use App\Account;
-use App\Business;
+use Modules\Contacts\Models\Business;
 use App\BusinessLocation;
 use App\Product;
-use App\ReferenceCount;
+use Modules\Contacts\Models\ReferenceCount;
 use App\System;
 use App\Transaction;
 use App\TransactionSellLine;
@@ -16,6 +16,7 @@ use App\AccountGroup;
 use App\AccountTransaction;
 use App\VariationLocationDetails;
 use DB;
+
 use Intervention\Image\Facades\Image;
 use GuzzleHttp\Client;
 use Modules\Fleet\Entities\RouteInvoiceNumber;
@@ -235,9 +236,8 @@ class Util
      */
     public function num_f($input_number, $add_symbol = false, $business_details = null, $is_quantity = false)
     {
-        $currency = session('currency');
-        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : ($currency['thousand_separator'] ?? ',');
-        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : ($currency['decimal_separator'] ?? '.');
+        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : session('currency')['thousand_separator'];
+        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : session('currency')['decimal_separator'];
 
         $currency_precision =  !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
         
@@ -250,7 +250,7 @@ class Util
 
         if ($add_symbol) {
             $currency_symbol_placement = !empty($business_details) ? $business_details->currency_symbol_placement : session('business.currency_symbol_placement');
-            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : (session('currency')['symbol'] ?? '$');
+            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : session('currency')['symbol'];
 
             if ($currency_symbol_placement == 'after') {
                 $formatted = $formatted . ' ' . $symbol;
@@ -639,7 +639,7 @@ class Util
         $ref_digits =  str_pad($ref_count, 4, 0, STR_PAD_LEFT);
 
         if (!in_array($type, ['contacts', 'business_location', 'username', 'employee_no','route_no'])) {
-            $ref_year = \Carbon::now()->year;
+            $ref_year = Carbon::now()->year;
             if ($type == 'contacts') {
             }
             $ref_number = $prefix . $ref_year . '/' . $ref_digits;

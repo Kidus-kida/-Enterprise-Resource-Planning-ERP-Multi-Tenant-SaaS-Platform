@@ -5,9 +5,9 @@ use App\Account;
 use App\AccountType;
 use Modules\Fleet\Entities\Fleet;
 use App\Business;
-use App\BusinessLocation;
+use Modules\Contacts\Models\BusinessLocation;
 use App\Category;
-use App\Contact;
+use Modules\Contacts\Models\Contact;
 use App\ContactLedger;
 use App\Currency;
 use App\Events\TransactionPaymentAdded;
@@ -18,10 +18,16 @@ use App\Http\Controllers\Ecom\ContactController;
 use App\InvoiceScheme;
 use App\Product;
 use App\PurchaseLine;
+use Modules\Contacts\Models\Transaction;
 use App\Restaurant\ResTable;
 use App\TaxRate;
+<<<<<<< HEAD
 use Modules\Contacts\Models\Transaction;
 use Modules\Contacts\Models\TransactionPayment;
+=======
+
+use App\TransactionPayment;
+>>>>>>> 10c8f9d6212616961d0b61dda01b872b08883385
 use App\TransactionSellLine;
 use App\TransactionSellLinesPurchaseLines;
 use App\Variation;
@@ -6553,97 +6559,97 @@ class TransactionUtil extends Util
      *
      * @return void
      */
-    public function createOpeningBalanceTransaction($business_id, $contact_id, $amount, $transaction_date = null,$invoice_no = null)
-    {
-        $business_location = BusinessLocation::where('business_id', $business_id)
-            ->first();
-        $contact = Contact::where('id', $contact_id)->first();
-        $final_amount = $this->num_uf($amount);
-        $ob_data = [
-            'business_id' => $business_id,
-            'location_id' => $business_location->id,
-            'type' => 'opening_balance',
-            'status' => 'final',
-            'payment_status' => 'due',
-            'invoice_no' => !empty($invoice_no) ? $invoice_no : null,
-            'contact_id' => $contact_id,
-            'transaction_date' => !empty($transaction_date) ? Carbon::parse($transaction_date)->format('Y-m-d') : \Carbon::now(),
-            'total_before_tax' => $final_amount,
-            'final_total' => $final_amount,
-            'created_by' => request()->session()->get('user.id')
-        ];
-        //Update reference count
-        $ob_ref_count = $this->setAndGetReferenceCount('opening_balance');
-        //Generate reference number
-        $ob_data['ref_no'] = $this->generateReferenceNumber('opening_balance', $ob_ref_count);
-        //Create opening balance transaction
-        $transaction = Transaction::create($ob_data);
-        if ($contact->type == 'supplier') {
-            if ($final_amount > 0) {
-                $type = 'credit';
-            }
-            if ($final_amount < 0) {
-                $type = 'debit';
-            }
-            $account_id = $this->account_exist_return_id('Accounts Payable');
-        }
-        if ($contact->type == 'customer') {
-            if ($final_amount > 0) {
-                $type = 'debit';
-            }
-            if ($final_amount < 0) {
-                $type = 'credit';
-            }
-            $account_id = $this->account_exist_return_id('Accounts Receivable');
-        }
-        $account_transaction_data = [
-            'amount' => abs($transaction->final_total),
-            'contact_id' => $contact_id,
-            'account_id' => $account_id,
-            'type' => $type,
-            'sub_type' => 'ledger_show',
-            'operation_date' => $transaction->transaction_date,
-            'created_by' => $transaction->created_by,
-            'transaction_id' => $transaction->id,
-            'transaction_payment_id' => null,
-            'note' => null
-        ];
-        AccountTransaction::createAccountTransaction($account_transaction_data);
-        ContactLedger::createContactLedger($account_transaction_data);
-        
-        if ($contact->type == 'customer') {
-            if ($final_amount > 0) {
-                $type = 'credit';
-            }
-            if ($final_amount < 0) {
-                $type = 'debit';
-            }
-        } else {
-            if ($final_amount > 0) {
-                $type = 'debit';
-            }
-            if ($final_amount < 0) {
-                $type = 'credit';
-            }
-        }
-        
-        
-        $opening_balance_equity_id = $this->account_exist_return_id('Opening Balance Equity Account');
-        $this->createAccountTransaction($transaction, $type, $opening_balance_equity_id, abs($transaction->final_total));
-       
-        
-        if ($final_amount < 0) {
-            if ($contact->type == 'customer') {
-                $type = 'credit';
-                $customer_over_payment_id = $this->account_exist_return_id('Customer Over Payments');
-                $this->createAccountTransaction($transaction, $type, $customer_over_payment_id, abs($transaction->final_total));
-            } else {
-                $type = 'debit';
-                $supplier_over_payment_id = $this->account_exist_return_id('Supplier Over Payments');
-                $this->createAccountTransaction($transaction, $type, $supplier_over_payment_id, abs($transaction->final_total));
-            }
-        }
+    public function createOpeningBalanceTransaction($business_id, $contact_id, $amount, $transaction_date = null, $invoice_no = null)
+{
+    // Validate inputs
+    if (!$business_id) {
+        throw new \Exception("Business ID is missing.");
     }
+
+    if (!$contact_id) {
+        throw new \Exception("Contact ID is missing.");
+    }
+
+    $business_location = BusinessLocation::where('business_id', $business_id)->first();
+    if (!$business_location) {
+        throw new \Exception("Business location not found for business ID: $business_id");
+    }
+
+    $contact = Contact::find($contact_id);
+    if (!$contact) {
+        throw new \Exception("Contact not found with ID: $contact_id");
+    }
+
+    $final_amount = $this->num_uf($amount);
+
+    // Prepare transaction data
+    $ob_data = [
+        'business_id' => $business_id,
+        'location_id' => $business_location->id,
+        'type' => 'opening_balance',
+        'status' => 'final',
+        'payment_status' => 'due',
+        'invoice_no' => $invoice_no ?: null,
+        'contact_id' => $contact_id,
+        'transaction_date' => $transaction_date ? Carbon::parse($transaction_date)->format('Y-m-d') : Carbon::now(),
+        'total_before_tax' => $final_amount,
+        'final_total' => $final_amount,
+        'created_by' => request()->session()->get('user.id') ?? auth()->id()
+    ];
+
+    // Update reference count and generate reference number
+    $ob_ref_count = $this->setAndGetReferenceCount('opening_balance', $business_id);
+    $ob_data['ref_no'] = $this->generateReferenceNumber('opening_balance', $ob_ref_count);
+
+    // Create transaction
+    $transaction = Transaction::create($ob_data);
+
+    // Determine account and type
+    if ($contact->type === 'supplier') {
+        $type = $final_amount >= 0 ? 'credit' : 'debit';
+        $account_id = $this->account_exist_return_id('Accounts Payable');
+    } elseif ($contact->type === 'customer') {
+        $type = $final_amount >= 0 ? 'debit' : 'credit';
+        $account_id = $this->account_exist_return_id('Accounts Receivable');
+    } else {
+        throw new \Exception("Unknown contact type: {$contact->type}");
+    }
+
+    // Create account transaction
+    $account_transaction_data = [
+        'amount' => abs($transaction->final_total),
+        'contact_id' => $contact_id,
+        'account_id' => $account_id,
+        'type' => $type,
+        'sub_type' => 'ledger_show',
+        'operation_date' => $transaction->transaction_date,
+        'created_by' => $transaction->created_by,
+        'transaction_id' => $transaction->id,
+        'transaction_payment_id' => null,
+        'note' => null
+    ];
+
+    AccountTransaction::createAccountTransaction($account_transaction_data);
+    ContactLedger::createContactLedger($account_transaction_data);
+
+    // Opening Balance Equity
+    $opening_balance_equity_id = $this->account_exist_return_id('Opening Balance Equity Account');
+    $equity_type = $contact->type === 'customer' ? 'credit' : 'debit';
+    $this->createAccountTransaction($transaction, $equity_type, $opening_balance_equity_id, abs($transaction->final_total));
+
+    // Overpayment for negative balances
+    if ($final_amount < 0) {
+        if ($contact->type === 'customer') {
+            $type = 'credit';
+            $over_payment_id = $this->account_exist_return_id('Customer Over Payments');
+        } else { // supplier
+            $type = 'debit';
+            $over_payment_id = $this->account_exist_return_id('Supplier Over Payments');
+        }
+        $this->createAccountTransaction($transaction, $type, $over_payment_id, abs($transaction->final_total));
+    }
+}
+
     public function adjustAdvancePayments($transaction, $paying_amount, $business_id)
     {
         // get advance amounts to supplier

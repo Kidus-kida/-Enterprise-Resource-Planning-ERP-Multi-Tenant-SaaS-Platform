@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
  *
 */
 
+<<<<<<< HEAD
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
     // Route::apiResource('contacts', ContactsController::class)->names('contacts');
 });
+=======
+// Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+//     Route::apiResource('contacts', ContactsController::class)->names('contacts');
+// });
+>>>>>>> 10c8f9d6212616961d0b61dda01b872b08883385

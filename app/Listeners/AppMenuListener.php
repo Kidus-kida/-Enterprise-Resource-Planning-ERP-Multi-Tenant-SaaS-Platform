@@ -209,8 +209,8 @@ class AppMenuListener
                 Menu::new()
 
                     // Core accounting items (adjust permissions as needed — currently no gate; add if required)
-                    ->add(Link::toRoute('account.index', __('Accounts'))
-                        ->addClass(route_is(['account.index', 'account.show']) ? 'active' : ''))
+                    ->add(Link::toRoute('accounts.index', __('Accounts'))
+                        ->addClass(route_is(['accounts.index', 'accounts.show']) ? 'active' : ''))
                     ->add(Link::toRoute('journal.index', __('Journals'))
                         ->addClass(route_is(['journal.*']) ? 'active' : ''))
 

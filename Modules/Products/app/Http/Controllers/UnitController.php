@@ -46,15 +46,24 @@ class UnitController extends Controller
 
         if (request()->ajax()) {
             $business_id = request()->session()->get('user.business_id');
+            if (empty($business_id)) {
+                $business_id = auth()->user()->business_id;
+            }
             $is_property = request()->is_property;
-         
+
             $unit = Unit::where('business_id', $business_id)
-                        ->with(['base_unit'])
-                        ->select(['actual_name', 'short_name', 'allow_decimal', 'id',
-                            'base_unit_id', 'base_unit_multiplier']);
-            if(!empty($is_property)){
+                ->with(['base_unit'])
+                ->select([
+                    'actual_name',
+                    'short_name',
+                    'allow_decimal',
+                    'id',
+                    'base_unit_id',
+                    'base_unit_multiplier'
+                ]);
+            if (!empty($is_property)) {
                 $unit->where('is_property', 1);
-            }else{
+            } else {
                 $unit->where('is_property', 0);
             }
             return Datatables::of($unit)
@@ -79,8 +88,8 @@ class UnitController extends Controller
                     $html = 'Base Unit';
                     if ($row->base_unit_id) {
                         $html = 'Multiple Unit';
-                       
-                    } 
+
+                    }
                     return $html;
                 })
                 ->editColumn('connected_units', function ($row) {
@@ -88,14 +97,14 @@ class UnitController extends Controller
                     if (!$row->base_unit_id) {
                         $base_unit = Unit::where('base_unit_id', $row->id)->pluck('actual_name')->toArray();
                         $html = $base_unit;
-                    } 
+                    }
                     return $html;
                 })
                 ->editColumn('actual_name', function ($row) {
                     if (!empty($row->base_unit_id)) {
-                        return  $row->actual_name . ' (' . (float)$row->base_unit_multiplier . $row->base_unit->short_name . ')';
+                        return $row->actual_name . ' (' . (float) $row->base_unit_multiplier . $row->base_unit->short_name . ')';
                     }
-                    return  $row->actual_name;
+                    return $row->actual_name;
                 })
                 ->removeColumn('id')
                 ->rawColumns(['action', 'multiple_units'])
@@ -120,15 +129,18 @@ class UnitController extends Controller
         }
 
         $business_id = request()->session()->get('user.business_id');
+        if (empty($business_id)) {
+            $business_id = auth()->user()->business_id;
+        }
         $is_property = request()->is_property;
         $quick_add = false;
         if (!empty(request()->input('quick_add'))) {
             $quick_add = true;
         }
 
-        if($is_property){
+        if ($is_property) {
             $units = Unit::getPropertyUnitDropdown($business_id);
-        }else{
+        } else {
             $units = Unit::forDropdown($business_id);
 
         }
@@ -138,8 +150,8 @@ class UnitController extends Controller
         $sale_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'sale_module');
         $property_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'property_module');
 
-        return view('Products::unit.create')
-                ->with(compact('quick_add', 'units', 'help_explanations', 'is_property', 'sale_module', 'property_module'));
+        return view('products::unit.create')
+            ->with(compact('quick_add', 'units', 'help_explanations', 'is_property', 'sale_module', 'property_module'));
     }
 
     /**
@@ -156,14 +168,13 @@ class UnitController extends Controller
 
         try {
             $input = $request->only(['actual_name', 'short_name', 'allow_decimal']);
-            $input['business_id'] = $request->session()->get('user.business_id');
+            $business_id = $request->session()->get('user.business_id');
+            if (empty($business_id)) {
+                $business_id = auth()->user()->business_id;
+            }
+            $input['business_id'] = $business_id;
             $input['is_property'] = !empty($request->is_property) ? 1 : 0;
-            $input['created_by'] = $request->session()->get('user.id');
-            $input['show_in_add_product_unit'] = !empty($request->show_in_add_product_unit) ? 1 : 0;
-            $input['show_in_add_pos_unit'] = !empty($request->show_in_add_pos_unit) ? 1 : 0;
-            $input['show_in_add_sale_unit'] = !empty($request->show_in_add_sale_unit) ? 1 : 0;
-            $input['show_in_add_project_unit'] = !empty($request->show_in_add_project_unit) ? 1 : 0;
-            $input['show_in_sell_land_block_unit'] = !empty($request->show_in_sell_land_block_unit) ? 1 : 0;
+            $input['created_by'] = auth()->user()->id;
 
             if ($request->has('define_base_unit')) {
                 if (!empty($request->input('base_unit_id')) && !empty($request->input('base_unit_multiplier'))) {
@@ -176,16 +187,18 @@ class UnitController extends Controller
             }
 
             $unit = Unit::create($input);
-            $output = ['success' => true,
-                        'data' => $unit,
-                        'msg' => __("unit.added_success")
-                    ];
+            $output = [
+                'success' => true,
+                'data' => $unit,
+                'msg' => __("unit.added_success")
+            ];
         } catch (\Exception $e) {
-            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-            $output = ['success' => false,
-                        'msg' => __("messages.something_went_wrong")
-                    ];
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+            $output = [
+                'success' => false,
+                'msg' => $e->getMessage()
+            ];
         }
 
         return $output;
@@ -216,17 +229,20 @@ class UnitController extends Controller
 
         if (request()->ajax()) {
             $business_id = request()->session()->get('user.business_id');
+            if (empty($business_id)) {
+                $business_id = auth()->user()->business_id;
+            }
             $unit = Unit::where('business_id', $business_id)->find($id);
 
-            if($unit->is_property){
+            if ($unit->is_property) {
                 $units = Unit::getPropertyUnitDropdown($business_id);
-            }else{
+            } else {
                 $units = Unit::forDropdown($business_id);
             }
 
             $sale_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'sale_module');
             $property_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'property_module');
-            return view('Products::unit.edit')
+            return view('products::unit.edit')
                 ->with(compact('unit', 'units', 'sale_module', 'property_module'));
         }
     }
@@ -248,16 +264,15 @@ class UnitController extends Controller
             try {
                 $input = $request->only(['actual_name', 'short_name', 'allow_decimal']);
                 $business_id = $request->session()->get('user.business_id');
+                if (empty($business_id)) {
+                    $business_id = auth()->user()->business_id;
+                }
 
                 $unit = Unit::where('business_id', $business_id)->findOrFail($id);
                 $unit->actual_name = $input['actual_name'];
                 $unit->short_name = $input['short_name'];
                 $unit->allow_decimal = $input['allow_decimal'];
-                $unit->show_in_add_product_unit = !empty($request->show_in_add_product_unit) ? 1 : 0;
-                $unit->show_in_add_pos_unit = !empty($request->show_in_add_pos_unit) ? 1 : 0;
-                $unit->show_in_add_sale_unit = !empty($request->show_in_add_sale_unit) ? 1 : 0;
-                $unit->show_in_add_project_unit = !empty($request->show_in_add_project_unit) ? 1 : 0;
-                $unit->show_in_sell_land_block_unit = !empty($request->show_in_sell_land_block_unit) ? 1 : 0;
+                $unit->allow_decimal = $input['allow_decimal'];
 
                 if ($request->has('define_base_unit')) {
                     if (!empty($request->input('base_unit_id')) && !empty($request->input('base_unit_multiplier'))) {
@@ -274,15 +289,17 @@ class UnitController extends Controller
 
                 $unit->save();
 
-                $output = ['success' => true,
-                            'msg' => __("unit.updated_success")
-                            ];
+                $output = [
+                    'success' => true,
+                    'msg' => __("unit.updated_success")
+                ];
             } catch (\Exception $e) {
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-                $output = ['success' => false,
-                            'msg' => __("messages.something_went_wrong")
-                        ];
+                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+                $output = [
+                    'success' => false,
+                    'msg' => __("messages.something_went_wrong")
+                ];
             }
 
             return $output;
@@ -309,33 +326,37 @@ class UnitController extends Controller
 
                 //check if any product associated with the unit
                 $exists = Product::where('unit_id', $unit->id)
-                                ->exists();
+                    ->exists();
                 if (!$exists) {
                     $unit->delete();
-                    $output = ['success' => true,
-                            'msg' => __("unit.deleted_success")
-                            ];
+                    $output = [
+                        'success' => true,
+                        'msg' => __("unit.deleted_success")
+                    ];
                 } else {
-                    $output = ['success' => false,
-                            'msg' => __("lang_v1.unit_cannot_be_deleted")
-                            ];
+                    $output = [
+                        'success' => false,
+                        'msg' => __("lang_v1.unit_cannot_be_deleted")
+                    ];
                 }
             } catch (\Exception $e) {
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-                $output = ['success' => false,
-                            'msg' => '__("messages.something_went_wrong")'
-                        ];
+                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+                $output = [
+                    'success' => false,
+                    'msg' => '__("messages.something_went_wrong")'
+                ];
             }
 
             return $output;
         }
     }
 
-    public function getSubUnits(Request $request){
+    public function getSubUnits(Request $request)
+    {
         $unit_id = $request->unit_id;
 
-        $units = Unit::where('id',  $unit_id)->orWhere('base_unit_id',  $unit_id)->get();
+        $units = Unit::where('id', $unit_id)->orWhere('base_unit_id', $unit_id)->get();
 
         return ['sub_units' => $units, 'count' => $units->count()];
     }
