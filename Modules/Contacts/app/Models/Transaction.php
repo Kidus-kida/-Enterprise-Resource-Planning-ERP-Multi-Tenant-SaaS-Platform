@@ -40,4 +40,9 @@ class Transaction extends Model
     {
         return $this->hasMany(\Modules\Contacts\Models\TransactionPayment::class, 'transaction_id');
     }
+
+    public function location()
+    {
+        return $this->belongsTo(\App\Models\BusinessLocation::class, 'location_id');
+    }
 }

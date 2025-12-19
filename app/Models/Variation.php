@@ -31,4 +31,8 @@ class Variation extends Model
 
         return $name;
     }
+    public function product_variation()
+    {
+        return $this->belongsTo(\App\ProductVariation::class);
+    }
 }

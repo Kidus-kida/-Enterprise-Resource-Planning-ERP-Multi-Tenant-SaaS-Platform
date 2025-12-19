@@ -191,8 +191,9 @@ $(document).ready(function () {
         row.find('.purchase_product_unit_tax_text').text(formatCurrency(taxAmount));
         row.find('.purchase_product_unit_tax').val(taxAmount);
 
-        // Update profit margin if selling price is set
-        updateProfitMargin(row);
+        const profitPercent = readNumber(row.find('.profit_percent'));
+        const sellingPrice = unitCostAfterTax * (1 + profitPercent / 100);
+        row.find('.default_sell_price').val(parseFloat(sellingPrice).toFixed(2));  // Don't use writeNumber to avoid triggering change
     }
 
     /**
@@ -231,19 +232,36 @@ $(document).ready(function () {
      * Update grand total (with shipping and adjustments)
      */
     function updateGrandTotal() {
-        const subtotal = updateTableTotal();
-        const discountAmount = readNumber($('[name="discount_amount"]')) || 0;
-        const shippingCharges = readNumber($('[name="shipping_charges"]')) || 0;
+        // Calculate purchase total (sum of all rows BEFORE any deductions)
+        const purchaseTotal = updateTableTotal();
 
-        const grandTotal = subtotal - discountAmount + shippingCharges;
+        // Calculate total discount from all rows
+        let totalDiscount = 0;
+        $('#product-table-body tr.purchase_entry_row').each(function () {
+            const quantity = readNumber($(this).find('.purchase_quantity'));
+            const unitCostWithoutDiscount = readNumber($(this).find('.purchase_unit_cost_without_discount'));
+            const discountPercent = readNumber($(this).find('.inline_discounts'));
+            const rowDiscount = (discountPercent / 100) * unitCostWithoutDiscount * quantity;
+            totalDiscount += rowDiscount;
+        });
 
-        $('#display-grand-total').text(formatCurrency(grandTotal));
-        $('[name="final_total"]').val(grandTotal);
+        // Net total = purchase total (which already has discounts applied)
+        const netTotal = purchaseTotal;
+
+        // Update displays
+        $('#display-grand-total').text(formatCurrency(purchaseTotal));
+        $('#display-discount-total').text(formatCurrency(totalDiscount));
+        $('#display-final-total').text(formatCurrency(netTotal));
+
+        // Update hidden inputs
+        $('[name="total_before_tax"]').val(purchaseTotal);
+        $('[name="discount_amount"]').val(totalDiscount);
+        $('[name="final_total"]').val(netTotal);
 
         // Update payment due
-        updatePaymentDue(grandTotal);
+        updatePaymentDue(netTotal);
 
-        return grandTotal;
+        return netTotal;
     }
 
     /**
@@ -444,19 +462,28 @@ $(document).ready(function () {
     function loadPaymentAccounts(rowIndex, paymentMethod) {
         const accountDropdown = $('#account_' + rowIndex);
 
-        // This would normally make an AJAX call to get accounts for the payment method
-        // For now, we'll just show the dropdown
-        // In production, you'd call an endpoint like:
-        // $.ajax({
-        //     url: '/get-accounts-for-payment-method',
-        //     data: { method: paymentMethod },
-        //     success: function(accounts) {
-        //         accountDropdown.html('<option value="">Select Account</option>');
-        //        Object.keys(accounts).forEach(id => {
-        //             accountDropdown.append('<option value="' + id + '">' + accounts[id] + '</option>');
-        //         });
-        //     }
-        // });
+        if (!paymentMethod) {
+            accountDropdown.html('<option value="">Select Account</option>');
+            return;
+        }
+
+        // Fetch accounts from server based on payment method
+        $.ajax({
+            url: '/purchases/get_payment_accounts',
+            method: 'GET',
+            data: { payment_method: paymentMethod },
+            dataType: 'json',
+            success: function (accounts) {
+                accountDropdown.html('<option value="">Select Account</option>');
+                $.each(accounts, function (id, name) {
+                    accountDropdown.append('<option value="' + id + '">' + name + '</option>');
+                });
+            },
+            error: function (xhr) {
+                console.error('Error loading payment accounts:', xhr);
+                accountDropdown.html('<option value="">Error loading accounts</option>');
+            }
+        });
     }
 
     /**

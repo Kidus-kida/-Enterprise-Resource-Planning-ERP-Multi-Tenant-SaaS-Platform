@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedInteger('business_id')->default(1)->after('id');
-            $table->index('business_id');
+        Schema::table('products', function (Blueprint $table) {
+            $table->boolean('vat_claimed')->default(0)->after('not_for_selling');
         });
     }
 
@@ -22,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex(['business_id']);
-            $table->dropColumn('business_id');
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('vat_claimed');
         });
     }
 };

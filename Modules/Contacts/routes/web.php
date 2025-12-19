@@ -6,7 +6,7 @@ use Modules\Contacts\Http\Controllers\CustomerLoanController;
 use Modules\Contacts\Http\Controllers\CustomerPaymentController;
 use Modules\Contacts\Http\Controllers\SupplierMappingController;
 use Modules\Contacts\Http\Controllers\CustomerStatementController;
-use Modules\Contacts\Http\Controllers\ContactsController;
+// use Modules\Contacts\Http\Controllers\ContactsController;
 
 /*
 |--------------------------------------------------------------------------

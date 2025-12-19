@@ -2,7 +2,7 @@
 @php
     $row_index = $row_index ?? 0;
     $payment = $payment ?? null;
-    $payment_method = $payment['method'] ?? $payment->method ?? 'cash';
+    $payment_method = $payment['method'] ?? $payment->method ?? '';
 @endphp
 
 <div class="payment-row row mb-3 p-3 border rounded bg-light" data-row-index="{{ $row_index }}">
@@ -33,7 +33,7 @@
             class="form-control payment_types_dropdown payment-method" 
             name="payment[{{ $row_index }}][method]"
             id="method_{{ $row_index }}"
-            required>
+            >
             <option value="">{{ __('Select Method') }}</option>
             @if(isset($payment_types))
                 @foreach($payment_types as $key => $value)

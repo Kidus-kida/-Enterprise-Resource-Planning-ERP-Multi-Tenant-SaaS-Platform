@@ -30,4 +30,62 @@ class Product extends Model
     {
         return $this->hasMany(\Modules\Purchase\Models\PurchaseLine::class);
     }
+
+        /**
+     * Get the brand associated with the product.
+     */
+    public function brand()
+    {
+        return $this->belongsTo(\App\Brands::class);
+    }
+    
+    public function getLotNumbers()
+    {
+        return $this->belongsTo(\Modules\Manufacturing\Entities\MfgSettings::class, 'id', 'id_product');
+    }
+
+    /**
+     * Get the unit associated with the product.
+     */
+    public function unit()
+    {
+        return $this->belongsTo(\App\Unit::class);
+    }
+
+    /**
+     * Get the unit associated with the product.
+     */
+    public function second_unit()
+    {
+        return $this->belongsTo(\App\Unit::class, 'secondary_unit_id');
+    }
+
+    /**
+     * Get category associated with the product.
+     */
+    public function category()
+    {
+        return $this->belongsTo(\App\Category::class);
+    }
+
+    /**
+     * Get sub-category associated with the product.
+     */
+    public function sub_category()
+    {
+        return $this->belongsTo(\App\Category::class, 'sub_category_id', 'id');
+    }
+
+    /**
+     * Get the tax associated with the product.
+     */
+    public function product_tax()
+    {
+        return $this->belongsTo(\App\TaxRate::class, 'tax', 'id');
+    }
+    
+    public function scopeActive($query)
+    {
+        return $query->where('products.is_inactive', 0);
+    }
 }

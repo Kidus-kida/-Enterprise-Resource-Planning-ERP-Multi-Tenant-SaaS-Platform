@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tax_rates', function (Blueprint $table) {
+        Schema::create('stores', function (Blueprint $table) {
             $table->id();
             $table->integer('business_id');
+            $table->string('location_id')->nullable();
             $table->string('name');
-            $table->float('amount', 8, 2);
-            $table->boolean('is_tax_group')->default(0);
-            $table->integer('created_by')->unsigned();
-            $table->softDeletes();
+            $table->string('address')->nullable();
+            $table->string('contact_number')->nullable();
+            $table->integer('stock')->nullable();
+            $table->boolean('status')->default(1);
+            $table->boolean('is_main')->default(0);
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tax_rates');
+        Schema::dropIfExists('stores');
     }
 };

@@ -21,8 +21,26 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('purchases/get_payment_row', [PurchaseController::class, 'getPaymentRow'])->name('purchase.get_payment_row');
     Route::get('purchases/get_products', [PurchaseController::class, 'getProducts'])->name('purchase.get_products');
     Route::get('purchases/get_suppliers', [PurchaseController::class, 'getSuppliers'])->name('purchase.get_suppliers');
+    Route::get('purchases/get_payment_accounts', [PurchaseController::class, 'getPaymentAccounts'])->name('purchase.get_payment_accounts');
     Route::get('purchases/cheque-list', [PurchaseController::class, 'getChequeList'])->name('purchase.cheque_list');
     
+    // Bulk Purchase Import
+    Route::get('purchase/bulk-import', [PurchaseController::class, 'bulkImport'])->name('purchase.bulk_import');
+    Route::post('purchase/bulk-import', [PurchaseController::class, 'bulkImportPost'])->name('purchase.bulk_import_post');
+    Route::get('purchase/download-template', [PurchaseController::class, 'downloadTemplate'])->name('purchase.download_template');
+    
     Route::resource('purchase', PurchaseController::class);
+
     Route::resource('supplier', SupplierController::class);
+    Route::get('/purchase/stores-by-location/{locationId}', function ($locationId) {
+    // Replace this with your actual logic
+    $stores = \App\Models\Store::where('location_id', $locationId)
+                ->pluck('name', 'id')
+                ->toArray();
+
+        return response()->json($stores);
+    })->name('purchase.stores.by.location');
+        
+    Route::get('/getProductsPurchases', [PurchaseController::class, 'getProductsPurchases'])
+     ->name('purchase.getProductsPurchases');
 });

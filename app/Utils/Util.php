@@ -26,6 +26,7 @@ use Modules\Superadmin\Entities\Subscription;
 use PhpParser\Node\Expr\FuncCall;
 use Spatie\Permission\Models\Role;
 use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
+use Carbon\Carbon;
 
 class Util
 {
@@ -349,13 +350,13 @@ class Util
         
         
         if ($add_credit_sale) {
-            $payment_types['credit_sale'] = __('lang_v1.credit_sale');
+            $payment_types['credit_sale'] = __('Credit Sale');
         }
         if ($add_credit_purchase) {
-            $payment_types['credit_purchase'] = __('lang_v1.credit_purchase');
+            $payment_types['credit_purchase'] = __('Credit Purchase');
         }
         if ($add_credit_expense) {
-            $payment_types['credit_expense'] = __('lang_v1.credit_expense');
+            $payment_types['credit_expense'] = __('Credit Expense');
         }
         
         // $payment_types['cpc'] = "CPC";
@@ -468,7 +469,7 @@ class Util
         }
 
 
-        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
+        return !empty($date_format)? Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -970,13 +971,13 @@ class Util
         //Add main unit as per given parameter or conditions.
         if (($return_main_unit_if_empty && count($unit->sub_units) == 0)) {
             $sub_units[$unit->id] = [
-                'name' => $unit->actual_name,
+                'name' => $unit->short_name,
                 'multiplier' => 1,
                 'allow_decimal' => $unit->allow_decimal
             ];
         } elseif (empty($related_sub_units) || in_array($unit->id, $related_sub_units)) {
             $sub_units[$unit->id] = [
-                'name' => $unit->actual_name,
+                'name' => $unit->short_name,
                 'multiplier' => 1,
                 'allow_decimal' => $unit->allow_decimal
             ];

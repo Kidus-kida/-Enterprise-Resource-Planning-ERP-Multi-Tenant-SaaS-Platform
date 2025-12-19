@@ -59,7 +59,7 @@
                             <div class="small text-muted">{{ \Carbon\Carbon::parse($purchase->transaction_date)->format('Y-m-d') }}</div>
                             
                             <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="badge bg-inverse-{{ $purchase->status == 'received' ? 'success' : ($purchase->status == 'pending' ? 'warning' : 'danger') }}">
+                                <span class="badge" style="color: black">
                                     {{ ucfirst($purchase->status) }}
                                 </span>
                                 <div class="fw-bold">{{ number_format($purchase->final_total, 2) }}</div>
@@ -87,6 +87,33 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach ($purchases as $purchase)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($purchase->transaction_date)->format('Y-m-d') }}</td>
+                                        <td>{{ $purchase->ref_no }}</td>
+                                        <td>{{ $purchase->contact->name ?? '' }}</td>
+                                        <td>
+                                            <span class="badge" style="color: black">
+                                                {{ ucfirst($purchase->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge" style="color: black">{{ ucfirst($purchase->payment_status) }}</span>
+                                        </td>
+                                        <td>{{ number_format($purchase->final_total, 2) }}</td>
+                                        <td>{{ number_format($purchase->final_total - $purchase->amount_paid, 2) }}</td>
+                                        <x-table-action>
+                                            <a class="dropdown-item" href="{{ route('purchase.show', $purchase->id) }}">
+                                                <i class="fa-solid fa-eye m-r-5"></i>
+                                                {{ __('View') }}
+                                            </a>
+                                            <a class="dropdown-item" href="{{ route('purchase.edit', $purchase->id) }}">
+                                                <i class="fa-solid fa-pencil m-r-5"></i>
+                                                {{ __('Edit') }}
+                                            </a>
+                                        </x-table-action>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -96,28 +123,8 @@
     </div>
 @endsection
 
-@push('scripts')
-    @if(request('view') != 'grid')
-    <script>
-        $(document).ready(function() {
-            if ($('#purchase_table').length > 0) {
-                $('#purchase_table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    ajax: '{{ route("purchase.index") }}',
-                    columns: [
-                        { data: 'transaction_date', name: 'transaction_date' },
-                        { data: 'ref_no', name: 'ref_no' },
-                        { data: 'supplier', name: 'supplier', orderable: false, searchable: false },
-                        { data: 'status', name: 'status' },
-                        { data: 'payment_status', name: 'payment_status' },
-                        { data: 'final_total', name: 'final_total' },
-                        { data: 'payment_due', name: 'payment_due', orderable: false, searchable: false },
-                        { data: 'action', name: 'action', orderable: false, searchable: false },
-                    ]
-                });
-            }
-        });
-    </script>
-    @endif
+@push('page-script')
+<script>
+    // Toggle view script if needed, though grid/list is handled by URL params
+</script>
 @endpush
