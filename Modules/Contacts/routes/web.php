@@ -6,11 +6,7 @@ use Modules\Contacts\Http\Controllers\CustomerLoanController;
 use Modules\Contacts\Http\Controllers\CustomerPaymentController;
 use Modules\Contacts\Http\Controllers\SupplierMappingController;
 use Modules\Contacts\Http\Controllers\CustomerStatementController;
-<<<<<<< HEAD
-// use Modules\Contacts\Http\Controllers\ContactsController;
-=======
 use Modules\Contacts\Http\Controllers\ContactController;
->>>>>>> 10c8f9d6212616961d0b61dda01b872b08883385
 
 /*
 |--------------------------------------------------------------------------

@@ -21,13 +21,7 @@ use App\PurchaseLine;
 use Modules\Contacts\Models\Transaction;
 use App\Restaurant\ResTable;
 use App\TaxRate;
-<<<<<<< HEAD
-use Modules\Contacts\Models\Transaction;
 use Modules\Contacts\Models\TransactionPayment;
-=======
-
-use App\TransactionPayment;
->>>>>>> 10c8f9d6212616961d0b61dda01b872b08883385
 use App\TransactionSellLine;
 use App\TransactionSellLinesPurchaseLines;
 use App\Variation;
