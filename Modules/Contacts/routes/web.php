@@ -6,7 +6,7 @@ use Modules\Contacts\Http\Controllers\CustomerLoanController;
 use Modules\Contacts\Http\Controllers\CustomerPaymentController;
 use Modules\Contacts\Http\Controllers\SupplierMappingController;
 use Modules\Contacts\Http\Controllers\CustomerStatementController;
-use Modules\Contacts\Http\Controllers\ContactsController;
+use Modules\Contacts\Http\Controllers\ContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +20,8 @@ use Modules\Contacts\Http\Controllers\ContactsController;
 */
 
 Route::middleware('auth')->group(function () {
-// Route::resource('contacts', ContactsController::class);
+
+    Route::resource('contacts', ContactController::class);
     
     Route::post('contact-groups/fetch-account', [ContactGroupController::class, 'fetchAccount'])->name('contact-groups.fetch-account');
     Route::resource('contact-groups', ContactGroupController::class);
