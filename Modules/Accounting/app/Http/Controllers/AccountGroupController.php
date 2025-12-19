@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Accounting\Models\AccountGroup;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 class AccountGroupController extends Controller
 {
@@ -16,9 +17,9 @@ class AccountGroupController extends Controller
     {
         if ($request->ajax()) {
             $business_id = session()->get('user.business_id');
-            
+
             $query = AccountGroup::query();
-            
+
             if ($business_id) {
                 $query->where('business_id', $business_id);
             }
@@ -64,10 +65,12 @@ class AccountGroupController extends Controller
      */
     public function create()
     {
-        $business_id = session()->get('user.business_id');
+        // $business_id = session()->get('user.business_id');
+
+        $business_id =    Auth::id();
         $account_types = \Modules\Accounting\Models\AccountType::where('business_id', $business_id)
-                                    ->whereNull('parent_account_type_id')
-                                    ->pluck('name', 'id');
+            // ->whereNull('parent_account_type_id')
+            ->pluck('name', 'id');
         return view('accounting::account-groups.create', compact('account_types'));
     }
 
@@ -76,23 +79,28 @@ class AccountGroupController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
         try {
-            $business_id = session()->get('user.business_id');
-
+            // Get business_id, fallback to logged-in user ID
+            $business_id = session()->get('user.business_id') ?? Auth::id();
             $group = new AccountGroup();
             $group->business_id = $business_id;
             $group->name = $request->name;
+            $group->account_type_id = $request->account_type_id;
             $group->description = $request->description;
             $group->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => __('Account group created successfully')
-            ]);
+            // return response()->json([
+            //     'success' => true,
+            //     'message' => __('Account group created successfully')
+            // ]);
+
+            $notification = notify(__('Account type created successfully'));
+            return back()->with($notification);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -116,10 +124,10 @@ class AccountGroupController extends Controller
     public function edit($id)
     {
         $group = AccountGroup::findOrFail($id);
-        $business_id = session()->get('user.business_id');
+        $business_id = session()->get('user.business_id') ?? Auth::id();
         $account_types = \Modules\Accounting\Models\AccountType::where('business_id', $business_id)
-                                    ->whereNull('parent_account_type_id')
-                                    ->pluck('name', 'id');
+            // ->whereNull('parent_account_type_id')
+            ->pluck('name', 'id');
         return view('accounting::account-groups.create', compact('group', 'account_types'));
     }
 
@@ -135,6 +143,7 @@ class AccountGroupController extends Controller
         try {
             $group = AccountGroup::findOrFail($id);
             $group->name = $request->name;
+            $group->account_type_id = $request->account_type_id;
             $group->description = $request->description;
             $group->save();
 

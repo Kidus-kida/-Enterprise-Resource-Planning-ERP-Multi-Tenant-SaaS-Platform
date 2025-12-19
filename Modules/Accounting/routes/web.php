@@ -65,6 +65,8 @@ Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
 
     // Missing Account Actions matching Old ERP
     Route::get('/deposit/{type}', [AccountController::class, 'getDeposit'])->name('account.deposit');
+    Route::post('/deposit/{type}', [AccountController::class, 'createDeposit'])->name('account.deposit');
+
     Route::post('/deposit', [AccountController::class, 'postDeposit'])->name('account.post-deposit');
     Route::get('/account/{id}/close', [AccountController::class, 'close'])->name('account.close');
     Route::get('/account/{id}/activate', [AccountController::class, 'activate'])->name('account.activate');

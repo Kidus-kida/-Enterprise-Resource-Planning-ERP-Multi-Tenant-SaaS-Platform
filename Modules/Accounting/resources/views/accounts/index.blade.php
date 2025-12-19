@@ -157,7 +157,7 @@
                                     <table class="table table-striped custom-table mb-0 datatable w-100">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
                                                 <th>{{ __('Type') }}</th>
                                                 <th>{{ __('Sub Type') }}</th>
@@ -196,7 +196,7 @@
                                     <table class="table table-striped custom-table mb-0" id="types-table">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
                                                 <th>{{ __('Description') }}</th>
                                                 <th class="text-end">{{ __('Action') }}</th>
@@ -229,7 +229,7 @@
                                     <table class="table table-striped custom-table mb-0" id="groups-table">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
                                                 <th>{{ __('Description') }}</th>
                                                 <th class="text-end">{{ __('Action') }}</th>
@@ -246,8 +246,42 @@
 
             <!-- Account Settings Tab -->
             <div class="tab-pane fade" id="account-settings-tab">
-                @includeIf('accounting::account-settings.index')
-            </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">{{ __('Account Setting') }}</h5>
+
+                                <a data-url="{{ route('account-settings.create') }}" href="javascript:void(0)"
+                                    class="btn btn-primary btn-sm" data-ajax-modal="true" data-size="md"
+                                    data-title="{{ __('Add Account Setting') }}">
+                                    <i class="fa-solid fa-plus"></i> {{ __('Add Setting') }}
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped custom-table mb-0" id="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>{{ __('Type') }}</th>
+                                                <th>{{ __('Date') }}</th>
+                                                <th>{{ __('Account') }}</th>
+                                                <th>{{ __('Group') }}</th>
+                                                <th>{{ __('Amount') }}</th>
+                                                <th>{{ __('Settings') }}</th>
+                                                <th class="text-end">{{ __('Action') }}</th>
+                                            </tr>
+
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /Account Groups Tab -->
 
             <!-- Deposits & Transfers Tab -->
             <div class="tab-pane fade" id="deposits-transfers-tab">
@@ -308,7 +342,7 @@
                         data: 'account_group',
                         name: 'account_group'
                     },
-                 
+
                     {
                         data: 'account_number',
                         name: 'account_number'
@@ -400,7 +434,101 @@
                     });
                 }
             });
+
+
+            var settingsTable = null;
+
+            /* Load DataTable only when tab is opened */
+            $('a[href="#account-settings-tab"]').on('shown.bs.tab', function() {
+
+                if (settingsTable === null) {
+
+                    settingsTable = $('#settings-table').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: "{{ route('account-settings.index') }}",
+                        order: [
+                            [0, 'desc']
+                        ],
+                        columns: [{
+                                data: 'DT_RowIndex',
+                                name: 'DT_RowIndex',
+                                orderable: false,
+                                searchable: false
+                            },
+                            {
+                                data: 'type',
+                                name: 'key'
+                            },
+                            {
+                                data: 'date',
+                                name: 'date'
+                            },
+                            {
+                                data: 'account',
+                                name: 'account_id'
+                            },
+                            {
+                                data: 'group',
+                                name: 'group_id'
+                            },
+                            {
+                                data: 'amount',
+                                name: 'amount'
+                            },
+                            {
+                                data: 'settings',
+                                name: 'settings',
+                                orderable: false
+                            },
+                            {
+                                data: 'action',
+                                name: 'action',
+                                orderable: false,
+                                searchable: false
+                            }
+                        ]
+                    });
+
+                    /* Initialize popovers AFTER every draw */
+                    $('#settings-table').on('draw.dt', function() {
+                        $('[data-bs-toggle="popover"]').popover({
+                            trigger: 'hover',
+                            placement: 'left',
+                            html: true,
+                            container: 'body'
+                        });
+                    });
+                }
+            });
+
         });
+
+        function deleteAccountSetting(id) {
+
+            if (!confirm('{{ __('Are you sure you want to delete this record?') }}')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/accounting/account-settings/' + id,
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        settingsTable.ajax.reload(null, false);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('{{ __('Something went wrong!') }}');
+                }
+            });
+        }
 
         // Delete functions
         function deleteType(id) {
