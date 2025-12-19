@@ -13,7 +13,6 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\AssetsController;
 use App\Http\Controllers\Admin\ChatAppController;
 use App\Http\Controllers\Admin\ClientsController;
-use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\TicketsController;
 use App\Http\Controllers\Admin\HolidaysController;
 use App\Http\Controllers\Admin\PayrollsController;
@@ -73,7 +72,7 @@ Route::group(['middleware' => 'signed'], function() {
     Route::resource('users', UsersController::class);
     Route::resource('employees', EmployeesController::class);
     Route::resource('clients', ClientsController::class);
-    Route::resource('contacts', ContactController::class);
+    // Route::resource('contacts', ContactController::class);
 
     Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
     Route::get('employee/personal-info/{employeeDetail}', [EmployeeDetailsController::class, 'personalInfo'])->name('employee.personal-info');
