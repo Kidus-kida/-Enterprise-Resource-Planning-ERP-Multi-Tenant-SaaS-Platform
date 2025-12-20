@@ -84,7 +84,7 @@ class AccountTransaction extends Model
             return null;
         }
 
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = !empty($data['business_id']) ? $data['business_id'] : request()->session()->get('user.business_id');
         
         $transaction_data = [
             'amount' => $data['amount'],

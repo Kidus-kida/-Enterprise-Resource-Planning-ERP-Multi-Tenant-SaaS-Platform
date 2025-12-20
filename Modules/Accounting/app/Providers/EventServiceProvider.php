@@ -17,7 +17,10 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         AppMenuEvent::class => [
             AppMenuListener::class,
-        ]
+        ],
+        \App\Events\TransactionPaymentAdded::class => [
+            \Modules\Accounting\Listeners\MapTransactionPaymentToAccountTransaction::class,
+        ],
     ];
 
     /**

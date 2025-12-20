@@ -41,8 +41,13 @@ class Transaction extends Model
         return $this->hasMany(\Modules\Contacts\Models\TransactionPayment::class, 'transaction_id');
     }
 
+    public function payment_lines()
+    {
+        return $this->hasMany(\Modules\Contacts\Models\TransactionPayment::class, 'transaction_id');
+    }
+
     public function location()
     {
-        return $this->belongsTo(\App\Models\BusinessLocation::class, 'location_id');
+        return $this->belongsTo(\Modules\Contacts\Models\BusinessLocation::class, 'location_id');
     }
 }

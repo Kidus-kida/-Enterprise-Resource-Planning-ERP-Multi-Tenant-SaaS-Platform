@@ -46,8 +46,8 @@ class Util
             $thousand_separator = $currency_details->thousand_separator;
             $decimal_separator = $currency_details->decimal_separator;
         } else {
-            $thousand_separator = session()->has('currency') ? session('currency')['thousand_separator'] : '';
-            $decimal_separator = session()->has('currency') ? session('currency')['decimal_separator'] : '';
+            $thousand_separator = session()->get('currency.thousand_separator', '');
+            $decimal_separator = session()->get('currency.decimal_separator', '');
         }
 
         $num = str_replace($thousand_separator, '', $input_number);
@@ -235,8 +235,8 @@ class Util
      */
     public function num_f($input_number, $add_symbol = false, $business_details = null, $is_quantity = false)
     {
-        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : session('currency')['thousand_separator'];
-        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : session('currency')['decimal_separator'];
+        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : (session()->has('currency') ? session('currency')['thousand_separator'] : ',');
+        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : (session()->has('currency') ? session('currency')['decimal_separator'] : '.');
 
         $currency_precision =  !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
         
@@ -618,13 +618,14 @@ class Util
     {
         $prefix = '';
 
-        if (session()->has('business') && !empty(request()->session()->get('business.ref_no_prefixes')[$type])) {
-            $prefix = request()->session()->get('business.ref_no_prefixes')[$type];
+        if (session()->has('business')) {
+            $prefixes = request()->session()->get('business.ref_no_prefixes');
+            $prefix = !empty($prefixes[$type]) ? $prefixes[$type] : '';
         }
-        if (!empty($business_id)) {
+        if (!empty($business_id) && empty($prefix)) {
             $business = Business::find($business_id);
             $prefixes = $business->ref_no_prefixes;
-            $prefix = $prefixes[$type];
+            $prefix = !empty($prefixes[$type]) ? $prefixes[$type] : '';
         }
 
         if (!empty($default_prefix)) {

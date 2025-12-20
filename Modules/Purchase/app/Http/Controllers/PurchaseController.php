@@ -278,9 +278,9 @@ class PurchaseController extends Controller
             $transaction_data['document'] = $this->productUtil->uploadFile($request, 'document', 'documents');
 
             // Update reference count and generate reference number
-            //$ref_count = $this->productUtil->setAndGetReferenceCount('purchase');
             if (empty($transaction_data['ref_no'])) {
-                $transaction_data['ref_no'] = $this->productUtil->generateReferenceNumber('purchase', $ref_count);
+                $ref_count = $this->productUtil->setAndGetReferenceCount('purchase', $business_id);
+                $transaction_data['ref_no'] = $this->productUtil->generateReferenceNumber('purchase', $ref_count, $business_id);
             }
 
             $taxes = TaxRate::where('business_id', $business_id)->first();
@@ -338,7 +338,7 @@ class PurchaseController extends Controller
             // Add Payments
             $payments = $request->input('payment', []);
             if (!empty($payments)) {
-                $this->transactionUtil->createOrUpdatePaymentLines($transaction, $payments, $business_id, $user_id);
+                $this->transactionUtil->createOrUpdatePaymentLines($transaction, $payments, $business_id, $user_id, true, $transaction->status);
             }
 
             // Update payment status
