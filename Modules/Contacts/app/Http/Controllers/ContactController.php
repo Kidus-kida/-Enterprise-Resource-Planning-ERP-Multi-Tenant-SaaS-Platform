@@ -25,7 +25,7 @@ use Modules\Contacts\Models\Vehicle;
 use Modules\Contacts\Models\ContactGroup;
 use Modules\Contacts\Models\Transaction;
 use App\Utils\ModuleUtil;
-
+use App\Utils\BusinessUtil;
 use App\Utils\TransactionUtil;
 
 
@@ -34,15 +34,17 @@ class ContactController extends Controller
     protected $moduleUtil;
     protected $commonUtil;
     protected $transactionUtil;
-    public function __construct(
+    protected $businessUtil;
+  public function __construct(
     ModuleUtil $moduleUtil,
-  
-    TransactionUtil $transactionUtil
+    TransactionUtil $transactionUtil,
+    BusinessUtil $businessUtil
 ) {
     $this->moduleUtil = $moduleUtil;
-  
     $this->transactionUtil = $transactionUtil;
+    $this->businessUtil = $businessUtil; 
 }
+
 
     /**
      * Display a listing of the resource.
@@ -74,11 +76,11 @@ class ContactController extends Controller
 
         // Check customer code and get contact ID
          $contact_id = $this->businessUtil->check_customer_code($business_id);
-return $dataTable->render('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups','contact_id','pageTitle'));
+return $dataTable->render('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups','pageTitle'));
     
 
 
-        // return view('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups', ));
+       
     }
 
     /**
@@ -728,5 +730,235 @@ public function store(Request $request)
             }
             return $output;
         }
+    }
+    public function getImportBalance(){
+        if (!auth()->user()->can('supplier.create') && !auth()->user()->can('customer.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        $zip_loaded = extension_loaded('zip') ? true : false;
+        //Check if zip extension it loaded or not.
+        if ($zip_loaded === false) {
+            $output = [
+                'success' => 0,
+                'msg' => 'Please install/enable PHP Zip archive for import'
+            ];
+            return view('contact.import')
+                ->with('notification', $output);
+        } else {
+            return view('contact.import-balance');
+        }
+    }
+
+    public function exportBalance(Request $request){
+        $selected_rows = explode(',', $request->input('selected_rows'));
+        $business_id = $request->session()->get('user.business_id');
+        $contacts = Contact::where('business_id', $business_id)
+            ->whereIn('id', $selected_rows)
+            ->get();
+
+        $data = [];
+
+        foreach($contacts as $one){
+            $data[] = array("contact_id" => $one->contact_id, 'type' => $one->type, 'name' => $one->name);
+        }
+
+        // dd($data);
+
+        $response = MatExcel::download(new ContactOpeningBalanceExport(
+        $data
+        ),"Contact-Opening-Balance.xls");
+
+        ob_end_clean();
+        return $response;
+
+    }
+    public function settings(){
+        $business_id = request()->session()->get('user.business_id');
+
+        $data = ContactLinkedAccount::where('contact_linked_accounts.business_id',$business_id)
+                    ->join('users as u','u.id','contact_linked_accounts.created_by')
+                    ->join('accounts as c','c.id','contact_linked_accounts.customer_advance')
+                    ->join('accounts as s','s.id','contact_linked_accounts.supplier_advance')
+                    ->leftjoin('accounts as cdr_liability','cdr_liability.id','contact_linked_accounts.customer_deposit_refund_liability_account')
+                    ->leftjoin('accounts as cdr_asset','cdr_asset.id','contact_linked_accounts.customer_deposit_refund_asset_account')
+                    ->select('contact_linked_accounts.*','c.name as cust','s.name as sup','u.username','cdr_liability.name as _customer_deposit_refund_liability_account','cdr_asset.name as _customer_deposit_refund_asset_account')->first();
+
+
+        $liability = AccountType::getAccountTypeIdByName('Current Liabilities', $business_id)->id;
+
+
+        $liability_accounts = Account::where('business_id', $business_id)->where('account_type_id', $liability)->pluck('name', 'id');
+
+
+
+        $asset = AccountType::getAccountTypeIdByName('Current Assets', $business_id)->id;
+        $asset_accounts = Account::where('business_id', $business_id)->where('account_type_id', $asset)->pluck('name', 'id');
+        return view('contact.settings')
+            ->with(compact('data','liability_accounts','asset_accounts'));
+    }
+
+    public function save_settings(Request $request){
+
+        try {
+            $input = $request->except('_token');
+
+            $input['business_id'] = $business_id = $request->session()->get('user.business_id');
+            $input['created_by'] = auth()->user()->id;
+
+
+
+            ContactLinkedAccount::updateOrCreate(['business_id' => $business_id],$input);
+
+                $output = [
+                    'success' => 1,
+                    'msg' => __('message.success'),
+                    'background' => 'alert-success'
+                ];
+                DB::commit();
+
+                return back()->with('status', $output);
+
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            $output = [
+                'success' => 0,
+                'msg' => $e->getMessage(),
+                'background' => 'alert-danger'
+            ];
+            return back()->with('status', $output);
+        }
+    }
+    
+    public function addVatNumber($id){
+        
+        $is_single = request()->is_single ?? false;
+        
+        $contact = Contact::findOrFail($id);
+        
+        if(empty($is_single)){
+            return view('contact.update_vat_number')
+                ->with(compact('contact'));
+        }else{
+            return view('contact.update_single_fields')
+                ->with(compact('contact'));
+        }
+            
+    }
+
+    public function updateVatNumber(Request $request,$id){
+
+        try {
+            $input = $request->except('_token','_method');
+            
+            if($request->hasFile('image')){
+                $imageName = Media::uploadFile($request->file('image'));
+                $input['image']=$imageName;
+            }
+            
+            Contact::where('id',$id)->update($input);
+            
+            $contact = Contact::findOrFail($id);
+            
+
+            $output = [
+                'success' => 1,
+                'msg' => __('message.success'),
+                'background' => 'alert-success',
+                'contact' => $contact
+            ];
+            DB::commit();
+
+            return $output;
+
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            $output = [
+                'success' => 0,
+                'msg' => $e->getMessage(),
+                'background' => 'alert-danger'
+            ];
+            return $output;
+        }
+    }
+
+
+    public function postImportBalance(Request $request)
+    {
+        if (!auth()->user()->can('supplier.create') && !auth()->user()->can('customer.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        try {
+            $notAllowed = $this->commonUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
+            }
+            //Set maximum php execution time
+            ini_set('max_execution_time', 0);
+            if ($request->hasFile('contacts_csv')) {
+                $file = $request->file('contacts_csv');
+                $parsed_array = Excel::toArray([], $file);
+                //Remove header row
+                $imported_data = array_splice($parsed_array[0], 1);
+                $business_id = $request->session()->get('user.business_id');
+                $user_id = $request->session()->get('user.id');
+                $formated_data = [];
+                $is_valid = true;
+                $error_msg = '';
+                DB::beginTransaction();
+                $ob_data = array();
+                foreach ($imported_data as $key => $value) {
+
+                    if(!empty($value[0])){
+                        $contact_id = $value[0];
+
+                        $contact = Contact::where('contact_id',$contact_id)->first();
+                        // if(count($value) % 2 == 0){
+                        //      $is_valid =  false;
+                        //      $error_msg = "Number of columns mismatch";
+                        //      break;
+                        // }
+
+                        for ($i = 3; $i < count($value); $i += 3) {
+
+                           if(!empty($contact) && !empty($value[$i + 2]) && !empty($value[$i + 1]) && !empty($value[$i])){
+                                $opening_balance = $value[$i + 1];
+                                $invoice_no = $value[$i + 2];
+
+                                $currentDate = new \DateTime();
+                                $currentDate->sub(new \DateInterval('P' . $value[$i] . 'D'));
+                                $transaction_date = $currentDate->format('Y-m-d');
+                                $ob_data[] = [$contact->id,$opening_balance, $transaction_date];
+                                $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $transaction_date, $invoice_no);
+                            }
+                        }
+                    }
+                }
+
+
+                $output = [
+                    'success' => 1,
+                    'msg' => __('product.file_imported_successfully'),
+                    'background' => 'alert-success'
+                ];
+                DB::commit();
+
+                return back()->with('notification', $output);
+
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+            $output = [
+                'success' => 0,
+                'msg' => $e->getMessage(),
+                'background' => 'alert-danger'
+            ];
+            return back()->with('notification', $output);
+        }
+
     }
 }
