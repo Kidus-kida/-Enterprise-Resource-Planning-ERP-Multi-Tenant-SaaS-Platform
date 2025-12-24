@@ -1575,12 +1575,20 @@ class Util
 
     public function account_exist_return_id($account_name)
     {
-        $business_id = request()->session()->get('business.id');
-        $account = Account::where(DB::raw("REPLACE(`name`, '  ', ' ')"), $account_name)->where('business_id', $business_id)->first();
-        if (!empty($account)) {
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->check() ? auth()->user()->business_id : (Business::first()->id ?? null));
+        
+        if (empty($business_id)) {
+            return 0;
+        }
+
+        $account = Account::where('business_id', $business_id)->where('name', $account_name)->first();
+        if ($account) {
             return $account->id;
         } else {
-            return 0;
+            // Fallback: try to find any account with that name if business-specific one failed, 
+            // especially if it's a single-business system.
+            $fallback = Account::where('name', $account_name)->first();
+            return $fallback ? $fallback->id : 0;
         }
     }
 

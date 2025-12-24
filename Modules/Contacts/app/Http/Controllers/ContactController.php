@@ -60,8 +60,8 @@ class ContactController extends Controller
             return redirect()->back();
         }
 
-        if (request()->ajax()) {
-            return $type == 'supplier' ? $this->indexSupplier() : ($type == 'customer' ? $this->indexCustomer() : abort(404));
+        if (empty($business_id)) {
+            $business_id = auth()->user()->business_id;
         }
         $reward_enabled = (request()->session()->get('business.enable_rp') == 1 && $type == 'customer');
 
