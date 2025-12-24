@@ -468,7 +468,7 @@ class Util
         }
 
 
-        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
+        return !empty($date_format) ? Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -483,7 +483,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return !empty($time_format) ? \Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
+        return !empty($time_format) ? Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
     }
 
     /**
@@ -498,7 +498,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return !empty($time) ? \Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
+        return !empty($time) ? Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
     }
 
     /**
@@ -511,6 +511,9 @@ class Util
     public function format_date($date, $show_time = false, $business_details = null)
     {
         $format = !empty($business_details) ? $business_details->date_format : session('business.date_format');
+        if (empty($format)) {
+            $format = 'm/d/Y';
+        }
         if (!empty($show_time)) {
             $time_format = !empty($business_details) ? $business_details->time_format : session('business.time_format');
             if ($time_format == 12) {
@@ -520,7 +523,7 @@ class Util
             }
         }
 
-        return !empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
+        return !empty($date) ? Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
     }
 
     /**

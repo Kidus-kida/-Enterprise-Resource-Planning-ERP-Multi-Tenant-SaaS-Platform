@@ -169,7 +169,7 @@ public static function forDropdown($business_id, $prepend_none = true, $include_
         //     $query->where('is_cmmsn_agnt', 0);
         // }// this condition is commented to include all users in dropdownby amanuel
 
-        $all_users = $query->select('id', DB::raw("CONCAT(COALESCE(firstname, ''),' ',COALESCE(firstname, ''),' ',COALESCE(lastname,'')) as surename"));
+        $all_users = $query->select('id', DB::raw("CONCAT(COALESCE(firstname, ''),' ',COALESCE(middlename, ''),' ',COALESCE(lastname,'')) as surename"));
 
         $users = $all_users->pluck('surename', 'id');
 
