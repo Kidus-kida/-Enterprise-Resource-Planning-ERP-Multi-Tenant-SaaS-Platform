@@ -9,7 +9,7 @@ use Modules\Contacts\Models\BusinessLocation;
 use App\Category;
 
 use Modules\Contacts\Models\Contact;
-use App\ContactLedger;
+use App\Models\ContactLedger;
 use App\Currency;
 use App\Events\TransactionPaymentAdded;
 use App\Events\TransactionPaymentDeleted;
