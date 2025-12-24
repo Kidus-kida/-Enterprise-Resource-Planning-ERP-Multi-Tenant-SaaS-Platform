@@ -6,6 +6,7 @@ use App\Utils\TransactionUtil;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use App\Account;
@@ -88,7 +89,7 @@ class AccountTransaction extends Model
             'business_id' => $business_id,
             'type' => $data['type'],
             'sub_type' => !empty($data['sub_type']) ? $data['sub_type'] : null,
-            'operation_date' => !empty($data['operation_date']) ? $data['operation_date'] : \Carbon::now(),
+            'operation_date' => !empty($data['operation_date']) ? $data['operation_date'] : Carbon::now(),
             'created_by' =>  !empty($data['created_by']) ? $data['created_by'] : Auth::user()->id,
             'transaction_id' => !empty($data['transaction_id']) ? $data['transaction_id'] : null,
             'transaction_payment_id' => !empty($data['transaction_payment_id']) ? $data['transaction_payment_id'] : null,

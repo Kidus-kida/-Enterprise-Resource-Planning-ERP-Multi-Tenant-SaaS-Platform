@@ -50,6 +50,25 @@ Route::middleware('auth')->group(function () {
     Route::get('contacts/settings', [\Modules\Contacts\Http\Controllers\ContactSettingsController::class, 'settings']);
     Route::post('contacts/save-settings', [\Modules\Contacts\Http\Controllers\ContactSettingsController::class, 'save_settings']);
 
+    // New Contact Actions
+    Route::get('contacts/advance-payment/{id}', [ContactController::class, 'getAdvancePayment']);
+    Route::post('contacts/advance-payment', [ContactController::class, 'postAdvancePayment']);
+    Route::get('contacts/direct-loan/{id}', [ContactController::class, 'getDirectLoan']);
+    Route::post('contacts/direct-loan/{id}', [ContactController::class, 'postDirectLoan']);
+    Route::get('contacts/refund-deposit/{id}', [ContactController::class, 'getRefundDeposit']);
+    Route::post('contacts/refund-deposit', [ContactController::class, 'postRefundDeposit']);
+    Route::get('contacts/security-deposit/{id}', [ContactController::class, 'getSecurityDeposit']);
+    Route::post('contacts/security-deposit', [ContactController::class, 'postSecurityDeposit']);
+    Route::get('contacts/refund-payment/{id}', [ContactController::class, 'getRefundPayment']);
+    Route::post('contacts/refund-payment', [ContactController::class, 'postRefundPayment']);
+    Route::get('contacts/pay-contact-due/{id}', [ContactController::class, 'getPayContactDue']);
+    Route::post('contacts/pay-contact-due', [ContactController::class, 'postPayContactDue']);
+    Route::get('contacts/toggle-activate/{id}', [ContactController::class, 'toggleActivate']);
+    Route::get('contacts/balance-details/{id}', [ContactController::class, 'balanceDetails']);
+    Route::get('contacts/ledger', [ContactController::class, 'getLedger']);
+    Route::get('contacts/payments', [ContactController::class, 'getPayment']);
+    Route::get('contacts/get-cheque-dropdown/{bank_id}/{contact_id}', [ContactController::class, 'getChequeDropdownByBankId']);
+
     // Contact Import
     Route::get('contacts/import', [\Modules\Contacts\Http\Controllers\ContactImportController::class, 'getImportContacts'])->name('contacts.import');
     Route::post('contacts/import', [\Modules\Contacts\Http\Controllers\ContactImportController::class, 'postImportContacts']);

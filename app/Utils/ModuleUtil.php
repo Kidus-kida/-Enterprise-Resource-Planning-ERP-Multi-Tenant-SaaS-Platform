@@ -242,8 +242,8 @@ class ModuleUtil extends Util
             }
 
             //Start
-            $start_dt = \Carbon\Carbon::parse($package->start_date)->toDateTimeString();
-            $end_dt = \Carbon\Carbon::parse($package->end_date)->endOfDay()->toDateTimeString();
+            $start_dt = Carbon::parse($package->start_date)->toDateTimeString();
+            $end_dt = Carbon::parse($package->end_date)->endOfDay()->toDateTimeString();
 
             if ($type == 'locations') {
                 //Check for available location and max number allowed.
