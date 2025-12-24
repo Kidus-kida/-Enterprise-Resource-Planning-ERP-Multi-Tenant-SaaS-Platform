@@ -600,13 +600,16 @@ class BusinessUtil extends Util
 
     public function check_customer_code($business_id, $increment =  false)
     {
-        $ref_count = $this->onlyGetReferenceCount('contacts', null, $increment);
+        $ref_count = $this->onlyGetReferenceCount('contacts', $business_id, $increment);
+        
         $ref_no_prefixes = request()->session()->get('business.ref_no_prefixes');
         $ref_no_starting_number = request()->session()->get('business.ref_no_starting_number');
-        $prefix =   $ref_no_prefixes['contacts'];
-        $starting_number =   $ref_no_starting_number['contacts'];
+        
+        $prefix = !empty($ref_no_prefixes['contacts']) ? $ref_no_prefixes['contacts'] : 'CO';
+        $starting_number = !empty($ref_no_starting_number['contacts']) ? $ref_no_starting_number['contacts'] : 1;
+        
         $contact_id = '';
-        $next_number = $starting_number + $ref_count;
+        $next_number = (int)$starting_number + $ref_count;
         $next_number =  str_pad($next_number, 4, 0, STR_PAD_LEFT);
         $contact_id =  $prefix . '-' . $next_number . '-' . $business_id;
 

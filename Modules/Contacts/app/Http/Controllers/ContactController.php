@@ -75,8 +75,11 @@ class ContactController extends Controller
         $is_property = isset($is_property_customer);
 
         // Check customer code and get contact ID
-         $contact_id = $this->businessUtil->check_customer_code($business_id);
-return $dataTable->render('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups','pageTitle'));
+        if (empty($business_id)) {
+            $business_id = auth()->user()->business_id;
+        }
+        $contact_id = $this->businessUtil->check_customer_code($business_id);
+return $dataTable->render('pages.contacts.index', compact('type', 'reward_enabled', 'contact_fields', 'is_property', 'user_groups','pageTitle', 'contact_id'));
     
 
 
@@ -111,6 +114,9 @@ return $dataTable->render('pages.contacts.index', compact('type', 'reward_enable
         }
         $customer_groups = ContactGroup::forDropdown($business_id);
         $supplier_groups = ContactGroup::forDropdown($business_id, true, false, 'supplier');
+        if (empty($business_id)) {
+            $business_id = auth()->user()->business_id;
+        }
         $contact_id = $this->businessUtil->check_customer_code($business_id);
         $user_groups = User::forDropdown($business_id);
 
@@ -520,6 +526,9 @@ public function store(Request $request)
             $customers = Contact::customersDropdown($business_id, false);
 
             $user_groups = User::forDropdown($business_id);
+            if (empty($business_id)) {
+                $business_id = auth()->user()->business_id;
+            }
             $contact_id = $this->businessUtil->check_customer_code($business_id);
             return view('pages.contacts.edit')
                 ->with(compact('notifications','contact','customers', 'types', 'customer_groups', 'supplier_groups', 'opening_balance', 'ob_transaction','user_groups', 'contact_id'));
