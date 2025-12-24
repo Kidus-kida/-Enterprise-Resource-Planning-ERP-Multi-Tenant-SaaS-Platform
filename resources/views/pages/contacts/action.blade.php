@@ -1,6 +1,6 @@
 <div class="btn-group">
     <button type="button" class="btn btn-info dropdown-toggle btn-xs"
-            data-bs-toggle="dropdown" aria-expanded="false">
+            data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
         Actions
         <span class="caret"></span><span class="visually-hidden">Toggle Dropdown</span>
     </button>
