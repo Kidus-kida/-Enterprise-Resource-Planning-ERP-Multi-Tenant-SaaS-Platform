@@ -547,9 +547,12 @@ class Util
             return $ref->ref_count;
         } else {
             $business = Business::find($business_id);
-            $starting_numbers = $business->ref_no_starting_number;
-
-            $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            if (!empty($business)) {
+                $starting_numbers = $business->ref_no_starting_number;
+                $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            } else {
+                $starting_number = 1;
+            }
 
             $new_ref = ReferenceCount::create([
                 'ref_type' => $type,
@@ -585,9 +588,12 @@ class Util
             return $ref->ref_count;
         } else {
             $business = Business::find($business_id);
-            $starting_numbers = $business->ref_no_starting_number;
-
-            $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            if (!empty($business)) {
+                $starting_numbers = $business->ref_no_starting_number;
+                $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            } else {
+                $starting_number = 1;
+            }
 
             $new_ref = ReferenceCount::create([
                 'ref_type' => $type,
