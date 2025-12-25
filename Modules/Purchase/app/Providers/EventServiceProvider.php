@@ -4,8 +4,6 @@ namespace Modules\Purchase\Providers;
 
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Modules\Purchase\Listeners\AppMenuListener;
-use App\Events\AppMenuEvent;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -15,9 +13,7 @@ class EventServiceProvider extends ServiceProvider
      * @var array<string, array<int, string>>
      */
     protected $listen = [
-        AppMenuEvent::class => [
-            AppMenuListener::class,
-        ]
+        // Menu is registered in app/Listeners/AppMenuListener.php
     ];
 
     /**

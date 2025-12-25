@@ -29,6 +29,11 @@ class PurchaseLine extends Model
         return $this->belongsTo(Variation::class, 'variation_id');
     }
 
+    public function sub_unit()
+    {
+        return $this->belongsTo(\App\Unit::class, 'sub_unit_id');
+    }
+
     /**
      * Set the quantity.
      *

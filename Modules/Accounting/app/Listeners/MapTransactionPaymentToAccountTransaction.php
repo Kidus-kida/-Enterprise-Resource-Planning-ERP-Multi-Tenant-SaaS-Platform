@@ -4,6 +4,7 @@ namespace Modules\Accounting\Listeners;
 
 use App\Events\TransactionPaymentAdded;
 use Modules\Accounting\Models\AccountTransaction;
+use Modules\Accounting\Models\Account;
 
 class MapTransactionPaymentToAccountTransaction
 {
@@ -32,6 +33,21 @@ class MapTransactionPaymentToAccountTransaction
             }
 
             AccountTransaction::createAccountTransaction($at_data);
+
+            // Update account current_balance
+            // For credit transactions (purchases/expenses), decrease the balance
+            // For debit transactions (sales), increase the balance
+            $account = Account::find($formInput['account_id']);
+            if ($account) {
+                if ($at_data['type'] == 'credit') {
+                    // Decrease balance for purchases/expenses (money going out)
+                    $account->current_balance -= $payment->amount;
+                } else {
+                    // Increase balance for sales (money coming in)
+                    $account->current_balance += $payment->amount;
+                }
+                $account->save();
+            }
         }
     }
 }

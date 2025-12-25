@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Purchase\Http\Controllers\PurchaseController;
 use Modules\Purchase\Http\Controllers\SupplierController;
+use Modules\Purchase\Http\Controllers\PurchaseReturnController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,9 +32,11 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('purchase/bulk-import', [PurchaseController::class, 'bulkImportPost'])->name('purchase.bulk_import_post');
     Route::get('purchase/download-template', [PurchaseController::class, 'downloadTemplate'])->name('purchase.download_template');
     
+    Route::get('purchase-return/add/{id}', [PurchaseReturnController::class, 'add'])->name('purchase-return.add');
+    Route::resource('purchase-return', PurchaseReturnController::class);
+
     Route::resource('purchase', PurchaseController::class);
 
-    Route::resource('supplier', SupplierController::class);
     Route::get('/purchase/stores-by-location/{locationId}', function ($locationId) {
     // Replace this with your actual logic
     $stores = \App\Models\Store::where('location_id', $locationId)

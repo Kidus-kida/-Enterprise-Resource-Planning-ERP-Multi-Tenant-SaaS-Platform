@@ -128,9 +128,12 @@ class PurchaseController extends Controller
                                     <i class="fa-solid fa-eye m-r-5"></i> ' . __('View') . '
                                 </a>
                                 <a class="dropdown-item" href="' . route('purchase.edit', $row->id) . '">
-                                    <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
-                                </a>
-                                <form action="' . route('purchase.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
+                                <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
+                            </a>
+                            <a class="dropdown-item" href="' . route('purchase-return.add', $row->id) . '">
+                                <i class="fa fa-undo m-r-5"></i> ' . __('Purchase Return') . '
+                            </a>
+                            <form action="' . route('purchase.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
                                     ' . csrf_field() . '
                                     ' . method_field("DELETE") . '
                                     <button type="submit" class="dropdown-item"><i class="fa-solid fa-trash m-r-5"></i> ' . __('Delete') . '</button>

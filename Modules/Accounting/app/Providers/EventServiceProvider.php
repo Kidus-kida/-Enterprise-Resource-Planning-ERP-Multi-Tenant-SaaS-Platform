@@ -21,6 +21,9 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\TransactionPaymentAdded::class => [
             \Modules\Accounting\Listeners\MapTransactionPaymentToAccountTransaction::class,
         ],
+        \App\Events\TransactionPaymentDeleted::class => [
+            \Modules\Accounting\Listeners\HandleTransactionPaymentDeleted::class,
+        ],
     ];
 
     /**

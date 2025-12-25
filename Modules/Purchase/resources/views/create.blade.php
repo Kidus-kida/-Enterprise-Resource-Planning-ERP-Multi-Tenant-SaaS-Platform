@@ -85,7 +85,7 @@
                                     <!-- Overlapping plus button -->
                                     <button type="button"
                                         class="btn btn-outline-primary position-absolute end-0 top-0 d-flex align-items-center px-3"
-                                        data-url="{{ route('supplier.create') }}" data-ajax-modal="true" data-size="lg"
+                                        data-url="{{ route('contacts.create') }}" data-ajax-modal="true" data-size="lg"
                                         data-title="Add Supplier" style="height: 44px; border-radius: 0 .375rem .375rem 0;">
                                         +
                                     </button>
@@ -177,7 +177,7 @@
                             <div class="product-search-input-group">
                                 <!-- Search box -->
                                 <input type="text" id="product-filter" class="form-control"
-                                    placeholder="Search product by name or code">
+                                    placeholder="Search product by name or code" disabled>
 
                                 <button type="button" class="btn btn-outline-primary d-flex align-items-center py-2 px-3"
                                     style="border-radius: 0 .375rem .375rem 0;" data-bs-toggle="modal"
@@ -516,5 +516,37 @@
                 });
             }
         });
+    </script>
+    <script>
+    $(document).ready(function() {
+        const supplierSelect = $('#supplierSelect');
+        const productFilter = $('#product-filter');
+        const addButton = productFilter.closest('.product-search-input-group').find('button');
+        const productTableBody = $('#product-table-body');
+
+        supplierSelect.on('change', function() {
+            const hasSupplier = !!$(this).val();
+
+            // Enable/disable product search and add button
+            productFilter.prop('disabled', !hasSupplier);
+            addButton.prop('disabled', !hasSupplier);
+            productFilter.attr('placeholder', hasSupplier 
+                ? 'Search product by name or code' 
+                : 'Select a supplier first...'
+            );
+
+            // Clear product table when supplier changes (only if a supplier is selected)
+            if (hasSupplier) {
+                productTableBody.empty().append(`
+                    <tr id="no-items-row">
+                        <td colspan="14" class="text-center py-4 text-muted">
+                            <i class="fas fa-box-open fa-2x mb-2"></i><br>
+                            {{ __('No items added yet. Search and select products above to add them.') }}
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    });
     </script>
 @endpush

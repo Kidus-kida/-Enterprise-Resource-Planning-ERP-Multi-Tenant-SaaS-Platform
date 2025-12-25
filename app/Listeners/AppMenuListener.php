@@ -155,6 +155,7 @@ class AppMenuListener
                     ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : ''))
                     ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('purchase.bulk_import', __('Bulk Purchase'))->addClass(route_is(['purchase.bulk_import']) ? 'active' : ''))
+                    ->addIfCan('view-invoices', Link::toRoute('purchase-return.index', __('Purchase Returns'))->addClass(route_is(['purchase-return.*']) ? 'active' : ''),)
                     ->addParentClass('submenu')
             );
         }
