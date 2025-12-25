@@ -12,9 +12,9 @@
     <tbody>
         @foreach($payments as $payment)
             <tr>
-                <td>{{@format_datetime($payment->paid_on)}}</td>
+                <td>@format_datetime($payment->paid_on)</td>
                 <td>{{$payment->payment_ref_no}}</td>
-                <td>{{@num_format($payment->amount)}}</td>
+                <td>@num_format($payment->amount)</td>
                 <td>{{$payment->method}}</td>
                 <td>
                     @if($payment->transaction)

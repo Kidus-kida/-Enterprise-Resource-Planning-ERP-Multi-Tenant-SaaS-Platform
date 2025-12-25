@@ -23,7 +23,7 @@
 
         <li><a href="javascript:void(0)" data-url="{{action([\Modules\Contacts\Http\Controllers\ContactController::class, 'getAdvancePayment'], [$id])}}?type=advance_payment" data-ajax-modal="true" data-title="Advance Payment" class="pay_purchase_due"><i class="fa fa-money" aria-hidden="true"></i> Advance Payment</a></li>
         
-        <li><a href="javascript:void(0)" data-url="{{action([\Modules\Contacts\Http\Controllers\ContactController::class, 'getDirectLoan'], [$id])}}" data-ajax-modal="true" data-title="Direct Loan" class="pay_purchase_due"><i class="fa fa-money" aria-hidden="true"></i> Direct Loan</a></li>
+        <li><a href="javascript:void(0)" data-url="{{action([\Modules\Contacts\Http\Controllers\ContactController::class, 'getDirectLoan'], [$id])}}" data-ajax-modal="true" class="pay_purchase_due"><i class="fa fa-money" aria-hidden="true"></i> Direct Loan</a></li>
         
         <li><a href="javascript:void(0)" data-url="{{action([\Modules\Contacts\Http\Controllers\ContactController::class, 'getRefundDeposit'], [$id])}}" data-ajax-modal="true" data-title="Refund Deposit" class="pay_purchase_due"><i class="fa fa-money" aria-hidden="true"></i> Refund Deposit</a></li>
         

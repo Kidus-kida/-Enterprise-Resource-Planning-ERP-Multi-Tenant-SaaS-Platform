@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Modules\Contacts\Models\NotificationTemplate;
-use Modules\Contacts\ModelsReferenceCount;
+// use Modules\Contacts\ModelsReferenceCount;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -26,9 +26,10 @@ use App\Utils\ModuleUtil;
 use App\Utils\BusinessUtil;
 use App\Utils\TransactionUtil;
 use App\Utils\NotificationUtil;
+use App\Utils\Util;
 use Modules\Contacts\Models\BusinessLocation;
 use Spatie\Activitylog\Models\Activity;
-use App\Models\Account;
+use App\Account;
 use Modules\Contacts\Models\AccountType;
 use Modules\Contacts\Models\AccountGroup;
 use Modules\Contacts\Models\ContactLedger;
@@ -55,12 +56,14 @@ class ContactController extends Controller
     ModuleUtil $moduleUtil,
     TransactionUtil $transactionUtil,
     BusinessUtil $businessUtil,
-    NotificationUtil $notificationUtil
+    NotificationUtil $notificationUtil,
+    Util $commonUtil
 ) {
     $this->moduleUtil = $moduleUtil;
     $this->transactionUtil = $transactionUtil;
     $this->businessUtil = $businessUtil;
     $this->notificationUtil = $notificationUtil;
+    $this->commonUtil = $commonUtil;
 }
 
 
@@ -484,7 +487,7 @@ public function store(Request $request)
         if (!auth()->user()->can('supplier.view') && !auth()->user()->can('customer.view')) {
             abort(403, 'Unauthorized action.');
         }
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? auth()->user()->business_id;
         
         $contact = Contact::where('contacts.id', $id)
             ->where('contacts.business_id', $business_id)
@@ -498,6 +501,10 @@ public function store(Request $request)
                 DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id AND transaction_payments.deleted_at IS NULL), 0)) as opening_balance_paid"),
                 'contacts.*'
             )->groupBy('contacts.id')->first();
+
+        if (empty($contact)) {
+            abort(404, 'Contact not found');
+        }
 
         $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
         
@@ -518,7 +525,8 @@ public function store(Request $request)
             abort(403, 'Unauthorized action.');
         }
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = request()->session()->get('user.business_id') ?? auth()->user()->business_id;
+            $business_details = $this->businessUtil->getDetails($business_id);
             $contact = Contact::leftjoin('user_contact_access','contacts.id','user_contact_access.contact_id')
             ->leftjoin('users','user_contact_access.user_id','users.id')
             ->select([
@@ -547,14 +555,14 @@ public function store(Request $request)
             $ob_transaction =  Transaction::where('contact_id', $id)
                 ->where('type', 'opening_balance')
                 ->first();
-            $opening_balance = !empty($ob_transaction->final_total) ? $ob_transaction->final_total : 0;
+            $opening_balance = (!empty($ob_transaction) && !empty($ob_transaction->final_total)) ? $ob_transaction->final_total : 0;
             //Deduct paid amount from opening balance.
             if (!empty($opening_balance)) {
                 $opening_balance_paid = $this->transactionUtil->getTotalAmountPaid($ob_transaction->id);
                 if (!empty($opening_balance_paid)) {
                     $opening_balance = $opening_balance - $opening_balance_paid;
                 }
-                $opening_balance = $this->commonUtil->num_f($ob_transaction->final_total);
+                $opening_balance = $this->commonUtil->num_f($opening_balance, false, $business_details);
             }
 
             if($contact->type == 'customer'){
@@ -573,6 +581,8 @@ public function store(Request $request)
             return view('pages.contacts.edit')
                 ->with(compact('notifications','contact','customers', 'types', 'customer_groups', 'supplier_groups', 'opening_balance', 'ob_transaction','user_groups', 'contact_id'));
         }
+
+        return redirect()->back();
     }
 
 
@@ -1240,7 +1250,7 @@ public function store(Request $request)
         try {
             $has_reviewed = $this->transactionUtil->hasReviewed($request->input('paid_on'));
             if(!empty($has_reviewed)){
-                 return redirect()->back()->with(['status' => ['success' => 0, 'msg' => __('lang_v1.review_first')]]);
+                 return redirect()->back()->with(['status' => ['success' => 0, 'msg' => 'Please review first']]);
             }
             
             $business_id = request()->session()->get('user.business_id');
@@ -1299,11 +1309,11 @@ public function store(Request $request)
             $transaction->payment_ref_number = $payment_ref_no;
             $this->notificationUtil->autoSendNotification($transaction->business_id,'customer_loan_given' , $transaction, $transaction->contact);
 
-            $output = ['success' => true, 'msg' => __('lang_v1.success')];
+            $output = ['success' => true, 'msg' => 'Success'];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
-            $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
+            $output = ['success' => false, 'msg' => 'Something went wrong'];
         }
         return redirect()->back()->with(['status' => $output]);
     }
@@ -2107,7 +2117,7 @@ public function store(Request $request)
         if (!auth()->user()->can('supplier.view') && !auth()->user()->can('customer.view')) {
             abort(403, 'Unauthorized action.');
         }
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? auth()->user()->business_id;
         $contact = Contact::findOrFail($id);
         
         $balance_details = ['opening_balance' => 0, 'total_purchase' => 0, 'total_sale' => 0, 'total_paid' => 0, 'total_balance' => 0];

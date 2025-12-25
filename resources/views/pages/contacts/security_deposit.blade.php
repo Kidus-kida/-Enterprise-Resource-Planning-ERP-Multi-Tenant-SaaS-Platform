@@ -2,11 +2,10 @@
 
   <div class="modal-content">
 
-    {!! Form::open(['url' => action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postSecurityDeposit'], $contact_id), 'method' =>
+    <form action="{{ action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postSecurityDeposit'], $contact_id) }}" method="post" id="add_security_deposit_form" enctype="multipart/form-data">
+    @csrf
 
-    'post', 'id' => 'add_security_deposit_form', 'files' => true ]) !!}
-
-    {!! Form::hidden("contact_id", $contact_id, ['id' => 'contact_id']); !!}
+    <input type="hidden" name="contact_id" value="{{ $contact_id }}" id="contact_id">
 
     <div class="modal-header">
 
@@ -54,17 +53,22 @@
 
           <div class="form-group">
 
-            {!! Form::label("location_id" , __('purchase.business_location') . ':*') !!}
+            <label for="location_id">{{ __('purchase.business_location') }}:*</label>
 
             <div class="input-group">
-
+ 
               <span class="input-group-addon">
 
                 <i class="fa fa-location-arrow"></i>
 
               </span>
 
-              {!! Form::select("location_id", $business_locations, $business_location_id, ['class' => 'form-control select2 location_id', 'required', 'style' => 'width:100%;', 'placeholder' => __('lang_v1.please_select')]); !!}
+              <select name="location_id" class="form-control select2 location_id" required style="width:100%;">
+                  <option value="">{{ __('lang_v1.please_select') }}</option>
+                  @foreach($business_locations as $key => $val)
+                      <option value="{{ $key }}" @if($business_location_id == $key) selected @endif>{{ $val }}</option>
+                  @endforeach
+              </select>
 
             </div>
 
@@ -76,7 +80,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("payment_ref_no" , __('lang_v1.ref_no') . ':*') !!}
+            <label for="payment_ref_no">{{ __('lang_v1.ref_no') }}:*</label>
 
             <div class="input-group">
 
@@ -86,7 +90,7 @@
 
               </span>
 
-              {!! Form::text("payment_ref_no", $payment_ref_no, ['class' => 'form-control payment_ref_no', 'readonly', 'style' => 'width:100%;', 'placeholder' => __('lang_v1.ref_no')]); !!}
+              <input type="text" name="payment_ref_no" value="{{ $payment_ref_no }}" class="form-control payment_ref_no" readonly style="width:100%;" placeholder="{{ __('lang_v1.ref_no') }}">
 
             </div>
 
@@ -98,7 +102,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("amount" , __('sale.amount') . ':*') !!}
+            <label for="amount">{{ __('sale.amount') }}:*</label>
 
             <div class="input-group">
 
@@ -108,7 +112,7 @@
 
               </span>
 
-              {!! Form::text("amount", null, ['class' => 'form-control input_number', 'required', 'placeholder' => 'Amount']); !!}
+              <input type="text" name="amount" class="form-control input_number" required placeholder="Amount" id="amount">
 
             </div>
 
@@ -120,7 +124,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("paid_on" , __('lang_v1.paid_on') . ':*') !!}
+            <label for="paid_on">{{ __('lang_v1.paid_on') }}:*</label>
 
             <div class="input-group">
 
@@ -130,7 +134,7 @@
 
               </span>
 
-              {!! Form::text("paid_on", date('m/d/Y H:i'), ['class' => 'form-control', 'readonly', 'required']); !!}
+              <input type="text" name="paid_on" value="{{ date('m/d/Y H:i') }}" class="form-control" readonly required>
 
             </div>
 
@@ -142,7 +146,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("method" , __('purchase.payment_method') . ':*') !!}
+            <label for="method">{{ __('purchase.payment_method') }}:*</label>
 
             <div class="input-group">
 
@@ -152,7 +156,11 @@
 
               </span>
 
-              {!! Form::select("method", $payment_types, null, ['class' => 'form-control select2 payment_types_dropdown', 'required', 'style' => 'width:100%;']); !!}
+              <select name="method" class="form-control select2 payment_types_dropdown" required style="width:100%;">
+                  @foreach($payment_types as $key => $val)
+                      <option value="{{ $key }}">{{ $val }}</option>
+                  @endforeach
+              </select>
 
             </div>
 
@@ -164,7 +172,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("account_id" , __('lang_v1.payment_account') . ':') !!}
+            <label for="account_id">{{ __('lang_v1.payment_account') }}:</label>
 
             <div class="input-group">
 
@@ -174,9 +182,9 @@
 
               </span>
 
-              {!! Form::select("account_id", [],null, ['class' => 'form-control select2 account_id', 'placeholder' => __('lang_v1.please_select'), 'id' => "account_id", 'style' => 'width:100%;']);
-
-              !!}
+              <select name="account_id" class="form-control select2 account_id" id="account_id" style="width:100%;">
+                  <option value="">{{ __('lang_v1.please_select') }}</option>
+              </select>
 
             </div>
 
@@ -188,7 +196,7 @@
 
           <div class="form-group">
 
-            {!! Form::label("current_liability_account" , ($contact_details->type == "customer" ? __('lang_v1.current_liability_account') : __('contact.current_asset_account')) . ':') !!}
+            <label for="current_liability_account">{{ ($contact_details->type == "customer" ? __('lang_v1.current_liability_account') : __('contact.current_asset_account')) }}:</label>
 
             <div class="input-group">
 
@@ -198,11 +206,12 @@
 
               </span>
 
-              {!! Form::select("current_liability_account", $accounts, $customer_deposit_account_id  ,
-
-              ['class' => 'form-control select2', 'placeholder' => __('lang_v1.please_select'), 'id' => "current_liability_account", 'style' => 'width:100%;', $disabled]);
-
-              !!}
+              <select name="current_liability_account" class="form-control select2" id="current_liability_account" style="width:100%;" {{ $disabled }}>
+                  <option value="">{{ __('lang_v1.please_select') }}</option>
+                  @foreach($accounts as $key => $val)
+                      <option value="{{ $key }}" @if($customer_deposit_account_id == $key) selected @endif>{{ $val }}</option>
+                  @endforeach
+              </select>
 
             </div>
 
@@ -218,9 +227,9 @@
 
           <div class="form-group">
 
-            {!! Form::label('document', __('purchase.attach_document') . ':') !!}
+            <label for="document">{{ __('purchase.attach_document') }}:</label>
 
-            {!! Form::file('document'); !!}
+            <input type="file" name="document">
 
           </div>
 
@@ -234,9 +243,9 @@
 
           <div class="form-group">
 
-            {!! Form::label("note", __('lang_v1.payment_note') . ':') !!}
+            <label for="note">{{ __('lang_v1.payment_note') }}:</label>
 
-            {!! Form::textarea("note", null, ['class' => 'form-control', 'rows' => 3]); !!}
+            <textarea name="note" class="form-control" rows="3"></textarea>
 
           </div>
 
@@ -254,7 +263,7 @@
 
     </div>
 
-    {!! Form::close() !!}
+    </form>
 
   </div><!-- /.modal-content -->
 

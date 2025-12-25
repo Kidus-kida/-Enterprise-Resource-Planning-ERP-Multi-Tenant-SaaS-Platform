@@ -246,3 +246,37 @@ if(!function_exists('can')){
         return auth('web')->user()->hasPermissionTo($permission);
     }
 }
+
+if (!function_exists('num_format')) {
+    function num_format($number, $precision = null)
+    {
+        $precision = $precision ?? config('constants.currency_precision', 2);
+        return number_format((float)$number, $precision, session('currency')['decimal_separator'] ?? '.', session('currency')['thousand_separator'] ?? ',');
+    }
+}
+
+if (!function_exists('format_quantity')) {
+    function format_quantity($number, $precision = null)
+    {
+        $precision = $precision ?? config('constants.quantity_precision', 2);
+        return number_format((float)$number, $precision, session('currency')['decimal_separator'] ?? '.', session('currency')['thousand_separator'] ?? ',');
+    }
+}
+
+if (!function_exists('format_currency')) {
+    function format_currency($number, $symbol = true)
+    {
+        $precision = config('constants.currency_precision', 2);
+        $formatted = number_format((float)$number, $precision, session('currency')['decimal_separator'] ?? '.', session('currency')['thousand_separator'] ?? ',');
+        
+        if (!$symbol) {
+            return $formatted;
+        }
+
+        if (session("business.currency_symbol_placement") == "before") {
+            return (session("currency")["symbol"] ?? '') . " " . $formatted;
+        } else {
+            return $formatted . " " . (session("currency")["symbol"] ?? '');
+        }
+    }
+}
