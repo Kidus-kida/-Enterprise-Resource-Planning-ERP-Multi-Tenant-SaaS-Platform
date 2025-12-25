@@ -58,15 +58,15 @@
                                 <div class="col-md-4">
                                     @if($contact->type == 'supplier' || $contact->type == 'both')
                                         <strong>@lang('contact.total_purchase')</strong>
-                                        <p class="text-muted">{{ @num_format($contact->total_purchase) }}</p>
+                                        <p class="text-muted">@num_format($contact->total_purchase)</p>
                                         <strong>@lang('contact.total_paid')</strong>
-                                        <p class="text-muted">{{ @num_format($contact->purchase_paid) }}</p>
+                                        <p class="text-muted">@num_format($contact->purchase_paid)</p>
                                     @endif
                                     @if($contact->type == 'customer' || $contact->type == 'both')
                                         <strong>@lang('contact.total_sale')</strong>
-                                        <p class="text-muted">{{ @num_format($contact->total_invoice) }}</p>
+                                        <p class="text-muted">@num_format($contact->total_invoice)</p>
                                         <strong>@lang('contact.total_paid')</strong>
-                                        <p class="text-muted">{{ @num_format($contact->invoice_received) }}</p>
+                                        <p class="text-muted">@num_format($contact->invoice_received)</p>
                                     @endif
                                 </div>
                             </div>
@@ -75,8 +75,8 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        {!! Form::label('ledger_date_range', __('report.date_range') . ':') !!}
-                                        {!! Form::text('ledger_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly', 'id' => 'ledger_date_range']); !!}
+                                        <label for="ledger_date_range">{{ __('report.date_range') }}:</label>
+                                        <input type="text" name="ledger_date_range" id="ledger_date_range" class="form-control" placeholder="{{ __('lang_v1.select_a_date_range') }}" readonly>
                                     </div>
                                     <div id="contact_ledger_div"></div>
                                 </div>

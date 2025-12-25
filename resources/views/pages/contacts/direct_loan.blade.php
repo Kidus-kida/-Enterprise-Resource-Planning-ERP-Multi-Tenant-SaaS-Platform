@@ -1,12 +1,13 @@
 <div class="modal-dialog" role="document">
     <div class="modal-content">
   
-      {!! Form::open(['url' => action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postDirectLoan'], $contact_id), 'method' => 'post', 'id' => 'pay_contact_due_form', 'files' => true ]) !!}
-  
-      {!! Form::hidden("contact_id", $contact_details->id); !!}
+      <form action="{{ action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postDirectLoan'], $contact_id) }}" method="post" id="pay_contact_due_form" enctype="multipart/form-data">
+      @csrf
+
+      <input type="hidden" name="contact_id" value="{{ $contact_details->id }}">
       <div class="modal-header">
+        <h4 class="modal-title">Direct Loan</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">@lang( 'lang_v1.direct_loan' )</h4>
       </div>
   
       <div class="modal-body">
@@ -14,9 +15,9 @@
           <div class="col-md-6">
             <div class="well">
               @if($contact_details->type == 'customer')
-              <strong>@lang('lang_v1.customer'): 
+              <strong>Customer: 
                 @else
-                <strong>@lang('lang_v1.supplier'): 
+                <strong>Supplier: 
               @endif
               </strong>{{ $contact_details->name }}<br>
             </div>
@@ -27,60 +28,68 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              {!! Form::label("amount" , __('sale.amount') . ':*') !!}
+              <label for="amount">Amount:*</label>
               <div class="input-group">
                 <span class="input-group-addon">
                   <i class="fa fa-money"></i>
                 </span>
-                {!! Form::text("amount", null, ['class' => 'form-control input_number', 'data-rule-min-value' => 0, 'data-msg-min-value' => __('lang_v1.negative_value_not_allowed'), 'required', 'placeholder' => 'Amount']); !!}
+                <input type="text" name="amount" class="form-control input_number" data-rule-min-value="0" data-msg-min-value="Negative value not allowed" required placeholder="Amount" id="amount">
               </div>
             </div>
           </div>
           
           <div class="col-md-6">
             <div class="form-group">
-              {!! Form::label("user" , __('lang_v1.created_by') . ':*') !!}
+              <label for="user">Created By:*</label>
               <div class="input-group">
                 <span class="input-group-addon">
                   <i class="fa fa-user"></i>
                 </span>
-                {!! Form::text("user", auth()->user()->username, ['class' => 'form-control','disabled']); !!}
+                <input type="text" name="user" value="{{ auth()->user()->username }}" class="form-control" disabled>
               </div>
             </div>
           </div>
           
           <div class="col-md-6">
             <div class="form-group">
-              {!! Form::label("method" , __('purchase.payment_method') . ':*') !!}
+              <label for="method">Payment Method:*</label>
               <div class="input-group">
                 <span class="input-group-addon">
                   <i class="fa fa-money"></i>
                 </span>
-                {!! Form::select("method", $accounts, null, ['class' => 'form-control select2 ', 'disabled', 'style' => 'width:100%;']); !!}
+                <select name="method" class="form-control select2" disabled style="width:100%;">
+                    @foreach($accounts as $key => $val)
+                        <option value="{{ $key }}">{{ $val }}</option>
+                    @endforeach
+                </select>
               </div>
             </div>
           </div>
           
         <div class="col-md-6 account_id_div">
           <div class="form-group">
-            {!! Form::label("account_id" , __('lang_v1.payment_account') . ':') !!}
+            <label for="account_id">Payment Account:</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
               </span>
-              {!! Form::select("account_id", $accounts, null, ['class' => 'form-control select2 ', 'id' => "account_id", 'style' => 'width:100%;','disabled']); !!}
+              <select name="account_id" class="form-control select2" id="account_id" style="width:100%;" disabled>
+                  @foreach($accounts as $key => $val)
+                      <option value="{{ $key }}">{{ $val }}</option>
+                  @endforeach
+              </select>
             </div>
           </div>
         </div>
         
         <div class="col-md-6">
             <div class="form-group">
-              {!! Form::label("paid_on" , __('lang_v1.paid_on') . ':*') !!}
+              <label for="paid_on">Paid On:*</label>
               <div class="input-group">
                 <span class="input-group-addon">
                   <i class="fa fa-calendar"></i>
                 </span>
-                {!! Form::text('paid_on', date('m/d/Y'), ['class' => 'form-control', 'readonly', 'required']); !!}
+                <input type="text" name="paid_on" value="{{ date('m/d/Y') }}" class="form-control" readonly required>
               </div>
             </div>
           </div>
@@ -88,8 +97,8 @@
         
           <div class="col-md-12">
             <div class="form-group">
-              {!! Form::label("note", __('lang_v1.payment_note') . ':') !!}
-              {!! Form::textarea("note", null, ['class' => 'form-control', 'rows' => 3]); !!}
+              <label for="note">Payment Note:</label>
+              <textarea name="note" class="form-control" rows="3"></textarea>
             </div>
           </div>
           
@@ -97,11 +106,11 @@
       </div>
   
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">@lang( 'messages.save' )</button>
-        <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
   
-      {!! Form::close() !!}
+      </form>
   
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

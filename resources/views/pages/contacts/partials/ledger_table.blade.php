@@ -12,7 +12,7 @@
     <tbody>
         @foreach($ledger_transactions as $transaction)
             <tr>
-                <td>{{@format_datetime($transaction->operation_date)}}</td>
+                <td>@format_datetime($transaction->operation_date)</td>
                 <td>
                     @if($transaction->transaction)
                         {{$transaction->transaction->invoice_no}}
@@ -22,7 +22,7 @@
                 </td>
                 <td>{{$transaction->type}}</td>
                 <td>{{$transaction->sub_type}}</td>
-                <td>{{@num_format($transaction->amount)}}</td>
+                <td>@num_format($transaction->amount)</td>
                 <td>{{$transaction->note}}</td>
             </tr>
         @endforeach

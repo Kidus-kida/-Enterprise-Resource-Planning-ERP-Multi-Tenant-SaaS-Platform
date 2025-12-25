@@ -1,11 +1,11 @@
 <div class="modal-dialog" role="document">
   <div class="modal-content">
 
-    {!! Form::open(['url' => action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postPayContactDue']), 'method' => 'post', 'id' =>
-    'pay_contact_due_form', 'files' => true ]) !!}
+    <form action="{{ action([\Modules\Contacts\Http\Controllers\ContactController::class, 'postPayContactDue']) }}" method="post" id="pay_contact_due_form" enctype="multipart/form-data">
+    @csrf
 
-    {!! Form::hidden("contact_id", $contact_details->contact_id); !!}
-    {!! Form::hidden("due_payment_type", $due_payment_type); !!}
+    <input type="hidden" name="contact_id" value="{{ $contact_details->contact_id }}">
+    <input type="hidden" name="due_payment_type" value="{{ $due_payment_type }}">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
           aria-hidden="true">&times;</span></button>
@@ -103,76 +103,89 @@
       <div class="row payment_row">
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("location_id" , __('purchase.business_location') . ':*') !!}
+            <label for="location_id">{{ __('purchase.business_location') }}:*</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-location-arrow"></i>
               </span>
-              {!! Form::select("location_id", $business_locations, $business_location_id, ['class' => 'form-control select2 location_id', 'required', 'style' => 'width:100%;', 'placeholder' => __('lang_v1.please_select')]); !!}
+              <select name="location_id" class="form-control select2 location_id" required style="width:100%;">
+                  <option value="">{{ __('lang_v1.please_select') }}</option>
+                  @foreach($business_locations as $key => $val)
+                      <option value="{{ $key }}" @if($business_location_id == $key) selected @endif>{{ $val }}</option>
+                  @endforeach
+              </select>
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("payment_ref_no" , __('lang_v1.ref_no') . ':*') !!}
+            <label for="payment_ref_no">{{ __('lang_v1.ref_no') }}:*</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-link"></i>
               </span>
-              {!! Form::text("payment_ref_no", $payment_ref_no, ['class' => 'form-control payment_ref_no', 'readonly', 'style' => 'width:100%;', 'placeholder' => __('lang_v1.ref_no')]); !!}
+              <input type="text" name="payment_ref_no" value="{{ $payment_ref_no }}" class="form-control payment_ref_no" readonly style="width:100%;" placeholder="{{ __('lang_v1.ref_no') }}">
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("amount" , __('sale.amount') . ':*') !!}
+            <label for="amount">{{ __('sale.amount') }}:*</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
               </span>
-              {!! Form::text("amount", $amount_formated, ['class' => 'form-control input_number', 'data-rule-min-value' => 0,'data-rule-max-value' => $amount_formated,'data-msg-max-value' => __('contact.greater_value_not_allowed'), 'data-msg-min-value' => __('lang_v1.negative_value_not_allowed'), 'required', 'placeholder' => 'Amount']); !!}
+              <input type="text" name="amount" value="{{ $amount_formated }}" class="form-control input_number" data-rule-min-value="0" data-rule-max-value="{{ $amount_formated }}" data-msg-max-value="{{ __('contact.greater_value_not_allowed') }}" data-msg-min-value="{{ __('lang_v1.negative_value_not_allowed') }}" required placeholder="Amount">
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("paid_on" , __('lang_v1.paid_on') . ':*') !!}
+            <label for="paid_on">{{ __('lang_v1.paid_on') }}:*</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-calendar"></i>
               </span>
-              {!! Form::text('paid_on', \Carbon\Carbon::parse($payment_line->paid_on)->format('m/d/Y H:i'), ['class' => 'form-control', 'readonly', 'required']); !!}
+              <input type="text" name="paid_on" value="{{ \Carbon\Carbon::parse($payment_line->paid_on)->format('m/d/Y H:i') }}" class="form-control" readonly required>
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("method" , __('purchase.payment_method') . ':*') !!}
+            <label for="method">{{ __('purchase.payment_method') }}:*</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
               </span>
-              {!! Form::select("method", $payment_types, $payment_line->method, ['class' => 'form-control select2 payment_types_dropdown', 'required', 'style' => 'width:100%;']); !!}
+              <select name="method" class="form-control select2 payment_types_dropdown" required style="width:100%;">
+                  @foreach($payment_types as $key => $val)
+                      <option value="{{ $key }}" @if($payment_line->method == $key) selected @endif>{{ $val }}</option>
+                  @endforeach
+              </select>
             </div>
           </div>
         </div>
         <div class="clearfix"></div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label('document', __('purchase.attach_document') . ':') !!}
-            {!! Form::file('document'); !!}
+            <label for="document">{{ __('purchase.attach_document') }}:</label>
+            <input type="file" name="document">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            {!! Form::label("account_id" , __('lang_v1.payment_account') . ':') !!}
+            <label for="account_id">{{ __('lang_v1.payment_account') }}:</label>
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
               </span>
 
-              {!! Form::select("account_id", $accounts, !empty($payment_line->account_id) ? $payment_line->account_id : '' , 
-                                ['class' => 'form-control select2 account_id', 'id' => "account_id", 'style' => 'width:100%;']); !!}
+              <select name="account_id" class="form-control select2 account_id" id="account_id" style="width:100%;">
+                  <option value="">{{ __('lang_v1.please_select') }}</option>
+                  @foreach($accounts as $key => $val)
+                      <option value="{{ $key }}" @if((!empty($payment_line->account_id) ? $payment_line->account_id : '') == $key) selected @endif>{{ $val }}</option>
+                  @endforeach
+              </select>
             </div>
           </div>
         </div>
@@ -184,7 +197,7 @@
         <div class="col-md-6 text-left" >
             <div class="checkbox">
                 <label>
-                    {!! Form::checkbox('post_dated_cheque', '1', false, [ 'class' => 'input-icheck','id' => 'post_dated_cheque']); !!} {{ __( 'account.post_dated_cheque' ) }}
+                    <input type="checkbox" name="post_dated_cheque" value="1" class="input-icheck" id="post_dated_cheque"> {{ __( 'account.post_dated_cheque' ) }}
                 </label>
             </div>
         </div>
@@ -192,15 +205,15 @@
         <div class="col-md-6 text-left" >
             <div class="checkbox">
                 <label>
-                    {!! Form::checkbox('update_post_dated_cheque', '1', false, [ 'class' => 'input-icheck','id' => 'update_post_dated_cheque']); !!} {{ __( 'account.update_post_dated_cheque' ) }}
+                    <input type="checkbox" name="update_post_dated_cheque" value="1" class="input-icheck" id="update_post_dated_cheque"> {{ __( 'account.update_post_dated_cheque' ) }}
                 </label>
             </div>
         </div>
         
         <div class="col-md-12">
           <div class="form-group">
-            {!! Form::label("note", __('lang_v1.payment_note') . ':') !!}
-            {!! Form::textarea("note", $payment_line->note, ['class' => 'form-control', 'rows' => 3]); !!}
+            <label for="note">{{ __('lang_v1.payment_note') }}:</label>
+            <textarea name="note" class="form-control" rows="3">{{ $payment_line->note }}</textarea>
           </div>
         </div>
       </div>
@@ -211,7 +224,7 @@
       <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>
     </div>
 
-    {!! Form::close() !!}
+    </form>
 
   </div><!-- /.modal-content -->
 </div><!-- /.modal-dialog -->

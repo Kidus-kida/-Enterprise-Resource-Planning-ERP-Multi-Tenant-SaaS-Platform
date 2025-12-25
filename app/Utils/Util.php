@@ -23,7 +23,7 @@ use Modules\Fleet\Entities\RouteInvoiceNumber;
 use Modules\Fleet\Entities\RouteOperation;
 use Modules\Petro\Entities\Pump;
 use Modules\Superadmin\Entities\ModulePermissionLocation;
-use Modules\Superadmin\Entities\Subscription;
+use Modules\Contacts\Entities\Subscription;
 use PhpParser\Node\Expr\FuncCall;
 use Spatie\Permission\Models\Role;
 use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
@@ -235,8 +235,8 @@ class Util
      */
     public function num_f($input_number, $add_symbol = false, $business_details = null, $is_quantity = false)
     {
-        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : session('currency')['thousand_separator'];
-        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : session('currency')['decimal_separator'];
+        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : (session()->has('currency') ? session('currency')['thousand_separator'] : ',');
+        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : (session()->has('currency') ? session('currency')['decimal_separator'] : '.');
 
         $currency_precision =  !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
         
@@ -249,7 +249,7 @@ class Util
 
         if ($add_symbol) {
             $currency_symbol_placement = !empty($business_details) ? $business_details->currency_symbol_placement : session('business.currency_symbol_placement');
-            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : session('currency')['symbol'];
+            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : (session()->has('currency') ? session('currency')['symbol'] : '');
 
             if ($currency_symbol_placement == 'after') {
                 $formatted = $formatted . ' ' . $symbol;
