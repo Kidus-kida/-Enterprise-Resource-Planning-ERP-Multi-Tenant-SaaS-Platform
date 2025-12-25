@@ -2182,9 +2182,12 @@ public function store(Request $request)
         $contact->active = !$contact->active;
         $contact->save();
         
-        $msg = $contact->active ? __('lang_v1.contact_activate_success') : __('lang_v1.contact_deactivate_success');
+        $msg = $contact->active ? __('contact activate success') : __('contact deactivate success');
         
-        return redirect()->back()->with('status', ['success' => 1, 'msg' => $msg]);
+    
+         return redirect()
+            ->back()
+            ->with(notify(__($msg)));
     }
 
     public function getLedger()
