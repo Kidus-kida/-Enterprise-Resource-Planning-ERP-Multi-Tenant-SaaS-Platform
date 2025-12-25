@@ -115,9 +115,9 @@
                                 <x-form.label>{{ __('Purchase Status') }}</x-form.label>
                                 <x-form.select name="status">
                                     <option value="" disabled selected>-- Select Status --</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="received">Received</option>
-                                    <option value="ordered">Ordered</option>
+                                    @foreach($orderStatuses as $key => $value)
+                                        <option value="{{ $key }}">{{ $value }}</option>
+                                    @endforeach
                                 </x-form.select>
                             </div>
                         </div>

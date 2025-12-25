@@ -246,3 +246,33 @@ if(!function_exists('can')){
         return auth('web')->user()->hasPermissionTo($permission);
     }
 }
+
+if (!function_exists('format_quantity')) {
+    function format_quantity($quantity)
+    {
+        $precision = 2;
+        if (session()->has('business.quantity_precision')) {
+            $precision = session('business.quantity_precision');
+        }
+        
+        $decimal_separator = session('currency.decimal_separator', '.');
+        $thousand_separator = session('currency.thousand_separator', ',');
+        
+        return number_format((float)$quantity, $precision, $decimal_separator, $thousand_separator);
+    }
+}
+
+if (!function_exists('num_format')) {
+    function num_format($number)
+    {
+        $precision = 2;
+        if (session()->has('business.currency_precision')) {
+            $precision = session('business.currency_precision');
+        }
+        
+        $decimal_separator = session('currency.decimal_separator', '.');
+        $thousand_separator = session('currency.thousand_separator', ',');
+        
+        return number_format((float)$number, $precision, $decimal_separator, $thousand_separator);
+    }
+}

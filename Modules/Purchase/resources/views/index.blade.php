@@ -32,6 +32,69 @@
         </x-breadcrumb>
         <!-- /Page Header -->
 
+        <!-- Search Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <x-form.label>{{ __('Business Location') }}</x-form.label>
+                            <x-form.select id="location_id" name="location_id">
+                                <option value="">{{ __('All') }}</option>
+                                @foreach($business_locations as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </x-form.select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <x-form.label>{{ __('Supplier') }}</x-form.label>
+                            <x-form.select id="supplier_id" name="supplier_id">
+                                <option value="">{{ __('All') }}</option>
+                                @foreach($suppliers as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </x-form.select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <x-form.label>{{ __('Status') }}</x-form.label>
+                            <x-form.select id="status" name="status">
+                                <option value="">{{ __('All') }}</option>
+                                @foreach($orderStatuses as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </x-form.select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <x-form.label>{{ __('Payment Status') }}</x-form.label>
+                            <x-form.select id="payment_status" name="payment_status">
+                                <option value="">{{ __('All') }}</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Partial">Partial</option>
+                                    <option value="Due">Due</option>
+                                    <option value="Due">Overdue</option>
+                            </x-form.select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                         <div class="form-group">
+                            <x-form.label>{{ __('Received Date Range') }}</x-form.label>
+                            <x-form.input type="date" class="form-control" id="date_range" name="date_range" placeholder="{{ __('Select Date Range') }}"/>
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="margin-top: 32px;">
+                        <x-form.button class="btn">{{ __('Filter') }}</x-form.button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- /Search Filter -->
+
         @if(request('view') == 'grid')
             <div class="row staff-grid-row">
                 @if (!empty($purchases))
@@ -70,61 +133,31 @@
                 @endif
             </div>
         @else
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="table-responsive">
-                        <table class="table table-striped custom-table" id="purchase_table">
-                            <thead>
-                                <tr>
-                                     <th>{{ __('Date') }}</th>
-                                     <th>{{ __('Ref No') }}</th>
-                                     <th>{{ __('Supplier') }}</th>
-                                     <th>{{ __('Status') }}</th>
-                                     <th>{{ __('Payment Status') }}</th>
-                                     <th>{{ __('Grand Total') }}</th>
-                                     <th>{{ __('Due') }}</th>
-                                     <th>{{ __('Action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($purchases as $purchase)
-                                    <tr>
-                                        <td>{{ \Carbon\Carbon::parse($purchase->transaction_date)->format('Y-m-d') }}</td>
-                                        <td>{{ $purchase->ref_no }}</td>
-                                        <td>{{ $purchase->contact->name ?? '' }}</td>
-                                        <td>
-                                            <span class="badge" style="color: black">
-                                                {{ ucfirst($purchase->status) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge" style="color: black">{{ ucfirst($purchase->payment_status) }}</span>
-                                        </td>
-                                        <td>{{ number_format($purchase->final_total, 2) }}</td>
-                                        <td>{{ number_format($purchase->final_total - $purchase->amount_paid, 2) }}</td>
-                                        <x-table-action>
-                                            <a class="dropdown-item" href="{{ route('purchase.show', $purchase->id) }}">
-                                                <i class="fa-solid fa-eye m-r-5"></i>
-                                                {{ __('View') }}
-                                            </a>
-                                            <a class="dropdown-item" href="{{ route('purchase.edit', $purchase->id) }}">
-                                                <i class="fa-solid fa-pencil m-r-5"></i>
-                                                {{ __('Edit') }}
-                                            </a>
-                                        </x-table-action>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            @include('purchase::list')
         @endif
     </div>
 @endsection
 
 @push('page-script')
 <script>
-    // Toggle view script if needed, though grid/list is handled by URL params
+    window.addEventListener('load', function() {
+        if ($('#purchase_table').length) {
+            var purchase_table = $('#purchase_table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('purchase.list') }}",
+                columns: [
+                    { data: 'transaction_date', name: 'transactions.transaction_date' },
+                    { data: 'ref_no', name: 'transactions.ref_no' },
+                    { data: 'supplier_name', name: 'contacts.name' },
+                    { data: 'status', name: 'transactions.status' },
+                    { data: 'payment_status', name: 'transactions.payment_status' },
+                    { data: 'final_total', name: 'transactions.final_total' },
+                    { data: 'due', name: 'due', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' }
+                ]
+            });
+        }
+    });
 </script>
 @endpush

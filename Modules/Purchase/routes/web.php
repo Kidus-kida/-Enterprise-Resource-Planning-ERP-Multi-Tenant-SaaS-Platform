@@ -16,6 +16,8 @@ use Modules\Purchase\Http\Controllers\SupplierController;
 */
 
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('purchase-list-json', [PurchaseController::class, 'list'])->name('purchase.list');
+
     // AJAX routes for purchase creation
     Route::post('purchases/get_purchase_entry_row', [PurchaseController::class, 'getPurchaseEntryRow'])->name('purchase.get_purchase_entry_row');
     Route::post('purchases/get_payment_row', [PurchaseController::class, 'getPaymentRow'])->name('purchase.get_payment_row');

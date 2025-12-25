@@ -98,23 +98,93 @@ class PurchaseController extends Controller
     }
 
     /**
+     * Display a listing of the resource for DataTables.
+     */
+    public function list()
+    {
+        $business_id = request()->session()->get('user.business_id') ?? 1;
+
+        $purchases = Transaction::where('transactions.business_id', $business_id)
+            ->where('transactions.type', 'purchase')
+            ->leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
+            ->select(
+                'transactions.id',
+                'transactions.transaction_date',
+                'transactions.ref_no',
+                'contacts.name as supplier_name',
+                'transactions.status',
+                'transactions.payment_status',
+                'transactions.final_total',
+                DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
+            )
+            ->get();
+            
+        return DataTables::of($purchases)
+            ->addColumn('action', function ($row) {
+                $html = '<div class="dropdown dropdown-action">
+                            <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="' . route('purchase.show', $row->id) . '">
+                                    <i class="fa-solid fa-eye m-r-5"></i> ' . __('View') . '
+                                </a>
+                                <a class="dropdown-item" href="' . route('purchase.edit', $row->id) . '">
+                                    <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
+                                </a>
+                                <form action="' . route('purchase.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
+                                    ' . csrf_field() . '
+                                    ' . method_field("DELETE") . '
+                                    <button type="submit" class="dropdown-item"><i class="fa-solid fa-trash m-r-5"></i> ' . __('Delete') . '</button>
+                                </form>
+                            </div>
+                        </div>';
+                return $html;
+            })
+            ->editColumn('transaction_date', function ($row) {
+                return \Carbon\Carbon::parse($row->transaction_date)->format('Y-m-d');
+            })
+            ->editColumn('status', function ($row) {
+                    return '<span class="badge" style="color: black">' . ucfirst($row->status) . '</span>';
+            })
+                ->editColumn('payment_status', function ($row) {
+                    return '<span class="badge" style="color: black">' . ucfirst($row->payment_status) . '</span>';
+            })
+            ->editColumn('final_total', function ($row) {
+                return number_format((float) $row->final_total, 2);
+            })
+            ->addColumn('due', function ($row) {
+                $paid = (float) $row->amount_paid;
+                $total = (float) $row->final_total;
+                return number_format($total - $paid, 2);
+            })
+            ->rawColumns(['action', 'status', 'payment_status'])
+            ->make(true);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $business_id = request()->session()->get('user.business_id') ?? 1;
 
-        $purchases = Transaction::where('business_id', $business_id)
-            ->where('type', 'purchase')
-            ->with(['contact'])
-            ->select(
-                'transactions.*',
-                DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
-            )
-            ->latest()
-            ->get();
+        $purchases = [];
+        if (request('view') == 'grid') {
+            $purchases = Transaction::where('business_id', $business_id)
+                ->where('type', 'purchase')
+                ->with(['contact'])
+                ->select(
+                    'transactions.*',
+                    DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
+                )
+                ->latest()
+                ->get();
+        }
+        
+        $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
+        $suppliers = Contact::suppliersDropdown($business_id, false);
+        $orderStatuses = $this->productUtil->orderStatuses();
 
-        return view('purchase::index', compact('purchases'));
+        return view('purchase::index', compact('purchases', 'business_locations', 'suppliers', 'orderStatuses'));
     }
 
 
