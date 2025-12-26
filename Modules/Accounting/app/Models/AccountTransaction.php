@@ -78,4 +78,47 @@ class AccountTransaction extends Model
         
         return !empty($amount) ? $amount : 0;
     }
+    public static function createAccountTransaction($data)
+    {
+        if (empty($data['account_id'])) {
+            return null;
+        }
+
+        $business_id = !empty($data['business_id']) ? $data['business_id'] : request()->session()->get('user.business_id');
+        
+        $transaction_data = [
+            'amount' => $data['amount'],
+            'account_id' => $data['account_id'],
+            'business_id' => $business_id,
+            'type' => $data['type'],
+            'sub_type' => !empty($data['sub_type']) ? $data['sub_type'] : null,
+            'operation_date' => !empty($data['operation_date']) ? $data['operation_date'] : \Carbon::now(),
+            'created_by' =>  !empty($data['created_by']) ? $data['created_by'] : auth()->id(),
+            'transaction_id' => !empty($data['transaction_id']) ? $data['transaction_id'] : null,
+            'transaction_payment_id' => !empty($data['transaction_payment_id']) ? $data['transaction_payment_id'] : null,
+            'note' => !empty($data['note']) ? $data['note'] : null,
+            'attachment' => !empty($data['attachment']) ? $data['attachment'] : null,
+            'transfer_transaction_id' => !empty($data['transfer_transaction_id']) ? $data['transfer_transaction_id'] : null,
+            'transaction_sell_line_id' => !empty($data['transaction_sell_line_id']) ? $data['transaction_sell_line_id'] : null,
+            'sell_line_id' => !empty($data['sell_line_id']) ? $data['sell_line_id'] : null,
+            'purchase_line_id' => !empty($data['purchase_line_id']) ? $data['purchase_line_id'] : null,
+            'income_type' => !empty($data['income_type']) ? $data['income_type'] : null,
+            'installment_id' => !empty($data['installment_id']) ? $data['installment_id'] : null,
+            'fixed_asset_id' => !empty($data['fixed_asset_id']) ? $data['fixed_asset_id'] : null,
+            
+        ];
+        
+        // Ensure transaction_type is set (required by schema)
+        if (!isset($transaction_data['transaction_type'])) {
+             // Derive from type if possible, or set a default. 
+             // The migration had transaction_type as a string. 
+             // In ERP code 'type' (debit/credit) seems to be the main indicator.
+             // We might need to map it or duplicate it.
+             $transaction_data['transaction_type'] = $data['type'];
+        }
+
+        $account_transaction = AccountTransaction::create($transaction_data);
+
+        return $account_transaction;
+    }
 }

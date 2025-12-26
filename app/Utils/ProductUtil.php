@@ -1021,15 +1021,8 @@ class ProductUtil extends Util
                 $variation_location_d->product_variation_id = $variation->product_variation_id;
                 $variation_location_d->qty_available = 0;
             }
-            $variation_location_d->qty_available += $qty_difference;
+            $variation_location_d->qty_available -= $qty_difference;
             $variation_location_d->save();
-            
-            //add qty to fuel tank current stock 
-            if (!empty($tank_id)) {
-                FuelTank::where('id', $tank_id)->increment('current_balance', $qty_difference);
-            }
-           
-            
             
         }
         return true;

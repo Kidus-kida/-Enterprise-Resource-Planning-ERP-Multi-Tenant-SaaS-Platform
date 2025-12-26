@@ -46,8 +46,8 @@ class Util
             $thousand_separator = $currency_details->thousand_separator;
             $decimal_separator = $currency_details->decimal_separator;
         } else {
-            $thousand_separator = session()->has('currency') ? session('currency')['thousand_separator'] : '';
-            $decimal_separator = session()->has('currency') ? session('currency')['decimal_separator'] : '';
+            $thousand_separator = session()->get('currency.thousand_separator', '');
+            $decimal_separator = session()->get('currency.decimal_separator', '');
         }
 
         $num = str_replace($thousand_separator, '', $input_number);
@@ -235,8 +235,8 @@ class Util
      */
     public function num_f($input_number, $add_symbol = false, $business_details = null, $is_quantity = false)
     {
-        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : session('currency')['thousand_separator'];
-        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : session('currency')['decimal_separator'];
+        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : (session()->has('currency') ? session('currency')['thousand_separator'] : ',');
+        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : (session()->has('currency') ? session('currency')['decimal_separator'] : '.');
 
         $currency_precision =  !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
         
@@ -309,7 +309,7 @@ class Util
     //Returns all avilable purchase statuses
     public function orderStatuses()
     {
-        return ['received' => __('lang_v1.received'), 'pending' => __('lang_v1.pending'), 'ordered' => __('lang_v1.ordered')];
+        return ['received' => __('Received'), 'pending' => __('Pending'), 'ordered' => __('Ordered')];
     }
 
     /**
@@ -349,13 +349,13 @@ class Util
         
         
         if ($add_credit_sale) {
-            $payment_types['credit_sale'] = __('lang_v1.credit_sale');
+            $payment_types['credit_sale'] = __('Credit Sale');
         }
         if ($add_credit_purchase) {
-            $payment_types['credit_purchase'] = __('lang_v1.credit_purchase');
+            $payment_types['credit_purchase'] = __('Credit Purchase');
         }
         if ($add_credit_expense) {
-            $payment_types['credit_expense'] = __('lang_v1.credit_expense');
+            $payment_types['credit_expense'] = __('Credit Expense');
         }
         
         // $payment_types['cpc'] = "CPC";
@@ -468,7 +468,7 @@ class Util
         }
 
 
-        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
+        return !empty($date_format)? Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -618,13 +618,14 @@ class Util
     {
         $prefix = '';
 
-        if (session()->has('business') && !empty(request()->session()->get('business.ref_no_prefixes')[$type])) {
-            $prefix = request()->session()->get('business.ref_no_prefixes')[$type];
+        if (session()->has('business')) {
+            $prefixes = request()->session()->get('business.ref_no_prefixes');
+            $prefix = !empty($prefixes[$type]) ? $prefixes[$type] : '';
         }
-        if (!empty($business_id)) {
+        if (!empty($business_id) && empty($prefix)) {
             $business = Business::find($business_id);
             $prefixes = $business->ref_no_prefixes;
-            $prefix = $prefixes[$type];
+            $prefix = !empty($prefixes[$type]) ? $prefixes[$type] : '';
         }
 
         if (!empty($default_prefix)) {
@@ -970,13 +971,13 @@ class Util
         //Add main unit as per given parameter or conditions.
         if (($return_main_unit_if_empty && count($unit->sub_units) == 0)) {
             $sub_units[$unit->id] = [
-                'name' => $unit->actual_name,
+                'name' => $unit->short_name,
                 'multiplier' => 1,
                 'allow_decimal' => $unit->allow_decimal
             ];
         } elseif (empty($related_sub_units) || in_array($unit->id, $related_sub_units)) {
             $sub_units[$unit->id] = [
-                'name' => $unit->actual_name,
+                'name' => $unit->short_name,
                 'multiplier' => 1,
                 'allow_decimal' => $unit->allow_decimal
             ];

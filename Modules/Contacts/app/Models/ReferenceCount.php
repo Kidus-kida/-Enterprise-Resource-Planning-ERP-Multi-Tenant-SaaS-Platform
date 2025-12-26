@@ -9,6 +9,7 @@ use Spatie\Activitylog\LogOptions;
 class ReferenceCount extends Model
 {
     use LogsActivity;
+    protected $table = 'reference_counts';
 
     protected static $logAttributes = ['*'];
 

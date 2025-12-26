@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
-use App\User;
+use App\Models\User;
 
 class Store extends Model
 {
