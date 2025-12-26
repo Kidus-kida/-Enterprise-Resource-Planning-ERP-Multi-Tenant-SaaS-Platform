@@ -20,6 +20,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'business_id',
         'firstname',
         'middlename',
         'lastname',
@@ -30,29 +31,41 @@ class User extends Authenticatable
         'address',
         'country',
         'country_code',
-        'dial_code', 'phone',
+        'dial_code',
+        'phone',
         'avatar',
         'created_by',
-        'is_active','is_online', 'lang', 'layout', 'color_scheme',
-        'layout_width', 'layout_position', 'topbar_color', 'sidebar_size', 'sidebar_view', 'sidebar_color',
+        'is_active',
+        'is_online',
+        'lang',
+        'layout',
+        'color_scheme',
+        'layout_width',
+        'layout_position',
+        'topbar_color',
+        'sidebar_size',
+        'sidebar_view',
+        'sidebar_color',
     ];
 
-   
+
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class, 'user_id');
     }
-   
+
     public function assets()
     {
         return $this->hasMany(Asset::class, 'user_id');
     }
 
-    public function family(){
-        return $this->hasMany(UserFamilyInfo::class,'user_id');
+    public function family()
+    {
+        return $this->hasMany(UserFamilyInfo::class, 'user_id');
     }
 
-    public function employeeDetail(){
+    public function employeeDetail()
+    {
         return $this->hasOne(EmployeeDetail::class);
     }
 
@@ -63,10 +76,11 @@ class User extends Authenticatable
 
     public function attendanceTimestamps()
     {
-        return $this->hasMany(AttendanceTimestamp::class,'user_id');
+        return $this->hasMany(AttendanceTimestamp::class, 'user_id');
     }
 
-    public function clientDetail(){
+    public function clientDetail()
+    {
         return $this->hasOne(ClientDetail::class);
     }
 
@@ -122,5 +136,47 @@ class User extends Authenticatable
     public function evaluatees()
     {
         return $this->belongsToMany(User::class, 'employee_evaluator', 'evaluator_id', 'employee_id');
+    }
+
+    /**
+     * Gives locations permitted for the logged in user
+     *
+     * @return string or array
+     */
+    public function permitted_locations()
+    {
+        $user = $this;
+
+        if ($user->can('access_all_locations')) {
+            return 'all';
+        } else {
+            $business_id = request()->session()->get('user.business_id');
+            $permitted_locations = [];
+            $all_locations = \App\BusinessLocation::where('business_id', $business_id)->get();
+            foreach ($all_locations as $location) {
+                if ($user->can('location.' . $location->id)) {
+                    $permitted_locations[] = $location->id;
+                }
+            }
+
+            return $permitted_locations;
+        }
+    }
+
+    /**
+     * Returns if a user can access the input location
+     *
+     * @param: int $location_id
+     * @return boolean
+     */
+    public static function can_access_this_location($location_id)
+    {
+        $permitted_locations = auth()->user()->permitted_locations();
+
+        if ($permitted_locations == 'all' || in_array($location_id, $permitted_locations)) {
+            return true;
+        }
+
+        return false;
     }
 }
