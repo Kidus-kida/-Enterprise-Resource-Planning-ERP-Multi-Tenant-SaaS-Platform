@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('account_groups', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('business_id');
             $table->string('name');
             $table->unsignedBigInteger('account_type_id')->nullable();
             $table->text('description')->nullable();

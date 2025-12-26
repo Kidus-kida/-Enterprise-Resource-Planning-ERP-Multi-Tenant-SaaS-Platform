@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Utils;
-
+use Carbon\Carbon;
 use App\Account;
-use App\Business;
+use Modules\Contacts\Models\Business;
 use App\BusinessLocation;
 use App\Product;
-use App\ReferenceCount;
+use Modules\Contacts\Models\ReferenceCount;
 use App\System;
 use App\Transaction;
 use App\TransactionSellLine;
@@ -17,13 +17,14 @@ use App\AccountTransaction;
 use App\VariationLocationDetails;
 use Carbon\Carbon;
 use DB;
+
 use Intervention\Image\Facades\Image;
 use GuzzleHttp\Client;
 use Modules\Fleet\Entities\RouteInvoiceNumber;
 use Modules\Fleet\Entities\RouteOperation;
 use Modules\Petro\Entities\Pump;
 use Modules\Superadmin\Entities\ModulePermissionLocation;
-use Modules\Superadmin\Entities\Subscription;
+use Modules\Contacts\Entities\Subscription;
 use PhpParser\Node\Expr\FuncCall;
 use Spatie\Permission\Models\Role;
 use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
@@ -242,9 +243,8 @@ class Util
      */
     public function num_f($input_number, $add_symbol = false, $business_details = null, $is_quantity = false)
     {
-        $currency = session('currency');
-        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : ($currency['thousand_separator'] ?? ',');
-        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : ($currency['decimal_separator'] ?? '.');
+        $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : (session()->has('currency') ? session('currency')['thousand_separator'] : ',');
+        $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : (session()->has('currency') ? session('currency')['decimal_separator'] : '.');
 
         $currency_precision = !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
 
@@ -257,7 +257,7 @@ class Util
 
         if ($add_symbol) {
             $currency_symbol_placement = !empty($business_details) ? $business_details->currency_symbol_placement : session('business.currency_symbol_placement');
-            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : (session('currency')['symbol'] ?? '$');
+            $symbol = !empty($business_details->currency_symbol) ? $business_details->currency_symbol : (session()->has('currency') ? session('currency')['symbol'] : '');
 
             if ($currency_symbol_placement == 'after') {
                 $formatted = $formatted . ' ' . $symbol;
@@ -476,7 +476,7 @@ class Util
         }
 
 
-        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
+        return !empty($date_format) ? Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -491,7 +491,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return !empty($time_format) ? \Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
+        return !empty($time_format) ? Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
     }
 
     /**
@@ -506,7 +506,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return !empty($time) ? \Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
+        return !empty($time) ? Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
     }
 
     /**
@@ -519,6 +519,9 @@ class Util
     public function format_date($date, $show_time = false, $business_details = null)
     {
         $format = !empty($business_details) ? $business_details->date_format : session('business.date_format');
+        if (empty($format)) {
+            $format = 'm/d/Y';
+        }
         if (!empty($show_time)) {
             $time_format = !empty($business_details) ? $business_details->time_format : session('business.time_format');
             if ($time_format == 12) {
@@ -528,7 +531,7 @@ class Util
             }
         }
 
-        return !empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
+        return !empty($date) ? Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
     }
 
     /**
@@ -593,9 +596,12 @@ class Util
             return $ref->ref_count;
         } else {
             $business = Business::find($business_id);
-            $starting_numbers = $business->ref_no_starting_number;
-
-            $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            if (!empty($business)) {
+                $starting_numbers = $business->ref_no_starting_number;
+                $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
+            } else {
+                $starting_number = 1;
+            }
 
             $new_ref = ReferenceCount::create([
                 'ref_type' => $type,
@@ -1582,12 +1588,20 @@ class Util
 
     public function account_exist_return_id($account_name)
     {
-        $business_id = request()->session()->get('business.id');
-        $account = Account::where(DB::raw("REPLACE(`name`, '  ', ' ')"), $account_name)->where('business_id', $business_id)->first();
-        if (!empty($account)) {
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->check() ? auth()->user()->business_id : (Business::first()->id ?? null));
+        
+        if (empty($business_id)) {
+            return 0;
+        }
+
+        $account = Account::where('business_id', $business_id)->where('name', $account_name)->first();
+        if ($account) {
             return $account->id;
         } else {
-            return 0;
+            // Fallback: try to find any account with that name if business-specific one failed, 
+            // especially if it's a single-business system.
+            $fallback = Account::where('name', $account_name)->first();
+            return $fallback ? $fallback->id : 0;
         }
     }
 

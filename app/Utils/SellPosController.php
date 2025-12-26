@@ -489,7 +489,7 @@ $vehicle=[];
                 
                 DB::beginTransaction();
                 if (empty($request->input('transaction_date'))) {
-                    $input['transaction_date'] = \Carbon::now();
+                    $input['transaction_date'] = Carbon::now();
                 } else {
                     $input['transaction_date'] = $request->input('transaction_date');
                 }
@@ -2178,7 +2178,7 @@ $vehicle=[];
                 })
                 ->addColumn('upcoming_invoice', function ($row) {
                     if (empty($row->recur_stopped_on)) {
-                        $last_generated = !empty($row->subscription_invoices) ? \Carbon::parse($row->subscription_invoices->max('transaction_date')) : \Carbon::parse($row->transaction_date);
+                        $last_generated = !empty($row->subscription_invoices) ? Carbon::parse($row->subscription_invoices->max('transaction_date')) : Carbon::parse($row->transaction_date);
                         if ($row->recur_interval_type == 'days') {
                             $upcoming_invoice = $last_generated->addDays($row->recur_interval);
                         } elseif ($row->recur_interval_type == 'months') {
@@ -2214,7 +2214,7 @@ $vehicle=[];
                 ->where('is_recurring', 1)
                 ->findorfail($id);
             if (empty($transaction->recur_stopped_on)) {
-                $transaction->recur_stopped_on = \Carbon::now();
+                $transaction->recur_stopped_on = Carbon::now();
             } else {
                 $transaction->recur_stopped_on = null;
             }
@@ -2308,7 +2308,7 @@ $vehicle=[];
                 'status'              => 'final',
                 'payment_status'      => 'due',
                 'additional_notes'    => '',
-                'transaction_date'    => \Carbon::now(),
+                'transaction_date'    => Carbon::now(),
                 'customer_group_id'   => $customer->customer_group_id,
                 'tax_rate_id'         => null,
                 'sale_note'           => null,

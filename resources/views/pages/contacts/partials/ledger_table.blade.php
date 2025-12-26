@@ -1,0 +1,30 @@
+<table class="table table-bordered table-striped" id="ledger_table">
+    <thead>
+        <tr>
+            <th>@lang('messages.date')</th>
+            <th>@lang('purchase.ref_no')</th>
+            <th>@lang('lang_v1.type')</th>
+            <th>@lang('lang_v1.sub_type')</th>
+            <th>@lang('sale.amount')</th>
+            <th>@lang('brand.note')</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($ledger_transactions as $transaction)
+            <tr>
+                <td>@format_datetime($transaction->operation_date)</td>
+                <td>
+                    @if($transaction->transaction)
+                        {{$transaction->transaction->invoice_no}}
+                    @elseif($transaction->transaction_payment)
+                        {{$transaction->transaction_payment->payment_ref_no}}
+                    @endif
+                </td>
+                <td>{{$transaction->type}}</td>
+                <td>{{$transaction->sub_type}}</td>
+                <td>@num_format($transaction->amount)</td>
+                <td>{{$transaction->note}}</td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>

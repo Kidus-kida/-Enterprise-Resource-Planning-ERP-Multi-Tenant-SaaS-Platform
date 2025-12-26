@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use DB;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserType;
 use App\Models\AttendanceTimestamp;
@@ -162,7 +162,29 @@ class User extends Authenticatable
             return $permitted_locations;
         }
     }
+public static function forDropdown($business_id, $prepend_none = true, $include_commission_agents = false, $prepend_all = false)
+    {
+        $query = User::where('business_id', $business_id);
+        // if (!$include_commission_agents) {
+        //     $query->where('is_cmmsn_agnt', 0);
+        // }// this condition is commented to include all users in dropdownby amanuel
 
+        $all_users = $query->select('id', DB::raw("CONCAT(COALESCE(firstname, ''),' ',COALESCE(middlename, ''),' ',COALESCE(lastname,'')) as surename"));
+
+        $users = $all_users->pluck('surename', 'id');
+
+        //Prepend none
+        if ($prepend_none) {
+            $users = $users->prepend(__('lang_v1.none'), '');
+        }
+
+        //Prepend all
+        if ($prepend_all) {
+            $users = $users->prepend(__('lang_v1.all'), '');
+        }
+
+        return $users;
+    }
     /**
      * Returns if a user can access the input location
      *

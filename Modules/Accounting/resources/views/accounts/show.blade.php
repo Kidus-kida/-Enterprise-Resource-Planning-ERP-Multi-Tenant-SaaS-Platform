@@ -11,7 +11,7 @@
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('account.index') }}">{{ __('Accounts') }}</a>
+                    <a href="{{ route('accounts.index') }}">{{ __('Accounts') }}</a>
                 </li>
                 <li class="breadcrumb-item active">{{ $account->name }}</li>
             </ul>
@@ -131,7 +131,7 @@
 <script type="module">
     function loadLedger() {
         $.ajax({
-            url: "{{ route('account.show', $account->id) }}",
+            url: "{{ route('accounts.show', $account->id) }}",
             data: {
                 start_date: $('#start_date').val(),
                 end_date: $('#end_date').val()

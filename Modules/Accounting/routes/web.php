@@ -41,7 +41,7 @@ Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
     Route::get('/accounts/import', [AccountController::class, 'import'])->name('accounts.import');
     Route::post('/accounts/import', [AccountController::class, 'postImport'])->name('accounts.post-import');
     Route::get('/accounts/disabled', [AccountController::class, 'disabled'])->name('accounts.disabled');
-    Route::resource('/account', AccountController::class);
+    Route::resource('/accounts', AccountController::class);
     
     // Account Transactions
     Route::get('/account-transaction/{id}/edit', [AccountController::class, 'editAccountTransaction'])->name('account.transaction.edit');
@@ -57,8 +57,21 @@ Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
     Route::post('/cheque-deposit', [AccountController::class, 'postChequeDeposit'])->name('account.post-cheque-deposit');
     
     // Account Helper Routes
-    Route::get('/check-account-balance/{id}', [AccountController::class, 'checkAccountBalance'])->name('account.check-balance');
     Route::get('/get-account-dropdown', [AccountController::class, 'getAccountDropdown'])->name('account.dropdown');
+
+    // Deposit & Transfers List
+    Route::get('/deposit-transfers', [\Modules\Accounting\Http\Controllers\DepositTransferController::class, 'index'])->name('deposit-transfers.index');
+    Route::get('/cheques-list', [AccountController::class, 'listCheques'])->name('account.cheques-list');
+
+    // Missing Account Actions matching Old ERP
+    Route::get('/deposit/{type}', [AccountController::class, 'getDeposit'])->name('account.deposit');
+    Route::post('/deposit', [AccountController::class, 'postDeposit'])->name('account.post-deposit');
+    Route::get('/account/{id}/close', [AccountController::class, 'close'])->name('account.close');
+    Route::get('/account/{id}/activate', [AccountController::class, 'activate'])->name('account.activate');
+    Route::get('/account/{id}/notes', [AccountController::class, 'getNotes'])->name('account.get-notes');
+    Route::post('/account/{id}/notes', [AccountController::class, 'postNotes'])->name('account.post-notes');
+    Route::get('/account-book/{id}', [AccountController::class, 'accountBook'])->name('accounting.account_book');
+    Route::get('/cheque-deposit', [AccountController::class, 'getChequeDeposit'])->name('account.cheque-deposit'); // Generic cheque deposit
     
     // ====================
     // JOURNALS
