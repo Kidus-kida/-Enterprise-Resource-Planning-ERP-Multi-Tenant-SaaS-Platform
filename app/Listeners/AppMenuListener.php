@@ -267,8 +267,6 @@ class AppMenuListener
                     // Budget-related items (permission-gated)
                     ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Categories'))
                         ->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
-
-
                     ->addParentClass('submenu')
             );
         }
