@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedInteger('business_id')->default(1)->after('id');
-            $table->index('business_id');
+            // $table->unsignedInteger('business_id')->default(1)->after('id');
+            // $table->index('business_id');
         });
     }
 
@@ -23,8 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex(['business_id']);
-            $table->dropColumn('business_id');
+            // $table->dropIndex(['business_id']);
+            // $table->dropColumn('business_id');
         });
     }
 };
