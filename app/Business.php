@@ -18,7 +18,7 @@ class Business extends Model
      *
      * @var string
      */
-    protected $table = 'business';
+    protected $table = 'businesses';
 
     public function getActivitylogOptions(): LogOptions
     {
