@@ -8,5 +8,5 @@
     "Accounting": true,
     "Crm": true,
     "Logistics": true,
-    "Contacts": false
+    "Contacts": true
 }
