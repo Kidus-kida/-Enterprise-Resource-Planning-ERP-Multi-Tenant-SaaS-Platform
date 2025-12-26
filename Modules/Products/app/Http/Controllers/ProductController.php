@@ -36,7 +36,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Spatie\Activitylog\Models\Activity;
 
 
-use App\Transaction;
+use Modules\Contacts\Models\Transaction;
 use App\Http\Controllers\Controller;
 
 class ProductController extends Controller
@@ -71,7 +71,8 @@ class ProductController extends Controller
     public function getUserActivityReport(Request $request)
     {
 
-        $business_id = auth()->user()->business_id;;
+        $business_id = auth()->user()->business_id;
+        ;
 
 
         if (request()->ajax()) {
@@ -506,7 +507,7 @@ class ProductController extends Controller
                 ->where('products.type', '!=', 'modifier');
 
             if (!empty($location_id) && $location_id != 'none') {
-                if ($permitted_locations == 'all' || in_array($location_id, $permitted_locations)) {
+                if ($permitted_locations == 'all' || (is_array($permitted_locations) && in_array($location_id, $permitted_locations))) {
                     $query->whereHas('product_locations', function ($query) use ($location_id) {
                         $query->where('product_locations.location_id', '=', $location_id);
                     });
@@ -618,6 +619,8 @@ class ProductController extends Controller
                 $products->where('products.repair_model_id', request()->get('repair_model_id'));
             }
 
+            \Log::info('Products query result count: ' . $products->get()->count());
+
             return Datatables::of($products)
                 ->addColumn(
                     'product_locations',
@@ -643,14 +646,14 @@ class ProductController extends Controller
                         $business_id = auth()->user()->business_id;
                         $subscription = null;
                         $pacakge_details = array();
-                        
+
 
 
 
                         $html =
                             '<div class="btn-group"><button type="button" class="btn btn-info dropdown-toggle btn-xs" data-toggle="dropdown" aria-expanded="false">Actions<span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu dropdown-menu-left" role="menu" style="overflow-y: auto !important">';
-                            // <li><a href="' . action([\App\Http\Controllers\LabelsController::class, 'show']) . '?product_id=' . $row->id . '" data-toggle="tooltip" title="' . __('lang_v1.label_help') . '"><i class="fa fa-barcode"></i> ' . __('barcode.labels') . '</a></li>';
-
+                        // <li><a href="' . action([\App\Http\Controllers\LabelsController::class, 'show']) . '?product_id=' . $row->id . '" data-toggle="tooltip" title="' . __('lang_v1.label_help') . '"><i class="fa fa-barcode"></i> ' . __('barcode.labels') . '</a></li>';
+        
                         if (auth()->user()->can('product.view')) {
                             $html .=
                                 '<li><a href="' . action([\Modules\Products\Http\Controllers\ProductController::class, 'show'], [$row->id]) . '" class="view-product"><i class="fa fa-eye"></i> View</a></li>';
@@ -783,7 +786,11 @@ class ProductController extends Controller
         $taxes = $tax_dropdown['tax_rates'];
 
         $business_locations = BusinessLocation::forDropdown($business_id);
-        $business_locations->prepend('None', 'none');
+        if (is_array($business_locations)) {
+            $business_locations = ['none' => 'None'] + $business_locations;
+        } else {
+            $business_locations->prepend('None', 'none');
+        }
 
         if ($this->moduleUtil->isModuleInstalled('Manufacturing') && (auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'manufacturing_module'))) {
             $show_manufacturing_data = true;
@@ -848,7 +855,7 @@ class ProductController extends Controller
         $tax_dropdown = TaxRate::forBusinessDropdown($business_id, true, true);
         $taxes = $tax_dropdown['tax_rates'];
         $tax_attributes = $tax_dropdown['attributes'];
-        
+
 
         $barcode_types = $this->barcode_types;
         $barcode_default = $this->productUtil->barcode_default();
@@ -923,7 +930,7 @@ class ProductController extends Controller
             // But I need to preserve the surrounding code logic if I change lines.
             // I will target the specific lines using context.
 
-            $form_fields = ['semi_finished', 'stock_type', 'name', 'date', 'brand_id', 'unit_id', 'category_id', 'tax', 'sale_tax', 'type', 'barcode_type', 'sku', 'alert_quantity', 'tax_type', 'weight', 'product_description', 'sub_unit_ids', 'product_custom_field1', 'product_custom_field2', 'product_custom_field3', 'product_custom_field4', 'product_custom_field5', 'product_custom_field6', 'product_custom_field7', 'product_custom_field8', 'product_custom_field9', 'product_custom_field10', 'product_custom_field11', 'product_custom_field12', 'product_custom_field13', 'product_custom_field14', 'product_custom_field15', 'product_custom_field16', 'product_custom_field17', 'product_custom_field18', 'product_custom_field19', 'product_custom_field20',];
+            $form_fields = ['semi_finished', 'name', 'brand_id', 'unit_id', 'category_id', 'tax', 'type', 'barcode_type', 'sku', 'alert_quantity', 'tax_type', 'weight', 'product_description', 'sub_unit_ids', 'product_custom_field1', 'product_custom_field2', 'product_custom_field3', 'product_custom_field4', 'product_custom_field5', 'product_custom_field6', 'product_custom_field7', 'product_custom_field8', 'product_custom_field9', 'product_custom_field10', 'product_custom_field11', 'product_custom_field12', 'product_custom_field13', 'product_custom_field14', 'product_custom_field15', 'product_custom_field16', 'product_custom_field17', 'product_custom_field18', 'product_custom_field19', 'product_custom_field20'];
 
             $module_form_fields = $this->moduleUtil->getModuleFormField('product_form_fields');
             if (!empty($module_form_fields)) {
@@ -932,11 +939,7 @@ class ProductController extends Controller
 
             $product_details = $request->only($form_fields);
 
-            if (!empty($product_details['date'])) {
-                $product_details['date'] = date('Y-m-d', strtotime($product_details['date']));
-            } else {
-                $product_details['date'] = \Carbon\Carbon::now()->format('Y-m-d');
-            }
+
 
             $product_details['business_id'] = $business_id;
             $product_details['created_by'] = auth()->user()->id;

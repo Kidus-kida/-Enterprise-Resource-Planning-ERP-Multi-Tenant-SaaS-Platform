@@ -3,7 +3,7 @@ import $ from 'jquery';
 window.jQuery = window.$ = $
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import sort from '@alpinejs/sort'
-window.Livewire = Livewire 
+window.Livewire = Livewire
 window.Alpine = Alpine
 Alpine.plugin(sort)
 Livewire.start()
@@ -18,16 +18,42 @@ import moment from 'moment';
 import intlTelInput from "intl-tel-input";
 import nProgress from "nprogress";
 import Toastify from 'toastify-js'
+import toastr from 'toastr';
+import 'toastr/build/toastr.min.css';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import { jsPDF } from "jspdf";
 
+// DataTables
+import DataTable from 'datatables.net-bs5';
+import 'datatables.net-buttons-bs5';
+import 'datatables.net-buttons/js/buttons.colVis.mjs';
+import 'datatables.net-buttons/js/buttons.html5.mjs';
+import 'datatables.net-buttons/js/buttons.print.mjs';
+import JSZip from 'jszip';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+// Assign to global
+window.JSZip = JSZip;
+if (pdfFonts && pdfFonts.pdfMake) {
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+} else if (pdfFonts && pdfFonts.vfs) {
+    pdfMake.vfs = pdfFonts.vfs;
+}
+window.pdfMake = pdfMake;
+if (DataTable.Buttons) {
+    if (typeof DataTable.Buttons.jszip === 'function') DataTable.Buttons.jszip(JSZip);
+    if (typeof DataTable.Buttons.pdfMake === 'function') DataTable.Buttons.pdfMake(pdfMake);
+}
 
 window.intlTelInput = intlTelInput;
 window.NProgress = nProgress;
 window.moment = moment;
+window.Moment = moment;
+window.toastr = toastr;
 window.Toastify = Toastify;
 window.Calendar = Calendar
 window.dayGridPlugin = dayGridPlugin
@@ -77,21 +103,18 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
             if (!$("#generalModalPopup").length) {
                 $("body").append(
                     $(
-                        `<div class="modal custom-modal ${
-                            style ? style : "fade"
+                        `<div class="modal custom-modal ${style ? style : "fade"
                         }" id="generalModalPopup" role="dialog">
-                            <div class="modal-dialog modal-dialog-centered ${
-                                size ? "modal-" + size : ""
-                            }" role="document">
+                            <div class="modal-dialog modal-dialog-centered ${size ? "modal-" + size : ""
+                        }" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        ${
-                                            title
-                                                ? '<h5 class="modal-title">' +
-                                                    title +
-                                                    "</h5>"
-                                                : ""
-                                        }
+                                        ${title
+                            ? '<h5 class="modal-title">' +
+                            title +
+                            "</h5>"
+                            : ""
+                        }
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
@@ -111,9 +134,9 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
                     var $this = $(this);
                     $this.wrap('<div class="position-relative"></div>');
                     $this.select2({
-                      dropdownAutoWidth: true,
-                      width: '100%',
-                      dropdownParent: $this.parent()
+                        dropdownAutoWidth: true,
+                        width: '100%',
+                        dropdownParent: $this.parent()
                     });
                 });
             }
@@ -144,7 +167,7 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
                 });
             }
         },
-        error: function (xhr) {                
+        error: function (xhr) {
             $(".loader-wrapper").addClass('d-none');
             console.log(xhr);
             alert("something went wrong")

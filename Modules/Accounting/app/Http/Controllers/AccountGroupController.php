@@ -23,10 +23,13 @@ class AccountGroupController extends Controller
                 $query->where('business_id', $business_id);
             }
 
-            return DataTables::of($query)
+            return DataTables::of($query->with('accountType'))
                 ->addIndexColumn()
                 ->addColumn('name', function ($group) {
                     return $group->name;
+                })
+                ->addColumn('account_type', function ($group) {
+                    return $group->accountType ? $group->accountType->name : '-';
                 })
                 ->addColumn('description', function ($group) {
                     return $group->description ?? '-';
@@ -61,7 +64,11 @@ class AccountGroupController extends Controller
      */
     public function create()
     {
-        return view('accounting::account-groups.create');
+        $business_id = session()->get('user.business_id');
+        $account_types = \Modules\Accounting\Models\AccountType::where('business_id', $business_id)
+                                    ->whereNull('parent_account_type_id')
+                                    ->pluck('name', 'id');
+        return view('accounting::account-groups.create', compact('account_types'));
     }
 
     /**
@@ -109,7 +116,11 @@ class AccountGroupController extends Controller
     public function edit($id)
     {
         $group = AccountGroup::findOrFail($id);
-        return view('accounting::account-groups.create', compact('group'));
+        $business_id = session()->get('user.business_id');
+        $account_types = \Modules\Accounting\Models\AccountType::where('business_id', $business_id)
+                                    ->whereNull('parent_account_type_id')
+                                    ->pluck('name', 'id');
+        return view('accounting::account-groups.create', compact('group', 'account_types'));
     }
 
     /**

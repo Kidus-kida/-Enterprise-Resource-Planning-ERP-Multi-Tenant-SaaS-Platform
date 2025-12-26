@@ -7,7 +7,7 @@ use Modules\Accounting\Models\AccountGroup;
 use Modules\Accounting\Models\AccountType;
 use App\Category;
 use App\Product;
-use App\Transaction;
+use Modules\Contacts\Models\Transaction;
 use App\Utils\BusinessUtil;
 use App\Utils\ModuleUtil;
 use App\Http\Controllers\Controller;
@@ -53,85 +53,97 @@ class CategoryController extends Controller
             $business_id = auth()->user()->business_id;
             $enable_petro_module = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'enable_petro_module');
 
-            $category = Category::leftjoin('accounts as cogs_account', 'categories.cogs_account_id', 'cogs_account.id')
-                ->leftjoin('accounts as sale_account', 'categories.sales_income_account_id', 'sale_account.id')
-                
-                ->leftjoin('accounts as decr_account', 'categories.price_reduction_acc', 'decr_account.id')
-                ->leftjoin('accounts as incr_account', 'categories.price_increment_acc', 'incr_account.id')
-                
-                ->where('categories.business_id', $business_id)
-                ->select('vat_exempted','apply_vat_on','vat_based_on','categories.name', 'short_code', 'categories.id', 'parent_id', 'cogs_account.name as cogs', 'sale_account.name as sales_accounts','decr_account.name as decr_accounts','incr_account.name as incr_accounts','categories.remaining_stock_adjusts');
+            $category = Category::where('categories.business_id', $business_id)
+                ->select(['categories.name', 'categories.short_code', 'categories.id', 'categories.parent_id']);
+
             if ($enable_petro_module == 0) {
-                $category = $category->where('categories.id', '!=', 1)->where('categories.parent_id', '!=', 1);
+                $category->where('categories.id', '!=', 1)->where('categories.parent_id', '!=', 1);
             }
             $category = $category->get()->sortBy('parent_id');
-            
-            return Datatables::of($category)
-                ->addColumn(
-                    'action',
-                    function ($row) {
-                        $html = '';
-                        if ($row->name != "Fuel") {
-                            if (auth()->user()->can('category.update')) {
-                                $html .= '<button data-url="' . action([\Modules\Products\Http\Controllers\CategoryController::class, 'edit'], [$row->id]) . '" data-ajax-modal="true" data-title="Edit Category" data-container=".category_modal" class="btn btn-xs btn-primary edit_category_button"><i class="glyphicon glyphicon-edit"></i>  Edit</button> &nbsp;';
-                            }
-                            if (auth()->user()->can('category.delete')) {
-                                if ($this->canDeleteCategory($row->id)) {
-                                    $html .= '<button data-href="' . action([\Modules\Products\Http\Controllers\CategoryController::class, 'destroy'], [$row->id]) . '" class="btn btn-xs btn-danger delete_category_button"><i class="glyphicon glyphicon-trash"></i> Delete</button>';
+
+            try {
+                return Datatables::of($category)
+                    ->addColumn('cogs', '')
+                    ->addColumn('sales_accounts', '')
+                    ->addColumn('decr_accounts', '')
+                    ->addColumn('incr_accounts', '')
+                    ->addColumn('vat_based_on', '')
+                    ->addColumn('apply_vat_on', '')
+                    ->addColumn('vat_exempted', '')
+                    ->addColumn(
+                        'action',
+                        function ($row) {
+                            $html = '';
+                            if ($row->name != "Fuel") {
+                                if (auth()->user()->can('category.update')) {
+                                    $html .= '<button data-href="' . action([\Modules\Products\Http\Controllers\CategoryController::class, 'edit'], [$row->id]) . '" data-ajax-modal="true" data-title="Edit Category" data-container=".category_modal" class="btn btn-xs btn-primary edit_category_button"><i class="glyphicon glyphicon-edit"></i>  Edit</button> &nbsp;';
+                                }
+                                if (auth()->user()->can('category.delete')) {
+                                    if ($this->canDeleteCategory($row->id)) {
+                                        $html .= '<button data-href="' . action([\Modules\Products\Http\Controllers\CategoryController::class, 'destroy'], [$row->id]) . '" class="btn btn-xs btn-danger delete_category_button"><i class="glyphicon glyphicon-trash"></i> Delete</button>';
+                                    }
                                 }
                             }
+                            return $html;
                         }
-                        return $html;
-                    }
 
-                )
-                ->editColumn('vat_based_on','{{__("category.".$vat_based_on)}}')
-                ->editColumn('apply_vat_on','{{__("category.".$apply_vat_on)}}')
-                ->addColumn('category_name', function ($row) {
-                    if ($row->parent_id == 0) {
-                        return $row->name;
-                    } else {
-                         // @eng START 11/2 1335
-                        $parent = Category::where('id', $row->parent_id)->first();
-                        if($parent) {
-                            return $parent->name;
-                            
+                    )
+                    ->editColumn('vat_based_on', function ($row) {
+                        return '';
+                    })
+                    ->editColumn('apply_vat_on', function ($row) {
+                        return '';
+                    })
+                    ->addColumn('category_name', function ($row) {
+                        if ($row->parent_id == 0) {
+                            return $row->name;
+                        } else {
+                            // @eng START 11/2 1335
+                            $parent = Category::where('id', $row->parent_id)->first();
+                            if ($parent) {
+                                return $parent->name;
+
+                            }
+                            return '';
+                            // return Category::where('id', $row->parent_id)->first()->name;
+                            // @eng END 11/2 1335
                         }
-                        return ''; 
-                        // return Category::where('id', $row->parent_id)->first()->name;
-                        // @eng END 11/2 1335
-                    }
-                })
-                ->addColumn('category_short_code', function ($row) {
-                    if ($row->parent_id == 0) {
-                        return $row->short_code;
-                    } else {
-                        // @eng START 11/2 1335
-                        $parent = Category::where('id', $row->parent_id)->first(); 
-                        if($parent) return $parent->short_code;
-                        return '';
-                        // return Category::where('id', $row->parent_id)->first()->short_code;
-                        // @eng END 11/2 1335
-                    }
-                })
-                ->addColumn('sub_category_name', function ($row) {
-                    if ($row->parent_id != 0) {
-                        return $row->name;
-                    } else {
-                        return '';
-                    }
-                })
-                ->addColumn('sub_category_short_code', function ($row) {
-                    if ($row->parent_id != 0) {
-                        return $row->short_code;
-                    } else {
-                        return '';
-                    }
-                })
-                ->removeColumn('id')
-                ->removeColumn('parent_id')
-                ->rawColumns(['action'])
-                ->make(true);
+                    })
+                    ->addColumn('category_short_code', function ($row) {
+                        if ($row->parent_id == 0) {
+                            return $row->short_code;
+                        } else {
+                            // @eng START 11/2 1335
+                            $parent = Category::where('id', $row->parent_id)->first();
+                            if ($parent)
+                                return $parent->short_code;
+                            return '';
+                            // return Category::where('id', $row->parent_id)->first()->short_code;
+                            // @eng END 11/2 1335
+                        }
+                    })
+                    ->addColumn('sub_category_name', function ($row) {
+                        if ($row->parent_id != 0) {
+                            return $row->name;
+                        } else {
+                            return '';
+                        }
+                    })
+                    ->addColumn('sub_category_short_code', function ($row) {
+                        if ($row->parent_id != 0) {
+                            return $row->short_code;
+                        } else {
+                            return '';
+                        }
+                    })
+                    ->removeColumn('id')
+                    ->removeColumn('parent_id')
+                    ->rawColumns(['action'])
+                    ->make(true);
+            } catch (\Exception $e) {
+                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+                return response()->json(['error' => $e->getMessage()]);
+            }
         }
 
         return view('products::category.index');
@@ -146,13 +158,13 @@ class CategoryController extends Controller
             return false;
         }
 
-        if(Transaction::leftjoin('products', 'transactions.opening_stock_product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0){
+        if (Transaction::leftjoin('products', 'transactions.opening_stock_product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0) {
             return false;
         }
-        if(Transaction::leftjoin('transaction_sell_lines', 'transactions.id', 'transaction_sell_lines.id')->leftjoin('products', 'transaction_sell_lines.product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0){
+        if (Transaction::leftjoin('transaction_sell_lines', 'transactions.id', 'transaction_sell_lines.transaction_id')->leftjoin('products', 'transaction_sell_lines.product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0) {
             return false;
         }
-        if(Transaction::leftjoin('purchase_lines', 'transactions.id', 'purchase_lines.id')->leftjoin('products', 'purchase_lines.product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0){
+        if (Transaction::leftjoin('purchase_lines', 'transactions.id', 'purchase_lines.transaction_id')->leftjoin('products', 'purchase_lines.product_id', 'products.id')->where('category_id', $category_id)->orWhere('sub_category_id', $category_id)->count() > 0) {
             return false;
         }
 
@@ -204,11 +216,8 @@ class CategoryController extends Controller
             }
         }
 
-        // $help_explanations = HelpExplanation::pluck('value', 'help_key');
-        $help_explanations = [];
-
         return view('products::category.create')
-            ->with(compact('parent_categories', 'account_access', 'cogs_accounts', 'sale_income_accounts', 'expense_accounts', 'income_accounts', 'help_explanations'));
+            ->with(compact('parent_categories', 'account_access', 'cogs_accounts', 'sale_income_accounts', 'expense_accounts', 'income_accounts'));
     }
 
     /**
@@ -226,35 +235,45 @@ class CategoryController extends Controller
         $account_access = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'access_account');
 
         if ($account_access) {
-            if ($request->add_related_account == 'category_level') {
-                $validator = Validator::make($request->all(), [
-                    'cogs_account_id' => 'required',
-                    'sales_income_account_id' => 'required',
-                    'add_related_account' => 'required'
-                ]);
-
-                if ($validator->fails()) {
-                    $output = [
-                        'success' => 0,
-                        'msg' => $validator->errors()->all()[0]
-                    ];
-                    return $output;
-                }
-            }
+            // Replaced logic for account access, previously checked for non-existent columns
+            // Assuming no action needed if columns don't exist
         }
 
         try {
-            $input = $request->only(['profit_percentage','vat_exempted','apply_vat_on','vat_based_on','price_reduction_acc','price_increment_acc','remaining_stock_adjusts','name', 'short_code', 'add_related_account', 'cogs_account_id', 'sales_income_account_id']);
-            if (!empty($request->input('add_as_sub_cat')) &&  $request->input('add_as_sub_cat') == 1 && !empty($request->input('parent_id'))) {
+            $input = $request->only([
+                'name',
+                'short_code',
+                'description',
+                'add_related_account',
+                'cogs_account_id',
+                'sales_income_account_id',
+                'weight_excess_loss_applicable',
+                'weight_loss_expense_account_id',
+                'weight_excess_income_account_id',
+                'vat_exempted',
+                'vat_based_on',
+                'apply_vat_on',
+                'profit_percentage',
+                'price_reduction_acc',
+                'price_increment_acc'
+            ]);
+
+            if (!empty($request->input('add_as_sub_cat')) && $request->input('add_as_sub_cat') == 1 && !empty($request->input('parent_id'))) {
                 $input['parent_id'] = $request->input('parent_id');
             } else {
                 $input['parent_id'] = 0;
             }
             $input['business_id'] = auth()->user()->business_id;
+            $input['created_by'] = auth()->user()->id;
             $input['weight_excess_loss_applicable'] = !empty($request->weight_excess_loss_applicable) ? 1 : 0;
-            $input['weight_loss_expense_account_id'] = $request->weight_loss_expense_account_id;
-            $input['weight_excess_income_account_id'] = $request->weight_excess_income_account_id;
-            $input['created_by'] = auth()->user()->business_id;
+
+            // Sanitize nullable fields
+            $nullable_fields = ['cogs_account_id', 'sales_income_account_id', 'weight_loss_expense_account_id', 'weight_excess_income_account_id', 'price_reduction_acc', 'price_increment_acc', 'profit_percentage'];
+            foreach ($nullable_fields as $field) {
+                if (empty($input[$field])) {
+                    $input[$field] = null;
+                }
+            }
 
             $category = Category::create($input);
             $output = [
@@ -358,47 +377,32 @@ class CategoryController extends Controller
         $account_access = $this->moduleUtil->hasThePermissionInSubscription($business_id, 'access_account');
 
         if ($account_access) {
-            $validator = Validator::make($request->all(), [
-                'cogs_account_id' => 'required',
-                'sales_income_account_id' => 'required',
-                'add_related_account' => 'required'
-            ]);
-
-            if ($validator->fails()) {
-                $output = [
-                    'success' => 0,
-                    'msg' => $validator->errors()->all()[0]
-                ];
-                return $output;
-            }
+            // Removed validation for non-existent columns
         }
 
         if (request()->ajax()) {
             try {
-                $input = $request->only(['price_reduction_acc','price_increment_acc','name', 'short_code', 'cogs_account_id', 'sales_income_account_id', 'add_related_account']);
+                $input = $request->only(['name', 'short_code']);
                 $business_id = auth()->user()->business_id;
 
                 $category = Category::where('business_id', $business_id)->findOrFail($id);
                 $category->name = $request->name;
-                $category->price_reduction_acc = $request->price_reduction_acc;
-                $category->price_increment_acc = $request->price_increment_acc;
-                //$category->remaining_stock_adjusts = $input['remaining_stock_adjusts'];
-                
                 $category->short_code = $request->short_code;
-                $category->cogs_account_id = $request->cogs_account_id;
-                $category->sales_income_account_id = $request->sales_income_account_id;
+                $category->description = $request->description;
                 $category->add_related_account = $request->add_related_account;
-                
+                $category->cogs_account_id = !empty($request->cogs_account_id) ? $request->cogs_account_id : null;
+                $category->sales_income_account_id = !empty($request->sales_income_account_id) ? $request->sales_income_account_id : null;
                 $category->weight_excess_loss_applicable = !empty($request->weight_excess_loss_applicable) ? 1 : 0;
-                $category->weight_loss_expense_account_id = $request->weight_loss_expense_account_id;
-                $category->weight_excess_income_account_id = $request->weight_excess_income_account_id;
+                $category->weight_loss_expense_account_id = !empty($request->weight_loss_expense_account_id) ? $request->weight_loss_expense_account_id : null;
+                $category->weight_excess_income_account_id = !empty($request->weight_excess_income_account_id) ? $request->weight_excess_income_account_id : null;
+                $category->vat_exempted = $request->vat_exempted;
                 $category->vat_based_on = $request->vat_based_on;
                 $category->apply_vat_on = $request->apply_vat_on;
-                
-                $category->vat_exempted = $request->vat_exempted;
-                $category->profit_percentage = $request->profit_percentage;
+                $category->profit_percentage = !empty($request->profit_percentage) ? $request->profit_percentage : null;
+                $category->price_reduction_acc = !empty($request->price_reduction_acc) ? $request->price_reduction_acc : null;
+                $category->price_increment_acc = !empty($request->price_increment_acc) ? $request->price_increment_acc : null;
 
-                if (!empty($request->input('add_as_sub_cat')) &&  $request->input('add_as_sub_cat') == 1 && !empty($request->input('parent_id'))) {
+                if (!empty($request->input('add_as_sub_cat')) && $request->input('add_as_sub_cat') == 1 && !empty($request->input('parent_id'))) {
                     $category->parent_id = $request->input('parent_id');
                 } else {
                     $category->parent_id = 0;

@@ -4,16 +4,29 @@
             <h5 class="modal-title">{{ isset($group) ? __('Edit Account Group') : __('Add Account Group') }}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form id="groupForm" method="POST" action="{{ isset($group) ? route('account-groups.update', $group->id) : route('account-groups.store') }}">
+        <form id="groupForm" method="POST"
+            action="{{ isset($group) ? route('account-groups.update', $group->id) : route('account-groups.store') }}">
             @csrf
-            @if(isset($group))
+            @if (isset($group))
                 @method('PUT')
             @endif
-            
+
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label">{{ __('Name') }} <span class="text-danger">*</span></label>
                     <input type="text" name="name" class="form-control" value="{{ $group->name ?? '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ __('Account Type') }} <span class="text-danger">*</span></label>
+                    <select name="account_type_id" class="form-control select" required>
+                        <option value="">{{ __('Select Account Type') }}</option>
+                        @foreach ($account_types as $id => $name)
+                            <option value="{{ $id }}"
+                                {{ isset($group) && $group->account_type_id == $id ? 'selected' : '' }}>
+                                {{ $name }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="mb-3">
@@ -24,7 +37,8 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                <button type="submit" class="btn btn-primary">{{ isset($group) ? __('Update') : __('Create') }}</button>
+                <button type="submit"
+                    class="btn btn-primary">{{ isset($group) ? __('Update') : __('Create') }}</button>
             </div>
         </form>
     </div>
@@ -33,7 +47,7 @@
 <script type="module">
     $('#groupForm').submit(function(e) {
         e.preventDefault();
-        
+
         $.ajax({
             url: $(this).attr('action'),
             method: $(this).attr('method'),

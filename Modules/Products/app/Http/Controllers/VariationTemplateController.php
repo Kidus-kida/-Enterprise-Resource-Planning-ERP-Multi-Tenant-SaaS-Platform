@@ -25,42 +25,39 @@ class VariationTemplateController extends Controller
     public function index()
     {
         $business_id = auth()->user()->business_id;
+
         if (request()->ajax()) {
+            \Log::info('Variations AJAX requested for business_id: ' . $business_id);
+            $query = VariationTemplate::with(['values'])
+                ->select('variation_templates.*');
 
-            $variations = VariationTemplate::where('business_id', $business_id)
-                        ->with(['values'])
-                        ->select('id', 'name', DB::raw("(SELECT COUNT(id) FROM product_variations WHERE product_variations.variation_template_id=variation_templates.id) as total_pv"));
+            if (!empty($business_id)) {
+                $query->where('variation_templates.business_id', $business_id);
+            }
 
-            return Datatables::of($variations)
+            $query->orderBy('variation_templates.name', 'asc');
+            \Log::info('Variations query count: ' . (clone $query)->count());
+
+            return DataTables::of($query)
                 ->addColumn('action', function ($row) {
-                    $action = '<button data-url="' . action([\Modules\Products\Http\Controllers\VariationTemplateController::class, 'edit'], [$row->id]) . '" data-ajax-modal="true" data-title="Edit Variation" class="btn btn-xs btn-primary edit_variation_button"><i class="glyphicon glyphicon-edit"></i> Edit</button>';
+                    $action = '<button data-url="' . route('products.variations.edit', [$row->id]) . '" data-ajax-modal="true" data-title="Edit Variation" class="btn btn-xs btn-primary edit_variation_button"><i class="fa fa-edit"></i> Edit</button>';
 
-                    if (empty($row->total_pv)) {
-                        $action .= '&nbsp;<button data-href="' . action([\Modules\Products\Http\Controllers\VariationTemplateController::class, 'destroy'], [$row->id]) . '" class="btn btn-xs btn-danger delete_variation_button"><i class="glyphicon glyphicon-trash"></i> Delete</button>';
-                    }
+                    $action .= '&nbsp;<button data-href="' . route('products.variations.destroy', [$row->id]) . '" class="btn btn-xs btn-danger delete_variation_button"><i class="fa fa-trash"></i> Delete</button>';
+
                     return $action;
                 })
-                ->addColumn('values', function ($data) {
-                    $values_arr = [];
-                    foreach ($data->values as $attr) {
-                        $values_arr[] = $attr->name;
-                    }
-                    return implode(', ', $values_arr);
+                ->addColumn('values', function ($row) {
+                    return $row->values->pluck('name')->implode(', ') ?: '';
                 })
-                ->removeColumn('id')
-                ->removeColumn('total_pv')
                 ->rawColumns(['action'])
                 ->make(true);
         }
 
-
-        $variations = Variation::getVariationDropdown($business_id);
         $business_locations = BusinessLocation::forDropdown($business_id);
         $categories = Category::forDropdown($business_id);
         $sub_categories = Category::subCategoryforDropdown($business_id);
 
         return view('products::variation.index')->with(compact(
-            'variations',
             'business_locations',
             'categories',
             'sub_categories',
@@ -87,51 +84,54 @@ class VariationTemplateController extends Controller
     {
         try {
             $input = $request->only(['name']);
-            $input['business_id'] =  auth()->user()->business_id;
+            $input['business_id'] = auth()->user()->business_id;
+            $input['created_by'] = auth()->user()->id;
+
             $variation = VariationTemplate::create($input);
-            
-            //craete variation values
+
+            // Create variation values
             if (!empty($request->input('variation_values'))) {
                 $values = $request->input('variation_values');
                 $data = [];
                 foreach ($values as $value) {
                     if (!empty($value)) {
-                        $data[] = [ 'name' => $value];
+                        $data[] = ['name' => $value];
                     }
                 }
                 $variation->values()->createMany($data);
             }
-            
-            $output = ['success' => true,
-                            'data' => $variation,
-                            'msg' => 'Variation added succesfully'
-                        ];
+
+            $output = [
+                'success' => true,
+                'msg' => 'Variation added succesfully'
+            ];
         } catch (\Exception $e) {
-            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-            $output = ['success' => false,
-                            'msg' => 'Something went wrong, please try again'
-                        ];
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+            $output = [
+                'success' => false,
+                'msg' => 'Something went wrong, please try again'
+            ];
         }
 
-        return $output;
+        return response()->json($output);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\VariationTemplate  $variationTemplate
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(VariationTemplate $variationTemplate)
+    public function show($id)
     {
-        //
+        return response()->json(['success' => false, 'msg' => 'Not implemented']);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param int  $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -139,11 +139,12 @@ class VariationTemplateController extends Controller
         if (request()->ajax()) {
             $business_id = auth()->user()->business_id;
             $variation = VariationTemplate::where('business_id', $business_id)
-                            ->with(['values'])->find($id);
+                ->with(['values'])->findOrFail($id);
 
             return view('products::variation.edit')
                 ->with(compact('variation'));
         }
+        return redirect()->back();
     }
 
     /**
@@ -167,50 +168,62 @@ class VariationTemplateController extends Controller
                     $variation->save();
 
                     ProductVariation::where('variation_template_id', $variation->id)
-                                ->update(['name' => $variation->name]);
+                        ->update(['name' => $variation->name]);
                 }
-                
-                //update variation
-                $data = [];
-                if (!empty($request->input('edit_variation_values'))) {
-                    $values = $request->input('edit_variation_values');
-                    foreach ($values as $key => $value) {
+
+                // Update existing variation values
+                $edit_variation_values = $request->input('edit_variation_values');
+                $updated_value_ids = [];
+                if (!empty($edit_variation_values)) {
+                    foreach ($edit_variation_values as $key => $value) {
                         if (!empty($value)) {
                             $variation_val = VariationValueTemplate::find($key);
+                            if ($variation_val) {
+                                if ($variation_val->name != $value) {
+                                    $variation_val->name = $value;
+                                    $variation_val->save();
 
-                            if ($variation_val->name != $value) {
-                                $variation_val->name = $value;
-                                $data[] = $variation_val;
-                                Variation::where('variation_value_id', $key)
-                                    ->update(['name' => $value]);
+                                    // Update related variations if name changed
+                                    Variation::where('variation_value_id', $key)
+                                        ->update(['name' => $value]);
+                                }
+                                $updated_value_ids[] = $key;
                             }
                         }
                     }
-                    $variation->values()->saveMany($data);
                 }
-                if (!empty($request->input('variation_values'))) {
-                    $values = $request->input('variation_values');
-                    foreach ($values as $value) {
+
+                // Remove values that were deleted from the form
+                $variation->values()->whereNotIn('id', $updated_value_ids)->delete();
+
+                // Add new variation values
+                $variation_values = $request->input('variation_values');
+                if (!empty($variation_values)) {
+                    $new_values = [];
+                    foreach ($variation_values as $value) {
                         if (!empty($value)) {
-                            $data[] = new VariationValueTemplate([ 'name' => $value]);
+                            $new_values[] = ['name' => $value];
                         }
                     }
+                    $variation->values()->createMany($new_values);
                 }
-                $variation->values()->saveMany($data);
 
-                $output = ['success' => true,
-                            'msg' => 'Variation updated succesfully'
-                            ];
+                $output = [
+                    'success' => true,
+                    'msg' => 'Variation updated succesfully'
+                ];
             } catch (\Exception $e) {
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-                $output = ['success' => false,
-                            'msg' => 'Something went wrong, please try again'
-                        ];
+                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+                $output = [
+                    'success' => false,
+                    'msg' => 'Something went wrong, please try again'
+                ];
             }
 
-            return $output;
+            return response()->json($output);
         }
+        return response()->json(['success' => false, 'msg' => 'Invalid request']);
     }
 
     /**
@@ -228,18 +241,21 @@ class VariationTemplateController extends Controller
                 $variation = VariationTemplate::where('business_id', $business_id)->findOrFail($id);
                 $variation->delete();
 
-                $output = ['success' => true,
-                            'msg' => 'Category deleted succesfully'
-                            ];
-            } catch (\Eexception $e) {
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-                $output = ['success' => false,
-                            'msg' => 'Something went wrong, please try again'
-                        ];
+                $output = [
+                    'success' => true,
+                    'msg' => 'Variation deleted succesfully'
+                ];
+            } catch (\Exception $e) {
+                \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+                $output = [
+                    'success' => false,
+                    'msg' => 'Something went wrong, please try again'
+                ];
             }
 
-            return $output;
+            return response()->json($output);
         }
+        return response()->json(['success' => false, 'msg' => 'Invalid request']);
     }
 }

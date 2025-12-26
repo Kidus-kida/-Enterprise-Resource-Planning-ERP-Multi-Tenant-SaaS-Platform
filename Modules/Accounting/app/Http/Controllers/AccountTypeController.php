@@ -17,7 +17,7 @@ class AccountTypeController extends Controller
         if ($request->ajax()) {
             $business_id = session()->get('user.business_id');
             
-            $query = AccountType::query();
+            $query = AccountType::with('parent');
             
             if ($business_id) {
                 $query->where('business_id', $business_id);
@@ -27,6 +27,9 @@ class AccountTypeController extends Controller
                 ->addIndexColumn()
                 ->addColumn('name', function ($type) {
                     return $type->name;
+                })
+                ->addColumn('parent_type', function ($type) {
+                    return $type->parent ? $type->parent->name : '-';
                 })
                 ->addColumn('description', function ($type) {
                     return $type->description ?? '-';
@@ -61,7 +64,11 @@ class AccountTypeController extends Controller
      */
     public function create()
     {
-        return view('accounting::account-types.create');
+        $business_id = session()->get('user.business_id');
+        $parent_types = AccountType::where('business_id', $business_id)
+                                    ->whereNull('parent_account_type_id')
+                                    ->pluck('name', 'id');
+        return view('accounting::account-types.create', compact('parent_types'));
     }
 
     /**
@@ -79,6 +86,7 @@ class AccountTypeController extends Controller
             $type = new AccountType();
             $type->business_id = $business_id;
             $type->name = $request->name;
+            $type->parent_account_type_id = $request->parent_account_type_id;
             $type->description = $request->description;
             $type->save();
 
@@ -109,7 +117,12 @@ class AccountTypeController extends Controller
     public function edit($id)
     {
         $type = AccountType::findOrFail($id);
-        return view('accounting::account-types.create', compact('type'));
+        $business_id = session()->get('user.business_id');
+        $parent_types = AccountType::where('business_id', $business_id)
+                                    ->whereNull('parent_account_type_id')
+                                    ->where('id', '!=', $id) // Prevent self-parenting
+                                    ->pluck('name', 'id');
+        return view('accounting::account-types.create', compact('type', 'parent_types'));
     }
 
     /**
@@ -124,6 +137,7 @@ class AccountTypeController extends Controller
         try {
             $type = AccountType::findOrFail($id);
             $type->name = $request->name;
+            $type->parent_account_type_id = $request->parent_account_type_id;
             $type->description = $request->description;
             $type->save();
 
