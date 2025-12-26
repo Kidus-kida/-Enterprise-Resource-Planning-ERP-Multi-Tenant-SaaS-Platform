@@ -7,6 +7,6 @@
     "Sales": true,
     "Accounting": true,
     "Crm": true,
-    "Logistics": true
-    "Contacts": true
+    "Logistics": true,
+    "Contacts": false
 }
