@@ -8,6 +8,10 @@ window.Alpine = Alpine
 Alpine.plugin(sort)
 Livewire.start()
 
+// DataTables
+import 'datatables.net-bs5';
+import 'datatables.net-buttons-bs5';
+
 import Select2 from 'select2';
 import Sortable from "sortablejs";
 import moment from 'moment';
