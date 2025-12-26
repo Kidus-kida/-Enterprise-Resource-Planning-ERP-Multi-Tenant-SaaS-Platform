@@ -15,6 +15,7 @@ use App\User;
 use App\AccountGroup;
 use App\AccountTransaction;
 use App\VariationLocationDetails;
+use Carbon\Carbon;
 use DB;
 
 use Intervention\Image\Facades\Image;
@@ -39,8 +40,8 @@ class Util
      */
     public function num_uf($input_number, $currency_details = null)
     {
-        $thousand_separator  = '';
-        $decimal_separator  = '';
+        $thousand_separator = '';
+        $decimal_separator = '';
 
         if (!empty($currency_details)) {
             $thousand_separator = $currency_details->thousand_separator;
@@ -53,9 +54,9 @@ class Util
         $num = str_replace($thousand_separator, '', $input_number);
         $num = str_replace($decimal_separator, '.', $num);
 
-        return (float)$num;
+        return (float) $num;
     }
-    
+
     public function getDays()
     {
         return [
@@ -68,62 +69,67 @@ class Util
             'saturday' => __('lang_v1.saturday'),
         ];
     }
-    
-    public function checkCheques($cheque_no, $bank_name){
+
+    public function checkCheques($cheque_no, $bank_name)
+    {
         $business_id = request()->session()->get('user.business_id');
         $cheque = DB::table('transaction_payments')
             ->where('business_id', '=', $business_id)
-            ->where('cheque_number',$cheque_no)
-            ->where('bank_name',$bank_name)
+            ->where('cheque_number', $cheque_no)
+            ->where('bank_name', $bank_name)
             ->whereNull('deleted_at')
             ->whereNull('deleted_by')
             ->count();
-        return $cheque; 
+        return $cheque;
     }
-    
-    public function get_reviewStatus($start_date,$end_date = "",$business_id = null,$is_petro = true){
-        
-        
+
+    public function get_reviewStatus($start_date, $end_date = "", $business_id = null, $is_petro = true)
+    {
+
+
         if (empty($business_id)) {
             $business_id = request()->session()->get('user.business_id');
         }
-        
-        if($is_petro){
-            
+
+        if ($is_petro) {
+
             $reviewed = DB::table('daily_report_review_status')
-            ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
-            ->select('daily_report_review_status.*', 'users.first_name')
-            ->where('daily_report_review_status.status','=',1)
-            ->whereDate('daily_report_review_status.reiew_date', '>=', date('Y-m-d',strtotime($start_date)))
-            ->where('daily_report_review_status.business_id', '=', $business_id)
-            ->first();
-            
+                ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
+                ->select('daily_report_review_status.*', 'users.first_name')
+                ->where('daily_report_review_status.status', '=', 1)
+                ->whereDate('daily_report_review_status.reiew_date', '>=', date('Y-m-d', strtotime($start_date)))
+                ->where('daily_report_review_status.business_id', '=', $business_id)
+                ->first();
+
         }
         return $reviewed;
     }
-    
-    public function get_review($start_date,$end_date = "",$business_id = null,$is_petro = true){
-        
-        if (auth()->user()->can('bypass.review')) { return []; }
-        
+
+    public function get_review($start_date, $end_date = "", $business_id = null, $is_petro = true)
+    {
+
+        if (auth()->user()->can('bypass.review')) {
+            return [];
+        }
+
         if (empty($business_id)) {
             $business_id = request()->session()->get('user.business_id');
         }
-        
-        if($is_petro){
-            
+
+        if ($is_petro) {
+
             $reviewed = DB::table('daily_report_review_status')
-            ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
-            ->select('daily_report_review_status.*', 'users.first_name')
-            ->where('daily_report_review_status.status','=',1)
-            ->whereDate('daily_report_review_status.reiew_date', '>=', date('Y-m-d',strtotime($start_date)))
-            ->where('daily_report_review_status.business_id', '=', $business_id)
-            ->first();
-            
+                ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
+                ->select('daily_report_review_status.*', 'users.first_name')
+                ->where('daily_report_review_status.status', '=', 1)
+                ->whereDate('daily_report_review_status.reiew_date', '>=', date('Y-m-d', strtotime($start_date)))
+                ->where('daily_report_review_status.business_id', '=', $business_id)
+                ->first();
+
         }
         return $reviewed;
     }
-    
+
     public function getDropdownForRoles($business_id)
     {
         $app_roles = Role::where('business_id', $business_id)
@@ -136,91 +142,93 @@ class Util
 
         return $roles;
     }
-    
-    public function hasReviewed($date){
-        
+
+    public function hasReviewed($date)
+    {
+
         // if (auth()->user()->can('bypass.review')) { return []; }
-        
-        
+
+
         $business_id = request()->session()->get('user.business_id');
         $subscription = Subscription::current_subscription($business_id);
-    	$pacakge_details = $subscription->package_details;
-    	
-    	
-    	if(!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1){
-    	    if(date('Y-m-d',strtotime($date)) > date('Y-m-d')){
+        $pacakge_details = $subscription->package_details;
+
+
+        if (!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1) {
+            if (date('Y-m-d', strtotime($date)) > date('Y-m-d')) {
                 $business_id = request()->session()->get('user.business_id');
-            
+
                 $reviewed = DB::table('daily_report_review_status')
                     ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
                     ->select('daily_report_review_status.*', 'users.first_name')
-                    ->where('daily_report_review_status.status','=',1)
+                    ->where('daily_report_review_status.status', '=', 1)
                     ->whereDate('daily_report_review_status.reiew_date', '=', date('Y-m-d'))
                     ->where('daily_report_review_status.business_id', '=', $business_id)
                     ->first();
-                if(empty($reviewed)){
-                   return ['can_proceed' => false] ;
-                }else{
+                if (empty($reviewed)) {
+                    return ['can_proceed' => false];
+                } else {
                     return [];
                 }
-                
-            }else{
+
+            } else {
                 return [];
             }
-    	}else{
-    	    return [];
-    	}
+        } else {
+            return [];
+        }
     }
-    
-    public function reviewChange($date,$data){
-        
+
+    public function reviewChange($date, $data)
+    {
+
         $business_id = request()->session()->get('user.business_id');
         $subscription = Subscription::current_subscription($business_id);
-    	$pacakge_details = $subscription->package_details;
-    	
-    	
-    	if(!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1){
-    	    
+        $pacakge_details = $subscription->package_details;
+
+
+        if (!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1) {
+
             $reviewed = DB::table('daily_report_review_status')
                 ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
                 ->select('daily_report_review_status.*', 'users.first_name')
-                ->where('daily_report_review_status.status','=',1)
-                ->whereDate('daily_report_review_status.reiew_date', '=', date('Y-m-d',strtotime($date)))
+                ->where('daily_report_review_status.status', '=', 1)
+                ->whereDate('daily_report_review_status.reiew_date', '=', date('Y-m-d', strtotime($date)))
                 ->where('daily_report_review_status.business_id', '=', $business_id)
                 ->first();
-            if(!empty($reviewed)){
-                
+            if (!empty($reviewed)) {
+
                 $changes = DB::table('reviewed_changes')
-                        ->where('business_id',$business_id)
-                        ->whereDate('date',date('Y-m-d',strtotime($date)))
-                        ->select('id')
-                        ->first();
-                if(!empty($changes)){
+                    ->where('business_id', $business_id)
+                    ->whereDate('date', date('Y-m-d', strtotime($date)))
+                    ->select('id')
+                    ->first();
+                if (!empty($changes)) {
                     $reviewID = $changes->id;
-                    
+
                     $data['review_id'] = $reviewID;
-                    
+
                     DB::table('reviewed_changes_description')->insert($data);
-    
-                    
-                }else{
-                    
+
+
+                } else {
+
                     $reviewID = DB::table('reviewed_changes')->insertGetId([
                         'business_id' => $business_id,
                         'date' => $date
                     ]);
-                    
+
                     $data['review_id'] = $reviewID;
-                    
-                   DB::table('reviewed_changes_description')->insert($data);
-    
-                    
+
+                    DB::table('reviewed_changes_description')->insert($data);
+
+
                 }
-                
+
             }
-    	}
-    	
-    	return true;
+        }
+
+        return true;
     }
 
     /**
@@ -238,9 +246,9 @@ class Util
         $thousand_separator = !empty($business_details) ? $business_details->thousand_separator : (session()->has('currency') ? session('currency')['thousand_separator'] : ',');
         $decimal_separator = !empty($business_details) ? $business_details->decimal_separator : (session()->has('currency') ? session('currency')['decimal_separator'] : '.');
 
-        $currency_precision =  !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
-        
-        
+        $currency_precision = !empty($business_details) && !empty($business_details->currency_precision) ? $business_details->currency_precision : config('constants.currency_precision', 2);
+
+
         if ($is_quantity) {
             $currency_precision = !empty($business_details) && !empty($business_details->quantity_precision) ? $business_details->quantity_precision : config('constants.quantity_precision', 2);
         }
@@ -257,7 +265,7 @@ class Util
                 $formatted = $symbol . ' ' . $formatted;
             }
         }
-        
+
         return $formatted;
     }
 
@@ -317,37 +325,37 @@ class Util
      *
      * @return array
      */
-    public function payment_types($location = null, $merge_cash_group_accounts = false, $add_credit_purchase = false, $add_credit_expense = false, $add_credit_sale = false, $is_company = false,$action = null)
+    public function payment_types($location = null, $merge_cash_group_accounts = false, $add_credit_purchase = false, $add_credit_expense = false, $add_credit_sale = false, $is_company = false, $action = null)
     {
         $business_id = request()->session()->get('user.business_id');
-        
-        
-        if(!empty($location) && $location != 'null'){
+
+
+        if (!empty($location) && $location != 'null') {
             $location = is_object($location) ? $location : BusinessLocation::find($location);
-        }else{
+        } else {
             $location = BusinessLocation::where('business_id', $business_id)->first();
         }
 
         $payment_types = [];
-        $payments = !empty($location) ? json_decode($location->default_payment_accounts,true) : [];
-        foreach($payments as $key => $value){
-            if(!empty($value['is_enabled']) && $value['is_enabled'] == 1){
-                
-                if(!empty($action) ){
-                    if(!empty($value[$action]) && $value[$action] == 1){
-                        $payment_types[$key] = ucfirst(str_replace("_"," ",$key));
+        $payments = !empty($location) ? json_decode($location->default_payment_accounts, true) : [];
+        foreach ($payments as $key => $value) {
+            if (!empty($value['is_enabled']) && $value['is_enabled'] == 1) {
+
+                if (!empty($action)) {
+                    if (!empty($value[$action]) && $value[$action] == 1) {
+                        $payment_types[$key] = ucfirst(str_replace("_", " ", $key));
                     }
-                    
-                }else{
-                    $payment_types[$key] = ucfirst(str_replace("_"," ",$key));
+
+                } else {
+                    $payment_types[$key] = ucfirst(str_replace("_", " ", $key));
                 }
-                
-                
+
+
             }
         }
-        
-        
-        
+
+
+
         if ($add_credit_sale) {
             $payment_types['credit_sale'] = __('lang_v1.credit_sale');
         }
@@ -357,31 +365,31 @@ class Util
         if ($add_credit_expense) {
             $payment_types['credit_expense'] = __('lang_v1.credit_expense');
         }
-        
+
         // $payment_types['cpc'] = "CPC";
 
         return $payment_types;
     }
-    
-    public function one_payment_type($type,$location = null)
+
+    public function one_payment_type($type, $location = null)
     {
         $business_id = request()->session()->get('user.business_id');
-        
-        if(!empty($location)){
+
+        if (!empty($location)) {
             $location = is_object($location) ? $location : BusinessLocation::find($location);
-        }else{
+        } else {
             $location = BusinessLocation::where('business_id', $business_id)->first();
         }
-        
-        $payments = json_decode($location->default_payment_accounts,true);
-        
+
+        $payments = json_decode($location->default_payment_accounts, true);
+
         return $payments[$type]['account'];
     }
-    
+
     function array_merge_recursive_distinct(array &$array1, array &$array2)
     {
         $merged = $array1;
-    
+
         foreach ($array2 as $key => &$value) {
             if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
                 $merged[$key] = array_merge_recursive_distinct($merged[$key], $value);
@@ -389,7 +397,7 @@ class Util
                 $merged[$key] = $value;
             }
         }
-    
+
         return $merged;
     }
 
@@ -550,12 +558,9 @@ class Util
             return $ref->ref_count;
         } else {
             $business = Business::find($business_id);
-            if (!empty($business)) {
-                $starting_numbers = $business->ref_no_starting_number;
-                $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
-            } else {
-                $starting_number = 1;
-            }
+            $starting_numbers = (!empty($business) && !empty($business->ref_no_starting_number)) ? $business->ref_no_starting_number : [];
+
+            $starting_number = !empty($starting_numbers[$type]) ? $starting_numbers[$type] : 1;
 
             $new_ref = ReferenceCount::create([
                 'ref_type' => $type,
@@ -615,12 +620,13 @@ class Util
      *
      * @return int
      */
-    public function generateCustomPrefix($l = 2){
+    public function generateCustomPrefix($l = 2)
+    {
         $randomLetters = '';
         for ($i = 0; $i < $l; $i++) {
             $randomLetters .= chr(rand(65, 90)); // ASCII values for A-Z
         }
-        
+
         return $randomLetters;
     }
     public function generateReferenceNumber($type, $ref_count, $business_id = null, $default_prefix = null)
@@ -639,14 +645,14 @@ class Util
         if (!empty($default_prefix)) {
             $prefix = $default_prefix;
         }
-        
-        if(empty($prefix)){
+
+        if (empty($prefix)) {
             $prefix = $this->generateCustomPrefix();
         }
 
-        $ref_digits =  str_pad($ref_count, 4, 0, STR_PAD_LEFT);
+        $ref_digits = str_pad($ref_count, 4, 0, STR_PAD_LEFT);
 
-        if (!in_array($type, ['contacts', 'business_location', 'username', 'employee_no','route_no'])) {
+        if (!in_array($type, ['contacts', 'business_location', 'username', 'employee_no', 'route_no'])) {
             $ref_year = Carbon::now()->year;
             if ($type == 'contacts') {
             }
@@ -702,36 +708,37 @@ class Util
      * @param  array $data
      * @return void
      */
-    public function superadminSendSms($data){
-        $this->ultimateSMS($data,ltrim($data['mobile_number'], '+'),$data['sms_body']);
+    public function superadminSendSms($data)
+    {
+        $this->ultimateSMS($data, ltrim($data['mobile_number'], '+'), $data['sms_body']);
         return true;
     }
-    public function sendSms($data,$contact = null,$type = null)
+    public function sendSms($data, $contact = null, $type = null)
     {
         $business_id = request()->session()->get('business.id');
         $subscription = Subscription::current_subscription($business_id);
-        
-        if(!empty($subscription)){
-           
+
+        if (!empty($subscription)) {
+
             $permissions = $subscription->package_details;
-            if(!empty($permissions['notification_template_module']) && $permissions['notification_template_module'] == 1){
-               
+            if (!empty($permissions['notification_template_module']) && $permissions['notification_template_module'] == 1) {
+
                 $sms_settings = $data['sms_settings'];
-                
-                if(!empty($sms_settings['default_gateway'])){
-                    if($sms_settings['default_gateway'] == 'utlimate_sms'){
-                        $this->ultimateSMS($data,ltrim($data['mobile_number'], '+'),$data['sms_body']);
+
+                if (!empty($sms_settings['default_gateway'])) {
+                    if ($sms_settings['default_gateway'] == 'utlimate_sms') {
+                        $this->ultimateSMS($data, ltrim($data['mobile_number'], '+'), $data['sms_body']);
                         return true;
-                    }elseif($sms_settings['default_gateway'] == 'hutch_sms'){
-                        $this->hutchSendSMS($data,ltrim($data['mobile_number'], '+'),$data['sms_body']);
+                    } elseif ($sms_settings['default_gateway'] == 'hutch_sms') {
+                        $this->hutchSendSMS($data, ltrim($data['mobile_number'], '+'), $data['sms_body']);
                         return true;
-                    }else{
-                        
+                    } else {
+
                         $request_data = [
                             $sms_settings['send_to_param_name'] => ltrim($data['mobile_number'], '+'),
                             $sms_settings['msg_param_name'] => $data['sms_body'],
                         ];
-                
+
                         if (!empty($sms_settings['param_1'])) {
                             $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
                         }
@@ -762,9 +769,9 @@ class Util
                         if (!empty($sms_settings['param_10'])) {
                             $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
                         }
-                
+
                         $client = new Client();
-                
+
                         $headers = [];
                         if (!empty($sms_settings['header_1'])) {
                             $headers[$sms_settings['header_1']] = $sms_settings['header_val_1'];
@@ -775,72 +782,73 @@ class Util
                         if (!empty($sms_settings['header_3'])) {
                             $headers[$sms_settings['header_3']] = $sms_settings['header_val_3'];
                         }
-                
+
                         $options = [];
                         if (!empty($headers)) {
                             $options['headers'] = $headers;
                         }
-                
+
                         if (empty($sms_settings['url'])) {
                             return false;
                         }
-                        
+
                         logger($data['sms_body']);
-                
+
                         if ($sms_settings['request_method'] == 'get') {
                             // $response = $client->get($sms_settings['url'] . '?' . http_build_query($request_data), $options);
                             // logger($sms_settings['url'] . '?' . http_build_query($request_data));
                             // logger($response->getBody()->getContents());
                         } else {
                             $options['form_params'] = $request_data;
-                
+
                             $response = $client->post($sms_settings['url'], $options);
                         }
-                
+
                         return $response;
                     }
                 }
-                
-            }else{
+
+            } else {
                 logger("not permitted");
             }
         }
-        
+
         // send to the other numbers
-        
-        if(!empty($contact) && !empty($type)){
-            $notification_numbers = json_decode($contact->notification_contacts,true) ?? [];
-            
-            foreach($notification_numbers as $no){
+
+        if (!empty($contact) && !empty($type)) {
+            $notification_numbers = json_decode($contact->notification_contacts, true) ?? [];
+
+            foreach ($notification_numbers as $no) {
                 $p = $no['phone_number'];
                 $can_notify = $no['notifications'];
-                if(!empty($can_notify) && !empty($can_notify[$type]) && $can_notify[$type] == 1){
+                if (!empty($can_notify) && !empty($can_notify[$type]) && $can_notify[$type] == 1) {
                     $data['mobile_number'] = $p;
                     $this->sendSms($data);
                 }
             }
         }
-        
+
         return false;
-        
-        
+
+
     }
-    
-    public function ultimateSMS($data,$phone,$sms){
-        
-        if(!empty(env('UTLIMATE_SMS_SERVER')) && !empty($phone) && !empty($sms) && !empty($data['sms_settings']['ultimate_sender_id']) && !empty($data['sms_settings']['ultimate_token'])){
-            
+
+    public function ultimateSMS($data, $phone, $sms)
+    {
+
+        if (!empty(env('UTLIMATE_SMS_SERVER')) && !empty($phone) && !empty($sms) && !empty($data['sms_settings']['ultimate_sender_id']) && !empty($data['sms_settings']['ultimate_token'])) {
+
             $url = env('UTLIMATE_SMS_SERVER');
-            
+
             $sdata = array(
                 'recipient' => $phone,
                 'sender_id' => $data['sms_settings']['ultimate_sender_id'],
                 'type' => 'plain',
                 'message' => $sms
             );
-            
+
             $token = $data['sms_settings']['ultimate_token'];
-            
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -852,65 +860,67 @@ class Util
             ));
             $result = curl_exec($ch);
             curl_close($ch);
-            
-            if(empty($result)){
+
+            if (empty($result)) {
                 $error_message = error_get_last()['message'];
             }
-            
-        }else{
+
+        } else {
         }
 
     }
-    
-    public function hutchSendSMS($data,$phone,$sms){
-        if(!empty(env('HUTCH_SEND_SMS_LINK')) &&  !empty(env('HUTCH_AUTH_LINK')) && !empty(env('HUTCH_VERSION')) && !empty($data['sms_settings']['hutch_username']) && !empty($data['sms_settings']['hutch_password']) && !empty($data['sms_settings']['hutch_mask'])){
-            
+
+    public function hutchSendSMS($data, $phone, $sms)
+    {
+        if (!empty(env('HUTCH_SEND_SMS_LINK')) && !empty(env('HUTCH_AUTH_LINK')) && !empty(env('HUTCH_VERSION')) && !empty($data['sms_settings']['hutch_username']) && !empty($data['sms_settings']['hutch_password']) && !empty($data['sms_settings']['hutch_mask'])) {
+
             $url = env('HUTCH_SEND_SMS_LINK');
-            
+
             $sdata = array(
                 "campaignName" => "Demo",
                 "mask" => $data['sms_settings']['hutch_mask'],
                 "numbers" => $phone,
                 "content" => $sms
             );
-            
+
             $token = $this->hutchAuth($data);
-            
-            if(!empty($token)){
+
+            if (!empty($token)) {
                 logger($token);
-                
+
                 $curl = curl_init();
 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $url,
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 0,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => json_encode($sdata),
-                  CURLOPT_HTTPHEADER => array(
-                    'X-API-VERSION: v1',
-                    'Content-Type: application/json',
-                    'Authorization: Bearer '.$token,
-                  ),
+                    CURLOPT_URL => $url,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_MAXREDIRS => 10,
+                    CURLOPT_TIMEOUT => 0,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_POSTFIELDS => json_encode($sdata),
+                    CURLOPT_HTTPHEADER => array(
+                        'X-API-VERSION: v1',
+                        'Content-Type: application/json',
+                        'Authorization: Bearer ' . $token,
+                    ),
                 ));
-                
+
                 $response = curl_exec($curl);
-                
+
                 curl_close($curl);
             }
-            
+
         }
     }
-    
-    public function hutchAuth($data){
+
+    public function hutchAuth($data)
+    {
         $accessToken = null;
-        if(!empty(env('HUTCH_AUTH_LINK')) && !empty(env('HUTCH_VERSION')) && !empty($data['sms_settings']['hutch_username']) && !empty($data['sms_settings']['hutch_password'])){
+        if (!empty(env('HUTCH_AUTH_LINK')) && !empty(env('HUTCH_VERSION')) && !empty($data['sms_settings']['hutch_username']) && !empty($data['sms_settings']['hutch_password'])) {
             $curl = curl_init();
-            
+
             $sdata = array(
                 'username' => $data['sms_settings']['hutch_username'],
                 'password' => $data['sms_settings']['hutch_password'],
@@ -925,29 +935,29 @@ class Util
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS =>  json_encode($sdata),
+                CURLOPT_POSTFIELDS => json_encode($sdata),
                 CURLOPT_HTTPHEADER => array(
-                    'X-API-VERSION: '.env('HUTCH_VERSION'),
+                    'X-API-VERSION: ' . env('HUTCH_VERSION'),
                     'Content-Type: application/json',
                 ),
             ));
-            
+
             $response = curl_exec($curl);
             $status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE); // Get the HTTP status code
-            
+
             curl_close($curl);
-            
+
             if ($status_code === 200) {
                 $data = json_decode($response, true);
-                
+
                 if (isset($data['accessToken'])) {
                     $accessToken = $data['accessToken'];
-                    
-                } 
-            } 
+
+                }
+            }
 
         }
-        
+
         return $accessToken;
     }
 
@@ -1081,7 +1091,7 @@ class Util
     //                 throw new \Exception("Invalid image file");
     //             }
     //         }
-            
+
     //         if ($request->$file_name->getSize() <= config('constants.document_size_limit')) {
     //             $new_file_name = time() . '_' . $request->$file_name->getClientOriginalName();
 
@@ -1094,33 +1104,33 @@ class Util
 
     //     return $uploaded_file_name;
     // }
-    
-    
-    
+
+
+
     public function uploadFile($request, $file_name, $dir_name, $file_type = 'document')
     {
         // If app environment is demo, return null
         if (config('app.env') == 'demo') {
             return null;
         }
-    
+
         $uploaded_file_name = null;
         if ($request->hasFile($file_name) && $request->file($file_name)->isValid()) {
-    
+
             if (!file_exists('./public/uploads/' . $dir_name)) {
                 mkdir('./public/uploads/' . $dir_name, 0777, true);
             }
-    
+
             // Check if mime type is image
             if ($file_type == 'image' && strpos($request->$file_name->getClientMimeType(), 'image/') === false) {
                 throw new \Exception("Invalid image file");
             }
-    
+
             if ($request->$file_name->getSize() <= config('constants.document_size_limit')) {
                 $new_file_name = time() . '_' . $request->$file_name->getClientOriginalName();
-    
+
                 $uploaded_file_path = 'public/uploads/' . $dir_name . '/' . $new_file_name;
-    
+
                 if (strpos($request->$file_name->getClientMimeType(), 'image/') === true) {
                     // Convert the image to AVIF format
                     $img = Image::make($request->$file_name->getRealPath())->save($uploaded_file_path, null, function ($constraint) {
@@ -1130,11 +1140,11 @@ class Util
                     // Save the uploaded file without modification
                     $request->$file_name->move(public_path('uploads/' . $dir_name), $new_file_name);
                 }
-    
+
                 $uploaded_file_name = $new_file_name;
             }
         }
-    
+
         return $uploaded_file_name;
     }
 
@@ -1171,7 +1181,7 @@ class Util
      *
      * @return array
      */
-    public function replaceTags($business_id, $data, $transaction,$is_single_pmt = null)
+    public function replaceTags($business_id, $data, $transaction, $is_single_pmt = null)
     {
         // logger($data);
         if (!is_object($transaction)) {
@@ -1189,25 +1199,25 @@ class Util
 
                 $data[$key] = str_replace('{contact_name}', $contact_name, $data[$key]);
             }
-            
+
             // replace transaction date:
             if (strpos($value, '{transaction_date}') !== false) {
                 $transaction_date = $this->format_date($transaction->transaction_date);
-                $data[$key] = str_replace('{transaction_date}', $transaction_date,$data[$key]);
+                $data[$key] = str_replace('{transaction_date}', $transaction_date, $data[$key]);
             }
-            
+
             if (strpos($value, '{loan_date}') !== false) {
                 $transaction_date = $this->format_date($transaction->transaction_date);
-                $data[$key] = str_replace('{loan_date}', $transaction_date,$data[$key]);
+                $data[$key] = str_replace('{loan_date}', $transaction_date, $data[$key]);
             }
-            
+
             //Replace customer name
             if (strpos($value, '{customer_name}') !== false) {
                 $customer_name = $transaction->contact->name;
 
                 $data[$key] = str_replace('{customer_name}', $customer_name, $data[$key]);
             }
-            
+
             //Replace bank name
             if (strpos($value, '{bank_name}') !== false) {
                 $bank_name = $transaction->bank_name;
@@ -1221,63 +1231,63 @@ class Util
 
                 $data[$key] = str_replace('{invoice_number}', $invoice_number, $data[$key]);
             }
-            
+
             //Replace expense number
             if (strpos($value, '{expense_number}') !== false) {
                 $invoice_number = $transaction->ref_no;
 
                 $data[$key] = str_replace('{expense_number}', $invoice_number, $data[$key]);
             }
-            
+
             //Replace purchase ref number
             if (strpos($value, '{purchase_ref_number}') !== false) {
                 $invoice_number = $transaction->ref_no;
 
                 $data[$key] = str_replace('{purchase_ref_number}', $invoice_number, $data[$key]);
             }
-            
+
             //Replace total_amount
             if (strpos($value, '{total_amount}') !== false) {
                 $total_amount = $this->num_f($transaction->final_total, false);
                 $data[$key] = str_replace('{total_amount}', $total_amount, $data[$key]);
             }
-            
-            
+
+
             //Replace total_amount
             if (strpos($value, '{loan_amount}') !== false) {
                 $total_amount = $this->num_f($transaction->final_total, false);
                 $data[$key] = str_replace('{loan_amount}', $total_amount, $data[$key]);
             }
-            
+
 
             $total_paid = 0;
             foreach ($transaction->payment_lines as $payment) {
-                if(empty($is_single_pmt)){
-                    if ($payment->is_return != 1 ) {
+                if (empty($is_single_pmt)) {
+                    if ($payment->is_return != 1) {
                         $total_paid += $payment->amount;
                     }
                 }
-                
+
             }
-            
-            if(!empty($is_single_pmt)){
+
+            if (!empty($is_single_pmt)) {
                 $total_paid = $transaction->single_payment_amount;
             }
-            
+
             //Replace total_amount
             if (strpos($value, '{paid_amount}') !== false) {
                 $paid_amount = $this->num_f($total_paid, false);
 
                 $data[$key] = str_replace('{paid_amount}', $paid_amount, $data[$key]);
             }
-            
+
             // replace payment ref
             if (strpos($value, '{payment_ref_number}') !== false) {
                 $payment_ref_number = $transaction->payment_ref_number;
 
                 $data[$key] = str_replace('{payment_ref_number}', $payment_ref_number, $data[$key]);
             }
-            
+
             //Replace total_amount
             if (strpos($value, '{received_amount}') !== false) {
                 $paid_amount = $this->num_f($total_paid, false);
@@ -1292,7 +1302,7 @@ class Util
 
                 $data[$key] = str_replace('{due_amount}', $due_amount, $data[$key]);
             }
-            
+
             //Replace amount
             if (strpos($value, '{amount}') !== false) {
                 $due = $transaction->final_total;
@@ -1300,32 +1310,32 @@ class Util
 
                 $data[$key] = str_replace('{amount}', $due_amount, $data[$key]);
             }
-            
+
             //Replace due_amount
             if (strpos($value, '{cumulative_due_amount}') !== false) {
                 $contactUtil = new \App\Utils\ContactUtil();
-                
-                if($transaction->contact->type == 'customer'){
-                    $due = $contactUtil->getCustomerBalance($transaction->contact->id,$business_id,true);
-                }else{
-                    $due = $contactUtil->getSupplierBalance($transaction->contact->id,$business_id,true);
+
+                if ($transaction->contact->type == 'customer') {
+                    $due = $contactUtil->getCustomerBalance($transaction->contact->id, $business_id, true);
+                } else {
+                    $due = $contactUtil->getSupplierBalance($transaction->contact->id, $business_id, true);
                 }
-                
+
                 $due_amount = $this->num_f($due, false);
 
                 $data[$key] = str_replace('{cumulative_due_amount}', $due_amount, $data[$key]);
             }
-            
+
             if (strpos($value, '{outstanding_amount}') !== false) {
                 $contactUtil = new \App\Utils\ContactUtil();
-                
-                if($transaction->contact->type == 'customer'){
-                    $due = $contactUtil->getCustomerBalance($transaction->contact->id,$business_id,true);
-                }else{
-                    $due = $contactUtil->getSupplierBalance($transaction->contact->id,$business_id,true);
+
+                if ($transaction->contact->type == 'customer') {
+                    $due = $contactUtil->getCustomerBalance($transaction->contact->id, $business_id, true);
+                } else {
+                    $due = $contactUtil->getSupplierBalance($transaction->contact->id, $business_id, true);
                 }
-                
-                $due_amount = $this->num_f($due-$transaction->final_total, false);
+
+                $due_amount = $this->num_f($due - $transaction->final_total, false);
 
                 $data[$key] = str_replace('{outstanding_amount}', $due_amount, $data[$key]);
             }
@@ -1625,7 +1635,7 @@ class Util
         if (!empty($route_invoice_number->starting_number)) {
             $number = $route_invoice_number->starting_number;
         }
-        $number = $number +  $route_count;
+        $number = $number + $route_count;
 
         $invoice_number = $prefix . $number;
         return $invoice_number;

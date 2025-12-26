@@ -10,20 +10,20 @@ return [
     | The following language lines are used for Brand CRUD operations.
     |
     */
-    
+
     'stock_adjustment' => 'Stock Adjustment',
     'view_stock_adjustment' => 'View Stock Adjustment',
     'add_stock_adjustment' => 'Add Stock Adjustment',
     'edit_stock_adjustment' => 'Edit Stock Adjustment',
     'delete_stock_adjustment' => 'Delete Stock Adjustment',
-    
+
     'pos.edit_pos_tax' => 'Edit POS Tax',
     'pos.edit_total_tax' => 'Edit Total Tax',
     'pos.edit_discount' => 'Edit Disount',
     'pos.edit_shipping' => 'Edit Shipping',
     'pos' => 'POS',
-    
-    
+
+
     "crm.access" => "CRM",
     "crm.access_all_leads" => "Access All Leads",
     "crm.access_own_leads" => "Access Own Leads",
@@ -39,9 +39,9 @@ return [
     "crm.access_life_stage" => "Access life stage",
     "crm.add_proposal_template" => "Add proposal template",
     "crm.access_proposal" => "Access proposal",
-    "deposit.cash_deposit" => "Cash deposit",
-    "deposit.cheque_deposit" => "Cheque deposit",
-    "deposit.card_deposit" => "Card deposit",
+    "deposit.cash_deposit" => "cash deposite",
+    "deposit.cheque_deposit" => "cheque deposite",
+    "deposit.card_deposit" => "card deposite",
     "deposit.access" => "Deposit Module",
     "deposit.transfer" => "Transfer",
     "airline.view_setting" => "View setting",
@@ -68,11 +68,11 @@ return [
     "shipping.shipper_tracking_no.edit" => "Shipper Tracking No edit",
     "shipping.access" => "Shipping Module",
     'deposits_module' => 'Deposits Module',
-    
-    
+
+
     'edit_received_outstanding' => 'Edit received outstanding',
     'delete_received_outstanding' => 'Delete received outstanding',
-    
+
     'dipmanagement_edit' => 'Edit Dip',
     'restore' => 'Restore Backups',
     'upload' => 'Upload Backups',
@@ -89,15 +89,15 @@ return [
     'supplier' => 'Supplier',
     'customer' => 'Customer',
     'purchase' => 'Purchase',
-    'report' =>'Report',
+    'report' => 'Report',
 
     'user.view' => 'View user',
     'user.create' => 'Add user',
     'user.update' => 'Edit user',
     'user.delete' => 'Delete user',
-    
 
-          'journal' => 'Journal',
+
+    'journal' => 'Journal',
     'journal.view' => 'View journal',
     'journal.create' => 'Add journal',
     'journal.update' => 'Edit journal',
@@ -117,7 +117,7 @@ return [
     'product.create' => 'Add product',
     'product.update' => 'Edit product',
     'product.delete' => 'Delete product',
-    
+
     'purchase.view' => 'View purchase',
     'purchase.create' => 'Add purchase',
     'purchase.update' => 'Edit purchase',
@@ -127,7 +127,7 @@ return [
     'product.create' => 'Add product',
     'product.update' => 'Edit product',
     'product.delete' => 'Delete product',
-    
+
     'expense' => 'Expense',
     'expense.create' => 'Add Expense',
     'expense.update' => 'Edit Expense',
@@ -175,22 +175,22 @@ return [
     'tax_rate' => 'Tax rate',
     'unit' => 'Unit',
     'expense.access' => 'Access expenses',
-    'access_locations' =>'Access locations',
+    'access_locations' => 'Access locations',
     'all_locations' => 'All Locations',
     'dashboard' => 'Home',
     'dashboard.data' => 'View Home data',
     'profit_loss_report.view' => 'View profit/loss report',
-    
+
     'sell.view' => 'View Sell',
     'sell.create' => 'Create Sell',
     'sell.update' => 'Update Sell',
     'sell.delete' => 'Delete Sell',
-    
-    'crm.view'   => 'View CRM',
+
+    'crm.view' => 'View CRM',
     'crm.create' => 'Create CRM',
     'crm.update' => 'Update CRM',
     'crm.delete' => 'Delete CRM',
-    
+
     'backup' => 'Backup',
 
     'MPCS' => 'MPCS',
@@ -207,7 +207,7 @@ return [
     'edit_f17_form' => 'Edit F17 Form',
     'mpcs_form_settings' => 'MPCS Form Settings',
     'list_opening_values' => 'List Opening Values',
-    
+
     'unfinished_form' => 'Unfinished Form',
     'unfinished_form.purchase' => 'Add Purchase Form',
     'unfinished_form.sale' => 'Sale Return Form',
@@ -215,27 +215,27 @@ return [
     'unfinished_form.stock_adjustment' => 'Stock Adjustment Form',
     'unfinished_form.stock_transfer' => 'Stock Transfer Form',
     'unfinished_form.expense' => 'Add Expense Form',
-    
+
     'petro' => 'Petro',
     'fuel_tank.edit' => 'Fuel Tank Edit',
     'meter_resetting_tab' => 'Meter Resetting Tab',
     'add_dip_resetting' => 'Add Dip Resetting',
-    
+
     'issue_customer_bill' => 'Issue Customer Bill',
     'issue_customer_bill.access' => 'Access',
     'issue_customer_bill.add' => 'Add',
     'issue_customer_bill.view' => 'View',
-    
+
     'tasks_management' => 'Task Management',
     'tasks_management.access' => 'Task Management Access',
     'tasks_management.tasks' => 'Tasks',
 
-    
+
     'member_registration' => 'Member Registration',
     'member_registration.access' => 'Member Registration Access',
     'update_status_of_issue' => 'Update status of issue',
     'add_remarks' => 'Add Remarks',
-    
+
     'leads' => 'Leads',
     'leads.create' => 'Add Leads',
     'leads.edit' => 'Edit Leads',
@@ -244,15 +244,15 @@ return [
     'leads.import' => 'Import Leads',
     'leads.settings' => 'Settings',
     'day_count' => 'Day Count',
-    
+
     'sms' => 'SMS',
     'sms.access' => 'Access SMS',
     'sms.list' => 'List SMS',
-    
+
     'customer_settings' => 'Customer Settings',
     'customer_settings.access' => 'Customer Settings Access',
     'approve_sell_over_limit' => 'Approve Sell Over Limit',
-    
+
     'product_reports' => 'Product Reports',
     'stock_adjustment_report.view' => 'Stock Adjustment Report',
     'item_report.view' => 'Items Report',
@@ -349,8 +349,8 @@ return [
     'property.update_commission_status' => 'Edit Commission',
     'airline_module' => 'Airline Module',
     'fleet_module' => "Fleet Module",
-    
-    
+
+
     'airline_edit_invoice' => 'Airline Edit Invoice',
     'fleet.fuel_management' => 'Fuel Management',
     'fleet.edit_fuel_type' => 'Edit Fuel Type',
@@ -368,4 +368,3 @@ return [
     'hr.notice_board' => 'Notice Board',
     'hr.settings' => 'Settings'
 ];
- 
