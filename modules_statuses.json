@@ -6,5 +6,6 @@
     "Products": true,
     "Sales": true,
     "Accounting": true,
-    "Crm": true
+    "Crm": true,
+    "Logistics": true
 }

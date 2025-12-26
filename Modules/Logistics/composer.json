@@ -1,0 +1,12 @@
+{
+    "name": "modules/logistics",
+    "description": "",
+    "authors": [],
+    "autoload": {
+        "psr-4": {
+            "Modules\\Logistics\\": "app/",
+            "Modules\\Logistics\\Database\\Factories\\": "database/factories/",
+            "Modules\\Logistics\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}
