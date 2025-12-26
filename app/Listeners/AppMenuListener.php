@@ -146,6 +146,20 @@ class AppMenuListener
             );
         }
 
+        // Purchase
+        if(auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
+            $activeClass = route_is(["taxes.*","expenses.*","estimates.*","invoices.*"]) ? "active" : "";
+            $menu->submenu(
+                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
+                Menu::new()
+                    ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : ''))
+                    ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : ''))
+                    ->addIfCan('view-estimates', Link::toRoute('purchase.bulk_import', __('Bulk Purchase'))->addClass(route_is(['purchase.bulk_import']) ? 'active' : ''))
+                    ->addIfCan('view-invoices', Link::toRoute('purchase-return.index', __('Purchase Returns'))->addClass(route_is(['purchase-return.*']) ? 'active' : ''),)
+                    ->addParentClass('submenu')
+            );
+        }
+
         // Sales
         if (auth()->user()->canAny(['view-taxes', 'view-expenses', 'view-estimates', 'view-invoices'])) {
             $activeClass = route_is(["taxes.*", "expenses.*", "estimates.*", "invoices.*"]) ? "active" : "";
@@ -277,8 +291,6 @@ class AppMenuListener
                     // Budget-related items (permission-gated)
                     ->addIfCan('view-budgetCategories', Link::toRoute('budget.categories.index', __('Categories'))
                         ->addClass(route_is(['budget.categories.*']) ? 'active' : ''))
-
-
                     ->addParentClass('submenu')
             );
         }

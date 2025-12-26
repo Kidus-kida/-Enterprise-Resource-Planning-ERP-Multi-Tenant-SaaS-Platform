@@ -3,12 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
+//use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class Currency extends Model
 {
-    use LogsActivity;
+    //use LogsActivity;
 
     protected static $logAttributes = ['*'];
 

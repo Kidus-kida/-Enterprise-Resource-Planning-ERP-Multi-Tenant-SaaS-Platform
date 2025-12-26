@@ -22,8 +22,7 @@ use App\PurchaseLine;
 use Modules\Contacts\Models\Transaction;
 use App\Restaurant\ResTable;
 use App\TaxRate;
-
-use App\TransactionPayment;
+use Modules\Contacts\Models\TransactionPayment;
 use App\TransactionSellLine;
 use App\TransactionSellLinesPurchaseLines;
 use App\Variation;
@@ -5007,7 +5006,7 @@ class TransactionUtil extends Util
             'symbol' => '',
         ];
         //Check if diff currency is used or not.
-        if ($business->purchase_in_diff_currency == 1) {
+        if ( $business->purchase_in_diff_currency == 1 ) {
             $output['purchase_in_diff_currency'] = true;
             $output['p_exchange_rate'] = $business->p_exchange_rate;
             $currency_id = $business->purchase_currency_id;

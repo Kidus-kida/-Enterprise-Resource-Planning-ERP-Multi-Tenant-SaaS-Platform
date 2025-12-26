@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Contacts\Http\Controllers\ContactsController;
+// use Modules\Contacts\Http\Controllers\ContactsController;
 
 /*
  *--------------------------------------------------------------------------
