@@ -309,6 +309,12 @@
 @endsection
 
 @push('page-scripts')
+    {{-- Include jQuery if not already loaded --}}
+    @if (!isset($jquery_loaded))
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        @php $jquery_loaded = true; @endphp
+    @endif
+
     <script>
         $(document).ready(function() {
             let row_count = 0;
@@ -326,14 +332,16 @@
             });
 
             // ===== STORE DROPDOWN AJAX (Location → Store) =====
-            $('#location_id').on('change', function() {
+            const locationSelect = $('#location_id');
+            const storeSelect = $('#store_id');
+
+            locationSelect.on('change', function() {
                 const locationId = $(this).val();
-                const storeSelect = $('#store_id');
                 storeSelect.empty().prop('disabled', true).append('<option>Loading...</option>');
 
                 if (locationId) {
                     $.ajax({
-                        url: "{{ route('purchase.stores.by.location', ['locationId' => '__ID__']) }}".replace('__ID__', locationId),
+                        url: "{{ route('sales.stores.by.location', ['locationId' => '__ID__']) }}".replace('__ID__', locationId),
                         type: 'GET',
                         dataType: 'json',
                         success: function(data) {
@@ -355,6 +363,14 @@
                 }
             });
 
+            storeSelect.on('change', function() {
+                if ($(this).val()) {
+                    $('#product-filter').prop('disabled', false).focus();
+                } else {
+                    $('#product-filter').prop('disabled', true);
+                }
+            });
+
             // ===== PRODUCT SEARCH =====
             let debounceTimeout;
             $('#product-filter').on('input', function() {
@@ -369,15 +385,25 @@
                     $.ajax({
                         url: "{{ route('sales.get_products') }}",
                         method: 'GET',
-                        data: { term: term },
+                        data: { 
+                            term: term,
+                            location_id: $('#location_id').val(),
+                            store_id: $('#store_id').val()
+                        },
                         success: function(data) {
                             let resultsHtml = '';
                             if (data.length > 0) {
                                 data.forEach(item => {
                                     resultsHtml += `<div class="product-item" data-product-id="${item.product_id}" data-variation-id="${item.variation_id}">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span>${item.text}</span>
-                                            <span class="badge bg-soft-primary text-primary px-2">${item.sub_sku || ''}</span>
+                                            <div>
+                                                <strong>${item.text}</strong><br>
+                                                <small class="text-muted">${item.sub_sku || ''}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-soft-primary text-primary px-2">Price: ${parseFloat(item.selling_price).toFixed(2)}</span><br>
+                                                <small class="text-muted">Stock: ${parseFloat(item.current_stock).toFixed(2)} ${item.unit || ''}</small>
+                                            </div>
                                         </div>
                                     </div>`;
                                 });
@@ -421,6 +447,7 @@
                         variation_id: variationId,
                         row_count: row_count,
                         location_id: $('#location_id').val(),
+                        store_id: $('#store_id').val(),
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(html) {
@@ -533,6 +560,25 @@
                 $(this).closest('.payment_row').next('hr').remove();
                 $(this).closest('.payment_row').remove();
                 calculatePaymentDue();
+            });
+
+            $(document).on('change', '.payment_method', function() {
+                const method = $(this).val();
+                const row = $(this).closest('.payment_row');
+                const methodFields = row.find('.method_fields');
+                
+                row.find('.cheque_fields, .card_fields').addClass('hide').hide();
+                methodFields.addClass('hide').hide();
+
+                if (method === 'cheque') {
+                    methodFields.removeClass('hide').show();
+                    row.find('.cheque_fields').removeClass('hide').show();
+                } else if (method === 'card') {
+                    methodFields.removeClass('hide').show();
+                    row.find('.card_fields').removeClass('hide').show();
+                } else if (method === 'credit_sale') {
+                    row.find('.payment_amount').val(0).trigger('change');
+                }
             });
 
             $(document).on('input change', '.payment_amount', function() {

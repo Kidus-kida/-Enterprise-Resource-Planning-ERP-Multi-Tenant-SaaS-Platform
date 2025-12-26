@@ -338,6 +338,7 @@ class ProductUtil extends Util
                 'VLD.qty_available',
                 'variations.sell_price_inc_tax as selling_price',
                 'variations.sub_sku',
+                'variations.sub_sku as sku',
                 'U.short_name as unit'
             );
 
@@ -723,6 +724,10 @@ class ProductUtil extends Util
             $query->where('products.brand_id',$brand_id);
         }
 
+        if (request()->has('category_id') && request()->get('category_id') != 'all') {
+            $query->where('products.category_id', request()->get('category_id'));
+        }
+
         if (! empty($location_id)) {
             $query->ForLocation($location_id);
         }
@@ -735,8 +740,10 @@ class ProductUtil extends Util
                 'variations.id as variation_id',
                 'variations.name as variation',
                 'VSD.qty_available',
+                'VSD.qty_available as current_stock',
                 'variations.sell_price_inc_tax as selling_price',
                 'variations.sub_sku',
+                'variations.sub_sku as sku',
                 'U.short_name as unit'
             );
 

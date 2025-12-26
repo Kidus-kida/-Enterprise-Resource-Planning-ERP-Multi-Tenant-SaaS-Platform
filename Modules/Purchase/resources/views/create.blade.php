@@ -518,35 +518,35 @@
         });
     </script>
     <script>
-    $(document).ready(function() {
-        const supplierSelect = $('#supplierSelect');
-        const productFilter = $('#product-filter');
-        const addButton = productFilter.closest('.product-search-input-group').find('button');
-        const productTableBody = $('#product-table-body');
+        $(document).ready(function() {
+            const supplierSelect = $('#supplierSelect');
+            const productFilter = $('#product-filter');
+            const addButton = productFilter.closest('.product-search-input-group').find('button');
+            const productTableBody = $('#product-table-body');
 
-        supplierSelect.on('change', function() {
-            const hasSupplier = !!$(this).val();
+            supplierSelect.on('change', function() {
+                const hasSupplier = !!$(this).val();
 
-            // Enable/disable product search and add button
-            productFilter.prop('disabled', !hasSupplier);
-            addButton.prop('disabled', !hasSupplier);
-            productFilter.attr('placeholder', hasSupplier 
-                ? 'Search product by name or code' 
-                : 'Select a supplier first...'
-            );
+                // Enable/disable product search and add button
+                productFilter.prop('disabled', !hasSupplier);
+                addButton.prop('disabled', !hasSupplier);
+                productFilter.attr('placeholder', hasSupplier 
+                    ? 'Search product by name or code' 
+                    : 'Select a supplier first...'
+                );
 
-            // Clear product table when supplier changes (only if a supplier is selected)
-            if (hasSupplier) {
-                productTableBody.empty().append(`
-                    <tr id="no-items-row">
-                        <td colspan="14" class="text-center py-4 text-muted">
-                            <i class="fas fa-box-open fa-2x mb-2"></i><br>
-                            {{ __('No items added yet. Search and select products above to add them.') }}
-                        </td>
-                    </tr>
-                `);
-            }
+                // Clear product table when supplier changes (only if a supplier is selected)
+                if (hasSupplier) {
+                    productTableBody.empty().append(`
+                        <tr id="no-items-row">
+                            <td colspan="14" class="text-center py-4 text-muted">
+                                <i class="fas fa-box-open fa-2x mb-2"></i><br>
+                                {{ __('No items added yet. Search and select products above to add them.') }}
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
         });
-    });
     </script>
 @endpush

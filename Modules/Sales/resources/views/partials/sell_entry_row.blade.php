@@ -16,6 +16,9 @@
         <input type="hidden" name="sales[{{ $row_count }}][row_count]" value="{{ $row_count }}">
         <input type="hidden" name="sales[{{ $row_count }}][product_unit_id]" value="{{ $product->unit->id }}">
         <input type="hidden" name="sales[{{ $row_count }}][line_discount_type]" value="percentage">
+        <input type="hidden" name="sales[{{ $row_count }}][enable_stock]" value="{{ $product->enable_stock }}">
+        <input type="hidden" name="sales[{{ $row_count }}][product_type]" value="{{ $product->type }}">
+        <input type="hidden" name="sales[{{ $row_count }}][base_unit_multiplier]" value="1">
         
         {{-- Fields needed by TransactionUtil::createOrUpdateSellLines --}}
         <input type="hidden" name="sales[{{ $row_count }}][unit_price_inc_tax]" class="sell_line_unit_price_inc_tax" value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
