@@ -1,6 +1,7 @@
 <?php
 
 namespace Modules\Products\Http\Controllers;
+use Carbon\Carbon;
 
 use App\Brands;
 use App\Business;
@@ -2493,7 +2494,7 @@ class ProductController extends Controller
                 $user_id = $request->session()->get('user.id');
 
                 $transaction_date = $request->session()->get('financial_year.start');
-                $transaction_date = \Carbon::createFromFormat('Y-m-d', $transaction_date)->toDateTimeString();
+                $transaction_date = Carbon::createFromFormat('Y-m-d', $transaction_date)->toDateTimeString();
 
                 $this->productUtil->addSingleProductOpeningStock($business_id, $product, $request->input('opening_stock'), $transaction_date, $user_id);
             }
@@ -3415,7 +3416,7 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $filename = 'products-export-' . \Carbon::now()->format('Y-m-d') . '.xlsx';
+        $filename = 'products-export-' . Carbon::now()->format('Y-m-d') . '.xlsx';
 
         return Excel::download(new ProductsExport, $filename);
     }

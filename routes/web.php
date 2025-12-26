@@ -32,6 +32,11 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\AwardController;
 use App\Http\Controllers\Admin\EvaluationController;
 use App\Http\Controllers\TaxCalculationController;
+use App\Http\Controllers\DepositsController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\StockTransferRequestController;
+use Illuminate\Support\Facades\Auth;
+
 
 include __DIR__ . '/auth.php';
 
@@ -41,13 +46,13 @@ Route::middleware(['auth'])->group(function () {
     // files route 
 
 
-Route::group(['middleware' => 'signed'], function() {
-    Route::get('files/create', [FileController::class, 'create'])->name('files.create');
-    Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');
-    Route::get('files/{file}/view', [FileController::class, 'view'])->name('files.view');
-    Route::get('files/{folder}', [FileController::class, 'show'])->name('files.show'); 
-    Route::delete('files/{folder}', [FileController::class, 'show'])->name('files.destroy'); 
-});
+    Route::group(['middleware' => 'signed'], function () {
+        Route::get('files/create', [FileController::class, 'create'])->name('files.create');
+        Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');
+        Route::get('files/{file}/view', [FileController::class, 'view'])->name('files.view');
+        Route::get('files/{folder}', [FileController::class, 'show'])->name('files.show');
+        Route::delete('files/{folder}', [FileController::class, 'show'])->name('files.destroy');
+    });
 
 
     //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
@@ -88,7 +93,7 @@ Route::group(['middleware' => 'signed'], function() {
     Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
     Route::group(['prefix' => 'payroll'], function () {
         Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
-        
+
         // Payroll Processing
         Route::get('processing', [\App\Http\Controllers\PayrollProcessingController::class, 'index'])->name('payroll.processing.index');
         Route::get('processing/create', [\App\Http\Controllers\PayrollProcessingController::class, 'create'])->name('payroll.processing.create');
@@ -97,7 +102,7 @@ Route::group(['middleware' => 'signed'], function() {
         Route::get('processing/{batch}', [\App\Http\Controllers\PayrollProcessingController::class, 'show'])->name('payroll.processing.show');
         Route::get('processing/{batch}/export', [\App\Http\Controllers\PayrollProcessingController::class, 'export'])->name('payroll.processing.export');
         Route::post('processing/{batch}/approve', [\App\Http\Controllers\PayrollProcessingController::class, 'approve'])->name('payroll.processing.approve');
-        
+
         Route::resource('allowances', AllowancesController::class)->except(['show']);
         Route::post('allowances/update-or-create', [AllowancesController::class, 'updateOrCreate'])->name('allowances.updateOrCreate');
         Route::delete('allowances/delete-by-employee', [AllowancesController::class, 'deleteByEmployeeAndName'])->name('allowances.deleteByEmployee');
@@ -164,12 +169,12 @@ Route::group(['middleware' => 'signed'], function() {
     });
 
     // tax calculation
-  Route::prefix('payroll')->group(function () {
+    Route::prefix('payroll')->group(function () {
 
-    Route::resource('tax', TaxCalculationController::class)
-        ->names('payroll.tax');
+        Route::resource('tax', TaxCalculationController::class)
+            ->names('payroll.tax');
 
-});
+    });
 
 
     // Accounting Module
@@ -183,4 +188,85 @@ Route::group(['middleware' => 'signed'], function() {
 
     // awards
     Route::resource('awards', AwardController::class);
+});
+
+Route::group(['prefix' => 'deposits-module', 'middleware' => ['auth']], function () {
+    Route::get('/check-insufficient-balance-for-accounts', [DepositsController::class, 'getAccsForWhichToCheckInsufficientBalances']);// @eng 15/2
+
+    Route::get('/get-account-dp', [DepositsController::class, 'getBankAccountDropDown']);
+
+    Route::get('/get-account-group-name-dp', [DepositsController::class, 'getBankAccountByGroupDP']);
+
+    Route::get('/get-account-by-group-id/{group_id}', [DepositsController::class, 'getAccountByGroupId']);
+
+    Route::get('/get-account-group-by-account/{type_id}', [DepositsController::class, 'getAccountGroupByAccount']);
+
+    Route::get('/get-parent-account-by-type/{type_id}', [DepositsController::class, 'getParentAccountsByType']);
+
+    Route::get('/account/image-modal', [DepositsController::class, 'imageModal']);
+
+    Route::resource('/deposits', DepositsController::class);
+    Route::get('/check_account_names', [DepositsController::class, 'checkAccountNames']);
+    Route::get('/check_account_number', [DepositsController::class, 'checkAccountNumber']);
+    Route::post('/account_details', [DepositsController::class, 'account_details']);
+
+    Route::get('/fund-transfer', [DepositsController::class, 'getFundTransfer'])->name('deposits.getFundTransfer');
+
+    Route::get('/account-number/{id}', [DepositsController::class, 'getAccNo']);
+
+    Route::post('/fund-transfer', [DepositsController::class, 'postFundTransfer'])->name('deposits.postFundTransfer');
+
+    Route::get('/cheque-list', [DepositsController::class, 'getChequeList'])->name('deposits.getChequeList');
+
+    Route::post('/cheque-deposit', [DepositsController::class, 'postChequeDeposit'])->name('deposits.postChequeDeposit');
+
+    Route::get('/cheque-deposit', [DepositsController::class, 'getChequeDeposit'])->name('deposits.getChequeDeposit');
+
+    Route::get('/realize-cheque-deposit', [DepositsController::class, 'getRealizeChequeDeposit'])->name('deposits.getRealizeChequeDeposit');
+    Route::get('/realize-cheque-list', [DepositsController::class, 'getRealizeChequeList'])->name('deposits.getRealizeChequeList');
+    Route::post('/realize-cheque-deposit', [DepositsController::class, 'postRealizeChequeDeposit'])->name('deposits.postRealizeChequeDeposit');
+
+    Route::get('/deposit/{id}', [DepositsController::class, 'getDeposit'])->name('deposits.getDeposit');
+
+    Route::post('/deposit', [DepositsController::class, 'postDeposit'])->name('deposits.postDeposit');
+
+    Route::get('/get-account-balance/{id}', [DepositsController::class, 'getAccountBalance']);
+
+    Route::get('/list-deposit-transfer', [DepositsController::class, 'listDepositTransfer']);
+
+    Route::get('/cheques-ob-details', [DepositsController::class, 'chequeObTransfer']);
+
+    Route::get('/edit-deposit-transfer/{id}', [DepositsController::class, 'editDepositTransfer']);
+
+    Route::post('/update-deposit-transfer/{id}', [DepositsController::class, 'updateDepositTransfer']);
+    Route::get('/cash-flow', [DepositsController::class, 'cashFlow']);
+    Route::get('/notes/{id}', [DepositsController::class, 'getNotes']);
+    Route::get('/disabled-account', [DepositsController::class, 'disabledAccount']);
+    Route::get('/reconcile/{id}', [DepositsController::class, 'reconcile']);
+    Route::post('/disabled-status/{id}', [DepositsController::class, 'disabledStatus']);
+    Route::post('/close/{id}', [DepositsController::class, 'close']);
+    Route::delete('/account-transaction/{id}', [DepositsController::class, 'destroyAccountTransaction']);
+});
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::resource('stock-transfers', StockTransferController::class);
+    Route::get('stock-transfers/print/{id}', [StockTransferController::class, 'printInvoice'])->name('stock-transfers.print');
+    Route::get('/stock-transfer/get_transfer_location/{id}', [StockTransferController::class, 'getBusinessLocationExcept']);
+    Route::get('/stock-transfer/get_transfer_store_id/{id}', [StockTransferController::class, 'getBusinessLocationStoreId']);
+    Route::get('/store-list', [StockTransferController::class, 'getBusinessLocationStoreId']);
+
+    Route::resource('stock-transfers-request', StockTransferRequestController::class);
+    Route::post('stock-transfers-request/save-transfer', [StockTransferRequestController::class, 'saveTransfer'])->name('stock-transfer.savetransfer');
+    Route::get('stock-transfers-request/create-transfer/{id}', [StockTransferRequestController::class, 'createTransfer'])->name('stock-transfers-request.createTransfer');
+    Route::get('stock-transfers-request/get-product-balance', [StockTransferRequestController::class, 'getProductBalance']);
+
+    Route::get('stock-transfers-request/received-transfer/{id}', [StockTransferRequestController::class, 'getReceivedTrasnfer'])->name('stock-transfers-request.getReceivedTrasnfer');
+    Route::post('stock-transfers-request/received-transfer/{id}', [StockTransferRequestController::class, 'postReceivedTransfer'])->name('stock-transfers-request.postReceivedTransfer');
+    Route::get('shippment', [StockTransferRequestController::class, 'shippment'])->name('stock-transfers-request.shippment');
+    Route::post('addshipment', [StockTransferRequestController::class, 'addshipment'])->name('stock-transfers-request.addshipment');
+    Route::get('shippment-detail/{id}', [StockTransferRequestController::class, 'showShipmentDetail'])->name('stock-transfers-request.showShipmentDetail');
+    Route::get('edit-shipping/{id}', [StockTransferRequestController::class, 'editShipping'])->name('stock-transfers-request.editShipping');
+    Route::match(['put', 'post'], 'update-shipping/{id}', [StockTransferRequestController::class, 'updateShipping'])->name('stock-transfers-request.updateShipping');
+    Route::delete('destroy-shipping/{id}', [StockTransferRequestController::class, 'destroyShipping'])->name('stock-transfers-request.destroyShipping');
+    Route::get('shippment-list', [StockTransferRequestController::class, 'shippment_list'])->name('stock-transfers-request.shippment_list');
 });

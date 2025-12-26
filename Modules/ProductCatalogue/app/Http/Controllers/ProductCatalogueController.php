@@ -70,7 +70,7 @@ class ProductCatalogueController extends Controller
             }
             $products = $query->get();
 
-            $now = \Carbon::now()->toDateTimeString();
+            $now = Carbon::now()->toDateTimeString();
             $discounts = Discount::where('business_id', $business_id)
                 ->where('location_id', $location_id)
                 ->where('is_active', 1)

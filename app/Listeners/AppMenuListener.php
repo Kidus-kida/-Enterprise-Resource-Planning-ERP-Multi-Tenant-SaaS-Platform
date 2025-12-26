@@ -118,7 +118,7 @@ class AppMenuListener
 
         // ==================== BUSINESS ====================
         $menu->html('<span>Business</span>', ['class' => 'menu-title']);
-        
+
         // Projects
         if (auth()->user()->canAny(['view-projects', 'view-taskboards'])) {
             $activeClass = route_is(["projects.*", "task-boards.*"]) ? "active" : "";
@@ -174,15 +174,39 @@ class AppMenuListener
             );
         }
 
+
+        // Deposits
+        if (auth()->user()->can('deposits_module')) {
+            $menu->add(
+                Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('Deposits') . '</span>')
+                    ->addClass(route_is(['deposits.*']) ? 'active' : '')
+            );
+        }
+
+        // Stock Transfers
+        if (auth()->user()->canAny(['purchase.view', 'purchase.create'])) {
+            $stockTransferActive = route_is(['stock-transfers.*', 'stock-transfers-request.*']);
+            $menu->submenu(
+                Html::raw('<a href="#" class="' . ($stockTransferActive ? 'active' : '') . '"><i class="la la-exchange"></i><span>' . __("Stock Transfers") . '</span><span class="menu-arrow"></span></a>'),
+                Menu::new()
+                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers.index', __('All Stock Transfers'))->addClass(route_is(['stock-transfers.index']) ? 'active' : ''))
+                    ->addIfCan('purchase.create', Link::toRoute('stock-transfers.create', __('Add Stock Transfer'))->addClass(route_is(['stock-transfers.create']) ? 'active' : ''))
+                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers-request.index', __('Stock Transfer Requests'))->addClass(route_is(['stock-transfers-request.index']) ? 'active' : ''))
+                    ->addParentClass('submenu')
+            );
+        }
+
         // Accounting
-        if (auth()->user()->canAny([
-            'view-budgetCategories',
-            'view-budgets',
-            'view-budgetExpenses',
-            'view-budgetRevenues',
-            // Add any other permission that should grant access to the full Accounting menu
-            // e.g., 'view-accounts', 'view-journals', etc., if needed
-        ])) {
+        if (
+            auth()->user()->canAny([
+                'view-budgetCategories',
+                'view-budgets',
+                'view-budgetExpenses',
+                'view-budgetRevenues',
+                // Add any other permission that should grant access to the full Accounting menu
+                // e.g., 'view-accounts', 'view-journals', etc., if needed
+            ])
+        ) {
             // Determine if any accounting-related route is active — broader match
             $isAccountingActive = route_is([
                 'budget.categories.*',

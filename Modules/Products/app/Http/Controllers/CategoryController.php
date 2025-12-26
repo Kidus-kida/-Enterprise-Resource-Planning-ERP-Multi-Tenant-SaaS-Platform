@@ -11,7 +11,7 @@ use Modules\Contacts\Models\Transaction;
 use App\Utils\BusinessUtil;
 use App\Utils\ModuleUtil;
 use App\Http\Controllers\Controller;
-// use CreateCategoriesTable; // Likely a migration class, not needed in controller?
+// use CreateCategoriesTable; // Likely a migration class, not needed in controller?   
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;

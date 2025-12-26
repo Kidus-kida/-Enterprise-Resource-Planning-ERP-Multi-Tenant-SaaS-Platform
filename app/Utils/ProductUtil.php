@@ -1,6 +1,7 @@
 <?php
 namespace App\Utils;
 use App\Business;
+use Carbon\Carbon;
 use App\BusinessLocation;
 use App\Category;
 use App\Discount;
@@ -1620,8 +1621,8 @@ class ProductUtil extends Util
                     'rack' => !empty($detail['rack']) ? $detail['rack'] : null,
                     'row' => !empty($detail['row']) ? $detail['row'] : null,
                     'position' => !empty($detail['position']) ? $detail['position'] : null,
-                    'created_at' => \Carbon::now()->toDateTimeString(),
-                    'updated_at' => \Carbon::now()->toDateTimeString()
+                    'created_at' => Carbon::now()->toDateTimeString(),
+                    'updated_at' => Carbon::now()->toDateTimeString()
                 ];
             }
             ProductRack::insert($data);
@@ -1755,7 +1756,7 @@ class ProductUtil extends Util
                 $qty = $this->num_uf(trim($value['quantity']));
                 $exp_date = null;
                 if (!empty($value['exp_date'])) {
-                    $exp_date = \Carbon::createFromFormat('d-m-Y', $value['exp_date'])->format('Y-m-d');
+                    $exp_date = Carbon::createFromFormat('d-m-Y', $value['exp_date'])->format('Y-m-d');
                 }
                 $lot_number = null;
                 if (!empty($value['lot_number'])) {
@@ -2111,7 +2112,7 @@ class ProductUtil extends Util
      */
     public function getProductDiscount($product, $business_id, $location_id, $is_cg = false, $is_spg = false)
     {
-        $now = \Carbon::now()->toDateTimeString();
+        $now = Carbon::now()->toDateTimeString();
         //Search if both category and brand matches
         $query1 = Discount::where('business_id', $business_id)
             ->where('location_id', $location_id)
