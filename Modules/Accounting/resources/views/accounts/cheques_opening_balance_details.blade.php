@@ -61,9 +61,7 @@
 
 <!-- Include Date Range Picker CSS & JS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-<script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-
+@push('page-scripts')
 <script type="module">
 $(document).ready(function() {
 
@@ -97,28 +95,39 @@ $(document).ready(function() {
     });
 
     // Initialize Date Range Picker
-    $('#cheques_date_range').daterangepicker({
-        opens: 'left',
-        autoUpdateInput: false,
-        ranges: {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'This Week': [moment().startOf('week'), moment().endOf('week')],
-            'Last Week': [moment().subtract(1, 'week').startOf('week'), moment().subtract(1, 'week').endOf('week')],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-            'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
-        },
-        locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' }
-    });
+    function initChequesDateRangePicker() {
+         if ($('#cheques_date_range').data('daterangepicker')) return;
 
-    $('#cheques_date_range').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
-        table.ajax.reload();
-    }).on('cancel.daterangepicker', function(ev, picker) {
-        $(this).val('');
-        table.ajax.reload();
-    });
+         $('#cheques_date_range').daterangepicker({
+            opens: 'left',
+            autoUpdateInput: false,
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'This Week': [moment().startOf('week'), moment().endOf('week')],
+                'Last Week': [moment().subtract(1, 'week').startOf('week'), moment().subtract(1, 'week').endOf('week')],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' }
+        });
+
+        $('#cheques_date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
+            table.ajax.reload();
+        }).on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            table.ajax.reload();
+        });
+    }
+
+    if ($.fn.daterangepicker) {
+        initChequesDateRangePicker();
+    } else {
+        $(document).on('daterangepicker:ready', initChequesDateRangePicker);
+    }
 
 });
 </script>
+@endpush

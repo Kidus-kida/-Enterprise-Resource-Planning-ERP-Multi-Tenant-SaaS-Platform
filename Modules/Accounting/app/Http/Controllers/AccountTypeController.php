@@ -91,36 +91,33 @@ class AccountTypeController extends Controller
 
         try {
             // Get business_id, fallback to logged-in user ID
-            $business_id = session()->get('user.business_id') ?? Auth::id();
+            $business_id = auth()->user()->business_id;
 
             if (!$business_id) {
                 throw new \Exception('Business or User ID not found');
             }
 
+            
             $type = new AccountType();
             $type->business_id = $business_id;
             $type->name = $request->name;
             $type->parent_account_type_id = $request->parent_account_type_id;
             $type->description = $request->description;
             $type->save();
+            
 
-            $notification = notify(__('Account type created successfully'));
-            return back()->with($notification);
-
-            // ✅ SUCCESS message
-            // return back()->with(
-            //     notify(__('Account type created successfully'))
-            // );
+            $output = ['success' => true,
+                            'data' => $type,
+                            'msg' => __("added successfully")
+                        ];
         } catch (\Exception $e) {
 
-            // ❌ ERROR message
-            return back()->with(
-                notify(
-                    __('Failed to create account type: ') . $e->getMessage(),
-                    'error'
-                )
-            );
+            $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
         }
+        
+        return $output;
     }
 
 

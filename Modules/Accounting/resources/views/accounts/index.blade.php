@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@push('page-scripts')
+    <!-- Include Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="module">
+        $(document).ready(function() {
+            // Dynamically load daterangepicker to ensure it uses the global jQuery instance from app.js
+            $.getScript("https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js", function() {
+                // Trigger event so other scripts know it's ready
+                $(document).trigger('daterangepicker:ready');
+            });
+        });
+    </script>
+@endpush
+
 @section('page-content')
     <div class="content container-fluid">
 
@@ -294,29 +308,7 @@
         </div><!-- /Tab Content -->
 
         <div class="modal fade view_modal" tabindex="-1" role="dialog"></div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            $(document).on('click', '.btn-modal', function() {
-                let container = $(this).data('container');
-                let url = $(this).data('href');
 
-                $(container).html(
-                    '<div class="modal-dialog"><div class="modal-content p-5 text-center">Loading...</div></div>');
-
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(response) {
-                        $(container).html(response);
-                        $(container).modal('show');
-                    },
-                    error: function() {
-                        alert('Failed to load modal');
-                    }
-                });
-            });
-        </script>
 
     </div>
 @endsection
@@ -591,5 +583,67 @@
                 });
             }
         }
+
+
+        $(document).on('click', '.btn-modal', function() {
+            let container = $(this).data('container');
+            let url = $(this).data('href');
+
+            $(container).html(
+                '<div class="modal-dialog"><div class="modal-content p-5 text-center">Loading...</div></div>');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    $(container).html(response);
+                    $(container).modal('show');
+                },
+                error: function() {
+                    alert('Failed to load modal');
+                }
+            });
+        });
+
+        // Handle Account Type Form Submission
+        $(document).on('submit', '#typeForm', function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let btn = form.find('button[type="submit"]');
+            btn.attr('disabled', true);
+
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                success: function(response) {
+                    btn.attr('disabled', false);
+                    if (response.success) {
+                        Toastify({
+                            text: response.msg,
+                            className: "success",
+                        }).showToast();
+                        $('#generalModalPopup').modal('hide');
+                        $('#types-table').DataTable().ajax.reload();
+                    } else {
+                        Toastify({
+                            text: response.msg,
+                            className: "danger",
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    btn.attr('disabled', false);
+                    let errorMsg = 'An error occurred';
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Toastify({
+                        text: errorMsg,
+                        className: "danger",
+                    }).showToast();
+                }
+            });
+        });
     </script>
 @endpush
