@@ -46,6 +46,12 @@ return new class extends Migration
             if (!Schema::hasColumn('contacts', 'notification_contacts')) {
                 $table->json('notification_contacts')->nullable()->after('contact_transaction_date');
             }
+            if (!Schema::hasColumn('contacts', 'supplier_group_id')) {
+                $table->integer('supplier_group_id')->nullable()->after('notification_contacts');
+            }
+            if (!Schema::hasColumn('contacts', 'customer_group_id')) {
+                $table->integer('customer_group_id')->nullable()->after('supplier_group_id');
+            }
         });
     }
 
@@ -70,7 +76,9 @@ return new class extends Migration
                 'is_property',
                 'should_notify',
                 'contact_transaction_date',
-                'notification_contacts'
+                'notification_contacts',
+                'supplier_group_id',
+                'customer_group_id'
             ]);
              
              // handling is_payee separately to be safe or just include it if we are confident.
