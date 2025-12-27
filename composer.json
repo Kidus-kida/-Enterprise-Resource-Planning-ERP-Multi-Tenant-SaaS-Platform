@@ -25,7 +25,7 @@
         "nwidart/laravel-modules": "^11.0",
         "opcodesio/log-viewer": "^3.10",
         "pavel-mironchik/laravel-backup-panel": "^2.6",
-        "spatie/laravel-activitylog": "*",
+        "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-medialibrary": "^11.7",
         "spatie/laravel-menu": "^4.2",
         "spatie/laravel-permission": "^6.9",
