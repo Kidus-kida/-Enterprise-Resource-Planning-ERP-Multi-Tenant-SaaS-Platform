@@ -81,9 +81,10 @@
 </div>
 
 
+@push('page-scripts')
 <script type="module">
     $(document).ready(function() {
-
+        // Initialize DataTable
         $('.select2').select2();
 
         const table = $('#deposit_transfer_table').DataTable({
@@ -138,20 +139,32 @@
                 table.ajax.reload();
             });
 
-    });
-</script>
-<script>
-    $('#date_range').daterangepicker({
-        opens: 'left',
-        autoUpdateInput: false,
-        locale: {
-            cancelLabel: 'Clear'
+        // Initialize DateRangePicker when ready
+        function initDateRangePicker() {
+            if ($('#date_range').data('daterangepicker')) return; // Already initialized
+
+            $('#date_range').daterangepicker({
+                opens: 'left',
+                autoUpdateInput: false,
+                locale: {
+                    cancelLabel: 'Clear'
+                }
+            });
+
+            $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
+                table.ajax.reload(); // Reload table on apply
+            }).on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                table.ajax.reload();
+            });
+        }
+
+        if ($.fn.daterangepicker) {
+            initDateRangePicker();
+        } else {
+            $(document).on('daterangepicker:ready', initDateRangePicker);
         }
     });
-
-    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
-    }).on('cancel.daterangepicker', function(ev, picker) {
-        $(this).val('');
-    });
 </script>
+@endpush

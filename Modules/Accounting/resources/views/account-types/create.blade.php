@@ -40,26 +40,4 @@
     </div>
 </div>
 
-<script type="module">
-    $('#typeForm').submit(function(e) {
-        e.preventDefault();
 
-        $.ajax({
-            url: $(this).attr('action'),
-            method: $(this).attr('method'),
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('.modal').modal('hide');
-                    $('.datatable').DataTable().ajax.reload();
-                } else {
-                    toastr.error(response.message);
-                }
-            },
-            error: function(xhr) {
-                toastr.error('An error occurred');
-            }
-        });
-    });
-</script>
