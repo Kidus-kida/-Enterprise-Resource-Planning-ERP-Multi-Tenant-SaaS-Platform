@@ -18,7 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('account_type_id')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
-
             $table->foreign('account_type_id')->references('id')->on('account_types')->onDelete('set null');
         });
     }

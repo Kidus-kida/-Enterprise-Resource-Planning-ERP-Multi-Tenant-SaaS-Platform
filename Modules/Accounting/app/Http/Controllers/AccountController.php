@@ -11,6 +11,11 @@ use Modules\Accounting\Models\AccountTransaction;
 use Modules\Accounting\Models\AccountSetting;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use Modules\Shipping\Entities\Type;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+
+
 
 class AccountController extends Controller
 {
@@ -20,20 +25,26 @@ class AccountController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $business_id = session()->get('user.business_id');
 
-            $query = Account::with(['accountType', 'accountGroup', 'parentAccount']);
-                // ->where('business_id', $business_id);
+            // $business_id = session()->get('user.business_id');
+            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
+            // dd($business_id);
 
-            // Apply filters
+            $query = Account::query()
+                ->where('business_id', $business_id)
+                ->with([
+                    'accountType.parentAccountType',
+                    'accountGroup',
+                    'parentAccount'
+                ]);
+            // dd($query->toSql());
+            /* ================= FILTERS ================= */
+
             if ($request->filled('account_type')) {
                 $query->where('account_type_id', $request->account_type);
             }
 
             if ($request->filled('account_sub_type')) {
-                // Assuming sub-types are handled via account_type_id or a separate column. 
-                // Using account_type_id for now if sub-type is just a child type.
-                // Adjust if there is a specific sub_type_id column.
                 $query->where('account_type_id', $request->account_sub_type);
             }
 
@@ -46,140 +57,58 @@ class AccountController extends Controller
             }
 
             if ($request->filled('status')) {
-                if ($request->status === 'active') {
-                    $query->where('is_closed', 0);
-                } elseif ($request->status === 'closed') {
-                    $query->where('is_closed', 1);
-                }
+                $query->where('is_closed', $request->status === 'closed');
             } else {
                 $query->where('is_closed', 0);
             }
 
-            return DataTables::of($query)
+            /* ================= DATATABLE ================= */
+
+            return DataTables::eloquent($query)
                 ->addIndexColumn()
-                ->addColumn('name', function ($account) {
-                    return $account->name;
-                })
+
                 ->addColumn('account_type', function ($account) {
-                    // Logic to get parent type if this is a sub-type
-                    return optional($account->accountType)->parentAccountType->name ?? optional($account->accountType)->name ?? '';
-                    // Note: This relies on AccountType having a self-relationship 'parentAccountType'. 
-                    // If not, simply return name.
+                    return optional(
+                        optional($account->accountType)->parentAccountType
+                    )->name
+                        ?? optional($account->accountType)->name
+                        ?? '';
                 })
-                ->addColumn('parent_account_type_name', function ($account) use ($business_id) {
-                    // Sub Type seems to be the specific type if the main 'account_type' is the parent category
-                    // Adjust based on your AccountType structure.
-                    return optional($account->accountType)->name ?? '';
-                })
+
+
                 ->addColumn('account_group', function ($account) {
                     return optional($account->accountGroup)->name ?? '';
                 })
-                ->addColumn('account_number', function ($account) {
-                    return $account->account_number ?? '';
-                })
+
                 ->addColumn('balance', function ($account) {
-                    $balance = Account::getAccountBalance($account->id);
-                    return 'Br ' . number_format($balance, 2);
+                    return 'Br ' . number_format($account->current_balance, 2);
                 })
-           ->addColumn('action', function ($account) {
 
-    $html = '<div class="btn-group btn-group-xs" style="white-space: nowrap;">';
+                ->addColumn('action', function ($account) {
+                    return view('accounting::accounts.partials.actions', compact('account'))->render();
+                })
 
-    // Edit
-    $html .= '<button 
-        data-href="' . route('accounts.edit', $account->id) . '" 
-        class="btn btn-outline-primary btn-modal" 
-        data-container=".account_model"
-        title="' . __('Edit') . '">
-        <i class="fa fa-pencil text-primary"></i>
-    </button>';
-
-    // Account Book
-    $html .= '<a 
-        href="' . route('accounting.account_book', $account->id) . '" 
-        class="btn btn-outline-warning" 
-        title="' . __('Account Book') . '">
-        <i class="fa fa-book text-warning"></i>
-    </a>';
-
-    // Transfer
-    $html .= '<a 
-        href="" 
-        class="btn btn-outline-info" 
-        title="' . __('Transfer') . '">
-        <i class="fa fa-exchange text-info"></i>
-    </a>';
-
-    // Deposit
-    $html .= '<button 
-        data-href="" 
-        class="btn btn-outline-success btn-modal" 
-        data-container=".view_modal"
-        title="' . __('Deposit') . '">
-        <i class="fa fa-money text-success"></i>
-    </button>';
-
-    // Close / Activate
-    if ($account->is_closed == 0) {
-        $html .= '<button 
-            data-href="" 
-            class="btn btn-outline-danger close_account" 
-            title="' . __('Close') . '">
-            <i class="fa fa-times text-danger"></i>
-        </button>';
-    } else {
-        $html .= '<button 
-            data-href="" 
-            class="btn btn-outline-success activate_account" 
-            title="' . __('Activate') . '">
-            <i class="fa fa-check text-success"></i>
-        </button>';
-    }
-
-    // Notes
-    $html .= '<button 
-        data-href="" 
-        class="btn btn-outline-secondary btn-modal" 
-        data-container=".view_modal"
-        title="' . __('Notes') . '">
-        <i class="fa fa-sticky-note-o text-muted"></i>
-    </button>';
-
-    // Status Indicator (icon-only, no button bg)
-    if (!$account->disabled) {
-        $html .= '<span class="text-success ml-1" title="' . __('Enabled') . '">
-            <i class="fa fa-check-circle"></i>
-        </span>';
-    } else {
-        $html .= '<span class="text-danger ml-1" title="' . __('Disabled') . '">
-            <i class="fa fa-ban"></i>
-        </span>';
-    }
-
-    $html .= '</div>';
-
-    return $html;
-})
-
-
-                ->rawColumns(['balance', 'action'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
-        $business_id = session()->get('user.id');
-        // dd($business_id);
-        $account_types = AccountType::all()->whereNull('parent_account_type_id')->pluck('name', 'id');
-        $account_sub_types = AccountType::all()->whereNotNull('parent_account_type_id')->pluck('name', 'id');
-        $account_groups = AccountGroup::all()->pluck('name', 'id');
+        /* ================= VIEW DATA ================= */
 
-        $accounts = Account::all()->pluck('name', 'id');
-        // dd($accounts);
-        
-        $setting = AccountSetting::where('business_id', $business_id)->where('key', 'default_accounts')->first();
-        $defaults = $setting ? $setting->settings : [];
+        $business_id = session()->get('user.business_id');
 
-        return view('accounting::accounts.index', compact('account_types', 'account_sub_types', 'account_groups', 'accounts', 'defaults'));
+        return view('accounting::accounts.index', [
+            'account_types'      => AccountType::whereNull('parent_account_type_id')->pluck('name', 'id'),
+            'account_sub_types'  => AccountType::whereNotNull('parent_account_type_id')->pluck('name', 'id'),
+            'account_groups'     => AccountGroup::pluck('name', 'id'),
+            'accounts'           => Account::where('business_id', $business_id)->pluck('name', 'id'),
+            'defaults'           => optional(
+                AccountSetting::where('business_id', $business_id)
+                    ->where('key', 'default_accounts')
+                    ->first()
+            )->settings ?? []
+        ]);
     }
+
 
     /**
      * Show the form for creating a new account
@@ -198,44 +127,43 @@ class AccountController extends Controller
     /**
      * Store a newly created account
      */
- public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'account_type_id' => 'required|exists:account_types,id',
-        'asset_type' => 'required|exists:account_groups,id',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'account_type_id' => 'required|exists:account_types,id',
+            'asset_type' => 'required|exists:account_groups,id',
+        ]);
 
-    try {
-        $business_id = session()->get('user.business_id');
-        $user_id = auth()->id();
+        try {
+            $business_id = session()->get('user.business_id');
+            $user_id = auth()->id();
 
-        $account = new Account();
-        $account->business_id = $business_id;
-        $account->name = $request->name;
-        $account->account_number = $request->account_number ?? 'ACC-' . rand(100000, 999999);
-        $account->account_type_id = $request->account_type_id;
-        $account->asset_type = $request->asset_type;
-        $account->parent_account_id = $request->parent_account_id;
-        $account->opening_balance = $request->opening_balance ?? 0;
-        $account->note = $request->note;
-        $account->is_main_account = $request->has('is_main_account') ? 1 : 0;
-        $account->is_need_cheque = $request->is_need_cheque ?? 'N';
-        $account->created_by = $user_id;
-        $account->save();
+            $account = new Account();
+            $account->business_id = $business_id;
+            $account->name = $request->name;
+            $account->account_number = $request->account_number ?? 'ACC-' . rand(100000, 999999);
+            $account->account_type_id = $request->account_type_id;
+            $account->asset_type = $request->asset_type;
+            $account->parent_account_id = $request->parent_account_id;
+            $account->opening_balance = $request->opening_balance ?? 0;
+            $account->note = $request->note;
+            $account->is_main_account = $request->has('is_main_account') ? 1 : 0;
+            $account->is_need_cheque = $request->is_need_cheque ?? 'N';
+            $account->created_by = $user_id;
+            $account->save();
 
-        return redirect()
-            ->back()
-            ->with('success', __('Account created successfully'));
+            return redirect()
+                ->back()
+                ->with('success', __('Account created successfully'));
+        } catch (\Exception $e) {
 
-    } catch (\Exception $e) {
-
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', __('Failed to create account: ') . $e->getMessage());
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', __('Failed to create account: ') . $e->getMessage());
+        }
     }
-}
 
 
     /**
@@ -303,6 +231,7 @@ class AccountController extends Controller
      */
     public function edit($id)
     {
+
         $account = Account::findOrFail($id);
         $business_id = session()->get('user.business_id');
 
@@ -486,57 +415,71 @@ class AccountController extends Controller
     /**
      * Show deposit form
      */
-    public function getDeposit(Request $request)
-    {
-        if (request()->ajax()) {
-            $business_id = session()->get('user.business_id');
-            $type = $request->input('type'); // 'cash' or 'card'
-            
-            $account = null;
-            $from_accounts = [];
 
-            if ($type == 'cash') {
+    public function getDeposit(Request $request, $type)
+    {
+
+        if ($request->ajax()) {
+
+            // $business_id = auth()->user()->business_id ?? auth()->id();
+
+            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
+            $account = null;
+
+            // FROM accounts (source)
+            $from_accounts = Account::where('business_id', $business_id)
+                ->where('is_closed', 0)
+                ->pluck('name', 'id');
+
+            // TO accounts (target)
+            $to_accounts = Account::where('business_id', $business_id)
+                ->where('is_closed', 0)
+                ->pluck('name', 'id');
+
+            // Cash deposit → default cash account
+            if ($type === 'cash') {
                 $account = Account::where('business_id', $business_id)
                     ->where('is_closed', 0)
-                    ->where('name', 'Cash')
+                    // ->where('name', 'Cash')
                     ->first();
-            } elseif ($type == 'card') {
-                // For Card, user selects FROM a card account.
-                // We fetch all accounts that might be Card accounts. 
-                // Ideally filtering by Group or Subtype if available.
-                // For now fetching all as candidates.
-                $from_accounts = Account::where('business_id', $business_id)
-                                        ->where('is_closed', 0)
-                                        ->pluck('name', 'id');
-                
-                // We might still set a default 'account' if needed, or leave null.
-            }
 
-            if ($type == 'cash' && !$account) {
-                 return view('accounting::accounts.deposit')->with('error', 'Default Cash account not found. Please create an account named "Cash".');
+                if (!$account) {
+                    return view('accounting::accounts.deposit')
+                        ->with('error', 'Default Cash account not found. Please create an account named "Cash".');
+                }
             }
-
-            // "Deposit To" Accounts (Target - e.g. Banks)
-            $to_accounts = Account::where('business_id', $business_id)
-                                  ->where('is_closed', 0)
-                                  ->pluck('name', 'id');
 
             $account_groups = AccountGroup::where('business_id', $business_id)->pluck('name', 'id');
-            
-            $account_balance = ($account) ? Account::getAccountBalance($account->id) : 0.00;
 
-            return view('accounting::accounts.deposit', compact('account', 'to_accounts', 'from_accounts', 'account_groups', 'type', 'account_balance'));
+            $account_balance = $account
+                ? Account::getAccountBalance($account->id)
+                : 0.00;
+
+            return view(
+                'accounting::accounts.deposit',
+                compact(
+                    'account',
+                    'from_accounts',
+                    'to_accounts',
+                    'account_groups',
+                    'type',
+                    'account_balance'
+                )
+            );
         }
     }
+
 
     public function getChequeDeposit()
     {
         if (request()->ajax()) {
-            $business_id = session()->get('user.business_id');
+            // $business_id = session()->get('user.business_id');
+
+            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
             // Find 'Cheques in Hand' account
             $account = Account::where('business_id', $business_id)
                 ->where('is_closed', 0)
-                ->where('name', 'Cheques in Hand')
+                // ->where('name', 'Cheques in Hand')
                 ->first();
 
             if (!$account) {
@@ -547,23 +490,26 @@ class AccountController extends Controller
             $id = $account->id;
 
             // To Accounts (Banks, Loans) - Old ERP logic
-            $to_accounts = Account::leftjoin('accounting_account_groups as ag', 'accounting_accounts.asset_type', '=', 'ag.id')
-                ->where('accounting_accounts.business_id', $business_id)
+            // $to_accounts = Account::leftjoin('account_settings as ag', 'accounts.asset_type', '=', 'ag.id')
+            //     ->where('accounts.business_id', $business_id)
+            //     ->whereIn('ag.name', ['Bank Account', 'Loans Taken', 'Loans Given'])
+            //     ->pluck('accounts.name', 'accounts.id');
+            $to_accounts = Account::join('account_groups as ag', 'accounts.asset_type', '=', 'ag.id')
+                ->where('accounts.business_id', $business_id)
                 ->whereIn('ag.name', ['Bank Account', 'Loans Taken', 'Loans Given'])
-                ->pluck('accounting_accounts.name', 'accounting_accounts.id');
+                ->where('accounts.is_closed', 0)
+                ->pluck('accounts.name', 'accounts.id');
 
-            // Note: Fixed table names to match New ERP migration likely (accounting_accounts, accounting_account_groups) 
-            // BUT check your Model table definitions. standard `accounts` and `account_groups` might be used if migrated fully.
-            // Assuming New ERP uses `accounting_accounts` based on module structure?
-            // Let's stick to Model relations if possible.
-            // If models are standard Eloquent, no need for table names unless joining.
-            // Simplified:
+
             $to_accounts = Account::where('business_id', $business_id)
                 ->whereHas('accountGroup', function ($q) {
                     $q->whereIn('name', ['Bank Account', 'Loans Taken', 'Loans Given']);
                 })->pluck('name', 'id');
 
+            // dd($to_accounts);
+
             $account_balance = Account::getAccountBalance($id);
+            // dd($account_balance);
 
             return view('accounting::accounts.cheque_deposit')
                 ->with(compact('account', 'to_accounts', 'account_balance'));
@@ -641,7 +587,9 @@ class AccountController extends Controller
         try {
             DB::beginTransaction();
 
-            $business_id = session()->get('user.business_id');
+
+
+            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
             $user_id = auth()->id();
             $amount = $request->amount;
             $from_account_id = $request->from_account;
@@ -689,15 +637,97 @@ class AccountController extends Controller
         }
     }
 
+    public function createDeposit(Request $request, $type)
+    {
+        // dd($request->all());
+        // 1️⃣ Validation
+        $validator = Validator::make($request->all(), [
+            'from_account'   => 'required|exists:accounts,id',
+            'to_account_id'  => 'required|exists:accounts,id|different:from_account',
+            'amount'         => 'required|numeric|min:0.01',
+            'operation_date' => 'required|date',
+            'note'           => 'nullable|string',
+            'attachment'     => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'msg'     => $validator->errors()->first(),
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 2️⃣ Business & User
+            $business_id = auth()->user()->business_id ?? auth()->id();
+            $user_id = auth()->id();
+
+            // 3️⃣ Request data
+            $amount         = $request->amount;
+            $from_account   = $request->from_account;
+            $to_account     = $request->to_account_id;
+            $operation_date = $request->operation_date;
+            $note           = $request->note;
+
+            // 4️⃣ Handle Attachment
+            $attachment_path = null;
+            if ($request->hasFile('attachment')) {
+                $attachment_path = $request->file('attachment')
+                    ->store('account_deposits', 'public');
+            }
+
+            // 5️⃣ CREDIT: From Account
+            AccountTransaction::create([
+                'business_id'    => $business_id,
+                'account_id'     => $from_account,
+                'type'           => 'credit',
+                'sub_type'       => 'deposit',
+                'amount'         => $amount,
+                'operation_date' => $operation_date,
+                'created_by'     => $user_id,
+                'remark'         => $note,
+                'attachment'     => $attachment_path,
+            ]);
+
+            // 6️⃣ DEBIT: To Account
+            AccountTransaction::create([
+                'business_id'    => $business_id,
+                'account_id'     => $to_account,
+                'type'           => 'debit',
+                'sub_type'       => 'deposit',
+                'amount'         => $amount,
+                'operation_date' => $operation_date,
+                'created_by'     => $user_id,
+                'remark'         => $note,
+                'attachment'     => $attachment_path,
+            ]);
+
+            DB::commit();
+            return back()->with('success', __('Deposit completed successfully'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'msg'     => __('Deposit failed: ') . $e->getMessage(),
+            ]);
+        }
+    }
+
     /**
      * Store Cheque Deposit
      */
     public function postChequeDeposit(Request $request)
     {
+        // dd($request->all());
         try {
             DB::beginTransaction();
 
-            $business_id = session()->get('user.business_id');
+            // $business_id = session()->get('user.business_id');
+            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
+
             $user_id = auth()->id();
             $amount = $request->amount;
 
@@ -708,12 +738,9 @@ class AccountController extends Controller
             $note = $request->note;
 
             if ($request->has('encash') && $request->encash == 1) {
-                // Encash: Credit ChequesInHand, Debit Cash (Wait... Encash usually means you get Cash?)
-                // Old ERP: If encash, it implies logic might be different. 
-                // Let's assume Encash means transferring to CASH account instead of BANK.
-                // In my logic, I disabled 'to_account' if encash is checked.
-                // So we need to find the Cash account ID.
-                $cash_account = Account::where('business_id', $business_id)->where('name', 'Cash')->first();
+
+                // $cash_account = Account::where('business_id', $business_id)->where('name', 'Cash')->first();
+                $cash_account = Account::where('business_id', $business_id)->first();
                 if ($cash_account) {
                     $to_account_id = $cash_account->id;
                 } else {
@@ -724,6 +751,7 @@ class AccountController extends Controller
             // Credit Cheques In Hand (Decrease)
             AccountTransaction::create([
                 'account_id' => $cheques_in_hand_id,
+                'business_id'    => $business_id,
                 'type' => 'credit',
                 'sub_type' => 'deposit',
                 'amount' => $amount,
@@ -735,6 +763,7 @@ class AccountController extends Controller
             // Debit Target Account (Increase)
             AccountTransaction::create([
                 'account_id' => $to_account_id,
+                'business_id'    => $business_id,
                 'type' => 'debit',
                 'sub_type' => 'deposit',
                 'amount' => $amount,
@@ -744,29 +773,13 @@ class AccountController extends Controller
             ]);
 
             DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'msg' => __('Cheque Deposit successful')
-            ]);
+            return back()->with('success', __('Cheque Deposit successful'));
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('status', [
                 'success' => false,
                 'msg' => __('Something went wrong: ') . $e->getMessage()
             ]);
-            // Note: Cheque deposit view is likely not fully ajax modal driven in Old ERP if return type was redirect.
-            // But my view puts it in a modal. 
-            // If I submitted via standard form, I need standard response or ajax form handling.
-            // My view uses `submit_btn`, likely handled by `common.js` if class `btn-modal` opened it?
-            // Actually index.blade.php uses `data-ajax-modal="true"`.
-            // `common.js` usually handles form submission inside modal if form has class `ajax_form`?
-            // Or I need to add JS to handle it. 
-            // The simplified view `deposit.blade.php` doesn't have JS. 
-            // I will assume JSON response is better if I add JS handler, or standard redirect if not.
-            // `deposit.blade.php` has id `deposit_form`. 
-            // I'll stick to JSON for consistency with other actions if I can.
-            // But `postChequeDeposit` in Old ERP returned redirect.
         }
     }
 
@@ -774,7 +787,168 @@ class AccountController extends Controller
     {
         return redirect()->route('accounts.show', $id);
     }
+    public function accountTransfer($id)
+    {
 
+        if (!request()->ajax()) {
+            abort(404);
+        }
+
+
+        $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
+
+        $from_account = Account::where('business_id', $business_id)
+            ->NotClosed()
+            ->findOrFail($id);
+
+        $to_accounts = Account::where('business_id', $business_id)
+            ->where('id', '!=', $id)
+            ->NotClosed()
+            ->pluck('name', 'id');
+
+        // $account_balance = $this->getAccountBalance($id);
+        $account_balance = (object) [
+            'balance' => 1000
+        ];
+
+        $from_account_group = AccountGroup::find($from_account->asset_type);
+
+        $group_name = $from_account_group->name ?? null;
+        // dd($group_name);
+        $check_insufficient = Account::checkInsufficientBalance($id);
+        // dd($check_insufficient);
+        $account_groups = $from_account_group
+            ->pluck('name', 'id');
+        // dd($account_groups);
+
+        return view(
+            'accounting::accounts.transfer',
+            compact(
+                'from_account',
+                'account_balance',
+                'check_insufficient',
+                'account_groups',
+                'to_accounts'
+            )
+
+        );
+    }
+    public function postAccountTransfer(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $business_id = session()->get('user.business_id') ?? auth()->user()->business_id;
+
+            /* -------------------- VALIDATION -------------------- */
+            $request->validate([
+                'from_account'    => 'required|integer',
+                'to_account'      => 'required|integer|different:from_account',
+                'amount'          => 'required|numeric|min:1',
+                'cheque_number'   => 'required|string',
+                'operation_date'  => 'required|date',
+                'attachment'      => 'nullable|file|max:5120',
+            ]);
+
+            $amount        = $request->amount;
+            $from          = $request->from_account;
+            $to            = $request->to_account;
+            $note          = $request->note;
+            $cheque_number = $request->cheque_number;
+
+            $fromAcc = Account::findOrFail($from);
+            $toAcc   = Account::findOrFail($to);
+
+            /* -------------------- FILE UPLOAD -------------------- */
+            $uploadFile = null;
+
+            if ($request->hasFile('attachment')) {
+                $path = public_path("img/account_transaction/$business_id");
+                if (!file_exists($path)) {
+                    mkdir($path, 0777, true);
+                }
+
+                $file = $request->file('attachment');
+                $filename = time() . '.' . $file->getClientOriginalExtension();
+                $file->move($path, $filename);
+
+                $uploadFile = "img/account_transaction/$business_id/$filename";
+            }
+
+            /* -------------------- CREATE PARENT PAYMENT -------------------- */
+            $parent_payment = AccountTransaction::create([
+                'business_id' => $business_id,
+                'method' => 'cheque',
+                'bank_name' => $fromAcc->name,
+                'cheque_number' => $cheque_number,
+                'paid_on' => $request->operation_date,
+                'created_by' => auth()->id(),
+                'amount' => $amount,
+                'cheque_date' => $request->operation_date,
+                'is_deposited' => 1,
+                'note' => $note,
+                'post_dated_cheque' => $request->post_dated_cheque ?? 0,
+                'update_post_dated_cheque' => $request->update_post_dated_cheque ?? 0,
+                'account_id' => $to,
+            ]);
+
+            /* -------------------- CREDIT TRANSACTION -------------------- */
+            $credit = AccountTransaction::create([
+                'amount' => $amount,
+                'account_id' => $from,
+                'type' => 'credit',
+                'sub_type' => 'fund_transfer',
+                'created_by' => auth()->id(),
+                'note' => $note,
+                'cheque_number' => $cheque_number,
+                'transfer_account_id' => $to,
+                'operation_date' => $request->operation_date,
+                'cheque_date' => $request->operation_date,
+                'attachment' => $uploadFile,
+                'transaction_payment_id' => $parent_payment->id,
+            ]);
+
+            /* -------------------- DEBIT TRANSACTION -------------------- */
+            $debit = AccountTransaction::create([
+                'amount' => $amount,
+                'account_id' => $to,
+                'type' => 'debit',
+                'sub_type' => 'fund_transfer',
+                'created_by' => auth()->id(),
+                'note' => $note,
+                'cheque_number' => $cheque_number,
+                'transfer_account_id' => $from,
+                'operation_date' => $request->operation_date,
+                'cheque_date' => $request->operation_date,
+                'attachment' => $uploadFile,
+                'transaction_payment_id' => $parent_payment->id,
+            ]);
+
+            /* -------------------- LINK BOTH -------------------- */
+            $credit->transfer_transaction_id = $debit->id;
+            $debit->transfer_transaction_id  = $credit->id;
+            $credit->save();
+            $debit->save();
+
+            DB::commit();
+
+            return back()->with('status', [
+                'success' => true,
+                'msg' => 'Fund transfer completed successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error(
+                "Fund Transfer Error | {$e->getMessage()} | Line {$e->getLine()}"
+            );
+
+            return back()->with('status', [
+                'success' => false,
+                'msg' => 'Something went wrong. Please try again.'
+            ]);
+        }
+    }
     /**
      * Get list of cheques in hand (debts to Cheques in Hand account)
      */
@@ -782,22 +956,22 @@ class AccountController extends Controller
     {
         if ($request->ajax()) {
             $business_id = session()->get('user.business_id');
-            
+
             // Find Cheques in Hand account
             $cheque_account = Account::where('business_id', $business_id)
-                                    ->where('name', 'Cheques in Hand')
-                                    ->first();
-            
+                ->where('name', 'Cheques in Hand')
+                ->first();
+
             if (!$cheque_account) {
-                 return DataTables::of([])->make(true);
+                return DataTables::of([])->make(true);
             }
 
             $query = AccountTransaction::where('account_id', $cheque_account->id)
-                                       ->where('type', 'debit') // Received cheques
-                                       ->with(['createdBy', 'contact']); // Assuming contact/customer relation exists if we saved it?
-                                       // Schema check: AccountTransaction has 'contact_id'? I didn't see it in migration.
-                                       // Maybe we rely on 'remark' or linked transaction.
-                                       // For now, simple list.
+                ->where('type', 'debit') // Received cheques
+                ->with(['createdBy', 'contact']); // Assuming contact/customer relation exists if we saved it?
+            // Schema check: AccountTransaction has 'contact_id'? I didn't see it in migration.
+            // Maybe we rely on 'remark' or linked transaction.
+            // For now, simple list.
 
             if ($request->filled('start_date') && $request->filled('end_date')) {
                 $query->whereBetween('operation_date', [$request->start_date, $request->end_date]);
@@ -808,8 +982,8 @@ class AccountController extends Controller
                     return $row->operation_date;
                 })
                 ->addColumn('customer', function ($row) {
-                     return $row->contact ? $row->contact->name : ($row->remark ?? '-');
-                     // Note: You might need to adjust based on how 'Customer' is stored.
+                    return $row->contact ? $row->contact->name : ($row->remark ?? '-');
+                    // Note: You might need to adjust based on how 'Customer' is stored.
                 })
                 ->addColumn('cheque_number', function ($row) {
                     return $row->cheque_number ?? '-';
@@ -821,7 +995,7 @@ class AccountController extends Controller
                     // Logic for cheque date? Maybe 'operation_date' is receipt date. 
                     // Cheque date might be stored in 'transaction_date' or custom column.
                     // Checking migration: `cheque_number` exists. `cheque_date`?
-                    return '-'; 
+                    return '-';
                 })
                 ->addColumn('bank', function ($row) {
                     return '-'; // Bank name from where cheque came?

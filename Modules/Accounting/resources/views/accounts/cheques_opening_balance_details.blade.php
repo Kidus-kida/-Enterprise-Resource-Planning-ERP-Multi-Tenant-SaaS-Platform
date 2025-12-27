@@ -1,19 +1,25 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="cheques_ob_details_date_range">{{ __('lang_v1.date_range') }}:</label>
-                <input type="text" name="cheques_ob_details_date_range" id="cheques_ob_details_date_range"
-                    class="form-control" style="width: 100%;">
-            </div>
-        </div>
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fa fa-filter me-2"></i> Filters
+        </h5>
+    </div>
 
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="cheques_ob_details_customer">{{ __('lang_v1.customer') }}:</label>
-                <select name="cheques_ob_details_customer" id="cheques_ob_details_customer" class="form-control select2"
-                    style="width: 100%;">
-                    <option value="">{{ __('lang_v1.all') }}</option>
+    <div class="card-body">
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <label class="form-label">Date Range</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                    <input type="text" id="cheques_date_range" class="form-control" placeholder="Select date range" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Customer</label>
+                <select id="cheques_customer_filter" class="form-select select2">
+                    <option value="">All</option>
                     @if (isset($customers))
                         @foreach ($customers as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
@@ -21,80 +27,98 @@
                     @endif
                 </select>
             </div>
+
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-12">
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fa fa-table me-2"></i> Cheques Report
+        </h5>
+    </div>
+
+    <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped table-bordered" id="cheques_ob_details_table" style="width: 100%;">
-                <thead>
+            <table class="table table-striped table-hover align-middle w-100" id="cheques_table">
+                <thead class="table-light">
                     <tr>
-                        <th>date</th>
-                        <th>customer</th>
-                        <th>cheque_number</th>
-                        <th>amount</th>
-                        <th>cheque_date</th>
-                        <th>bank</th>
-                        <th>action</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Cheque Number</th>
+                        <th>Amount</th>
+                        <th>Cheque Date</th>
+                        <th>Bank</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<script type="module">
-    $(document).ready(function() {
-        $('#cheques_ob_details_table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ route('account.cheques-list') }}",
-                data: function(d) {
-                    d.start_date = null;
-                    d.end_date = null;
-                    d.customer_id = $('#cheques_ob_details_customer').val();
-                }
-            },
-            columns: [{
-                    data: 'date',
-                    name: 'operation_date'
-                },
-                {
-                    data: 'customer',
-                    name: 'customer'
-                },
-                {
-                    data: 'cheque_number',
-                    name: 'cheque_number'
-                },
-                {
-                    data: 'amount',
-                    name: 'amount'
-                },
-                {
-                    data: 'cheque_date',
-                    name: 'cheque_date'
-                },
-                {
-                    data: 'bank',
-                    name: 'bank'
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                },
-            ]
-        });
+<!-- Include Date Range Picker CSS & JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
-        $('#cheques_ob_details_customer').change(function() {
-            $('#cheques_ob_details_table').DataTable().ajax.reload();
-        });
+<script type="module">
+$(document).ready(function() {
+
+    $('.select2').select2();
+
+    // Initialize DataTable
+    const table = $('#cheques_table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('account.cheques-list') }}",
+            data: function(d) {
+                d.date_range = $('#cheques_date_range').val();
+                d.customer_id = $('#cheques_customer_filter').val();
+            }
+        },
+        columns: [
+            { data: 'date' },
+            { data: 'customer' },
+            { data: 'cheque_number' },
+            { data: 'amount' },
+            { data: 'cheque_date' },
+            { data: 'bank' },
+            { data: 'action', orderable: false, searchable: false }
+        ]
     });
+
+    // Reload table on filter change
+    $('#cheques_customer_filter, #cheques_date_range').on('change', function() {
+        table.ajax.reload();
+    });
+
+    // Initialize Date Range Picker
+    $('#cheques_date_range').daterangepicker({
+        opens: 'left',
+        autoUpdateInput: false,
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'This Week': [moment().startOf('week'), moment().endOf('week')],
+            'Last Week': [moment().subtract(1, 'week').startOf('week'), moment().subtract(1, 'week').endOf('week')],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+        },
+        locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' }
+    });
+
+    $('#cheques_date_range').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
+        table.ajax.reload();
+    }).on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        table.ajax.reload();
+    });
+
+});
 </script>
