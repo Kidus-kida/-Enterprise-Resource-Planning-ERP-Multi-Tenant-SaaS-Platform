@@ -67,7 +67,7 @@ class AccountGroupController extends Controller
     {
         // $business_id = session()->get('user.business_id');
 
-        $business_id =    Auth::id();
+        $business_id = auth()->user()->business_id;
         $account_types = \Modules\Accounting\Models\AccountType::where('business_id', $business_id)
             // ->whereNull('parent_account_type_id')
             ->pluck('name', 'id');
@@ -94,19 +94,18 @@ class AccountGroupController extends Controller
             $group->description = $request->description;
             $group->save();
 
-            // return response()->json([
-            //     'success' => true,
-            //     'message' => __('Account group created successfully')
-            // ]);
-
-            $notification = notify(__('Account type created successfully'));
-            return back()->with($notification);
+            $output = [
+                'success' => true,
+                'msg' => __('Account group created successfully')
+            ];
         } catch (\Exception $e) {
-            return response()->json([
+            $output = [
                 'success' => false,
-                'message' => __('Failed to create account group: ') . $e->getMessage()
-            ], 500);
+                'msg' => __('Failed to create account group: ') . $e->getMessage()
+            ];
         }
+
+        return $output;
     }
 
     /**

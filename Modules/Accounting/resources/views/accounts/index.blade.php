@@ -620,14 +620,55 @@
                     btn.attr('disabled', false);
                     if (response.success) {
                         Toastify({
-                            text: response.msg,
+                            text: response.msg || response.message || "{{ __('messages.success') }}",
                             className: "success",
                         }).showToast();
                         $('#generalModalPopup').modal('hide');
                         $('#types-table').DataTable().ajax.reload();
                     } else {
                         Toastify({
-                            text: response.msg,
+                            text: response.msg || response.message || "{{ __('messages.error') }}",
+                            className: "danger",
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    btn.attr('disabled', false);
+                    let errorMsg = 'An error occurred';
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Toastify({
+                        text: errorMsg,
+                        className: "danger",
+                    }).showToast();
+                }
+            });
+        });
+
+        // Handle Account Group Form Submission
+        $(document).on('submit', '#groupForm', function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let btn = form.find('button[type="submit"]');
+            btn.attr('disabled', true);
+
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                success: function(response) {
+                    btn.attr('disabled', false);
+                    if (response.success) {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.success') }}", // Handle various response keys
+                            className: "success",
+                        }).showToast();
+                        $('#generalModalPopup').modal('hide');
+                        $('#groups-table').DataTable().ajax.reload();
+                    } else {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.error') }}",
                             className: "danger",
                         }).showToast();
                     }

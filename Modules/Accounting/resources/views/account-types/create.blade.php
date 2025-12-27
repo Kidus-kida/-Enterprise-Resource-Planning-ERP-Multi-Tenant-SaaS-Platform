@@ -1,5 +1,3 @@
-<div class="modal-dialog modal-dialog-centered modal-md" role="document">
-    <div class="modal-content">
         <form id="typeForm" method="POST"
             action="{{ isset($type) ? route('account-types.update', $type->id) : route('account-types.store') }}">
             @csrf
@@ -15,7 +13,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">{{ __('Parent Account Type') }}</label>
-                    <select name="parent_account_type_id" class="form-control select">
+                    <select name="parent_account_type_id" id="parent_type_select" class="form-control" style="width: 100%">
                         <option value="">{{ __('None') }}</option>
                         @foreach ($parent_types as $id => $name)
                             <option value="{{ $id }}"
@@ -37,7 +35,14 @@
                     class="btn btn-primary">{{ isset($type) ? __('Update') : __('Create') }}</button>
             </div>
         </form>
-    </div>
-</div>
+
+        <script>
+            $(document).ready(function() {
+                $('#parent_type_select').select2({
+                    dropdownParent: $('#generalModalPopup'),
+                    width: '100%'
+                });
+            });
+        </script>
 
 
