@@ -27,7 +27,7 @@ class AccountController extends Controller
         if ($request->ajax()) {
 
             // $business_id = session()->get('user.business_id');
-            $business_id = session()->get('user.business_id') ? auth()->user()->business_id : auth()->id();
+            $business_id = auth()->user()->business_id;
             // dd($business_id);
 
             $query = Account::query()
@@ -94,7 +94,7 @@ class AccountController extends Controller
 
         /* ================= VIEW DATA ================= */
 
-        $business_id = session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
 
         return view('accounting::accounts.index', [
             'account_types'      => AccountType::whereNull('parent_account_type_id')->pluck('name', 'id'),
