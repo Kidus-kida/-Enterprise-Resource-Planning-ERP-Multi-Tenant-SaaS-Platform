@@ -20,6 +20,7 @@ class Account extends Model
     {
         return $this->belongsTo(AccountType::class, 'account_type_id');
     }
+    
 
     public function accountGroup()
     {
@@ -45,6 +46,7 @@ class Account extends Model
     {
         return $this->hasMany(AccountTransaction::class, 'account_id');
     }
+ 
 
     /**
      * Scopes

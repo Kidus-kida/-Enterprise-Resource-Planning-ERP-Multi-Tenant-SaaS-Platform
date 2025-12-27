@@ -28,6 +28,11 @@ class AccountType extends Model
     {
         return $this->belongsTo(AccountType::class, 'parent_account_type_id');
     }
+    public function parentAccountType()
+    {
+        return $this->belongsTo(AccountType::class, 'parent_account_type_id');
+    }
+
 
     /**
      * Get account type ID by name

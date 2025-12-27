@@ -25,37 +25,37 @@ use Modules\Accounting\Http\Controllers\AccountSettingController;
 |
 */
 
-Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
-    
+Route::group(['prefix' => 'accounting', 'middleware' => ['auth']], function () {
+
     // Budgets Routes (existing)
     Route::resource('budget-categories', BudgetCategoriesController::class)->except('show')->names('budget.categories');
     Route::resource('budget-expense', ExpenseBudgetController::class)->except('show')->names('budget.expense');
     Route::resource('budget-revenue', RevenueBudgetController::class)->except('show')->names('budget.revenue');
     Route::resource('budgets', BudgetsController::class);
-    
+
     // ====================
     // CHART OF ACCOUNTS
     // ====================
-    
+
     // Main Account Routes
     Route::get('/accounts/import', [AccountController::class, 'import'])->name('accounts.import');
     Route::post('/accounts/import', [AccountController::class, 'postImport'])->name('accounts.post-import');
     Route::get('/accounts/disabled', [AccountController::class, 'disabled'])->name('accounts.disabled');
     Route::resource('/accounts', AccountController::class);
-    
+
     // Account Transactions
     Route::get('/account-transaction/{id}/edit', [AccountController::class, 'editAccountTransaction'])->name('account.transaction.edit');
     Route::put('/account-transaction/{id}', [AccountController::class, 'updateAccountTransaction'])->name('account.transaction.update');
     Route::delete('/account-transaction/{id}', [AccountController::class, 'deleteAccountTransaction'])->name('account.transaction.delete');
-    
+
     // Fund Transfer
     Route::get('/fund-transfer/{id}', [AccountController::class, 'getFundTransfer'])->name('account.fund-transfer');
     Route::post('/fund-transfer', [AccountController::class, 'postFundTransfer'])->name('account.post-fund-transfer');
-    
+
     // Cheque Deposit
     Route::get('/cheque-deposit/{id}', [AccountController::class, 'getChequeDeposit'])->name('account.cheque-deposit');
     Route::post('/cheque-deposit', [AccountController::class, 'postChequeDeposit'])->name('account.post-cheque-deposit');
-    
+
     // Account Helper Routes
     Route::get('/get-account-dropdown', [AccountController::class, 'getAccountDropdown'])->name('account.dropdown');
 
@@ -74,40 +74,46 @@ Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
     Route::post('/account/{id}/notes', [AccountController::class, 'postNotes'])->name('account.post-notes');
     Route::get('/account-book/{id}', [AccountController::class, 'accountBook'])->name('accounting.account_book');
     Route::get('/cheque-deposit', [AccountController::class, 'getChequeDeposit'])->name('account.cheque-deposit'); // Generic cheque deposit
-    
+    // account crud 
+    Route::get('/account-transfer/{id}', [AccountController::class, 'accountTransfer'])->name('accounting.account_transfer');
+    Route::post('/accounting/fund-transfer', [AccountController::class, 'postAccountTransfer'])
+        ->name('accounting.fund_transfer.store');
+
+
+
     // ====================
     // JOURNALS
     // ====================
     Route::get('/journal/get-account-dropdown', [JournalController::class, 'getAccountDropdown'])->name('journal.account-dropdown');
     Route::resource('/journal', JournalController::class);
-    
+
     // ====================
     // FINANCIAL REPORTS
     // ====================
-    
+
     // Income Statement (P&L)
     Route::get('/reports/income-statement', [AccountReportsController::class, 'incomeStatement'])->name('accounting.income-statement');
     Route::get('/reports/profit-loss', [AccountReportsController::class, 'profitLoss'])->name('accounting.profit-loss');
-    
+
     // Balance Sheet
     Route::get('/reports/balance-sheet', [AccountReportsController::class, 'balanceSheet'])->name('accounting.balance-sheet');
     Route::get('/reports/balance-sheet-comparison', [AccountReportsController::class, 'balanceSheetComparison'])->name('accounting.balance-sheet-comparison');
-    
+
     // Trial Balance
     Route::get('/reports/trial-balance', [AccountReportsController::class, 'trialBalance'])->name('accounting.trial-balance');
     Route::get('/reports/trial-balance-cumulative', [AccountReportsController::class, 'trialBalanceCumulative'])->name('accounting.trial-balance-cumulative');
-    
+
     // Cash Flow
     Route::get('/reports/cash-flow', [AccountReportsController::class, 'cashFlow'])->name('accounting.cash-flow');
-    
+
     // Payment Account Report
     Route::get('/reports/payment-account', [AccountReportsController::class, 'paymentAccountReport'])->name('accounting.payment-account-report');
-    
+
     // ====================
     // FIXED ASSETS
     // ====================
     Route::resource('/fixed-asset', FixedAssetController::class);
-    
+
     // ====================
     // POST-DATED CHEQUES
     // ====================
@@ -116,12 +122,12 @@ Route::group(['prefix' => 'accounting','middleware' => ['auth']], function () {
     Route::get('/old-post-dated-cheques', [PostdatedChequeController::class, 'oldPostDatedCheques'])->name('pdc.old');
     Route::get('/dated-cheques-party-type', [PostdatedChequeController::class, 'partyType'])->name('pdc.party-type');
     Route::resource('/post-dated-cheques', PostdatedChequeController::class);
-    
+
     // ====================
     // ACCOUNT SETTINGS
     // ====================
     Route::resource('/account-settings', AccountSettingController::class);
-    
+
     // ====================
     // ACCOUNT TYPES & GROUPS (Admin)
     // ====================

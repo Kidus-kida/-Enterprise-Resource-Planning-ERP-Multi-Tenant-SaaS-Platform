@@ -159,8 +159,7 @@
                                             <tr>
                                                 <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
-                                                <th>{{ __('Type') }}</th>
-                                                <th>{{ __('Sub Type') }}</th>
+                                                <th>{{ __('Account Type') }}</th>
                                                 <th>{{ __('Account Group') }}</th>
                                                 <th>{{ __('Account Number') }}</th>
                                                 <th>{{ __('Balance') }}</th>
@@ -293,6 +292,32 @@
                 @includeIf('accounting::accounts.cheques_opening_balance_details')
             </div>
         </div><!-- /Tab Content -->
+
+        <div class="modal fade view_modal" tabindex="-1" role="dialog"></div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).on('click', '.btn-modal', function() {
+                let container = $(this).data('container');
+                let url = $(this).data('href');
+
+                $(container).html(
+                    '<div class="modal-dialog"><div class="modal-content p-5 text-center">Loading...</div></div>');
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(response) {
+                        $(container).html(response);
+                        $(container).modal('show');
+                    },
+                    error: function() {
+                        alert('Failed to load modal');
+                    }
+                });
+            });
+        </script>
+
     </div>
 @endsection
 
@@ -314,7 +339,7 @@
                     url: "{{ route('accounts.index') }}",
                     data: function(d) {
                         d.account_type = $('#account_type_filter').val();
-                        d.account_sub_type = $('#account_sub_type_filter').val();
+
                         d.account_group = $('#account_group_filter').val();
                         d.account_name = $('#account_name_filter').val();
                     }
@@ -333,11 +358,7 @@
                         data: 'account_type',
                         name: 'account_type'
                     },
-                    {
-                        data: 'parent_account_type_name',
-                        name: 'parent_account_type_name',
-                        defaultContent: ''
-                    },
+
                     {
                         data: 'account_group',
                         name: 'account_group'
