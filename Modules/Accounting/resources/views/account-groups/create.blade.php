@@ -1,9 +1,3 @@
-<div class="modal-dialog modal-dialog-centered modal-md" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">{{ isset($group) ? __('Edit Account Group') : __('Add Account Group') }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
         <form id="groupForm" method="POST"
             action="{{ isset($group) ? route('account-groups.update', $group->id) : route('account-groups.store') }}">
             @csrf
@@ -19,7 +13,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">{{ __('Account Type') }} <span class="text-danger">*</span></label>
-                    <select name="account_type_id" class="form-control select" required>
+                    <select name="account_type_id" id="account_type_select" class="form-control" required style="width: 100%">
                         <option value="">{{ __('Select Account Type') }}</option>
                         @foreach ($account_types as $id => $name)
                             <option value="{{ $id }}"
@@ -41,29 +35,12 @@
                     class="btn btn-primary">{{ isset($group) ? __('Update') : __('Create') }}</button>
             </div>
         </form>
-    </div>
-</div>
-
-<script type="module">
-    $('#groupForm').submit(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: $(this).attr('method'),
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('.modal').modal('hide');
-                    $('.datatable').DataTable().ajax.reload();
-                } else {
-                    toastr.error(response.message);
-                }
-            },
-            error: function(xhr) {
-                toastr.error('An error occurred');
-            }
-        });
-    });
-</script>
+        
+        <script>
+            $(document).ready(function() {
+                $('#account_type_select').select2({
+                    dropdownParent: $('#generalModalPopup'),
+                    width: '100%'
+                });
+            });
+        </script>

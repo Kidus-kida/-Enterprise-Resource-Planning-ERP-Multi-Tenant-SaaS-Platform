@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@push('page-scripts')
+    <!-- Include Date Range Picker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="module">
+        $(document).ready(function() {
+            // Dynamically load daterangepicker to ensure it uses the global jQuery instance from app.js
+            $.getScript("https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js", function() {
+                // Trigger event so other scripts know it's ready
+                $(document).trigger('daterangepicker:ready');
+            });
+        });
+    </script>
+@endpush
+
 @section('page-content')
     <div class="content container-fluid">
 
@@ -157,10 +171,9 @@
                                     <table class="table table-striped custom-table mb-0 datatable w-100">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
-                                                <th>{{ __('Type') }}</th>
-                                                <th>{{ __('Sub Type') }}</th>
+                                                <th>{{ __('Account Type') }}</th>
                                                 <th>{{ __('Account Group') }}</th>
                                                 <th>{{ __('Account Number') }}</th>
                                                 <th>{{ __('Balance') }}</th>
@@ -196,7 +209,7 @@
                                     <table class="table table-striped custom-table mb-0" id="types-table">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
                                                 <th>{{ __('Description') }}</th>
                                                 <th class="text-end">{{ __('Action') }}</th>
@@ -229,7 +242,7 @@
                                     <table class="table table-striped custom-table mb-0" id="groups-table">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
+                                                <th>ID</th>
                                                 <th>{{ __('Name') }}</th>
                                                 <th>{{ __('Description') }}</th>
                                                 <th class="text-end">{{ __('Action') }}</th>
@@ -246,8 +259,42 @@
 
             <!-- Account Settings Tab -->
             <div class="tab-pane fade" id="account-settings-tab">
-                @includeIf('accounting::account-settings.index')
-            </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">{{ __('Account Setting') }}</h5>
+
+                                <a data-url="{{ route('account-settings.create') }}" href="javascript:void(0)"
+                                    class="btn btn-primary btn-sm" data-ajax-modal="true" data-size="md"
+                                    data-title="{{ __('Add Account Setting') }}">
+                                    <i class="fa-solid fa-plus"></i> {{ __('Add Setting') }}
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped custom-table mb-0" id="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>{{ __('Type') }}</th>
+                                                <th>{{ __('Date') }}</th>
+                                                <th>{{ __('Account') }}</th>
+                                                <th>{{ __('Group') }}</th>
+                                                <th>{{ __('Amount') }}</th>
+                                                <th>{{ __('Settings') }}</th>
+                                                <th class="text-end">{{ __('Action') }}</th>
+                                            </tr>
+
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /Account Groups Tab -->
 
             <!-- Deposits & Transfers Tab -->
             <div class="tab-pane fade" id="deposits-transfers-tab">
@@ -259,6 +306,10 @@
                 @includeIf('accounting::accounts.cheques_opening_balance_details')
             </div>
         </div><!-- /Tab Content -->
+
+        <div class="modal fade view_modal" tabindex="-1" role="dialog"></div>
+
+
     </div>
 @endsection
 
@@ -280,7 +331,7 @@
                     url: "{{ route('accounts.index') }}",
                     data: function(d) {
                         d.account_type = $('#account_type_filter').val();
-                        d.account_sub_type = $('#account_sub_type_filter').val();
+
                         d.account_group = $('#account_group_filter').val();
                         d.account_name = $('#account_name_filter').val();
                     }
@@ -299,16 +350,12 @@
                         data: 'account_type',
                         name: 'account_type'
                     },
-                    {
-                        data: 'parent_account_type_name',
-                        name: 'parent_account_type_name',
-                        defaultContent: ''
-                    },
+
                     {
                         data: 'account_group',
                         name: 'account_group'
                     },
-                 
+
                     {
                         data: 'account_number',
                         name: 'account_number'
@@ -400,7 +447,101 @@
                     });
                 }
             });
+
+
+            var settingsTable = null;
+
+            /* Load DataTable only when tab is opened */
+            $('a[href="#account-settings-tab"]').on('shown.bs.tab', function() {
+
+                if (settingsTable === null) {
+
+                    settingsTable = $('#settings-table').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: "{{ route('account-settings.index') }}",
+                        order: [
+                            [0, 'desc']
+                        ],
+                        columns: [{
+                                data: 'DT_RowIndex',
+                                name: 'DT_RowIndex',
+                                orderable: false,
+                                searchable: false
+                            },
+                            {
+                                data: 'type',
+                                name: 'key'
+                            },
+                            {
+                                data: 'date',
+                                name: 'date'
+                            },
+                            {
+                                data: 'account',
+                                name: 'account_id'
+                            },
+                            {
+                                data: 'group',
+                                name: 'group_id'
+                            },
+                            {
+                                data: 'amount',
+                                name: 'amount'
+                            },
+                            {
+                                data: 'settings',
+                                name: 'settings',
+                                orderable: false
+                            },
+                            {
+                                data: 'action',
+                                name: 'action',
+                                orderable: false,
+                                searchable: false
+                            }
+                        ]
+                    });
+
+                    /* Initialize popovers AFTER every draw */
+                    $('#settings-table').on('draw.dt', function() {
+                        $('[data-bs-toggle="popover"]').popover({
+                            trigger: 'hover',
+                            placement: 'left',
+                            html: true,
+                            container: 'body'
+                        });
+                    });
+                }
+            });
+
         });
+
+        function deleteAccountSetting(id) {
+
+            if (!confirm('{{ __('Are you sure you want to delete this record?') }}')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/accounting/account-settings/' + id,
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        settingsTable.ajax.reload(null, false);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('{{ __('Something went wrong!') }}');
+                }
+            });
+        }
 
         // Delete functions
         function deleteType(id) {
@@ -442,5 +583,108 @@
                 });
             }
         }
+
+
+        $(document).on('click', '.btn-modal', function() {
+            let container = $(this).data('container');
+            let url = $(this).data('href');
+
+            $(container).html(
+                '<div class="modal-dialog"><div class="modal-content p-5 text-center">Loading...</div></div>');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    $(container).html(response);
+                    $(container).modal('show');
+                },
+                error: function() {
+                    alert('Failed to load modal');
+                }
+            });
+        });
+
+        // Handle Account Type Form Submission
+        $(document).on('submit', '#typeForm', function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let btn = form.find('button[type="submit"]');
+            btn.attr('disabled', true);
+
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                success: function(response) {
+                    btn.attr('disabled', false);
+                    if (response.success) {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.success') }}",
+                            className: "success",
+                        }).showToast();
+                        $('#generalModalPopup').modal('hide');
+                        $('#types-table').DataTable().ajax.reload();
+                    } else {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.error') }}",
+                            className: "danger",
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    btn.attr('disabled', false);
+                    let errorMsg = 'An error occurred';
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Toastify({
+                        text: errorMsg,
+                        className: "danger",
+                    }).showToast();
+                }
+            });
+        });
+
+        // Handle Account Group Form Submission
+        $(document).on('submit', '#groupForm', function(e) {
+            e.preventDefault();
+            let form = $(this);
+            let btn = form.find('button[type="submit"]');
+            btn.attr('disabled', true);
+
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                success: function(response) {
+                    btn.attr('disabled', false);
+                    if (response.success) {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.success') }}", // Handle various response keys
+                            className: "success",
+                        }).showToast();
+                        $('#generalModalPopup').modal('hide');
+                        $('#groups-table').DataTable().ajax.reload();
+                    } else {
+                        Toastify({
+                            text: response.msg || response.message || "{{ __('messages.error') }}",
+                            className: "danger",
+                        }).showToast();
+                    }
+                },
+                error: function(xhr) {
+                    btn.attr('disabled', false);
+                    let errorMsg = 'An error occurred';
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Toastify({
+                        text: errorMsg,
+                        className: "danger",
+                    }).showToast();
+                }
+            });
+        });
     </script>
 @endpush

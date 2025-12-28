@@ -15,12 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('business_id');
             $table->string('name');
+            $table->text('description')->nullable();
             $table->unsignedBigInteger('parent_account_type_id')->nullable();
             $table->integer('show_balance_as')->default(1)->comment('1=Debit-Credit, 2=Credit-Debit');
             $table->timestamps();
-
-            $table->index('business_id');
-            $table->foreign('parent_account_type_id')->references('id')->on('account_types')->onDelete('cascade');
         });
     }
 
