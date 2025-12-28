@@ -9,5 +9,6 @@
     "Crm": true,
     "Logistics": true,
     "Purchase": true,
-    "Contacts": true
+    "Contacts": true,
+    "StockAdjustment": true
 }
