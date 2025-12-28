@@ -17,10 +17,10 @@
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('stockadjustment.create') }}" class="btn add-btn"
-                        data-ajax-modal="true" data-size="lg" data-title="Add Stock Adjustment">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add ') }}
-                    </a>
+                   <a href="{{ route('stock_adjustment.create') }}" class="btn add-btn">
+    <i class="fa-solid fa-plus"></i> {{ __('Add') }}
+</a>
+
                 </div>
             </x-slot>
         </x-breadcrumb>

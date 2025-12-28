@@ -38,18 +38,18 @@ class AppMenuListener
             ->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-ship"></i><span>' . __("Stock-Adjustment") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->add(
-                        Link::toRoute('stockadjustment.index', __('List Stock Adjustments'))
-                            ->addClass(route_is(['stockadjustment.index.*']) ? 'active' : ''),
+                 ->add(
+                        Link::toRoute('stock_adjustment.index', __('List Stock Adjustment'))
+                            ->addClass(route_is(['stock_adjustment.index.*']) ? 'active' : ''),
                     )
+                    
                     ->add(
-                        Link::toRoute('stockadjustment.index', __('Add Stock Adjustment'))
-                            ->addClass(route_is(['stockadjustment.index.*']) ? 'active' : ''),
+                        Link::toRoute('stockadjustment-settings.create', __('Stock Adjustment Settings'))
+                            ->addClass(route_is(['stockadjustment-settings.create.*']) ? 'active' : ''),
                     )
-                    ->add(
-                        Link::toRoute('stockadjustment.index', __('Stock Adjustment Settings'))
-                            ->addClass(route_is(['stockadjustment.index.*']) ? 'active' : ''),
-                    )
+                   
+                    
+                   
                     
                     ->addParentClass('submenu')
             );

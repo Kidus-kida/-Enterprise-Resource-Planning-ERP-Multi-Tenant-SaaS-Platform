@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\StockAdjustment\Http\Controllers\StockAdjustmentSettings;
 use Modules\StockAdjustment\Http\Controllers\StockAdjustmentController;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,5 +15,10 @@ use Modules\StockAdjustment\Http\Controllers\StockAdjustmentController;
 */
 
 Route::group([], function () {
-    Route::resource('stockadjustment', StockAdjustmentController::class)->names('stockadjustment');
+    Route::resource('stockadjustment', StockAdjustmentController::class)
+        ->names('stock_adjustment');
+
+    // Resource routes for settings
+    Route::resource('stockadjustment-settings', StockAdjustmentSettings::class)
+        ->names('stockadjustment-settings');
 });
