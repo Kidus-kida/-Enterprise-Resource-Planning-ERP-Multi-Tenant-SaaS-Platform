@@ -30,6 +30,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
+use App\InvoiceScheme;
+use App\SellingPriceGroup;
+use App\TypesOfService;
+use Yajra\DataTables\Facades\DataTables;
+use App\Models\ContactLedger;
 
 class SalesController extends Controller
 {
@@ -149,15 +155,19 @@ class SalesController extends Controller
         $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
         
         $customer_groups = ContactGroup::forDropdown($business_id);
-        
         $customers = Contact::customersDropdown($business_id, false);
         
         $first_location = BusinessLocation::where('business_id', $business_id)->first();
         $payment_types = $this->productUtil->payment_types($first_location, true, false, false, false, true, "is_sale_enabled");
         
         $accounts = $this->moduleUtil->accountsDropdown($business_id, true);
-
         $invoice_no = $this->businessUtil->getFormNumber('sell');
+
+        $invoice_schemes = InvoiceScheme::forDropdown($business_id);
+        $default_invoice_scheme_id = InvoiceScheme::getDefault($business_id);
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+        $price_groups = SellingPriceGroup::forDropdown($business_id);
+        $types_of_service = TypesOfService::forDropdown($business_id);
 
         return view('sales::create', compact(
             'invoice_no',
@@ -166,8 +176,121 @@ class SalesController extends Controller
             'customer_groups',
             'customers',
             'payment_types',
-            'accounts'
+            'accounts',
+            'invoice_schemes',
+            'default_invoice_scheme_id',
+            'shipping_statuses',
+            'price_groups',
+            'types_of_service'
         ));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        $business_id = request()->session()->get('user.business_id');
+        $transaction = Transaction::where('business_id', $business_id)
+            ->where('type', 'sell')
+            ->findOrFail($id);
+
+        $taxes = TaxRate::where('business_id', $business_id)->get();
+        $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
+        $customer_groups = ContactGroup::forDropdown($business_id);
+        $customers = Contact::customersDropdown($business_id, false);
+        $accounts = $this->moduleUtil->accountsDropdown($business_id, true);
+        
+        $invoice_schemes = InvoiceScheme::forDropdown($business_id);
+        $default_invoice_scheme_id = InvoiceScheme::getDefault($business_id);
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+        $price_groups = SellingPriceGroup::forDropdown($business_id);
+        $types_of_service = TypesOfService::forDropdown($business_id);
+        
+        $first_location = BusinessLocation::find($transaction->location_id);
+        $payment_types = $this->productUtil->payment_types($first_location, true, false, false, false, true, "is_sale_enabled");
+
+        return view('sales::edit', compact(
+            'transaction',
+            'taxes',
+            'business_locations',
+            'customer_groups',
+            'customers',
+            'payment_types',
+            'accounts',
+            'invoice_schemes',
+            'default_invoice_scheme_id',
+            'shipping_statuses',
+            'price_groups',
+            'types_of_service'
+        ));
+    }
+    
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $business_id = $request->session()->get('user.business_id');
+            $transaction = Transaction::where('business_id', $business_id)
+                ->where('type', 'sell')
+                ->findOrFail($id);
+
+            // Validation (simplified)
+            $validator = Validator::make($request->all(), [
+                'contact_id' => 'required',
+                'transaction_date' => 'required',
+                'final_total' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            DB::beginTransaction();
+
+            $input = $request->except(['_token', '_method']);
+            
+            // Generate update logic similar to store, reusing TransactionUtil
+            // Note: Update logic requires deep diffing which Utils usually handle if passed correct IDs.
+            // For now, this is a basic implementation structure.
+            
+             // Map 'sales' to 'products' for Utils
+            $sales = $request->input('sales', []);
+            $input['products'] = $sales; 
+            
+            // Recalculate invoice total
+             $discount = [
+                'discount_type' => $input['discount_type'],
+                'discount_amount' => $input['discount_amount']
+            ];
+            $invoice_total = $this->productUtil->calculateInvoiceTotal($sales, $input['tax_rate_id'] ?? null, $discount);
+            
+            // Update Transaction
+            $transaction->fill($input);
+            $transaction->total_before_tax = $invoice_total['total_before_tax'];
+            $transaction->tax_amount = $invoice_total['tax'];
+            $transaction->save();
+
+            // Update Sell Lines
+            $this->transactionUtil->createOrUpdateSellLines($transaction, $sales, $transaction->location_id);
+            
+            // Update Payments?
+            // Payment update logic is complex. Utils have `createOrUpdatePaymentLines`.
+            
+             // VAT
+             $this->transactionUtil->calculateAndUpdateVAT($transaction);
+
+            DB::commit();
+
+            return redirect()->route('sales.index')->with(notify(__('Sale updated successfully')));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating sale: ' . $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -196,6 +319,7 @@ class SalesController extends Controller
                 'location_id' => 'required',
                 'store_id' => 'required',
                 'final_total' => 'required',
+                'sales' => 'required|array|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -206,51 +330,105 @@ class SalesController extends Controller
 
             DB::beginTransaction();
 
-            $transaction_data = $request->only([
-                'contact_id', 'transaction_date', 'location_id', 'status', 'is_vat',
-                'total_before_tax', 'discount_amount', 'discount_type', 'tax_amount', 'shipping_charges',
-                'final_total', 'additional_notes', 'pay_term_number', 'pay_term_type', 'invoice_no', 'ref_no'
-            ]);
+            $input = $request->except('_token');
 
-            $transaction_data['business_id'] = $business_id;
-            $transaction_data['created_by'] = $user_id;
-            $transaction_data['type'] = 'sell';
-            $transaction_data['payment_status'] = 'due';
-            $transaction_data['store_id'] = $request->input('store_id');
+            // Check Credit Limit
+            $is_credit_limit_exeeded = $this->transactionUtil->isCustomerCreditLimitExeeded($input);
+             if ($is_credit_limit_exeeded !== false) {
+                 $credit_limit_amount = $this->transactionUtil->num_f($is_credit_limit_exeeded, true);
+                  $output = [
+                    'success' => 0,
+                    'msg' => __('lang_v1.cutomer_credit_limit_exeeded', ['credit_limit' => $credit_limit_amount]),
+                ];
+                 return redirect()->back()->with('status', $output)->withInput();
+             }
+
+            $input['business_id'] = $business_id;
+            $input['created_by'] = $user_id;
+            $input['is_quotation'] = 0;
+            $input['status'] = $input['status'] ?? 'final';
+            $input['type'] = 'sell';
+            $input['payment_status'] = 'due';
             
-            if (!empty($transaction_data['transaction_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $transaction_data['transaction_date'])) {
-                $transaction_data['transaction_date'] = $transaction_data['transaction_date'] . ' ' . date('H:i:s');
+            // Format date
+            if (!empty($input['transaction_date'])) {
+                 if(preg_match('/^\d{4}-\d{2}-\d{2}$/', $input['transaction_date'])) {
+                    $input['transaction_date'] = $input['transaction_date'] . ' ' . date('H:i:s');
+                 }
             } else {
-                $transaction_data['transaction_date'] = $this->productUtil->uf_date($transaction_data['transaction_date'], true);
+                $input['transaction_date'] = Carbon::now();
             }
-
+            
             // Generate invoice number if empty
-            if (empty($transaction_data['invoice_no'])) {
-                $transaction_data['invoice_no'] = $this->businessUtil->getFormNumber('sell');
+            if(empty($input['invoice_no'])){
+                 $input['invoice_no'] = $this->businessUtil->getFormNumber('sell');
             }
 
-            $transaction = Transaction::create($transaction_data);
-
-            // Create sell lines
+            // Map 'sales' to 'products' for Utils
             $sales = $request->input('sales', []);
-            if (!empty($sales)) {
-                $this->transactionUtil->createOrUpdateSellLines($transaction, $sales, $transaction->location_id);
-            }
+            $input['products'] = $sales; 
 
-            // Add Payments
+            $discount = [
+                'discount_type' => $input['discount_type'],
+                'discount_amount' => $input['discount_amount']
+            ];
+            
+            $invoice_total = $this->productUtil->calculateInvoiceTotal($sales, $input['tax_rate_id'] ?? null, $discount);
+            
+            // Determine credit sale
+            $is_credit_sale = 0;
             $payments = $request->input('payment', []);
             if (!empty($payments)) {
-                $this->transactionUtil->createOrUpdatePaymentLines($transaction, $payments, $business_id, $user_id, true, $transaction->status);
+                if (isset($payments[0]['method']) && $payments[0]['method'] == 'credit_sale') {
+                    $is_credit_sale = 1;
+                }
+            }
+            $input['is_credit_sale'] = $is_credit_sale;
+
+            // Create Transaction
+            $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
+
+            // Create Sell Lines
+            $this->transactionUtil->createOrUpdateSellLines($transaction, $sales, $transaction->location_id);
+
+            // Create Payment Lines
+            if(!empty($payments) && !$is_credit_sale) {
+                 $this->transactionUtil->createOrUpdatePaymentLines($transaction, $payments, $business_id, $user_id, true, $transaction->status);
             }
 
-            // Update payment status
-            $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
+            // Accounting for Credit Sale
+            if ($is_credit_sale) {
+                  $account = Account::where('business_id', $business_id)->where('name', 'Accounts Receivable')->first();
+                  $acc_id = $account ? $account->id : null;
+                  
+                  if($acc_id) {
+                       $account_transaction_data = [
+                            'amount' => $transaction->final_total,
+                            'account_id' => $acc_id,
+                            'type' => 'debit',
+                            'sub_type' => '',
+                            'operation_date' => $transaction->transaction_date,
+                            'created_by' => $transaction->created_by,
+                            'transaction_id' => $transaction->id,
+                            'transaction_payment_id' => null,
+                        ];
+                        // Create AR transaction
+                        $this->transactionUtil->createAccountTransaction($transaction, 'debit', $acc_id);
+                        
+                        // Manage Stock Account
+                        $this->transactionUtil->manageStockAccount($transaction, $account_transaction_data, 'credit', $transaction->final_total);
+                        $this->transactionUtil->createCostofGoodsSoldTransaction($transaction, null, 'debit');
+                        $this->transactionUtil->createSaleIncomeTransaction($transaction, null, 'credit');
+                  }
+                  
+                   $this->createContactLedger($transaction, 'debit');
+            }
 
-            // Update product stock
+            // Update Stock
             foreach ($sales as $product) {
-                if (!empty($product['variation_id']) && !empty($product['enable_stock'])) {
+                 if (!empty($product['variation_id']) && !empty($product['enable_stock'])) {
                     $decrease_qty = $this->productUtil->num_uf($product['quantity']);
-                    if (!empty($product['base_unit_multiplier'])) {
+                     if (!empty($product['base_unit_multiplier'])) {
                         $decrease_qty *= $product['base_unit_multiplier'];
                     }
 
@@ -276,8 +454,22 @@ class SalesController extends Controller
                 }
             }
 
-            // Calculate and update VAT
-            $this->transactionUtil->calculateAndUpdateVAT($transaction);
+            // Map Purchase Sell (FIFO)
+             $business_details = $this->businessUtil->getDetails($business_id);
+             $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
+             $business_data = [
+                 'id' => $business_id,
+                 'accounting_method' => $request->session()->get('business.accounting_method'),
+                 'location_id' => $input['location_id'],
+                 'pos_settings' => $pos_settings
+             ];
+             $this->transactionUtil->mapPurchaseSell($business_data, $transaction->sell_lines, 'purchase');
+            
+             // VAT
+             $this->transactionUtil->calculateAndUpdateVAT($transaction);
+             
+             // Update Payment Status
+             $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
 
             DB::commit();
 
@@ -339,21 +531,7 @@ class SalesController extends Controller
         return view('sales::show', compact('sale', 'payment_types', 'order_taxes'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('sales::edit');
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
 
     public function getProducts(Request $request)
     {
@@ -361,8 +539,9 @@ class SalesController extends Controller
             $term = $request->term ?? '';
             $location_id = $request->location_id;
             $business_id = $request->session()->get('user.business_id') ?? 1;
+            $store_id = $request->store_id;
 
-            $products = $this->productUtil->filterProduct(
+            $products = $this->productUtil->filterProductPos(
                 $business_id, 
                 $term, 
                 $location_id, 
@@ -370,7 +549,11 @@ class SalesController extends Controller
                 null, 
                 [], 
                 ['name', 'sku', 'sub_sku'], 
-                false
+                false,
+                'like',
+                $store_id,
+                null,
+                null
             );
 
             $results = [];
@@ -385,6 +568,10 @@ class SalesController extends Controller
                     'variation_id' => $product->variation_id,
                     'text' => $text . ' (' . $product->sub_sku . ')',
                     'sub_sku' => $product->sub_sku,
+                    'image' => $product->image_url,
+                    'selling_price' => $product->selling_price,
+                    'current_stock' => $product->current_stock,
+                    'unit' => $product->unit,
                 ];
             }
 
@@ -425,5 +612,18 @@ class SalesController extends Controller
         $accounts = $this->moduleUtil->accountsDropdown($business_id, true);
 
         return view('sales::partials.payment_row', compact('row_index', 'payment_types', 'accounts'));
+    }
+    public function createContactLedger($transaction, $type)
+    {
+        $account_transaction_data = [
+            'contact_id'             => !empty($transaction) ? $transaction->contact_id : null,
+            'amount'                 => $transaction->final_total,
+            'type'                   => $type,
+            'operation_date'         => $transaction->transaction_date,
+            'created_by'             => $transaction->created_by,
+            'transaction_id'         => $transaction->id,
+            'transaction_payment_id' => null,
+        ];
+        ContactLedger::createContactLedger($account_transaction_data);
     }
 }

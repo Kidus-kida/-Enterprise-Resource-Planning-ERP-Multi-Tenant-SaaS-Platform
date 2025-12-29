@@ -14,7 +14,7 @@
         <input type="hidden" name="sales[{{ $row_count }}][product_id]" value="{{ $product->id }}">
         <input type="hidden" name="sales[{{ $row_count }}][variation_id]" value="{{ $variation->id }}" class="hidden_variation_id">
         <input type="hidden" name="sales[{{ $row_count }}][row_count]" value="{{ $row_count }}">
-        <input type="hidden" name="sales[{{ $row_count }}][product_unit_id]" value="{{ $product->unit->id }}">
+        <input type="hidden" name="sales[{{ $row_count }}][product_unit_id]" value="{{ $product->unit_id }}">
         <input type="hidden" name="sales[{{ $row_count }}][line_discount_type]" value="percentage">
         <input type="hidden" name="sales[{{ $row_count }}][enable_stock]" value="{{ $product->enable_stock }}">
         <input type="hidden" name="sales[{{ $row_count }}][product_type]" value="{{ $product->type }}">
@@ -33,7 +33,7 @@
                class="form-control sell_quantity" 
                required />
         @if($product->unit)
-            <span class="unit_text">{{ $product->unit->short_name }}</span>
+            <span class="unit_text">{{ $product->unit }}</span>
         @endif
     </td>
     

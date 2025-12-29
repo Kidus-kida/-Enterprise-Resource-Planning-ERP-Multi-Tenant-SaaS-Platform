@@ -51,7 +51,7 @@ class PurchaseReturnController extends Controller
         // }
 
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
 
             $purchases_returns = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                 ->join(
@@ -176,7 +176,7 @@ class PurchaseReturnController extends Controller
         // if (!auth()->user()->can('purchase.update')) {
         //     abort(403, 'Unauthorized action.');
         // }
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $purchase = Transaction::where('business_id', $business_id)
             ->where('type', 'purchase')
@@ -214,7 +214,7 @@ class PurchaseReturnController extends Controller
         // }
 
         try {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
 
             $purchase = Transaction::where('business_id', $business_id)
                 ->where('type', 'purchase')
@@ -388,7 +388,7 @@ class PurchaseReturnController extends Controller
         //     abort(403, 'Unauthorized action.');
         // }
 
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $purchase = Transaction::where('business_id', $business_id)
             ->with(['return_parent', 'purchase_lines', 'contact', 'purchase_lines.sub_unit', 'purchase_lines.product', 'purchase_lines.product.unit'])

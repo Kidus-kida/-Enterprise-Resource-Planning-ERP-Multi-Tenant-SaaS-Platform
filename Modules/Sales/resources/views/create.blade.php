@@ -217,50 +217,76 @@
                             </table>
                         </div>
 
-                        <hr />
-                        <div class="row mb-3">
+                        <div class="row mb-2">
                             <div class="col-md-6"></div>
                             <div class="col-md-6 text-end">
-                                <h5 class="mb-0">
-                                    <strong>{{ __('Subtotal:') }} <span id="display-grand-total">0.00</span></strong>
-                                    <input type="hidden" name="total_before_tax" id="total_before_tax" value="0">
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6"></div>
-                            <div class="col-md-6 text-end">
-                                <h5 class="mb-0 text-danger">
-                                    <strong>{{ __('Discount:') }} <span id="display-discount-total">0.00</span></strong>
-                                    <input type="hidden" name="discount_amount" id="discount_amount" value="0">
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6"></div>
-                            <div class="col-md-6 text-end">
-                                <h5 class="mb-0 text-primary">
-                                    <strong>{{ __('Total Tax:') }} <span id="display-tax-total">0.00</span></strong>
-                                    <input type="hidden" name="tax_amount" id="tax_amount" value="0">
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6"></div>
-                            <div class="col-md-6 text-end">
-                                <div class="d-flex justify-content-end align-items-center">
-                                    <strong class="me-2">{{ __('Shipping:') }}</strong>
-                                    <input type="number" name="shipping_charges" class="form-control text-end" id="shipping_charges" value="0.00" step="0.01" style="width: 150px">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-md-7 text-end fw-bold">{{ __('Subtotal:') }}</div>
+                                    <div class="col-md-5 text-end">
+                                        <span id="display-grand-total">0.00</span>
+                                        <input type="hidden" name="total_before_tax" id="total_before_tax" value="0">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6"></div>
+                            <div class="col-md-6">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-md-7 text-end fw-bold">{{ __('Discount:') }}</div>
+                                    <div class="col-md-5">
+                                        <div class="input-group input-group-sm">
+                                            <select class="form-select" name="discount_type" id="discount_type" style="max-width: 80px;">
+                                                <option value="fixed">{{ __('Fixed') }}</option>
+                                                <option value="percentage">{{ __('%') }}</option>
+                                            </select>
+                                            <input type="number" class="form-control text-end" name="discount_amount" id="discount_amount" value="0" step="0.01">
+                                        </div>
+                                        <span class="d-none" id="display-discount-total">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6"></div>
+                            <div class="col-md-6">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-md-7 text-end fw-bold">{{ __('Order Tax:') }}</div>
+                                    <div class="col-md-5">
+                                        <select name="tax_rate_id" id="tax_rate_id" class="form-select form-select-sm text-end">
+                                            <option value="" data-tax-amount="0">{{ __('None') }}</option>
+                                            @foreach($taxes as $tax)
+                                                <option value="{{ $tax->id }}" data-tax-amount="{{ $tax->amount }}">{{ $tax->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" name="tax_amount" id="tax_amount" value="0">
+                                        <span class="d-block text-end small text-muted mt-1" id="display-tax-total">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6"></div>
+                            <div class="col-md-6">
+                                <div class="row align-items-center mb-2">
+                                    <div class="col-md-7 text-end fw-bold">{{ __('Shipping:') }}</div>
+                                    <div class="col-md-5">
+                                        <input type="number" name="shipping_charges" class="form-control form-control-sm text-end" id="shipping_charges" value="0.00" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row mb-3">
                             <div class="col-md-6"></div>
                             <div class="col-md-6 text-end">
-                                <h5 class="mb-0">
+                                <h4 class="mb-0 text-primary">
                                     <strong>{{ __('Final Total:') }} <span id="display-final-total">0.00</span></strong>
                                     <input type="hidden" name="final_total" id="final_total" value="0">
-                                </h5>
+                                </h4>
                             </div>
                         </div>
                         <hr />
@@ -268,7 +294,7 @@
                         <div class="col-md-12">
                             <div class="input-block mb-3">
                                 <x-form.label>{{ __('Sales Note') }}</x-form.label>
-                                <x-form.textarea name="additional_notes" rows="3" placeholder="{{ __('Any notes for this sale...') }}" />
+                                <x-form.textarea name="sale_note" rows="3" placeholder="{{ __('Any notes for this sale...') }}" />
                             </div>
                         </div>
 
@@ -464,40 +490,37 @@
             }
 
             // ===== CALCULATIONS =====
-            $(document).on('input change', '.sell_quantity, .sell_unit_price, .sell_line_discount, .sell_line_tax_id, #shipping_charges', function() {
+            $(document).on('input change', '.sell_quantity, .sell_unit_price, .sell_line_discount, .sell_line_tax_id, #shipping_charges, #discount_amount, #discount_type, #tax_rate_id', function() {
                 calculateTotal();
             });
 
             function calculateTotal() {
-                let totalBeforeTax = 0;
-                let totalDiscount = 0;
-                let totalTax = 0;
+                let totalLineTotal = 0; // Sum of line totals (including line tax)
+                let totalBeforeTax = 0; // Sum of line quantities * unit price (subtotal)
 
                 $('#product-table-body tr.sell_entry_row').each(function() {
                     const row = $(this);
                     const qty = parseFloat(row.find('.sell_quantity').val()) || 0;
                     const price = parseFloat(row.find('.sell_unit_price').val()) || 0;
                     const discPercent = parseFloat(row.find('.sell_line_discount').val()) || 0;
-                    const taxRate = parseFloat(row.find('.sell_line_tax_id option:selected').data('tax_amount')) || 0;
+                    const lineTaxAmount = parseFloat(row.find('.sell_line_tax_id option:selected').data('tax_amount')) || 0; // Line tax rate
 
-                    const totalWithoutDiscount = qty * price;
+                    const totalWithoutDiscount = qty * price; 
                     const discountValue = (totalWithoutDiscount * discPercent) / 100;
                     const totalAfterDiscount = totalWithoutDiscount - discountValue;
                     
-                    const taxValue = (totalAfterDiscount * taxRate) / 100;
-                    const lineTotal = totalAfterDiscount + taxValue;
+                    const taxValue = (totalAfterDiscount * lineTaxAmount) / 100;
+                    const lineTotal = totalAfterDiscount + taxValue; // Line total (inc line tax)
 
-                    totalBeforeTax += totalWithoutDiscount;
-                    totalDiscount += discountValue;
-                    totalTax += taxValue;
+                    totalBeforeTax += totalAfterDiscount; // Logic: Subtotal is usually post-line-discount
+                    totalLineTotal += lineTotal;
 
                     // Update row displays
-                    row.find('.row_subtotal_before_tax').text(totalWithoutDiscount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                    row.find('.row_subtotal_before_tax_hidden').val(totalWithoutDiscount.toFixed(2));
+                    row.find('.row_subtotal_before_tax').text(totalAfterDiscount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    row.find('.row_subtotal_before_tax_hidden').val(totalAfterDiscount.toFixed(2));
                     
-                    // Calc individual unit price inc tax for backend
-                    const unitPriceAfterDiscount = price - (price * discPercent / 100);
-                    const unitPriceIncTax = unitPriceAfterDiscount + (unitPriceAfterDiscount * taxRate / 100);
+                    // Calc individual unit price inc tax for backend (approx)
+                    const unitPriceIncTax = (lineTotal / qty) || 0;
                     row.find('.sell_line_unit_price_inc_tax').val(unitPriceIncTax.toFixed(4));
                     
                     row.find('.sell_line_tax_amount').val(taxValue.toFixed(4));
@@ -505,21 +528,79 @@
                     row.find('.row_line_total_hidden').val(lineTotal.toFixed(2));
                 });
 
+                // Order Level Calculations
+                let orderDiscountAmount = 0;
+                const discountType = $('#discount_type').val();
+                const discountVal = parseFloat($('#discount_amount').val()) || 0;
+
+                if (discountType === 'fixed') {
+                    orderDiscountAmount = discountVal;
+                } else {
+                    orderDiscountAmount = (totalBeforeTax * discountVal) / 100;
+                }
+
+                // Order Tax
+                let orderTaxAmount = 0;
+                const orderTaxRate = parseFloat($('#tax_rate_id option:selected').data('tax-amount')) || 0;
+                
+                // Taxable amount = Subtotal - Order Discount
+                let taxableAmount = totalBeforeTax - orderDiscountAmount;
+                if(taxableAmount < 0) taxableAmount = 0;
+
+                orderTaxAmount = (taxableAmount * orderTaxRate) / 100;
+
                 const shipping = parseFloat($('#shipping_charges').val()) || 0;
-                const finalTotal = totalBeforeTax - totalDiscount + totalTax + shipping;
+                
+                // Final Total = (Sum of Line Totals) - Order Discount + Order Tax + Shipping
+                // Note: Line Totals already include Line Tax.
+                // If using Order Tax, usually Line Tax should be 0 or they stack. 
+                // We will add Order Tax on top of everything.
+                 
+                // Wait, if Line Tax is used, totalBeforeTax excludes it?
+                // totalBeforeTax calculated above IS (Price * Qty - Line Discount). 
+                // So it excludes Line Tax.
+                
+                // If we want Subtotal displayed, usually it's totalBeforeTax.
+                
+                const finalTotal = totalBeforeTax - orderDiscountAmount + orderTaxAmount + shipping; 
+                // Note: This ignores Line Tax in the Final Total calculation if we assume "Order Tax" replaces it or stacks on Subtotal.
+                // But wait, the loop calculated `lineTotal` which INCLUDES Line Tax.
+                // If we have line taxes, they should be in the final total.
+                // Let's use `totalLineTotal` (which includes line tax) - OrderDiscount + OrderTax + Shipping.
+                // Careful: Order Tax is usually on (Subtotal - OrderDiscount). Subtotal usually EXCLUDES line tax.
+                
+                // Adjusted logic:
+                // Final = (Sum of Line Totals) - OrderDiscount + OrderTax + Shipping.
+                // Provided OrderDiscount applies to the "Base" price. 
+                // This is getting complex. Let's stick to a standard:
+                // Subtotal = Sum(Line Total Excl Tax)
+                // Order Discount = applied on Subtotal
+                // Order Tax = applied on (Subtotal - Order Discount)
+                // Final = (Subtotal - Order Discount) + Order Tax + Sum(Line Taxes) + Shipping
+                
+                // Let's re-sum:
+                let subtotalExclTax = totalBeforeTax; // (Qty * Price - Line Disc)
+                let sumLineTaxes = 0;
+                $('#product-table-body tr.sell_entry_row').each(function() {
+                     sumLineTaxes += parseFloat($(this).find('.sell_line_tax_amount').val()) || 0;
+                });
+                
+                // Recalculate Order Tax on (Subtotal - Order Discount)
+                taxableAmount = subtotalExclTax - orderDiscountAmount;
+                orderTaxAmount = (taxableAmount * orderTaxRate) / 100;
+
+                const grandTotal = (subtotalExclTax - orderDiscountAmount) + sumLineTaxes + orderTaxAmount + shipping;
 
                 // Update Summary displays
-                $('#display-grand-total').text(totalBeforeTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#total_before_tax').val(totalBeforeTax.toFixed(2));
+                $('#display-grand-total').text(subtotalExclTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#total_before_tax').val(subtotalExclTax.toFixed(2));
                 
-                $('#display-discount-total').text(totalDiscount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#discount_amount').val(totalDiscount.toFixed(2));
+                // Display Order Tax
+                $('#display-tax-total').text(orderTaxAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#tax_amount').val(orderTaxAmount.toFixed(2)); 
                 
-                $('#display-tax-total').text(totalTax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#tax_amount').val(totalTax.toFixed(2));
-                
-                $('#display-final-total').text(finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#final_total').val(finalTotal.toFixed(2));
+                $('#display-final-total').text(grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#final_total').val(grandTotal.toFixed(2));
 
                 calculatePaymentDue();
             }

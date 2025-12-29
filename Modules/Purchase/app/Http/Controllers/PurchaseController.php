@@ -102,7 +102,7 @@ class PurchaseController extends Controller
      */
     public function list()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $purchases = Transaction::where('transactions.business_id', $business_id)
             ->where('transactions.type', 'purchase')
@@ -168,7 +168,7 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $purchases = [];
         if (request('view') == 'grid') {
@@ -196,7 +196,7 @@ class PurchaseController extends Controller
      */
     public function create()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $taxes = TaxRate::where('business_id', $business_id)->get();
         $orderStatuses = $this->productUtil->orderStatuses();
@@ -265,7 +265,7 @@ class PurchaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         try {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
             $user_id = request()->session()->get('user.id') ?? 1;
 
             // Check for reviewed dates
@@ -287,7 +287,6 @@ class PurchaseController extends Controller
                 'total_before_tax' => 'required',
                 'location_id' => 'required',
                 'final_total' => 'required',
-                'store_id' => 'required',
                 'ref_no' => [
                     'required',
                     Rule::unique('transactions', 'ref_no')
@@ -448,7 +447,7 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
         $transaction = Transaction::where('business_id', $business_id)
             ->where('id', $id)
             ->with(['contact', 'purchase_lines', 'payments']) 
@@ -462,7 +461,7 @@ class PurchaseController extends Controller
      */
     public function edit($id)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 11;
         $transaction = Transaction::where('business_id', $business_id)
             ->where('id', $id)
             ->firstOrFail();
@@ -488,7 +487,7 @@ class PurchaseController extends Controller
             $variation_id = $request->input('variation_id');
             $location_id = $request->input('location_id');
             
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
             
             $product = Product::leftJoin('categories as c1', 'products.category_id', '=', 'c1.id')
                                 ->where('products.id',$product_id)
@@ -585,7 +584,7 @@ class PurchaseController extends Controller
     {
         $term = $request->term ?? '';
         $location_id = $request->location_id;
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $products = Product::leftJoin('variations', 'products.id', '=', 'variations.product_id')
             ->where('products.business_id', $business_id)
@@ -630,7 +629,7 @@ class PurchaseController extends Controller
      */
     public function getPaymentRow(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
         $row_index = $request->row_index ?? 0;
         $location_id = $request->location_id;
         
@@ -652,7 +651,7 @@ class PurchaseController extends Controller
      */
     public function getPaymentAccounts(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
         $payment_method = $request->payment_method;
         
         $query = Account::where('business_id', $business_id);
@@ -680,7 +679,7 @@ class PurchaseController extends Controller
     public function getSuppliers(Request $request)
     {
         $term = $request->q ?? '';
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = auth()->user()->business_id ?? 1;
 
         $suppliers = DB::table('contacts')
             ->where('business_id', $business_id)
@@ -709,7 +708,7 @@ class PurchaseController extends Controller
     public function getProductsPurchases()
     {
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
             $term = request()->term;
             $module = request()->module ?? null;
 
@@ -847,7 +846,7 @@ class PurchaseController extends Controller
     {
         // Re-implementing destroy for completeness
         try {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = auth()->user()->business_id ?? 1;
 
             $transaction = Transaction::where('id', $id)
                 ->where('business_id', $business_id)

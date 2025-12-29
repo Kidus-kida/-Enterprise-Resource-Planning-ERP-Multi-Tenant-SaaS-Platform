@@ -59,18 +59,18 @@ class Util
     public function getDays()
     {
         return [
-            'sunday' => __('lang_v1.sunday'),
-            'monday' => __('lang_v1.monday'),
-            'tuesday' => __('lang_v1.tuesday'),
-            'wednesday' => __('lang_v1.wednesday'),
-            'thursday' => __('lang_v1.thursday'),
-            'friday' => __('lang_v1.friday'),
-            'saturday' => __('lang_v1.saturday'),
+            'sunday' => __('Sunday'),
+            'monday' => __('Monday'),
+            'tuesday' => __('Tuesday'),
+            'wednesday' => __('Wednesday'),
+            'thursday' => __('Thursday'),
+            'friday' => __('Friday'),
+            'saturday' => __('Saturday'),
         ];
     }
     
     public function checkCheques($cheque_no, $bank_name){
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         $cheque = DB::table('transaction_payments')
             ->where('business_id', '=', $business_id)
             ->where('cheque_number',$cheque_no)
@@ -85,7 +85,7 @@ class Util
         
         
         if (empty($business_id)) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id ?? 1;
         }
         
         if($is_petro){
@@ -107,7 +107,7 @@ class Util
         if (auth()->user()->can('bypass.review')) { return []; }
         
         if (empty($business_id)) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id ?? 1;
         }
         
         if($is_petro){
@@ -142,14 +142,14 @@ class Util
         // if (auth()->user()->can('bypass.review')) { return []; }
         
         
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         $subscription = Subscription::current_subscription($business_id);
     	$pacakge_details = $subscription->package_details;
     	
     	
     	if(!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1){
     	    if(date('Y-m-d',strtotime($date)) > date('Y-m-d')){
-                $business_id = request()->session()->get('user.business_id');
+                $business_id = auth()->user()->business_id ?? 1;
             
                 $reviewed = DB::table('daily_report_review_status')
                     ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
@@ -174,7 +174,7 @@ class Util
     
     public function reviewChange($date,$data){
         
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         $subscription = Subscription::current_subscription($business_id);
     	$pacakge_details = $subscription->package_details;
     	
@@ -319,7 +319,7 @@ class Util
      */
     public function payment_types($location = null, $merge_cash_group_accounts = false, $add_credit_purchase = false, $add_credit_expense = false, $add_credit_sale = false, $is_company = false,$action = null)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         
         
         if(!empty($location) && $location != 'null'){
@@ -330,7 +330,7 @@ class Util
 
         $payment_types = [];
         $payments = !empty($location) ? json_decode($location->default_payment_accounts,true) : [];
-        foreach($payments as $key => $value){
+        foreach($payments ?? [] as $key => $value){
             if(!empty($value['is_enabled']) && $value['is_enabled'] == 1){
                 
                 if(!empty($action) ){
@@ -365,7 +365,7 @@ class Util
     
     public function one_payment_type($type,$location = null)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         
         if(!empty($location)){
             $location = is_object($location) ? $location : BusinessLocation::find($location);
@@ -535,7 +535,7 @@ class Util
     public function setAndGetReferenceCount($type, $business_id = null)
     {
         if (empty($business_id)) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id ?? 1;
         }
 
         $ref = ReferenceCount::where('ref_type', $type)
@@ -571,7 +571,7 @@ class Util
     public function onlyGetReferenceCount($type, $business_id = null, $increment_only)
     {
         if (empty($business_id)) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id ?? 1;
         }
 
         $ref = ReferenceCount::where('ref_type', $type)

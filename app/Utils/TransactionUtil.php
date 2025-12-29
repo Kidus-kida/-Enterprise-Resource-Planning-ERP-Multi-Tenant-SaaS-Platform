@@ -1299,7 +1299,7 @@ class TransactionUtil extends Util
             }
             
             
-            if($this->moduleUtil->hasThePermissionInSubscription(request()->session()->get('user.business_id'), 'vat_module')){
+            if($this->moduleUtil->hasThePermissionInSubscription(auth()->user()->business_id ?? 1, 'vat_module')){
                 // if product is set as vat claimed; and the VAT is existend; store in Account Transaction
                 if(!empty($tax_account_id) && $vat_claimed > 0){
                     $account_transaction_data = [
@@ -1400,7 +1400,7 @@ class TransactionUtil extends Util
                 
             }
             
-            if($this->moduleUtil->hasThePermissionInSubscription(request()->session()->get('user.business_id'), 'vat_module')){
+            if($this->moduleUtil->hasThePermissionInSubscription(auth()->user()->business_id ?? 1, 'vat_module')){
                 // if product is set as vat claimed; and the VAT is existend; store in Account Transaction
                 if(!empty($tax_account_id) && $vat_claimed > 0){
                     $account_transaction_data = [
@@ -1471,7 +1471,7 @@ class TransactionUtil extends Util
                 $expense_cat = ExpenseCategory::find($transaction->expense_category_id);
                 
             
-                if ($this->moduleUtil->hasThePermissionInSubscription(request()->session()->get('user.business_id'), 'vat_module') && $transaction->tax_amount > 0) {
+                if ($this->moduleUtil->hasThePermissionInSubscription(auth()->user()->business_id ?? 1, 'vat_module') && $transaction->tax_amount > 0) {
                     
                     // first delete previous tax account transactions
                     AccountTransaction::where('account_id',$tax_account_id)->where('transaction_id',$transaction->id)->forceDelete();
@@ -1527,7 +1527,7 @@ class TransactionUtil extends Util
     
      private function __transactionQuery($contact_id, $start, $end = null, $location_id = null)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         $transaction_type_keys = array_keys(Transaction::transactionTypes());
 
         $query = Transaction::where('transactions.contact_id', $contact_id)
@@ -1557,7 +1557,7 @@ class TransactionUtil extends Util
     
     private function __paymentQuery($contact_id, $start, $end = null, $location_id = null)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
 
         $query = TransactionPayment::leftJoin(
             'transactions as t',
@@ -1593,7 +1593,7 @@ class TransactionUtil extends Util
     
     public function getLedgerDetails($contact_id, $start, $end, $format = 'format_1', $location_id = null, $line_details = false)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id ?? 1;
         //Get sum of totals before start date
         $previous_transaction_sums = $this->__transactionQuery($contact_id, $start, null, $location_id)
                 ->select(
