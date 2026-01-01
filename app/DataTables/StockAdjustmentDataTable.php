@@ -2,13 +2,14 @@
 
 namespace App\DataTables;
 
-use App\Models\AccountGroup;
+use Models\StockAdjustment\app\Models\StockAdjustment;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+
 
 class StockAdjustmentDataTable extends DataTable
 {
@@ -34,7 +35,7 @@ class StockAdjustmentDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(AccountGroup $model): QueryBuilder
+    public function query(StockAdjustment $model): QueryBuilder
     {
         return $model->with('stockAdjustment:id,name')->newQuery();
     }
