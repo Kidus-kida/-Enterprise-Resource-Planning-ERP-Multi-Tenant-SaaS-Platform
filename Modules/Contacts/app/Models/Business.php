@@ -20,9 +20,7 @@ class Business extends Model
      *
      * @var string
      */
-    protected $table = 'businesses';
 
-    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

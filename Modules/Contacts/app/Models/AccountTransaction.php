@@ -4,8 +4,7 @@ namespace Modules\Contacts\Models;
 
 use App\Utils\TransactionUtil;
 use Illuminate\Database\Eloquent\Model;
-// use Spatie\Activitylog\Traits\LogsActivity;
-// use Spatie\Activitylog\LogOptions;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -14,21 +13,6 @@ use App\Account;
 class AccountTransaction extends Model
 {
     use SoftDeletes;
-    // use LogsActivity;
-
-    protected static $logAttributes = ['*'];
-
-    protected static $logFillable = true;
-
-    protected $guarded = ['id'];
-
-    /*
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['fillable', 'some_other_attribute']);
-    }
-    */
 
     /**
      * The attributes that should be mutated to dates.

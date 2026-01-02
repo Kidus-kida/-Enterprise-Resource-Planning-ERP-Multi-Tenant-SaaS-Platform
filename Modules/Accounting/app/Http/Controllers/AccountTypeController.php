@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Accounting\Models\AccountType;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Auth;
+
 
 class AccountTypeController extends Controller
 {
@@ -16,9 +18,9 @@ class AccountTypeController extends Controller
     {
         if ($request->ajax()) {
             $business_id = session()->get('user.business_id');
-            
+
             $query = AccountType::with('parent');
-            
+
             if ($business_id) {
                 $query->where('business_id', $business_id);
             }
@@ -65,15 +67,22 @@ class AccountTypeController extends Controller
     public function create()
     {
         $business_id = session()->get('user.business_id');
-        $parent_types = AccountType::where('business_id', $business_id)
-                                    ->whereNull('parent_account_type_id')
-                                    ->pluck('name', 'id');
+        // $parent_types = AccountType::where('business_id', $business_id)
+        //     ->whereNull('parent_account_type_id')
+        //     ->pluck('name', 'id');
+        $parent_types = AccountType::all()
+            // ->whereNull('parent_account_type_id')
+            ->pluck('name', 'id');
+            // dd($parent_types);
         return view('accounting::account-types.create', compact('parent_types'));
     }
 
     /**
      * Store a newly created account type
      */
+
+
+
     public function store(Request $request)
     {
         $request->validate([
@@ -81,26 +90,36 @@ class AccountTypeController extends Controller
         ]);
 
         try {
-            $business_id = session()->get('user.business_id');
+            // Get business_id, fallback to logged-in user ID
+            $business_id = auth()->user()->business_id;
 
+            if (!$business_id) {
+                throw new \Exception('Business or User ID not found');
+            }
+
+            
             $type = new AccountType();
             $type->business_id = $business_id;
             $type->name = $request->name;
             $type->parent_account_type_id = $request->parent_account_type_id;
             $type->description = $request->description;
             $type->save();
+            
 
-            return response()->json([
-                'success' => true,
-                'message' => __('Account type created successfully')
-            ]);
+            $output = ['success' => true,
+                            'data' => $type,
+                            'msg' => __("added successfully")
+                        ];
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => __('Failed to create account type: ') . $e->getMessage()
-            ], 500);
+
+            $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
         }
+        
+        return $output;
     }
+
 
     /**
      * Display the specified account type
@@ -118,10 +137,14 @@ class AccountTypeController extends Controller
     {
         $type = AccountType::findOrFail($id);
         $business_id = session()->get('user.business_id');
-        $parent_types = AccountType::where('business_id', $business_id)
-                                    ->whereNull('parent_account_type_id')
-                                    ->where('id', '!=', $id) // Prevent self-parenting
-                                    ->pluck('name', 'id');
+        // $parent_types = AccountType::where('business_id', $business_id)
+        //     ->whereNull('parent_account_type_id')
+        //     ->where('id', '!=', $id) // Prevent self-parenting
+        //     ->pluck('name', 'id');
+        $parent_types = AccountType::all()
+            // ->whereNull('parent_account_type_id')
+            ->where('id', '!=', $id) // Prevent self-parenting
+            ->pluck('name', 'id');
         return view('accounting::account-types.create', compact('type', 'parent_types'));
     }
 

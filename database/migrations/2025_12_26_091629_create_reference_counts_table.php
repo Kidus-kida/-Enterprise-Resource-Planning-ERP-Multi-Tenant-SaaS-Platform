@@ -12,13 +12,30 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('reference_counts', function (Blueprint $table) {
-            $table->id();
-            $table->string('ref_type');
-            $table->integer('business_id');
-            $table->integer('ref_count');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('reference_counts')) {
+            Schema::create('reference_counts', function (Blueprint $table) {
+                $table->id();
+                $table->string('ref_type');
+                $table->integer('business_id');
+                $table->integer('ref_count');
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('reference_counts', function (Blueprint $table) {
+                if (!Schema::hasColumn('reference_counts', 'ref_type')) {
+                    $table->string('ref_type')->after('id');
+                }
+                if (!Schema::hasColumn('reference_counts', 'business_id')) {
+                    $table->integer('business_id')->after('ref_type');
+                }
+                if (!Schema::hasColumn('reference_counts', 'ref_count')) {
+                    $table->integer('ref_count')->after('business_id');
+                }
+                if (!Schema::hasColumn('reference_counts', 'created_at')) {
+                    $table->timestamps();
+                }
+            });
+        }
     }
 
     /**

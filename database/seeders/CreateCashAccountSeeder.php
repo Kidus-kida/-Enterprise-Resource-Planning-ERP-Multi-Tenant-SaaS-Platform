@@ -9,18 +9,26 @@ class CreateCashAccountSeeder extends Seeder
 {
     public function run()
     {
-        // Get the first user's business_id
+        // Determine business_id to use (user.business_id if available, else first business)
         $user = DB::table('users')->first();
-
-        if (!$user) {
-            echo "No users found. Please create a user first.\n";
+        $business_id = null;
+        if ($user) {
+            if (\Schema::hasColumn('users', 'business_id') && $user->business_id) {
+                $business_id = $user->business_id;
+            }
+        }
+        if (! $business_id) {
+            $business_id = DB::table('businesses')->value('id');
+        }
+        if (! $business_id) {
+            echo "No business found. Please run BusinessSeeder first.\n";
             return;
         }
 
         // Check if Cash account already exists
         $exists = DB::table('accounts')
             ->where('name', 'Cash')
-            ->where('business_id', $user->business_id)
+            ->where('business_id', $business_id)
             ->exists();
 
         if ($exists) {
@@ -38,7 +46,7 @@ class CreateCashAccountSeeder extends Seeder
 
         // Create Cash account
         DB::table('accounts')->insert([
-            'business_id' => $user->business_id,
+            'business_id' => $business_id,
             'name' => 'Cash',
             'account_number' => 'CASH-001',
             'account_type_id' => $accountType->id,
