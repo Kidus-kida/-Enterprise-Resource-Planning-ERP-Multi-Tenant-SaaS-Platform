@@ -15,6 +15,9 @@ use Modules\StockAdjustment\Http\Controllers\StockAdjustmentController;
 */
 
 Route::group([], function () {
+    Route::post('/stock-adjustments/get_product_row', [StockAdjustmentController::class, 'getProductRow'])->name('stock_adjustment.get_product_row');
+    Route::get('/stock-adjustments/get_inventory_adjustment_account', [StockAdjustmentController::class, 'getInventoryAdjustmentAccount'])->name('stock_adjustment.get_inventory_adjustment_account');
+
     Route::resource('stockadjustment', StockAdjustmentController::class)
         ->names('stock_adjustment');
 

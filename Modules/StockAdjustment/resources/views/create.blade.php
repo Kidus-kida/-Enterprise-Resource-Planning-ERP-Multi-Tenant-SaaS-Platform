@@ -5,14 +5,14 @@
 
     <!-- Page Header -->
     <x-breadcrumb class="col">
-        <x-slot name="title">{{ __('Stock-Adjustment Settings') }}</x-slot>
+        <x-slot name="title">Stock-Adjustment Settings</x-slot>
         <ul class="breadcrumb">
-            <li class="breadcrumb-item active">{{ __('All stock adjustments') }}</li>
+            <li class="breadcrumb-item active">All stock adjustments</li>
         </ul>
         <x-slot name="right">
             <div class="col-auto float-end ms-auto">
-                <a href="" class="btn btn-secondary">
-                    <i class="fa-solid fa-arrow-left"></i> {{ __('Back') }}
+                <a href="{{ route('stock_adjustment.index') }}" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
             </div>
         </x-slot>
@@ -22,7 +22,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card p-3">
-                <h5 class="mb-3">{{ __('Add Stock Setting ') }}</h5>
+                <h5 class="mb-3">Add Stock Setting</h5>
 
                 <form action="{{ route('stockadjustment-settings.store') }}" method="POST">
                     @csrf
@@ -98,8 +98,8 @@
                     </div>
 
                     <div class="mt-3">
-                        <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
-                        <a href="{{ route('stock_adjustment.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a href="{{ route('stock_adjustment.index') }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

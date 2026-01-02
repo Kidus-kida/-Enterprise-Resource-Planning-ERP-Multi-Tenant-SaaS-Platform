@@ -2,14 +2,14 @@
 
 namespace App\DataTables;
 
-use Models\StockAdjustment\app\Models\StockAdjustment;
+use Modules\Contacts\Models\Transaction;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
-
+use DB;
 
 class StockAdjustmentDataTable extends DataTable
 {
@@ -22,12 +22,18 @@ class StockAdjustmentDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addIndexColumn()
-            ->addColumn('type_name', function ($row) {
-                return $row->accountType ? $row->accountType->name : 'N/A';
+            ->editColumn('transaction_date', function($row){
+                return format_date($row->transaction_date);
+            })
+            ->editColumn('adjustment_type', function($row){
+                return ucfirst($row->adjustment_type);
+            })
+             ->editColumn('stock_adjustment_type', function($row){
+                return ucfirst($row->stock_adjustment_type);
             })
             ->addColumn('action', function ($row) {
                 $id = $row->id;
-                return view('stockadjustment.action', compact('id'));
+                return view('stockadjustment::action', compact('id'));
             })
             ->rawColumns(['action']);
     }
@@ -35,9 +41,26 @@ class StockAdjustmentDataTable extends DataTable
     /**
      * Get the query source of dataTable.
      */
-    public function query(StockAdjustment $model): QueryBuilder
+    public function query(Transaction $model): QueryBuilder
     {
-        return $model->with('stockAdjustment:id,name')->newQuery();
+        $business_id = auth()->user()->business_id;
+
+        return $model->where('transactions.business_id', $business_id)
+            ->where('transactions.type', 'stock_adjustment')
+            ->leftJoin('business_locations as bl', 'transactions.location_id', '=', 'bl.id')
+            ->leftJoin('users as u', 'transactions.created_by', '=', 'u.id')
+            ->select(
+                'transactions.id',
+                'transaction_date',
+                'ref_no',
+                'bl.name as location_name',
+                'adjustment_type',
+                'stock_adjustment_type',
+                'final_total',
+                'total_amount_recovered',
+                'additional_notes',
+                DB::raw("CONCAT(COALESCE(u.firstname, ''),' ',COALESCE(u.middlename, ''),' ',COALESCE(u.lastname,'')) as added_by")
+            );
     }
 
     /**
@@ -68,14 +91,14 @@ class StockAdjustmentDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('date')->title('Date'),
-            Column::make('reference_no')->title('Reference No')->searchable(false)->orderable(false),
-            Column::make('location')->title('Location'),
+            Column::make('transaction_date')->title('Date'),
+            Column::make('ref_no')->title('Reference No'),
+            Column::make('location_name')->title('Location'),
             Column::make('adjustment_type')->title('Adjustment Type'),
             Column::make('stock_adjustment_type')->title('Stock Adjustment Type'),
-            Column::make('total_amount')->title('Total Amount'),
+            Column::make('final_total')->title('Total Amount'),
             Column::make('total_amount_recovered')->title('Total Amount Recovered'),
-            Column::make('reason')->title('Reason'),
+            Column::make('additional_notes')->title('Reason'),
             Column::make('added_by')->title('Added By'),
             Column::computed('action')
                 ->exportable(false)
@@ -89,6 +112,6 @@ class StockAdjustmentDataTable extends DataTable
      */
     protected function filename(): string
     {
-        return 'AccountGroups_' . date('YmdHis');
+        return 'StockAdjustments_' . date('YmdHis');
     }
 }

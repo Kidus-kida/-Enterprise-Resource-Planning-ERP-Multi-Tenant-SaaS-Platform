@@ -72,7 +72,7 @@ class StockAdjustmentSettings extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
 
         $business_locations = BusinessLocation::forDropdown($business_id);
         $categories = Category::forDropdown($business_id, 'product');
@@ -109,7 +109,7 @@ class StockAdjustmentSettings extends Controller
             $accounts =  Account::where('business_id', $business_id)->where('account_type_id', $type_id)->pluck('name', 'id')->toArray();
         }
         
-        $options = "<option value=''>".__('messages.please_select')."</option>";
+        $options = "<option value=''>Please Select</option>";
         
         foreach($accounts as $key => $account){
             $options .= "<option value='".$key."'>".$account."</option>";
@@ -135,7 +135,7 @@ class StockAdjustmentSettings extends Controller
 
             $input = $request->only(['date', 'adjustment_type', 'category_id', 'sub_category_id', 'account_to_link_id', 'stock_account_id', 'stock_account_group_id']);
             
-            $business_id = $request->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             
             $input_data = [
                 'business_id' => $business_id,
@@ -153,14 +153,14 @@ class StockAdjustmentSettings extends Controller
             DB::commit();
             
             $output = ['success' => 1,
-                'msg' => __('stock_adjustment_settings.stock_adjustment_added_successfully'),
+                'msg' => 'Stock adjustment add successfully',
             ];
         } catch (\Exception $e) {
             DB::rollBack();
 
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
             $output = ['success' => 0,
-                'msg' => trans('messages.something_went_wrong'),
+                'msg' => 'Something went wrong',
             ];
         }
         
