@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stock_adjustment_settings', function (Blueprint $table) {
+        if (!Schema::hasTable('stock_adjustment_settings')) {
+            Schema::create('stock_adjustment_settings', function (Blueprint $table) {
             $table->id();
             $table->integer('business_id');
             $table->timestamp('date')->nullable();
@@ -22,7 +23,8 @@ return new class extends Migration
             $table->integer('stock_group')->nullable();
             $table->integer('stock_account')->nullable();
             $table->timestamps();
-        });
+            });
+        }
     }
 
     /**

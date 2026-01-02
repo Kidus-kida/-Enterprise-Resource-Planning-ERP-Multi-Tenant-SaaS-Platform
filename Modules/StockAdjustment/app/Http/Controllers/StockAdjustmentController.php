@@ -10,7 +10,7 @@ use App\Business;
 use App\Product;
 use App\Unit;
 use App\PurchaseLine;
-use App\Models\Store;
+use App\Store;
 use Modules\Contacts\Models\Transaction;
 use App\Utils\ModuleUtil;
 use App\Utils\ProductUtil;
@@ -71,11 +71,13 @@ class StockAdjustmentController extends Controller
         $ref_no = $this->productUtil->generateReferenceNumber('stock_adjustment', $ref_count);
 
         $business_locations = BusinessLocation::forDropdown($business_id);
+        $stores = Store::where('business_id', $business_id)->pluck('name', 'id');
 
         return view('stockadjustment::add_stock_adjustment')
-            ->with(compact('business_locations', 'ref_no'));
+            ->with(compact('business_locations', 'ref_no', 'stores'));
     }
 
+    
     /**
      * Store a newly created resource in storage.
      *
@@ -99,12 +101,12 @@ class StockAdjustmentController extends Controller
                 return $this->moduleUtil->expiredResponse(route('stock_adjustment.index'));
             }
 
-            $user_id = $request->session()->get('user.id');
+            $user_id = auth()->user()->id;
 
             $input_data['type'] = 'stock_adjustment';
             $input_data['business_id'] = $business_id;
             $input_data['created_by'] = $user_id;
-            $input_data['transaction_date'] = $this->productUtil->uf_date($input_data['transaction_date'], true);
+            $input_data['transaction_date'] = \Carbon\Carbon::parse($input_data['transaction_date'])->toDateTimeString();
             $input_data['total_amount_recovered'] = $this->productUtil->num_uf($input_data['total_amount_recovered']);
 
             //Update reference count
@@ -272,7 +274,7 @@ class StockAdjustmentController extends Controller
         if (!auth()->user()->can('purchase.view')) {
             abort(403, 'Unauthorized action.');
         }
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
         $stock_adjustment = Transaction::where('transactions.business_id', $business_id)
             ->where('transactions.id', $id)
             ->where('transactions.type', 'stock_adjustment')
@@ -371,7 +373,7 @@ class StockAdjustmentController extends Controller
     public function getInventoryAdjustmentAccount(Request $request)
     {
         $type = $request->type;
-        $business_id = $request->session()->get('user.business_id');
+        $business_id = auth()->user()->business_id;
         $account_type = null;
 
         if ($type == 'increase') {
@@ -400,7 +402,7 @@ class StockAdjustmentController extends Controller
             $variation_id = $request->input('variation_id');
             $location_id = $request->input('location_id');
 
-            $business_id = $request->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
             $product = $this->productUtil->getDetailsFromVariation($variation_id, $business_id, $location_id);
             $product->formatted_qty_available = $this->productUtil->num_f($product->qty_available);
             $type = !empty($request->input('type')) ? $request->input('type') : 'stock_adjustment';
