@@ -162,6 +162,9 @@ class StockTransferRequestController extends Controller
             $data = DB::table('transfer_shipment')
                 ->leftjoin('drivers', 'transfer_shipment.driver_id', '=', 'drivers.id')
                 ->leftjoin('users', 'transfer_shipment.created_by', '=', 'users.id')
+                ->leftjoin('stock_transfer_requests', function ($join) {
+                    $join->on(DB::raw("FIND_IN_SET(stock_transfer_requests.id, transfer_shipment.request_id)"), '>', DB::raw('0'));
+                })
                 ->where('transfer_shipment.business_id', $business_id)
                 ->select(
                     'transfer_shipment.*',
@@ -176,6 +179,30 @@ class StockTransferRequestController extends Controller
             }
             if (!empty(request()->status)) {
                 $data->where('transfer_shipment.shipment_status', request()->status);
+            }
+            if (!empty(request()->driver_id)) {
+                $data->where('transfer_shipment.driver_id', request()->driver_id);
+            }
+            if (!empty(request()->request_location)) {
+                $data->where('stock_transfer_requests.request_location', request()->request_location);
+            }
+            if (!empty(request()->request_to_location)) {
+                $data->where('stock_transfer_requests.request_to_location', request()->request_to_location);
+            }
+            if (!empty(request()->from_store)) {
+                $data->where('stock_transfer_requests.from_store', request()->from_store);
+            }
+            if (!empty(request()->to_store)) {
+                $data->where('stock_transfer_requests.store_id', request()->to_store);
+            }
+            if (!empty(request()->category_id)) {
+                $data->where('stock_transfer_requests.category_id', request()->category_id);
+            }
+            if (!empty(request()->sub_category_id)) {
+                $data->where('stock_transfer_requests.sub_category_id', request()->sub_category_id);
+            }
+            if (!empty(request()->product_id)) {
+                $data->where('stock_transfer_requests.product_id', request()->product_id);
             }
 
             return DataTables::of($data)
@@ -196,12 +223,24 @@ class StockTransferRequestController extends Controller
                     $html .= '</ul></div>';
                     return $html;
                 })
+                ->addColumn('select_items', function ($row) {
+                    if (empty($row->request_id)) {
+                        return '';
+                    }
+                    $request_ids = explode(',', $row->request_id);
+                    $items = DB::table('stock_transfer_requests')
+                        ->join('products', 'stock_transfer_requests.product_id', '=', 'products.id')
+                        ->whereIn('stock_transfer_requests.id', $request_ids)
+                        ->pluck('products.name')
+                        ->toArray();
+                    return implode(', ', $items);
+                })
                 ->removeColumn('id')
                 ->editColumn('shipment_status', function ($row) {
                     return ($row->shipment_status == 'issued') ? 'approved' : $row->shipment_status;
                 })
                 ->editColumn('date', '{{@format_datetime($assigned_date)}}')
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'select_items'])
                 ->make(true);
         }
 
@@ -326,14 +365,14 @@ class StockTransferRequestController extends Controller
         $business_id = auth()->user()->business_id;
         $business_locations = BusinessLocation::forDropdown($business_id);
         $driver = DB::table('drivers')->where('business_id', $business_id)->pluck('driver_name', 'id');
-        $items = DB::table('stock_transfer_requests')
+        $requests = DB::table('stock_transfer_requests')
             ->join('products', 'stock_transfer_requests.product_id', '=', 'products.id')
             ->where('stock_transfer_requests.business_id', $business_id)
             ->where('stock_transfer_requests.status', 'issued')
             ->pluck('products.name', 'stock_transfer_requests.id');
 
         $asset_v = 1;
-        return view('stock_transfer.requests.shippment')->with(compact('business_locations', 'driver', 'items', 'asset_v'));
+        return view('stock_transfer.requests.shippment')->with(compact('business_locations', 'driver', 'requests', 'asset_v'));
     }
 
     public function store(Request $request)
