@@ -176,7 +176,7 @@ class Account extends Model
 
     public static function getAccountByAccountName($account_name)
     {
-        $business_id = request()->session()->get('business.id');
+        $business_id = request()->session()->get('user.business_id') ?? request()->session()->get('business.id');
         $account = Account::where(DB::raw("REPLACE(`name`, '  ', ' ')"), $account_name)->where('business_id', $business_id)->first();
 
         return $account;
@@ -185,7 +185,7 @@ class Account extends Model
     /* return all sub accounts if exist */
     public static function getSubAccountOrParentAccountByName($account_name)
     {
-        $business_id = request()->session()->get('business.id');
+        $business_id = request()->session()->get('user.business_id') ?? request()->session()->get('business.id');
         $this_account = Account::where('name', $account_name)->where('business_id', $business_id)->first();
         if (!empty($this_account->is_main_account)) { //if main account then return sub accounts
             $sub_accounts = Account::where('business_id', $business_id)->where('parent_account_id', $this_account->id)->pluck('name', 'id');
@@ -268,8 +268,8 @@ class Account extends Model
         $account_query->where('is_closed', 0);
 
         $account = $account_query->select(
-            DB::raw("SUM(IF(AT.type='credit',amount, 0)) as creditSum"),
-            DB::raw("SUM(IF(AT.type='debit', amount, 0)) as debitSum")
+            DB::raw("SUM(IF(AT.transaction_type='credit',amount, 0)) as creditSum"),
+            DB::raw("SUM(IF(AT.transaction_type='debit', amount, 0)) as debitSum")
         )->first();
 
         if ($account_type_name == "Assets" || $account_type_name == "Expenses" || $account_type_name == "Current Assets" || $account_type_name == "Fixed Assets") {
@@ -326,7 +326,7 @@ class Account extends Model
         }
 
         $balance = $account_query->select(
-            DB::raw("SUM( IF(AT.type='credit', -1 * amount, amount) ) as balance")
+            DB::raw("SUM( IF(AT.transaction_type='credit', -1 * amount, amount) ) as balance")
         )
             ->first();
 

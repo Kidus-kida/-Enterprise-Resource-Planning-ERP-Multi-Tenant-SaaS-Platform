@@ -3,14 +3,14 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransactionPayment extends Model
 {
     use SoftDeletes;
-    use LogsActivity;
+    // use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
@@ -25,12 +25,14 @@ class TransactionPayment extends Model
      * @var array
      */
     protected $guarded = ['id'];
-    
+
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
 
     /**
      * Get the phone record associated with the user.
@@ -39,7 +41,7 @@ class TransactionPayment extends Model
     {
         return $this->belongsTo(\App\Account::class, 'account_id');
     }
-    
+
     public function contact()
     {
         return $this->belongsTo(\App\Contact::class, 'payment_for');
@@ -84,58 +86,60 @@ class TransactionPayment extends Model
     /**
      * Get unique amounts customer_wise
      */
-    public static  function get_customer_wise_unique_amounts($customer,$start_date = null, $end_date = null, $bank = null,$post_party_type = null){
-        $result =  self::query()->whereHas('transaction',function($query) use($customer){
-            $query->whereHas('contact',function($query) use($customer){
-                 $query->where('id', $customer);
-            })->where('amount','>',0);
+    public static function get_customer_wise_unique_amounts($customer, $start_date = null, $end_date = null, $bank = null, $post_party_type = null)
+    {
+        $result = self::query()->whereHas('transaction', function ($query) use ($customer) {
+            $query->whereHas('contact', function ($query) use ($customer) {
+                $query->where('id', $customer);
+            })->where('amount', '>', 0);
         });
-        
-        if(!empty($start_date)){
-            $result->whereDate('transaction_payments.paid_on','>=', $start_date);
+
+        if (!empty($start_date)) {
+            $result->whereDate('transaction_payments.paid_on', '>=', $start_date);
         }
-        
-        if(!empty($end_date)){
-            $result->whereDate('transaction_payments.paid_on','<=', $end_date);
+
+        if (!empty($end_date)) {
+            $result->whereDate('transaction_payments.paid_on', '<=', $end_date);
         }
-        
-        if(!empty($bank)){
+
+        if (!empty($bank)) {
             $result->where('transaction_payments.account_id', $bank);
         }
-        
-        if(!empty($post_party_type)){
-            
+
+        if (!empty($post_party_type)) {
+
         }
-        
+
         return $result->distinct()->groupBy('amount')->get();
     }
 
-     /**
+    /**
      * Get unique cheque numbers customer_wise
      */
-    public static  function get_customer_wise_unique_cheque_no($customer, $start_date = null, $end_date = null, $bank = null,$post_party_type = null){
-        $result =  self::query()->whereHas('transaction',function($query) use($customer){
-            $query->whereHas('contact',function($query) use($customer){
-                 $query->where('id', $customer);
+    public static function get_customer_wise_unique_cheque_no($customer, $start_date = null, $end_date = null, $bank = null, $post_party_type = null)
+    {
+        $result = self::query()->whereHas('transaction', function ($query) use ($customer) {
+            $query->whereHas('contact', function ($query) use ($customer) {
+                $query->where('id', $customer);
             });
-        })->where('cheque_number','!=',null);
-        
-        if(!empty($start_date)){
-            $result->whereDate('transaction_payments.paid_on','>=', $start_date);
+        })->where('cheque_number', '!=', null);
+
+        if (!empty($start_date)) {
+            $result->whereDate('transaction_payments.paid_on', '>=', $start_date);
         }
-        
-        if(!empty($end_date)){
-            $result->whereDate('transaction_payments.paid_on','<=', $end_date);
+
+        if (!empty($end_date)) {
+            $result->whereDate('transaction_payments.paid_on', '<=', $end_date);
         }
-        
-        if(!empty($bank)){
+
+        if (!empty($bank)) {
             $result->where('transaction_payments.account_id', $bank);
         }
-        
-        if(!empty($post_party_type)){
-            
+
+        if (!empty($post_party_type)) {
+
         }
-        
+
         return $result->distinct()->groupBy('cheque_number')->get();
     }
 }

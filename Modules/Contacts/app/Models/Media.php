@@ -4,19 +4,19 @@ namespace Modules\Contacts\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 
 class Media extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
     protected static $logFillable = true;
 
-    
-    protected static $logName = 'Media'; 
+
+    protected static $logName = 'Media';
 
     /**
      * The attributes that aren't mass assignable.
@@ -35,11 +35,13 @@ class Media extends Model
     {
         return $this->morphTo();
     }
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
 
     /**
      * Get display name for the media
@@ -154,7 +156,7 @@ class Media extends Model
     public static function deleteMedia($business_id, $media_id)
     {
         $media = Media::where('business_id', $business_id)
-                        ->findOrFail($media_id);
+            ->findOrFail($media_id);
 
         $media_path = public_path('uploads/media/' . $media->file_name);
 
@@ -176,22 +178,24 @@ class Media extends Model
                 $media_obj = [];
                 foreach ($uploaded_files as $value) {
                     $media_obj[] = new \App\Media([
-                            'file_name' => $value,
-                            'business_id' => $business_id,
-                            'description' => !empty($request->description) ? $request->description : null,
-                            'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
+                        'file_name' => $value,
+                        'business_id' => $business_id,
+                        'description' => !empty($request->description) ? $request->description : null,
+                        'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id
+                    ]);
                 }
-                
+
                 $model->media()->saveMany($media_obj);
             } else {
                 //delete previous media if exists
                 $model->media()->delete();
-                
+
                 $media_obj = new \App\Media([
-                        'file_name' => $uploaded_files,
-                        'business_id' => $business_id,
-                        'description' => !empty($request->description) ? $request->description : null,
-                        'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
+                    'file_name' => $uploaded_files,
+                    'business_id' => $business_id,
+                    'description' => !empty($request->description) ? $request->description : null,
+                    'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id
+                ]);
                 $model->media()->save($media_obj);
             }
         }
