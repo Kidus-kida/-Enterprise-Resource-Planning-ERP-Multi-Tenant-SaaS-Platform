@@ -592,6 +592,7 @@ class DepositsController extends Controller
                     'success' => false,
                     'msg' => __("messages.something_went_wrong")
                 ];
+                
             }
             return $output;
         }
