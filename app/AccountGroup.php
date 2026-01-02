@@ -55,25 +55,7 @@ class AccountGroup extends Model
 
     public static function createOwnerDrawings($business_id)
     {
-        // TewosHR adaptation: AccountGroup has no business_id. 
-        // We will assume Owners Drawings group exists or is created globally.
-        // For now, we disabling the creation logic that relies on business_id for AccountGroup.
-
-        // $default_account_grp = DefaultAccountGroup::where('name','Owners Drawings')->where('business_id',$business_id)->first();
-
-        // $default_equity_id = DefaultAccountType::where('name','Equity')->where('business_id',$business_id)->first();
-        // $equity_id = AccountType::where('name','Equity')->where('business_id',$business_id)->first()->id ?? null;
-
-        // if(empty($default_account_grp)){
-        //     $default_account_grp = DefaultAccountGroup::create(['business_id' => $business_id,'name' => 'Owners Drawings','account_type_id' => !empty($default_equity_id) ? $default_equity_id->id : 0]);
-        // }
-
-        // $account_grp = AccountGroup::where('name','Owners Drawings')->first();
-        // if(empty($account_grp)){
-        // If we must create it, we need to know if account_type_id needs to be set. 
-        // Leaving this empty for now as it causes schema mismatch errors.
-        // $account_grp = AccountGroup::create(['name' => 'Owners Drawings','account_type_id' => $equity_id]);
-        // }
+        
     }
 
     static function getAccountGroupByAccountId($account_id)
