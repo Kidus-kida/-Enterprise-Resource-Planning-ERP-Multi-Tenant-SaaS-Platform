@@ -24,7 +24,7 @@
             <div class="card p-3">
                 <h5 class="mb-3">{{ __('Add Stock Setting ') }}</h5>
 
-                <form action="" method="POST">
+                <form action="{{ route('stockadjustment-settings.store') }}" method="POST">
                     @csrf
                     <div class="row">
 
@@ -33,15 +33,15 @@
                             <input type="datetime-local"
                                    name="date"
                                    class="form-control"
-                                   value="{{ now()->format('Y-m-d\TH:i') }}"
+                                   value="{{ !empty($settings->date) ? \Carbon\Carbon::parse($settings->date)->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i') }}"
                                    required>
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label>Adjustment Type <span class="text-danger">*</span></label>
                             <select name="adjustment_type" class="form-control" required>
-                                <option value="increase">Increase</option>
-                                <option value="decrease">Decrease</option>
+                                <option value="increase" {{ (!empty($settings) && $settings->adjustment_type == 'increase') ? 'selected' : '' }}>Increase</option>
+                                <option value="decrease" {{ (!empty($settings) && $settings->adjustment_type == 'decrease') ? 'selected' : '' }}>Decrease</option>
                             </select>
                         </div>
 
@@ -50,7 +50,7 @@
                             <select name="category_id" class="form-control">
                                 <option value="">Select Category</option>
                                 @foreach($categories ?? [] as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ (!empty($settings) && $settings->category_id == $id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -60,7 +60,7 @@
                             <select name="sub_category_id" class="form-control">
                                 <option value="">Select Sub Category</option>
                                 @foreach($sub_categories ?? [] as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ (!empty($settings) && $settings->sub_category_id == $id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -70,7 +70,7 @@
                             <select name="account_to_link_id" class="form-control">
                                 <option value="">Select Account</option>
                                 @foreach($accounts ?? [] as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ (!empty($settings) && $settings->account_to_link == $id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -80,7 +80,7 @@
                             <select name="stock_account_group_id" class="form-control">
                                 <option value="">Select Account Group</option>
                                 @foreach($stock_account_groups ?? [] as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ (!empty($settings) && $settings->stock_group == $id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -89,8 +89,8 @@
                             <label>Stock Account</label>
                             <select name="stock_account_id" class="form-control">
                                 <option value="">Select Stock Account</option>
-                                @foreach($stock_accounts ?? [] as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @foreach($accounts ?? [] as $id => $name)
+                                    <option value="{{ $id }}" {{ (!empty($settings) && $settings->stock_account == $id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -99,7 +99,7 @@
 
                     <div class="mt-3">
                         <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
-                        <a href="" class="btn btn-secondary">{{ __('Cancel') }}</a>
+                        <a href="{{ route('stock_adjustment.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
                     </div>
                 </form>
             </div>
