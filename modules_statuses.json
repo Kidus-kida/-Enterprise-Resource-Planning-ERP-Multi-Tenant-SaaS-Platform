@@ -10,5 +10,6 @@
     "Logistics": true,
     "Purchase": true,
     "Contacts": true,
-    "StockAdjustment": true
+    "StockAdjustment": true,
+    "Superadmin": true
 }

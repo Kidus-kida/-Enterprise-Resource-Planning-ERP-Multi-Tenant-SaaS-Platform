@@ -8,7 +8,7 @@ use Modules\Contacts\Models\ContactGroup;
 use Modules\Contacts\Models\Transaction;
 use Modules\Contacts\Models\TransactionPayment; // Might need to be created if missing
 use App\Models\BusinessLocation;
-use App\Models\Business;
+use App\Business;
 use Modules\Accounting\Models\Account; // Or App\Models\Account
 use Modules\Accounting\Models\AccountType;
 use Illuminate\Http\Request;
