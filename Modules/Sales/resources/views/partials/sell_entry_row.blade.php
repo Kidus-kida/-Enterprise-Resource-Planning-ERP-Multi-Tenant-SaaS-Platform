@@ -97,15 +97,7 @@
                class="row_line_total_hidden" 
                value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
     </td>
-    
-    <td>
-        {{-- Line Total --}}
-        <span class="row_line_total">{{ number_format($variation->sell_price_inc_tax ?? $variation->default_sell_price, 2) }}</span>
-        <input type="hidden" 
-               name="sales[{{ $row_count }}][line_total]" 
-               class="row_line_total_hidden" 
-               value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
-    </td>
+
     
     <td class="text-center">
         {{-- Delete Button --}}
