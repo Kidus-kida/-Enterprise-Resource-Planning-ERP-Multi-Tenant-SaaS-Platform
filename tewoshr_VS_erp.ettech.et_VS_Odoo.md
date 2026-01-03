@@ -1092,7 +1092,7 @@ This analysis provides a **production-ready roadmap** combining the best practic
 247. Set `APP_ENV=production` and `APP_DEBUG=false`
 248. Configure production database credentials
 249. Configure production SMTP settings
-250. Set `TENANT_DATABASE_PREFIX=tewoshr_tenant_`
+250. Set `TENANT_DATABASE_PREFIX=tewoserp_tenant_`
 251. Set `CENTRAL_DOMAIN=tewoshr.com`
 252. Generate production `APP_KEY`
 253. Set `SESSION_DRIVER=database` for production
