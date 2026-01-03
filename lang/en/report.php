@@ -16,13 +16,13 @@ return [
     'all_days' => 'All Days',
     'transaction_date' => 'Transaction Date',
     'date_filter_by' => 'Date Filter By',
-    
-    
-    
+
+
+
     'previous_Day_balance' => 'Previous Day Balance',
     'balance' => 'Balance',
     'ref_no' => 'Reference No',
-    
+
     'created_on' => 'Created On',
     // daily report details
     'meter_sales' => 'Meter Sales',
@@ -31,7 +31,7 @@ return [
     'shift' => 'Shift',
     'not_reviewed' => 'Not Reviewed',
     'sales' => 'Sales',
-    'reviewed_by'  => 'Reviewed By',
+    'reviewed_by' => 'Reviewed By',
     'customer_outstanding_balance' => 'Customer Outstanding Balance',
     'cash_withdrawn' => 'Cash Withdrawn',
     'expenses_in_sales' => 'Expenses in Sales',
@@ -121,8 +121,8 @@ return [
     'note' => 'Note',
     'today_excess' => 'Today Excess',
     'balance_excess' => 'Balance Excess',
-    
-    
+
+
 
     /*
     |--------------------------------------------------------------------------
@@ -138,7 +138,7 @@ return [
     'total_in' => 'Total In',
     'total_out' => 'Total Out',
     'account_payable' => 'Account Payable',
-    
+
     'direct_cash_expenses' => 'Direct Cash Expenses',
 
     'remarks' => 'Remarks',
@@ -182,8 +182,8 @@ return [
     'stock_adjustment_report' => 'Stock Adjust. Report',
     'total_stock_adjustment' => 'Total Stock Adjustment',
     'total_recovered' => 'Total Amount Recovered',
-    'total_normal' =>'Total Normal',
-    'total_abnormal' =>'Total Abnormal',
+    'total_normal' => 'Total Normal',
+    'total_abnormal' => 'Total Abnormal',
     'register_report' => 'Register Report',
     'open_time' => 'Open Time',
     'close_time' => 'Close Time',
@@ -322,8 +322,8 @@ return [
     'total_unit_purchase' => 'Total Unit Purchase',
     'total_unit_purchase_return' => 'Total Unit Purchase Return',
     'total_unit_sold_return' => 'Total Unit Sold Return',
-    
-    
+
+
     'product_report' => 'Product Reports',
     'contact_report' => 'Contact Reports',
     'management_report' => 'Management Reports',
@@ -337,7 +337,7 @@ return [
     'purchase_payment_report' => 'Purchase Payment Report',
     'sell_payment_report' => 'Sell Payment Report',
     'sold_value_in_code' => 'Sold Stock Value in Cost',
-    
+
     'business' => 'Business',
     'total_qty_purcahse' => 'Total Qty Purchase',
     'total_qty_purcahse_value' => 'Total Qty Purchase Value',
@@ -345,7 +345,7 @@ return [
     'total_qty_sell_value' => 'Total Qty Sell Value',
     'total_qty_adjusted' => 'Total Qty Adjusted',
     'total_qty_adjusted_value' => 'Total Qty Adjusted Value',
-    
+
     'credit_status' => 'Credit Status',
     'daily' => 'Daily',
     'weekly' => 'Weekly',
@@ -364,14 +364,14 @@ return [
     'monthly_report' => 'Monthly Report',
     'comparison_report' => 'Comparison Report',
     'month_range' => 'Month Range',
-   
+
     'start_month_range' => 'From Month',
     'month_placeholder' => '---select month---',
-   
+
     'end_month_range' => 'To Month',
     'years_range' => 'Year',
     'verification_reports' => 'Verification Reports',
-    
+
     'sale' => 'Sale',
     'date' => 'Date',
     'cash_total' => 'Cash Total',
@@ -405,7 +405,7 @@ return [
     'stock_adjustment_value' => 'Stock Adjustment Value',
     'product_loss_excess_report' => 'Prod Loss Excess Report',
     'qty' => 'Qty',
-    'type' => 'Type',
+    'type' => 'TYPe',
     'unit' => 'Unit',
     'sale_amount' => 'Sale Amount',
     'sale_bill_no' => 'Sale Bill No',
@@ -419,10 +419,10 @@ return [
     'summary' => 'Summary',
     'credit_cards' => 'Credit Cards',
     'cash_in_hand' => 'Cash In Hand',
-// Reports Cases
+    // Reports Cases
     'report_case_received' => 'Received Payment for Outstanding',
     'report_case_meter' => 'Meter Sales Details',
-'report_case_sold_items' => 'Sold items Report',
-'report_case_cheques' => 'Cheques Received',
-'report_case_expenses' => 'Expenses in Sales'
+    'report_case_sold_items' => 'Sold items Report',
+    'report_case_cheques' => 'Cheques Received',
+    'report_case_expenses' => 'Expenses in Sales'
 ];

@@ -22,6 +22,7 @@ class CashRegister extends Model
      * @var array
      */
     protected $guarded = ['id'];
+    protected $table = 'cash_registers';
 
     /**
      * Get the Cash registers transactions.

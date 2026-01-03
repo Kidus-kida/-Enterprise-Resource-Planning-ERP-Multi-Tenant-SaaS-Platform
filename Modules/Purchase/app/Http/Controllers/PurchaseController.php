@@ -22,6 +22,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Contacts\Models\Transaction;
 use Modules\Accounting\Models\AccountTransaction;
+use Modules\Logistics\Models\Shipment;
 use Carbon\Carbon;
 use Modules\Contacts\Models\TransactionPayment;
 use Illuminate\Support\Facades\DB;
@@ -102,11 +103,21 @@ class PurchaseController extends Controller
      */
     public function list()
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
+
 
         $purchases = Transaction::where('transactions.business_id', $business_id)
-            ->where('transactions.type', 'purchase')
-            ->leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
+            ->where('transactions.type', 'purchase');
+
+        if (request()->has('only_shipments')) {
+            $purchases->whereNotNull('transactions.shipping_status');
+        }
+
+        if (request()->has('shipping_status')) {
+            $purchases->where('transactions.shipping_status', request()->get('shipping_status'));
+        }
+
+        $purchases->leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
             ->select(
                 'transactions.id',
                 'transactions.transaction_date',
@@ -115,9 +126,11 @@ class PurchaseController extends Controller
                 'transactions.status',
                 'transactions.payment_status',
                 'transactions.final_total',
+                'transactions.shipping_status',
+                'transactions.shipping_details',
+                'transactions.delivered_to',
                 DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
-            )
-            ->get();
+            );
             
         return DataTables::of($purchases)
             ->addColumn('action', function ($row) {
@@ -126,14 +139,22 @@ class PurchaseController extends Controller
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" href="' . route('purchase.show', $row->id) . '">
                                     <i class="fa-solid fa-eye m-r-5"></i> ' . __('View') . '
-                                </a>
-                                <a class="dropdown-item" href="' . route('purchase.edit', $row->id) . '">
+                                </a>';
+
+                if (request()->has('only_shipments')) {
+                    $html .= '<a class="dropdown-item edit_shipping" href="javascript:void(0)" data-href="' . route('purchase.edit_shipping', $row->id) . '">
+                                <i class="fa-solid fa-truck m-r-5"></i> ' . __('lang_v1.edit_shipping') . '
+                            </a>';
+                } else {
+                    $html .= '<a class="dropdown-item" href="' . route('purchase.edit', $row->id) . '">
                                 <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
                             </a>
                             <a class="dropdown-item" href="' . route('purchase-return.add', $row->id) . '">
                                 <i class="fa fa-undo m-r-5"></i> ' . __('Purchase Return') . '
-                            </a>
-                            <form action="' . route('purchase.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
+                            </a>';
+                }
+
+                $html .= '<form action="' . route('purchase.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
                                     ' . csrf_field() . '
                                     ' . method_field("DELETE") . '
                                     <button type="submit" class="dropdown-item"><i class="fa-solid fa-trash m-r-5"></i> ' . __('Delete') . '</button>
@@ -159,7 +180,14 @@ class PurchaseController extends Controller
                 $total = (float) $row->final_total;
                 return number_format($total - $paid, 2);
             })
-            ->rawColumns(['action', 'status', 'payment_status'])
+            ->editColumn('shipping_status', function ($row) {
+                $status = $row->shipping_status;
+                $class = 'bg-info';
+                if ($status == 'delivered') $class = 'bg-success';
+                if ($status == 'cancelled') $class = 'bg-danger';
+                return '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+            })
+            ->rawColumns(['action', 'status', 'payment_status', 'shipping_status'])
             ->make(true);
     }
 
@@ -168,7 +196,7 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
 
         $purchases = [];
         if (request('view') == 'grid') {
@@ -196,7 +224,7 @@ class PurchaseController extends Controller
      */
     public function create()
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
 
         $taxes = TaxRate::where('business_id', $business_id)->get();
         $orderStatuses = $this->productUtil->orderStatuses();
@@ -265,7 +293,7 @@ class PurchaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         try {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? 1;
             $user_id = request()->session()->get('user.id') ?? 1;
 
             // Check for reviewed dates
@@ -287,6 +315,7 @@ class PurchaseController extends Controller
                 'total_before_tax' => 'required',
                 'location_id' => 'required',
                 'final_total' => 'required',
+                'store_id' => 'required',
                 'ref_no' => [
                     'required',
                     Rule::unique('transactions', 'ref_no')
@@ -360,6 +389,29 @@ class PurchaseController extends Controller
             $transaction_data['tax_id'] = $tax_id;
 
             $transaction = Transaction::create($transaction_data);
+
+            if (!empty($transaction_data['shipping_status'])) {
+                $contact = Contact::find($transaction->contact_id);
+                Shipment::create([
+                    'business_id' => $business_id,
+                    'transaction_id' => $transaction->id,
+                    'shipment_no' => $transaction->ref_no,
+                    'vendor' => !empty($contact) ? $contact->name : 'Supplier',
+                    'vendor_country' => !empty($contact) ? ($contact->country ?? 'Unknown') : 'Unknown',
+                    'incoterms' => 'CIF',
+                    'port_of_loading' => 'Foreign',
+                    'port_of_discharge' => 'Local',
+                    'transport_mode' => 'sea',
+                    'status' => 'pending',
+                    'expected_arrival' => Carbon::parse($transaction->transaction_date)->addDays(30),
+                    'user_id' => $user_id,
+                    'shipping_details' => $transaction->shipping_details,
+                    'shipping_address' => $transaction->shipping_address,
+                    'shipping_status' => $transaction->shipping_status,
+                    'delivered_to' => $transaction->delivered_to,
+                    'shipping_charges' => $transaction->shipping_charges,
+                ]);
+            }
 
             // Create purchase lines
             $purchases = $request->input('purchases', []);
@@ -447,7 +499,7 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
         $transaction = Transaction::where('business_id', $business_id)
             ->where('id', $id)
             ->with(['contact', 'purchase_lines', 'payments']) 
@@ -461,7 +513,7 @@ class PurchaseController extends Controller
      */
     public function edit($id)
     {
-        $business_id = auth()->user()->business_id ?? 11;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
         $transaction = Transaction::where('business_id', $business_id)
             ->where('id', $id)
             ->firstOrFail();
@@ -487,7 +539,7 @@ class PurchaseController extends Controller
             $variation_id = $request->input('variation_id');
             $location_id = $request->input('location_id');
             
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? 1;
             
             $product = Product::leftJoin('categories as c1', 'products.category_id', '=', 'c1.id')
                                 ->where('products.id',$product_id)
@@ -584,7 +636,7 @@ class PurchaseController extends Controller
     {
         $term = $request->term ?? '';
         $location_id = $request->location_id;
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
 
         $products = Product::leftJoin('variations', 'products.id', '=', 'variations.product_id')
             ->where('products.business_id', $business_id)
@@ -629,7 +681,7 @@ class PurchaseController extends Controller
      */
     public function getPaymentRow(Request $request)
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
         $row_index = $request->row_index ?? 0;
         $location_id = $request->location_id;
         
@@ -651,7 +703,7 @@ class PurchaseController extends Controller
      */
     public function getPaymentAccounts(Request $request)
     {
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
         $payment_method = $request->payment_method;
         
         $query = Account::where('business_id', $business_id);
@@ -679,7 +731,7 @@ class PurchaseController extends Controller
     public function getSuppliers(Request $request)
     {
         $term = $request->q ?? '';
-        $business_id = auth()->user()->business_id ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? 1;
 
         $suppliers = DB::table('contacts')
             ->where('business_id', $business_id)
@@ -705,10 +757,117 @@ class PurchaseController extends Controller
         return response()->json($results);
     }
 
+    /**
+     * Display list of shipments.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function shipments()
+    {
+        $business_id = request()->session()->get('user.business_id') ?? 1;
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        return view('purchase::shipments')->with(compact('shipping_statuses'));
+    }
+
+    /**
+     * Shows modal to edit shipping details.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function editShipping($id)
+    {
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id') ?? 1;
+
+        $transaction = Transaction::where('business_id', $business_id)
+            ->findOrFail($id);
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        return view('purchase::partials.edit_shipping')
+            ->with(compact('transaction', 'shipping_statuses'));
+    }
+
+    /**
+     * Update shipping details.
+     *
+     * @param  Request $request
+     * @param  int $id
+     * @return array
+     */
+    public function updateShipping(Request $request, $id)
+    {
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $input = $request->only([
+                'shipping_details', 'shipping_address',
+                'shipping_status', 'delivered_to'
+            ]);
+            $business_id = $request->session()->get('user.business_id') ?? 1;
+
+            $transaction_obj = Transaction::where('business_id', $business_id)
+                ->where('id', $id)
+                ->first();
+            
+            $transaction_obj->update($input);
+
+            if (!empty($input['shipping_status'])) {
+                $shipment = Shipment::where('transaction_id', $id)->first();
+                if (!$shipment) {
+                    $contact = Contact::find($transaction_obj->contact_id);
+                    Shipment::create([
+                        'business_id' => $business_id,
+                        'transaction_id' => $id,
+                        'shipment_no' => $transaction_obj->ref_no,
+                        'vendor' => !empty($contact) ? $contact->name : 'Supplier',
+                        'vendor_country' => !empty($contact) ? ($contact->country ?? 'Unknown') : 'Unknown',
+                        'incoterms' => 'CIF',
+                        'port_of_loading' => 'Foreign',
+                        'port_of_discharge' => 'Local',
+                        'transport_mode' => 'sea',
+                        'status' => 'pending',
+                        'expected_arrival' => Carbon::parse($transaction_obj->transaction_date)->addDays(30),
+                        'user_id' => auth()->id(),
+                        'shipping_details' => $transaction_obj->shipping_details,
+                        'shipping_address' => $transaction_obj->shipping_address,
+                        'shipping_status' => $transaction_obj->shipping_status,
+                        'delivered_to' => $transaction_obj->delivered_to,
+                        'shipping_charges' => $transaction_obj->shipping_charges,
+                    ]);
+                }
+            }
+
+            $output = [
+                'success' => 1,
+                'msg' => __("lang_v1.updated_success")
+            ];
+        } catch (\Exception $e) {
+            Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+            $output = [
+                'success' => 0,
+                'msg' => __("messages.something_went_wrong")
+            ];
+        }
+
+        return $output;
+    }
+
     public function getProductsPurchases()
     {
         if (request()->ajax()) {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? 1;
             $term = request()->term;
             $module = request()->module ?? null;
 
@@ -846,7 +1005,7 @@ class PurchaseController extends Controller
     {
         // Re-implementing destroy for completeness
         try {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? 1;
 
             $transaction = Transaction::where('id', $id)
                 ->where('business_id', $business_id)

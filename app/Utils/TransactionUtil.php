@@ -1,14 +1,15 @@
 <?php
 namespace App\Utils;
-use Modules\Accounting\Models\AccountTransaction;
+use Modules\Contacts\Models\AccountTransaction;
 use App\Account;
 use App\AccountType;
 use Modules\Fleet\Entities\Fleet;
 use App\Business;
 use Modules\Contacts\Models\BusinessLocation;
 use App\Category;
+
 use Modules\Contacts\Models\Contact;
-use App\ContactLedger;
+use App\Models\ContactLedger;
 use App\Currency;
 use App\Events\TransactionPaymentAdded;
 use App\Events\TransactionPaymentDeleted;
@@ -53,6 +54,7 @@ use Modules\Vat\Entities\VatCustomerStatement;
 use Modules\Vat\Entities\VatCustomerStatementDetail;
 
 use Modules\Shipping\Entities\ShippingAgentCommission;
+use Modules\Logistics\Models\Shipment;
 
 class TransactionUtil extends Util
 {
@@ -393,7 +395,7 @@ class TransactionUtil extends Util
         $duplicate_invoice_count = Transaction::where('is_duplicate', 1)->where('business_id', $business_id)->get()->count();
         $business = Business::where('id', $business_id)->first();
         $pos_settings = json_decode($business->pos_settings);
-        if ($input['is_duplicate']) {
+        if (!empty($input['is_duplicate'])) {
             $d_prefix = '';
             if (!empty($pos_settings->enable_prefix_duplicate_invoice)) {
                 $d_prefix = $pos_settings->duplicate_invoice_prefix;
@@ -408,26 +410,27 @@ class TransactionUtil extends Util
         $final_total = $uf_data ? $this->num_uf($input['final_total']) : $input['final_total'];
         $transaction = Transaction::create([
             'business_id' => $business_id,
-            'location_id' => $input['location_id'],
-            'is_duplicate' => $input['is_duplicate'],
+            'location_id' => !empty($input['location_id']) ? $input['location_id'] : null,
+            'is_duplicate' => !empty($input['is_duplicate']) ? 1 : 0,
             'type' => 'sell',
-            'status' => $input['status'],
-            'contact_id' => $input['contact_id'],
-            'customer_group_id' => $input['customer_group_id'],
+            'status' => !empty($input['status']) ? $input['status'] : 'final',
+            'contact_id' => !empty($input['contact_id']) ? $input['contact_id'] : null,
+            'customer_group_id' => !empty($input['customer_group_id']) ? $input['customer_group_id'] : null,
             'invoice_no' => $invoice_no,
             'ref_no' => '',
             'total_before_tax' => $invoice_total['total_before_tax'],
-            'transaction_date' => $input['transaction_date'],
+            'transaction_date' => !empty($input['transaction_date']) ? $input['transaction_date'] : Carbon::now(),
             'tax_id' => !empty($input['tax_rate_id']) ? $input['tax_rate_id'] : null,
             'discount_type' => !empty($input['discount_type']) ? $input['discount_type'] : null,
-            'discount_amount' => $uf_data ? $this->num_uf($input['discount_amount']) : $input['discount_amount'],
+            'discount_amount' => isset($input['discount_amount']) ? ($uf_data ? $this->num_uf($input['discount_amount']) : $input['discount_amount']) : 0,
             'tax_amount' => $invoice_total['tax'],
             'final_total' => $final_total,
             'additional_notes' => !empty($input['sale_note']) ? $input['sale_note'] : null,
             'staff_note' => !empty($input['staff_note']) ? $input['staff_note'] : null,
             'created_by' => $user_id,
             'is_direct_sale' => !empty($input['is_direct_sale']) ? $input['is_direct_sale'] : 0,
-            'commission_agent' => $input['commission_agent'],
+            'is_pos' => !empty($input['is_pos']) ? 1 : 0,
+            'commission_agent' => !empty($input['commission_agent']) ? $input['commission_agent'] : null,
             'is_quotation' => isset($input['is_quotation']) ? $input['is_quotation'] : 0,
             'is_customer_order' => isset($input['is_customer_order']) ? $input['is_customer_order'] : 0,
             'shipping_details' => isset($input['shipping_details']) ? $input['shipping_details'] : null,
@@ -447,7 +450,7 @@ class TransactionUtil extends Util
             'recur_repetitions' => !empty($input['recur_repetitions']) ? $input['recur_repetitions'] : 0,
             'order_addresses' => !empty($input['order_addresses']) ? $input['order_addresses'] : null,
             'sub_type' => !empty($input['sub_type']) ? $input['sub_type'] : null,
-            'rp_earned' => $input['status'] == 'final' ? $this->calculateRewardPoints($business_id, $final_total) : 0,
+            'rp_earned' => (!empty($input['status']) && $input['status'] == 'final') ? $this->calculateRewardPoints($business_id, $final_total) : 0,
             'rp_redeemed' => !empty($input['rp_redeemed']) ? $input['rp_redeemed'] : 0,
             'rp_redeemed_amount' => !empty($input['rp_redeemed_amount']) ? $input['rp_redeemed_amount'] : 0,
             'is_created_from_api' => !empty($input['is_created_from_api']) ? 1 : 0,
@@ -471,8 +474,30 @@ class TransactionUtil extends Util
             'over_limit_amount' => !empty($input['over_limit_amount']) ? $input['over_limit_amount'] : 0.00,
             'customer_limit' => !empty($input['customer_limit']) ? $input['customer_limit'] : 0.00,
             'price_later' => !empty($input['price_later']) ? $input['price_later'] : 0,
-            'store_id' => $input['store_id']
+            'store_id' => !empty($input['store_id']) ? $input['store_id'] : null
         ]);
+
+        if (!empty($input['shipping_status'])) {
+            Shipment::create([
+                'business_id' => $business_id,
+                'transaction_id' => $transaction->id,
+                'shipment_no' => $transaction->invoice_no,
+                'vendor' => $business->name,
+                'vendor_country' => 'Ethiopia',
+                'incoterms' => 'EXW',
+                'port_of_loading' => 'Local',
+                'port_of_discharge' => 'Local',
+                'transport_mode' => 'truck',
+                'status' => 'pending',
+                'expected_arrival' => Carbon::now()->addDays(2),
+                'user_id' => $user_id,
+                'shipping_details' => $transaction->shipping_details,
+                'shipping_address' => $transaction->shipping_address,
+                'shipping_status' => $transaction->shipping_status,
+                'delivered_to' => $transaction->delivered_to,
+                'shipping_charges' => $transaction->shipping_charges,
+            ]);
+        }
         
         return $transaction;
     }
@@ -1940,7 +1965,7 @@ class TransactionUtil extends Util
                     'transactions.custom_field_4',*/
                     
                     DB::raw('DATE_FORMAT(transactions.transaction_date, "%Y/%m/%d") as sale_date'),
-                    DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by"),
+                    DB::raw("CONCAT(COALESCE(u.firstname, ''),' ',COALESCE(u.middlename, ''),' ',COALESCE(u.lastname,'')) as added_by"),
                     DB::raw('(SELECT SUM(IF(TP.is_return = 1,-1*TP.amount,TP.amount)) FROM transaction_payments AS TP WHERE
                         TP.transaction_id=transactions.id) as total_paid'),
                     'bl.name as business_location',
@@ -1952,7 +1977,7 @@ class TransactionUtil extends Util
                     'tos.name as types_of_service_name',
                     'transactions.service_custom_field_1',
                     DB::raw('COUNT( DISTINCT tsl.id) as total_items'),
-                    DB::raw("CONCAT(COALESCE(ss.surname, ''),' ',COALESCE(ss.first_name, ''),' ',COALESCE(ss.last_name,'')) as waiter"),
+                    DB::raw("CONCAT(COALESCE(ss.firstname, ''),' ',COALESCE(ss.middlename, ''),' ',COALESCE(ss.lastname,'')) as waiter"),
                     'tables.name as table_name',
                     DB::raw('SUM(tsl.quantity - tsl.so_quantity_invoiced) as so_qty_remaining'),
                     'transactions.is_export'
@@ -2008,7 +2033,7 @@ class TransactionUtil extends Util
                         TP2.transaction_id=PR.id ) as return_paid'),
                         DB::raw('COUNT(PR.id) as return_exists'),
                         DB::raw('COALESCE(PR.final_total, 0) as amount_return'),
-                        DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
+                        DB::raw("CONCAT(COALESCE(u.firstname, ''),' ',COALESCE(u.middlename, ''),' ',COALESCE(u.lastname,'')) as added_by")
                     )
                     ->groupBy('transactions.id');
 
@@ -2152,7 +2177,7 @@ class TransactionUtil extends Util
                     }
                 }
                 $uf_quantity = $uf_data ? $this->num_uf($product['quantity']) : $product['quantity'];
-                $uf_item_tax = $uf_data ? $this->num_uf($product['item_tax']) : $product['item_tax'];
+                $uf_item_tax = !empty($product['item_tax']) ? ($uf_data ? $this->num_uf($product['item_tax']) : $product['item_tax']) : 0;
                 $uf_unit_price_inc_tax = $uf_data ? $this->num_uf($product['unit_price_inc_tax']) : $product['unit_price_inc_tax'];
                 $line = [
                     'product_id' => $product['product_id'],
@@ -2163,7 +2188,7 @@ class TransactionUtil extends Util
                     'line_discount_type' => !empty($product['line_discount_type']) ? $product['line_discount_type'] : null,
                     'line_discount_amount' => !empty($product['line_discount_amount']) ? $uf_data ? $this->num_uf($product['line_discount_amount']) : $product['line_discount_amount'] : 0,
                     'item_tax' =>  $uf_item_tax / $multiplier,
-                    'tax_id' => $product['tax_id'],
+                    'tax_id' => !empty($product['tax_id']) ? $product['tax_id'] : null,
                     'unit_price_inc_tax' =>  $uf_unit_price_inc_tax / $multiplier,
                     'sell_line_note' => !empty($product['sell_line_note']) ? $product['sell_line_note'] : '',
                     'sub_unit_id' => !empty($product['sub_unit_id']) ? $product['sub_unit_id'] : null,
@@ -2494,9 +2519,9 @@ class TransactionUtil extends Util
                         'method' => $payment['method'],
                         'business_id' => $transaction->business_id,
                         'is_return' => isset($payment['is_return']) ? $payment['is_return'] : 0,
-                        'card_transaction_number' => $payment['card_transaction_number'],
+                        'card_transaction_number' => $payment['card_transaction_number'] ?? null,
                         'bank_name' => !empty($payment['bank_name']) ? $payment['bank_name'] : null,
-                        'cheque_number' => $payment['cheque_number'].$cheque_nos,
+                        'cheque_number' => ($payment['cheque_number'] ?? '') . $cheque_nos,
                         'cheque_date' => !empty($payment['cheque_date']) ? $payment['cheque_date'] : date('Y-m-d'),
                         'note' => !empty($payment['note']) ? $payment['note'] : null,
                         'paid_on' => !empty($payment['paid_on']) ? $this->uf_date($payment['paid_on']) : $transaction->transaction_date,
@@ -2510,11 +2535,11 @@ class TransactionUtil extends Util
                     ];
                     
                     if ($payment['method'] == 'custom_pay_1') {
-                        $payment_data['transaction_no'] = $payment['transaction_no_1'];
+                        $payment_data['transaction_no'] = $payment['transaction_no_1'] ?? null;
                     } elseif ($payment['method'] == 'custom_pay_2') {
-                        $payment_data['transaction_no'] = $payment['transaction_no_2'];
+                        $payment_data['transaction_no'] = $payment['transaction_no_2'] ?? null;
                     } elseif ($payment['method'] == 'custom_pay_3') {
-                        $payment_data['transaction_no'] = $payment['transaction_no_3'];
+                        $payment_data['transaction_no'] = $payment['transaction_no_3'] ?? null;
                     }
                     // if method value is integer, then method holds cash group accounts id
                     if (!empty($payment['method'])) {
@@ -3098,7 +3123,7 @@ class TransactionUtil extends Util
         if (blank($il->date_time_format)) {
             $output['invoice_date'] = $this->format_date($transaction->transaction_date, true, $business_details);
         } else {
-            $output['invoice_date'] = \Carbon::createFromFormat('Y-m-d H:i:s', $transaction->transaction_date)->format($il->date_time_format);
+            $output['invoice_date'] = Carbon::createFromFormat('Y-m-d H:i:s', $transaction->transaction_date)->format($il->date_time_format);
         }
         if (!empty($il->common_settings['show_due_date'])) {
             $output['due_date_label'] = !empty($il->common_settings['due_date_label']) ? $il->common_settings['due_date_label'] : '';
@@ -3107,7 +3132,7 @@ class TransactionUtil extends Util
                 if (blank($il->date_time_format)) {
                     $output['due_date'] = $this->format_date($due_date->toDateTimeString(), true, $business_details);
                 } else {
-                    $output['due_date'] = \Carbon::createFromFormat('Y-m-d H:i:s', $due_date->toDateTimeString())->format($il->date_time_format);
+                    $output['due_date'] = Carbon::createFromFormat('Y-m-d H:i:s', $due_date->toDateTimeString())->format($il->date_time_format);
                 }
             }
         }
@@ -3384,7 +3409,7 @@ class TransactionUtil extends Util
                     $waiter = \App\User::find($transaction->res_waiter_id);
                 }
                 //res_table_id
-                $output['service_staff'] = !empty($waiter->id) ? implode(' ', [$waiter->first_name, $waiter->last_name]) : '';
+                $output['service_staff'] = !empty($waiter->id) ? implode(' ', array_filter([$waiter->firstname, $waiter->middlename, $waiter->lastname])) : '';
             }
         }
         //Repair module details
@@ -3420,10 +3445,9 @@ class TransactionUtil extends Util
     }
     public function getCustomerDetails($contact_id)
     {
-        if (!empty($contact_id)) {
-            $customer_id = $contact_id;
-        }
-        $business_id = request()->session()->get('business.id');
+        $customer_id = $contact_id;
+        $business_id = request()->session()->get('business.id') ?? request()->session()->get('user.business_id');
+        
         $query = Contact::leftjoin('transactions AS t', 'contacts.id', '=', 't.contact_id')
             ->leftjoin('contact_groups AS cg', 'contacts.customer_group_id', '=', 'cg.id')
             ->where('contacts.business_id', $business_id)
@@ -3441,6 +3465,11 @@ class TransactionUtil extends Util
                 'email', 'tax_number', 'contacts.pay_term_number', 'contacts.pay_term_type', 'contacts.credit_limit', 'contacts.custom_field1', 'contacts.custom_field2', 'contacts.custom_field3', 'contacts.custom_field4', 'contacts.type'
             ])
             ->groupBy('contacts.id')->first();
+
+        if (empty($query)) {
+            return ['due_amount' => 0, 'customer_name' => '', 'sol_with_approval' => 0];
+        }
+
         $due = $query->total_invoice - $query->invoice_received + $query->advance_payment;
         $return_due = $query->total_sell_return - $query->sell_return_paid;
         $opening_balance = $query->opening_balance;
@@ -4184,7 +4213,7 @@ class TransactionUtil extends Util
     public function getProfitLossDetails($business_id, $location_id, $start_date, $end_date, $user_id = null)
     {
         //For Opening stock date should be 1 day before
-        $day_before_start_date = \Carbon::createFromFormat('Y-m-d', $start_date)->subDay()->format('Y-m-d');
+        $day_before_start_date = Carbon::createFromFormat('Y-m-d', $start_date)->subDay()->format('Y-m-d');
         $filters = ['user_id' => $user_id];
         //Get Opening stock
         $opening_stock = $this->getOpeningClosingStock($business_id, $day_before_start_date, $location_id, true, false, $filters);
@@ -4481,7 +4510,7 @@ class TransactionUtil extends Util
             ->where('transactions.business_id', $business_id)
             ->where('transactions.type', 'sell')
             ->where('transactions.status', 'final')
-            ->whereBetween(DB::raw('date(transactions.transaction_date)'), [\Carbon::now()->subDays(30), \Carbon::now()]);
+            ->whereBetween(DB::raw('date(transactions.transaction_date)'), [Carbon::now()->subDays(30), Carbon::now()]);
         //Check for permitted locations of a user
         $permitted_locations = auth()->user()->permitted_locations();
         if ($permitted_locations != 'all') {
@@ -4561,7 +4590,7 @@ class TransactionUtil extends Util
             ->where('contacts.contact_id', $contact_id)
             ->where('transactions.type', 'sell')
             ->where('transactions.status', 'final')
-            ->whereBetween(DB::raw('date(transactions.transaction_date)'), [\Carbon::now()->subDays(30), \Carbon::now()]);
+            ->whereBetween(DB::raw('date(transactions.transaction_date)'), [Carbon::now()->subDays(30), Carbon::now()]);
         //Check for permitted locations of a user
         $query->select(
             DB::raw("DATE_FORMAT(transactions.transaction_date, '%Y-%m-%d') as date"),
@@ -5053,7 +5082,7 @@ class TransactionUtil extends Util
                 if ($total_amount > 0) {
                     $total_paid = $this->getTotalPaid($transaction->id);
                     $due = $transaction->final_total - $total_paid;
-                    $now = \Carbon::now()->toDateTimeString();
+                    $now = Carbon::now()->toDateTimeString();
                     $array = [
                         'transaction_id' => $transaction->id,
                         'business_id' => $parent_payment->business_id,
@@ -5120,7 +5149,7 @@ class TransactionUtil extends Util
                 if ($total_amount > 0) {
                     $total_paid = $this->getTotalPaid($transaction->id);
                     $due = $transaction->final_total - $total_paid;
-                    $now = \Carbon::now()->toDateTimeString();
+                    $now = Carbon::now()->toDateTimeString();
                     $array = [
                         'transaction_id' => $transaction->id,
                         'business_id' => $parent_payment->business_id,
@@ -5319,7 +5348,7 @@ class TransactionUtil extends Util
             //If product expiry is enabled then check for on expiry conditions
             if ($stop_selling_expired && empty($purchase_line_id)) {
                 $stop_before = request()->session()->get('business')['stop_selling_before'];
-                $expiry_date = \Carbon::today()->addDays($stop_before)->toDateString();
+                $expiry_date = Carbon::today()->addDays($stop_before)->toDateString();
                 $query->whereRaw('PL.exp_date IS NULL OR PL.exp_date > ?', [$expiry_date]);
             }
             //If lot number present consider only lot number purchase line
@@ -5373,8 +5402,8 @@ class TransactionUtil extends Util
                             'stock_adjustment_line_id' => $line->id,
                             'purchase_line_id' => $row->purchase_lines_id,
                             'quantity' => $qty_allocated,
-                            'created_at' => \Carbon::now(),
-                            'updated_at' => \Carbon::now()
+                            'created_at' => Carbon::now(),
+                            'updated_at' => Carbon::now()
                         ];
                     //Update purchase line
                     PurchaseLine::where('id', $row->purchase_lines_id)
@@ -5385,8 +5414,8 @@ class TransactionUtil extends Util
                         'sell_line_id' => $line->id,
                         'purchase_line_id' => $row->purchase_lines_id,
                         'quantity' => $qty_allocated,
-                        'created_at' => \Carbon::now(),
-                        'updated_at' => \Carbon::now()
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now()
                     ];
                     //Update purchase line
                     PurchaseLine::where('id', $row->purchase_lines_id)
@@ -5397,8 +5426,8 @@ class TransactionUtil extends Util
                         'sell_line_id' => $line->id,
                         'purchase_line_id' => $row->purchase_lines_id,
                         'quantity' => $qty_allocated,
-                        'created_at' => \Carbon::now(),
-                        'updated_at' => \Carbon::now()
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now()
                     ];
                     //Update purchase line
                     PurchaseLine::where('id', $row->purchase_lines_id)
@@ -5448,8 +5477,8 @@ class TransactionUtil extends Util
                         'sell_line_id' => $line->id,
                         'purchase_line_id' => 0,
                         'quantity' => $qty_selling,
-                        'created_at' => \Carbon::now(),
-                        'updated_at' => \Carbon::now()
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now()
                     ];
                 }
             }
@@ -5826,7 +5855,7 @@ class TransactionUtil extends Util
         if (empty($transaction)) {
             return false;
         }
-        $date = \Carbon::parse($transaction->transaction_date)
+        $date = Carbon::parse($transaction->transaction_date)
             ->addDays($edit_duration);
         $today = today();
         if ($date->gte($today)) {
@@ -5902,7 +5931,7 @@ class TransactionUtil extends Util
 
         //If opening
         if ($is_opening) {
-            $next_day = \Carbon::createFromFormat('Y-m-d', $date)->addDay()->format('Y-m-d');
+            $next_day = Carbon::createFromFormat('Y-m-d', $date)->addDay()->format('Y-m-d');
             $query->where(function ($query) use ($date, $next_day) {
                 $query->whereRaw("date(transaction_date) <= '$date'")
                     ->orWhereRaw("date(transaction_date) = '$next_day' AND purchase.type='opening_stock' ");
@@ -6023,7 +6052,7 @@ class TransactionUtil extends Util
         }
 
         //calculate first day of stock
-        $next_day = \Carbon::createFromFormat('Y-m-d', $date)->addDay()->format('Y-m-d');
+        $next_day = Carbon::createFromFormat('Y-m-d', $date)->addDay()->format('Y-m-d');
         $opening_date_query = PurchaseLine::join('transactions','purchase_lines.transaction_id','=','transactions.id')
             ->select(DB::raw("min(date(transactions.transaction_date)) as stock_date"))
             ->where('transactions.business_id', $business_id)
@@ -6413,7 +6442,7 @@ class TransactionUtil extends Util
             'status' => 'final',
             'payment_status' => 'due',
             'pump_operator_id' => $pump_operator_id,
-            'transaction_date' => \Carbon::parse($transaction_date) ?: \Carbon::now(),
+            'transaction_date' => Carbon::parse($transaction_date) ?: Carbon::now(),
             'total_before_tax' => $final_amount,
             'final_total' => $final_amount,
             'created_by' => request()->session()->get('user.id')
@@ -6479,7 +6508,7 @@ class TransactionUtil extends Util
                 'status' => 'final',
                 'payment_status' => 'due',
                 'pump_operator_id' => $pump_operator_id,
-                'transaction_date' => \Carbon::parse($transaction_date) ?: \Carbon::now(),
+                'transaction_date' => Carbon::parse($transaction_date) ?: Carbon::now(),
                 'total_before_tax' => $final_amount,
                 'final_total' => $final_amount,
                 'created_by' => request()->session()->get('user.id')
@@ -7086,7 +7115,7 @@ class TransactionUtil extends Util
         $data['recur_interval_type'] = null;
         $data['recur_repetitions'] = 0;
         $data['recur_stopped_on'] = null;
-        $data['transaction_date'] = \Carbon::now();
+        $data['transaction_date'] = Carbon::now();
         if (isset($data['invoice_token'])) {
             $data['invoice_token'] = null;
         }
@@ -7429,13 +7458,13 @@ class TransactionUtil extends Util
         }
         $is_expired = false;
         if (!empty($business->rp_expiry_period)) {
-            $expiry_date = \Carbon::parse($date);
+            $expiry_date = Carbon::parse($date);
             if ($business->rp_expiry_type == 'month') {
                 $expiry_date = $expiry_date->addMonths($business->rp_expiry_period);
             } elseif ($business->rp_expiry_type == 'year') {
                 $expiry_date = $expiry_date->addYears($business->rp_expiry_period);
             }
-            if ($expiry_date->format('Y-m-d') >= \Carbon::now()->format('Y-m-d')) {
+            if ($expiry_date->format('Y-m-d') >= Carbon::now()->format('Y-m-d')) {
                 $is_expired = true;
             }
         }

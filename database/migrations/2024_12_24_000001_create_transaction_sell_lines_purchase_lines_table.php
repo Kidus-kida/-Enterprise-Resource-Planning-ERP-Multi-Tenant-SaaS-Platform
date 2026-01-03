@@ -22,7 +22,10 @@ return new class extends Migration
                 
                 $table->index('sell_line_id');
                 $table->index('purchase_line_id');
-                $table->index('stock_adjustment_line_id');
+                $table->index(
+                    'stock_adjustment_line_id',
+                    'tsl_pl_stock_adj_line_idx'
+                );
             });
         }
     }

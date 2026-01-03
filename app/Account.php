@@ -7,6 +7,9 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\AccountType;
+use App\AccountGroup;
+
 
 class Account extends Model
 {
@@ -21,7 +24,7 @@ class Account extends Model
     protected static $logName = 'Account';
 
     protected $guarded = ['id'];
-    
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -114,7 +117,7 @@ class Account extends Model
 
     public static function AssetTypeAccountGroupActive()
     {
-        return  array(
+        return array(
             '1' => 'Raw material Account',
             '2' => 'Finished Goods Account',
             '3' => 'Other Stocks',
@@ -128,7 +131,7 @@ class Account extends Model
     }
     public static function AssetTypeAccountGroupNoneActive()
     {
-        return  array(
+        return array(
             '4' => 'Bank Account',
             '5' => 'Cash Account',
             '6' => 'Cheques in Hand (Customer���s)',
@@ -149,9 +152,9 @@ class Account extends Model
 
         return Account::where('business_id', $business_id)->where('asset_type', $group_id)->where('is_main_account', $is_main_account)->pluck('name', 'id');
     }
-     function AccountGroups()
+    function AccountGroups()
     {
-        return $this->belongsTo(AccountGroup::class,'asset_type','id');
+        return $this->belongsTo(AccountGroup::class, 'asset_type', 'id');
     }
     public static function getAccountByAccountTypeId($account_type_id)
     {
@@ -186,7 +189,7 @@ class Account extends Model
         $this_account = Account::where('name', $account_name)->where('business_id', $business_id)->first();
         if (!empty($this_account->is_main_account)) { //if main account then return sub accounts
             $sub_accounts = Account::where('business_id', $business_id)->where('parent_account_id', $this_account->id)->pluck('name', 'id');
-            return  $sub_accounts;
+            return $sub_accounts;
         }
         return $this_account->pluck('name', 'id');
     }
@@ -195,18 +198,20 @@ class Account extends Model
     public static function getSubAccountBalanceByMainAccountId($prent_account_id, $start_date = null, $end_date = null)
     {
         $business_id = request()->session()->get('user.business_id');
-        
+
         $accounts = Account::where('parent_account_id', $prent_account_id)->where('business_id', $business_id)
-                ->select([
-                    'accounts.name', 'accounts.id', 'accounts.account_number'
-                ])->get();
-        
+            ->select([
+                'accounts.name',
+                'accounts.id',
+                'accounts.account_number'
+            ])->get();
+
         $balance = 0;
-        foreach ($accounts as  $account) {
+        foreach ($accounts as $account) {
             $balance += Account::getAccountBalance($account->id, null, $end_date);
         }
-        return round($balance,2);
-            
+        return round($balance, 2);
+
     }
 
     public static function checkInsufficientBalance($id)
@@ -230,26 +235,26 @@ class Account extends Model
      */
     static function getAccountBalance($id, $start_date = null, $end_date = null, $get_previous = false, $account_book = false, $is_daily_report = false)
     {
-        
+
         $account_type_id = Account::where('id', $id)->first() ? Account::where('id', $id)->first()->account_type_id : 0;
         $account_type = AccountType::where('id', $account_type_id)->first();
         $account_type_name = !empty($account_type) ? $account_type->name : "";
         $business_id = session()->get('user.business_id');
-        
-        $account_query = Account::leftjoin('account_transactions as AT','AT.account_id','=','accounts.id')
+
+        $account_query = Account::leftjoin('account_transactions as AT', 'AT.account_id', '=', 'accounts.id')
             ->whereNull('AT.deleted_at')
             ->where('accounts.business_id', $business_id)
             ->where('accounts.id', $id);
-        
+
         if (!empty($start_date) && !$get_previous) {
             $account_query->where('operation_date', '>=', $start_date);
         }
-        
+
         if (!empty($end_date) && !$get_previous) {
             $account_query->where('operation_date', '<=', $end_date);
         }
-        
-        
+
+
         if ($get_previous && !empty($start_date)) {
             if ($account_book) {
                 $account_query->whereDate('operation_date', '<', $start_date);
@@ -259,23 +264,23 @@ class Account extends Model
                 $account_query->whereDate('operation_date', '<=', $start_date);
             }
         }
-        
+
         $account_query->where('is_closed', 0);
-        
+
         $account = $account_query->select(
-                DB::raw("SUM(IF(AT.type='credit',amount, 0)) as creditSum"),
-                DB::raw("SUM(IF(AT.type='debit', amount, 0)) as debitSum")
+            DB::raw("SUM(IF(AT.type='credit',amount, 0)) as creditSum"),
+            DB::raw("SUM(IF(AT.type='debit', amount, 0)) as debitSum")
         )->first();
-        
-        if($account_type_name == "Assets" || $account_type_name == "Expenses" || $account_type_name == "Current Assets" || $account_type_name == "Fixed Assets"){
+
+        if ($account_type_name == "Assets" || $account_type_name == "Expenses" || $account_type_name == "Current Assets" || $account_type_name == "Fixed Assets") {
             $balance = $account->debitSum - $account->creditSum;
-        }else if($account_type_name == "Liabilities" || $account_type_name == "Equity" || $account_type_name == "Income" || $account_type_name == "Long Term Liabilities" || $account_type_name == "Current Liabilities"){
+        } else if ($account_type_name == "Liabilities" || $account_type_name == "Equity" || $account_type_name == "Income" || $account_type_name == "Long Term Liabilities" || $account_type_name == "Current Liabilities") {
             $balance = $account->creditSum - $account->debitSum;
-        }else{
+        } else {
             $balance = $account->debitSum - $account->creditSum;
         }
 
-        
+
         return $balance;
     }
     /**
@@ -299,11 +304,11 @@ class Account extends Model
             '=',
             'accounts.id'
         )->leftjoin(
-            'transactions',
-            'AT.transaction_id',
-            '=',
-            'transactions.id'
-        )
+                'transactions',
+                'AT.transaction_id',
+                '=',
+                'transactions.id'
+            )
             ->where('accounts.business_id', $business_id)
             ->where('transactions.type', $type)
             ->whereIn('accounts.asset_type', $stock_group_id_array)
@@ -333,7 +338,7 @@ class Account extends Model
      * @param  int $id
      * @return float
      */
-    static function getStockGroupAccountBalanceByTransactionTypeAndCategory($type, $sub_cat_id, $start_date = null, $end_date = null, $get_previous = false, $get_qty = false,$module = 'dailysummary_stocksummary_value')
+    static function getStockGroupAccountBalanceByTransactionTypeAndCategory($type, $sub_cat_id, $start_date = null, $end_date = null, $get_previous = false, $get_qty = false, $module = 'dailysummary_stocksummary_value')
     {
         $business_id = session()->get('user.business_id');
         $balance = 0;
@@ -349,11 +354,11 @@ class Account extends Model
             '=',
             'accounts.id'
         )->leftjoin(
-            'transactions',
-            'AT.transaction_id',
-            '=',
-            'transactions.id'
-        );
+                'transactions',
+                'AT.transaction_id',
+                '=',
+                'transactions.id'
+            );
         if ($type == 'sell') {
             $account_query->leftjoin(
                 'transaction_sell_lines',
@@ -391,8 +396,8 @@ class Account extends Model
                 );
         }
         $account_query->where('products.sub_category_id', $sub_cat_id)->groupBy('products.sub_category_id');
-        
-        $account_query->where(function($q) use($module){
+
+        $account_query->where(function ($q) use ($module) {
             $q->whereNull('products.disabled_in')->orwhereRaw("NOT FIND_IN_SET(?, products.disabled_in)", [$module]);
         });
 
@@ -465,36 +470,37 @@ class Account extends Model
             $balance->whereDate('operation_date', '<', $start_date);
             $amount = $balance->sum('amount');
         }
-		
+
 
         if (!empty($amount)) {
             return $amount;
         }
         return 0;
     }
-    
-    public static function getAccountTotalByRange($account_id,$type,$start_date,$end_date){
+
+    public static function getAccountTotalByRange($account_id, $type, $start_date, $end_date)
+    {
         $amount = 0;
         $start_date = date('Y-m-d', strtotime("-1 day", strtotime($start_date)));
         $end_date = date('Y-m-d', strtotime("-1 day", strtotime($end_date)));
-        
-        
+
+
         $balance = AccountTransaction::leftjoin('accounts', 'account_transactions.account_id', 'accounts.id')
             ->where('accounts.id', $account_id)
             ->where('account_transactions.type', $type)
             ->whereDate('operation_date', '>=', $start_date)
             ->whereDate('operation_date', '<=', $end_date);
-        
-        
+
+
         $amount = $balance->sum('amount');
         if (!empty($amount)) {
             return $amount;
         }
         return 0;
-        
+
     }
-    
-    public static function getAccountBalanceByType($account_id, $type, $start_date, $end_date, $is_previous = false, $opening_balance_only = false, $sub_type=null)
+
+    public static function getAccountBalanceByType($account_id, $type, $start_date, $end_date, $is_previous = false, $opening_balance_only = false, $sub_type = null)
     {
         $balance = AccountTransaction::leftjoin('accounts', 'account_transactions.account_id', 'accounts.id')
             ->leftjoin('transactions', 'account_transactions.transaction_id', 'transactions.id')
@@ -502,7 +508,7 @@ class Account extends Model
             ->where('accounts.is_main_account', 0)
             ->where('account_transactions.type', $type);
         if ($opening_balance_only) {
-            $balance->whereIn('transactions.type', ['opening_balance'])->where('transactions.final_total','>',0);
+            $balance->whereIn('transactions.type', ['opening_balance'])->where('transactions.final_total', '>', 0);
         } else {
             $balance->whereNotIn('transactions.type', ['opening_balance']);
         }
@@ -516,10 +522,10 @@ class Account extends Model
                 $balance->whereDate('operation_date', '<', $start_date);
             }
         }
-        if(strlen($sub_type) > 0){
+        if (strlen($sub_type) > 0) {
             $balance->where('account_transactions.sub_type', $sub_type);
         }
-        
+
         $amount = $balance->sum('amount');
         if (!empty($amount)) {
             return $amount;
@@ -551,13 +557,30 @@ class Account extends Model
     public static function crearePostdatedChequesAccount($business_id, $user_id)
     {
         Account::where('business_id', $business_id)->where('name', 'Company Post dated Cheques')->update(['name' => 'Post Dated Cheques']);
-        
-        $account_type = AccountType::getAccountTypeIdByName('Current Assets',$business_id,true);
-        $account_group = AccountGroup::getGroupByName('Bank Account',true);
-        
+
+        $account_type = AccountType::getAccountTypeIdByName('Current Assets', $business_id, true);
+        $account_group = AccountGroup::getGroupByName('Bank Account', true);
+
         // if 'Post Dated Cheques' account is not created, then create
         $account_post_dated_cheque = Account::where('business_id', $business_id)->where('name', 'Post Dated Cheques')->first();
-        if(empty($account_post_dated_cheque)){
+        if (empty($account_post_dated_cheque)) {
+            // Fallback: If specific type not found, find ANY type or Create it?             // Best to find any type with that name generally if strict business check fails, or default to first valid ID to avoid crash.
+            if (empty($account_type)) {
+                $account_type = AccountType::where('name', 'like', '%Current Assets%')->first()?->id ?? AccountType::query()->first()?->id;
+                if (empty($account_type)) {
+                    // Table likely empty or no match, create one
+                    $newType = AccountType::create([
+                        'business_id' => $business_id,
+                        'name' => 'Current Assets',
+                        'parent_account_type_id' => null
+                    ]);
+                    $account_type = $newType->id;
+                }
+            }
+            if (empty($account_group)) {
+                $account_group = AccountGroup::where('name', 'like', '%Bank Account%')->first()?->id ?? AccountGroup::query()->first()?->id ?? null;
+            }
+
             $account = new Account;
             $account->business_id = $business_id;
             $account->name = "Post Dated Cheques";
@@ -568,26 +591,46 @@ class Account extends Model
             $account->created_by = $user_id;
             $account->is_main_account = 0;
             $account->is_closed = 0;
-            $account->visible = 1;
-            $account->disabled = 0;
+            // $account->visible = 1;
+            // $account->disabled = 0;
             $account->save();
         }
-        
+
         // if issued post dated cheques not available, then create
         $issued_post_dated_cheque = Account::where('business_id', $business_id)->where('name', 'Issued Post Dated Cheques')->first();
-        if(empty($issued_post_dated_cheque)){
+        if (empty($issued_post_dated_cheque)) {
+            $account_type_liability = AccountType::getAccountTypeIdByName('Current Liabilities', $business_id, true);
+            if (empty($account_type_liability)) {
+                $account_type_liability = AccountType::where('name', 'like', '%Current Liabilities%')->first()?->id ?? AccountType::query()->first()?->id;
+                if (empty($account_type_liability)) {
+                    // Table likely empty or no match, create one
+                    $newType = AccountType::create([
+                        'business_id' => $business_id,
+                        'name' => 'Current Liabilities',
+                        'parent_account_type_id' => null
+                    ]);
+                    $account_type_liability = $newType->id;
+                }
+            }
+
+            $account_group_bank = AccountGroup::getGroupByName('Bank Account', true);
+            if (empty($account_group_bank)) {
+                $account_group_bank = AccountGroup::where('name', 'like', '%Bank Account%')->first()?->id ?? AccountGroup::query()->first()?->id ?? null;
+            }
+
             $account = new Account;
             $account->business_id = $business_id;
             $account->name = "Issued Post Dated Cheques";
             $account->account_number = rand(111111, 999999);
-            $account->account_type_id = AccountType::getAccountTypeIdByName('Current Liabilities',$business_id,true);;
-            $account->asset_type = AccountGroup::getGroupByName('Bank Account',true);
+            $account->account_type_id = $account_type_liability;
+            ;
+            $account->asset_type = $account_group_bank;
             $account->is_need_cheque = "N";
             $account->created_by = $user_id;
             $account->is_main_account = 0;
             $account->is_closed = 0;
-            $account->visible = 1;
-            $account->disabled = 0;
+            // $account->visible = 1;
+            // $account->disabled = 0;
             $account->save();
         }
 

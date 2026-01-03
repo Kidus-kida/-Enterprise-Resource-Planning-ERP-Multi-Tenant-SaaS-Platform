@@ -3,7 +3,7 @@
     <form action="{{ route('sales.cash-register.post-close') }}" method="POST">
       @csrf
       <div class="modal-header">
-        <h5 class="modal-title">{{ __('Close Register') }} ({{ \Carbon\Carbon::parse($register_details->open_time)->format('jS M, Y h:i A') }} - {{ \Carbon::now()->format('jS M, Y h:i A') }})</h5>
+        <h5 class="modal-title">{{ __('Close Register') }} ({{ \Carbon\Carbon::parse($register_details->open_time)->format('jS M, Y h:i A') }} - {{ \Carbon\Carbon::now()->format('jS M, Y h:i A') }})</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 

@@ -26,7 +26,7 @@
                             <table class="table table-striped custom-table mb-0 datatable w-100">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
+                                        <th>ID</th>
                                         <th>{{ __('Name') }}</th>
                                         <th>{{ __('Parent Type') }}</th>
                                         <th>{{ __('Description') }}</th>

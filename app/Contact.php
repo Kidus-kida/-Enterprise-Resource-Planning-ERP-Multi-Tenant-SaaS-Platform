@@ -17,10 +17,10 @@ class Contact extends Model implements CommonConstants
     protected static $logAttributes = ['*'];
 
     protected static $logFillable = true;
-    
+
     protected $table = "contacts";
-    
-    protected static $logName = 'Contact'; 
+
+    protected static $logName = 'Contact';
 
     use Notifiable;
 
@@ -30,10 +30,10 @@ class Contact extends Model implements CommonConstants
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
-    
+
     public function scopeActive($query)
     {
-        return $query->where('active', '1');
+        return $query->where('contact_status', 'active');
     }
 
     /**
@@ -58,9 +58,10 @@ class Contact extends Model implements CommonConstants
     {
         return $query->whereIn('contacts.type', ['supplier', 'both']);
     }
-    
-    public function loans(){
-        return $this->hasMany(Loan::class,'id','contact_id');
+
+    public function loans()
+    {
+        return $this->hasMany(Loan::class, 'id', 'contact_id');
     }
 
     public function scopeOnlyCustomers($query)
@@ -69,10 +70,10 @@ class Contact extends Model implements CommonConstants
     }
     public function scopeOnlyActive($query)
     {
-        return $query->where('contacts.active', 1);
+        return $query->where('contacts.contact_status', 'active');
     }
 
-     /**
+    /**
      * Get all of the contacts's notes & documents.
      */
     public function documentsAndnote()
@@ -80,14 +81,14 @@ class Contact extends Model implements CommonConstants
         return $this->morphMany('App\DocumentAndNote', 'notable');
     }
 
-       /**
+    /**
      * Get the business that owns the user.
      */
     public function business()
     {
         return $this->belongsTo(\App\Business::class);
     }
-    
+
 
 
     /**
@@ -110,14 +111,14 @@ class Contact extends Model implements CommonConstants
             $query->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contact_id, ')')) AS supplier"),
                 'id'
-                    );
+            );
         } else {
             $query->select(
                 'id',
                 DB::raw("IF (supplier_business_name IS not null, CONCAT(name, ' (', supplier_business_name, ')'), name) as supplier")
             );
         }
-        
+
         $contacts = $query->pluck('supplier', 'id');
 
         //Prepend none
@@ -138,14 +139,14 @@ class Contact extends Model implements CommonConstants
             $query->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contact_id, ')')) AS supplier"),
                 'id'
-                    );
+            );
         } else {
             $query->select(
                 'id',
                 DB::raw("IF (supplier_business_name IS not null, CONCAT(name, ' (', supplier_business_name, ')'), name) as supplier")
             );
         }
-        
+
         $contacts = $query->pluck('supplier', 'id');
 
         //Prepend none
@@ -155,7 +156,7 @@ class Contact extends Model implements CommonConstants
 
         return $contacts;
     }
-    
+
     /**
      * Return list of searched contact dropdown for a business
      *
@@ -167,7 +168,7 @@ class Contact extends Model implements CommonConstants
      */
     public static function customersSearchRecord($business_id, $exclude_default = false, $customer_name = '', $prepend_none = true, $append_id = true)
     {
-        $query = Contact::where('business_id', $business_id)->where('name','like','%'.$customer_name."%");
+        $query = Contact::where('business_id', $business_id)->where('name', 'like', '%' . $customer_name . "%");
         if ($exclude_default) {
             $query->where('is_default', 0);
         }
@@ -176,21 +177,21 @@ class Contact extends Model implements CommonConstants
             $query->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contact_id, ')')) AS supplier"),
                 'id'
-                    );
+            );
         } else {
             $query->select(
                 'id',
                 DB::raw("IF (supplier_business_name IS not null, CONCAT(name, ' (', supplier_business_name, ')'), name) as supplier")
             );
         }
-        
+
         $contacts = $query->pluck('supplier', 'id');
 
         //Prepend none
         if ($prepend_none) {
             $contacts = $contacts->prepend(__('lang_v1.none'), '');
         }
-        
+
         return $contacts;
     }
 
@@ -205,18 +206,18 @@ class Contact extends Model implements CommonConstants
     public static function suppliersDropdown($business_id, $prepend_none = true, $append_id = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->whereIn('type', ['supplier', 'both']);
+            ->whereIn('type', ['supplier', 'both']);
 
         if ($append_id) {
             $all_contacts->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contact_id, ')')) AS supplier"),
                 'id'
-                    );
+            );
         } else {
             $all_contacts->select(
                 'id',
                 DB::raw("CONCAT(name, ' (', supplier_business_name, ')') as supplier")
-                );
+            );
         }
 
         $suppliers = $all_contacts->pluck('supplier', 'id');
@@ -239,18 +240,18 @@ class Contact extends Model implements CommonConstants
     public static function suppliersDropdownByType($business_id, $prepend_none = true, $append_id = true, $type)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->whereIn('type', $type);
+            ->whereIn('type', $type);
 
         if ($append_id) {
             $all_contacts->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contact_id, ')')) AS supplier"),
                 'id'
-                    );
+            );
         } else {
             $all_contacts->select(
                 'id',
                 DB::raw("CONCAT(name, ' (', supplier_business_name, ')') as supplier")
-                );
+            );
         }
 
         $suppliers = $all_contacts->pluck('supplier', 'id');
@@ -274,18 +275,18 @@ class Contact extends Model implements CommonConstants
     public static function propertyCustomerDropdown($business_id, $prepend_none = true, $append_nic = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->where('type', 'customer');
+            ->where('type', 'customer');
 
         if ($append_nic) {
             $all_contacts->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' - ', COALESCE(tax_number, ''), '(', contact_id, ')')) AS customer"),
                 'id'
-                    );
+            );
         } else {
             $all_contacts->select(
                 'id',
                 DB::raw("CONCAT(name, ' (', supplier_business_name, ')') as customer")
-                );
+            );
         }
 
         $suppliers = $all_contacts->pluck('customer', 'id');
@@ -309,13 +310,13 @@ class Contact extends Model implements CommonConstants
     public static function customersDropdown($business_id, $prepend_none = true, $append_id = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->whereIn('type', ['customer', 'both'])->onlyActive();
+            ->whereIn('type', ['customer', 'both'])->onlyActive();
 
         if ($append_id) {
             $all_contacts->select(
                 DB::raw("IF(contact_id IS NULL OR contact_id='', name, CONCAT(name, ' (', contact_id, ')')) AS customer"),
                 'id'
-                );
+            );
         } else {
             $all_contacts->select('id', DB::raw("name as customer"));
         }
@@ -373,7 +374,7 @@ class Contact extends Model implements CommonConstants
     }
 
 
-     /**
+    /**
      * Return list of customers dropdown for a business and customer group
      *
      * @param $business_id int
@@ -384,11 +385,11 @@ class Contact extends Model implements CommonConstants
     public static function customersDropdownByGroupId($business_id, $customer_group_id, $prepend_none = true, $append_id = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->where('type','customer')
-                        ->where('customer_group_id', $customer_group_id)->onlyActive();
-        
+            ->where('type', 'customer')
+            ->where('customer_group_id', $customer_group_id)->onlyActive();
+
         $all_contacts->select('id', DB::raw("name as customer"));
-        
+
         $customers = $all_contacts->pluck('customer', 'id');
 
 

@@ -1,6 +1,7 @@
 <?php
 namespace App\Utils;
 use App\Business;
+use Carbon\Carbon;
 use App\BusinessLocation;
 use App\Category;
 use App\Discount;
@@ -180,7 +181,7 @@ class ProductUtil extends Util
         return $query->get();
     }
     
-     public function filterProduct($business_id, $search_term, $location_id = null, $not_for_selling = null, $price_group_id = null, $product_types = [], $search_fields = [], $check_qty = false, $search_type = 'like',$module = null)
+     public function filterProduct($business_id, $search_term, $location_id = null, $not_for_selling = false, $price_group_id = null, $product_types = [], $search_fields = [], $check_qty = false, $search_type = 'like',$module = null)
     {
         
         $query = Product::join('variations', 'products.id', '=', 'variations.product_id')
@@ -207,7 +208,7 @@ class ProductUtil extends Util
             $query->forModule($module);
         }
 
-        if (! is_null($not_for_selling)) {
+        if (! $not_for_selling) {
             $query->where('products.not_for_selling', $not_for_selling);
         }
 
@@ -552,7 +553,7 @@ class ProductUtil extends Util
                         ->get();
     }
     
-    public function filterProductPos($business_id, $search_term, $location_id = null, $not_for_selling = null, $price_group_id = null, $product_types = [], $search_fields = [], $check_qty = false, $search_type = 'like', $store_id = null, $brand_id = null, $module = null)
+    public function filterProductPos($business_id, $search_term, $location_id = null, $not_for_selling = null, $price_group_id = null, $product_types = [], $search_fields = [], $check_qty = false, $search_type = 'like', $store_id = null, $brand_id = null, $category_id = null, $is_paginated = false, $per_page = 20, $module = null)
     {
         $query = Product::join('variations', 'products.id', '=', 'variations.product_id')
                 ->active()
@@ -585,6 +586,10 @@ class ProductUtil extends Util
 
         if (!empty($module)) {
             $query->forModule($module);
+        }
+
+        if (!empty($category_id) && $category_id != 'all') {
+            $query->where('products.category_id', $category_id);
         }
 
         if (!is_null($not_for_selling)) {
@@ -639,9 +644,7 @@ class ProductUtil extends Util
             $query->where('products.brand_id', $brand_id);
         }
 
-        if (request()->has('category_id') && request()->get('category_id') != 'all') {
-            $query->where('products.category_id', request()->get('category_id'));
-        }
+
 
         if (!empty($location_id)) {
             $query->ForLocation($location_id);
@@ -653,10 +656,12 @@ class ProductUtil extends Util
             'products.type',
             'products.image',
             'products.enable_stock',
+            'products.tax',
             'variations.id as variation_id',
             'variations.name as variation',
             'VSD.qty_available',
             'VSD.qty_available as current_stock',
+            'variations.default_sell_price',
             'variations.sell_price_inc_tax as selling_price',
             'variations.sub_sku',
             'variations.sub_sku as sku',
@@ -669,7 +674,13 @@ class ProductUtil extends Util
 
         $query->groupBy('variations.id');
 
-        return $query->orderBy('VSD.qty_available', 'desc')->get();
+        $query->orderBy('VSD.qty_available', 'desc');
+
+        if ($is_paginated) {
+            return $query->paginate($per_page);
+        }
+
+        return $query->get();
     }
 
     
@@ -1539,8 +1550,8 @@ class ProductUtil extends Util
                     'rack' => !empty($detail['rack']) ? $detail['rack'] : null,
                     'row' => !empty($detail['row']) ? $detail['row'] : null,
                     'position' => !empty($detail['position']) ? $detail['position'] : null,
-                    'created_at' => \Carbon::now()->toDateTimeString(),
-                    'updated_at' => \Carbon::now()->toDateTimeString()
+                    'created_at' => Carbon::now()->toDateTimeString(),
+                    'updated_at' => Carbon::now()->toDateTimeString()
                 ];
             }
             ProductRack::insert($data);
@@ -1674,7 +1685,7 @@ class ProductUtil extends Util
                 $qty = $this->num_uf(trim($value['quantity']));
                 $exp_date = null;
                 if (!empty($value['exp_date'])) {
-                    $exp_date = \Carbon::createFromFormat('d-m-Y', $value['exp_date'])->format('Y-m-d');
+                    $exp_date = Carbon::createFromFormat('d-m-Y', $value['exp_date'])->format('Y-m-d');
                 }
                 $lot_number = null;
                 if (!empty($value['lot_number'])) {
@@ -2030,7 +2041,7 @@ class ProductUtil extends Util
      */
     public function getProductDiscount($product, $business_id, $location_id, $is_cg = false, $is_spg = false)
     {
-        $now = \Carbon::now()->toDateTimeString();
+        $now = Carbon::now()->toDateTimeString();
         //Search if both category and brand matches
         $query1 = Discount::where('business_id', $business_id)
             ->where('location_id', $location_id)

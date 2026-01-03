@@ -1,23 +1,23 @@
 <?php
 return [
-    
+
     'deposits_module' => 'Deposits Module',
-    
+
     'realize_cheque' => 'Cheques to Realize',
     'realize_date' => 'Realize Date',
     'realized_successfully' => 'Realized successfully',
-    
+
     'total_longterm_liabilities' => 'Total Long Term Liabilities',
-    
-    'balance_sheet_comparison' => 'Balance Sheet -Comparison', 
-    
+
+    'balance_sheet_comparison' => 'Balance Sheet -Comparison',
+
     'fixed_assets' => 'Fixed Assets',
     'asset_name' => 'Asset Name',
     'asset_location' => 'Asset Location',
     'account_no' => 'Account Number',
     'add_fixed_asset' => 'Add Fixed Asset',
     'created_by' => 'Created By',
-    
+
     'account_numbers' => 'Account Numbers',
     'show_status' => 'Show in Financial Status',
     'show_in_ledger' => 'Show In Ledger',
@@ -49,7 +49,7 @@ return [
     'transfer_to' => 'Transfer To',
     'transfer_from' => 'Transfer From',
     'fund_transfered_success' => 'Fund transfered successfully',
-    'deposit' => 'Deposit',
+    'deposit' => 'Deposite',
     'deposits' => 'Deposits',
     'deposited_successfully' => 'Amount deposited successfully',
     'from' => 'From',
@@ -166,15 +166,15 @@ return [
     'disabled_accounts' => 'Disabled Accounts',
     'all_your_disabled_accounts' => 'All your disabled accounts',
     'opening_amount_adjusted' => 'Opening amount adjusted',
-    
+
     'advance_payment' => 'Advance Payment',
-    'deposit' => 'Deposit',
+    'deposit' => 'Deposite',
     'payment_type' => 'Payment Type',
     'deposit_to' => 'Deposit To',
-    'cash_deposit' => 'Cash Deposit',
-    'cheque_deposit' => 'Cheque Deposit',
+    'cash_deposit' => 'cash deposite',
+    'cheque_deposit' => 'cheque deposite',
     'sub_account_name' => 'Sub Account Name',
-    'cheque_deposit' => 'Cheque Deposit',
+    'cheque_deposit' => 'cheque deposite',
     'cheque_date' => 'Cheque Date',
     'cheque_no' => 'Cheque No',
     'select' => 'Select',
@@ -182,7 +182,7 @@ return [
     'no_item_found' => 'No item found',
     'insufficient_balance_msg' => 'Transaction Not Allowed. Insufficient balance Amount',
     'card_accounts' => 'Card Accounts',
-    'card_deposit' => 'Card Deposit',
+    'card_deposit' => 'card deposite',
     'no_data_available_in_table' => 'No data available in table',
     'not_subscribed_to_this_module' => 'Not Subscribed to this Module / page. Please contact the Administrator.',
     'journal_no' => 'Journal No',

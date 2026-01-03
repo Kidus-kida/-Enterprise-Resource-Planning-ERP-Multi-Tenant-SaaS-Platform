@@ -18,10 +18,11 @@
         <input type="hidden" name="sales[{{ $row_count }}][line_discount_type]" value="percentage">
         <input type="hidden" name="sales[{{ $row_count }}][enable_stock]" value="{{ $product->enable_stock }}">
         <input type="hidden" name="sales[{{ $row_count }}][product_type]" value="{{ $product->type }}">
-        <input type="hidden" name="sales[{{ $row_count }}][base_unit_multiplier]" value="1">
+        <input type="hidden" name="sales[{{ $row_count }}][base_unit_multiplier]" class="base_unit_multiplier" value="1">
         
         {{-- Fields needed by TransactionUtil::createOrUpdateSellLines --}}
-        <input type="hidden" name="sales[{{ $row_count }}][unit_price_inc_tax]" class="sell_line_unit_price_inc_tax" value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
+        <input type="hidden" name="sales[{{ $row_count }}][unit_price_inc_tax]" class="sell_line_unit_price_inc_tax" value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}" data-default-price="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
+        <input type="hidden" class="max_qty_available" value="{{ $current_stock }}">
     </td>
     
     <td>
@@ -32,8 +33,20 @@
                min="1"
                class="form-control sell_quantity" 
                required />
-        @if($product->unit)
-            <span class="unit_text">{{ $product->unit }}</span>
+        
+        @if(!empty($sub_units))
+            <br>
+            <select name="sales[{{$row_count}}][sub_unit_id]" class="form-control input-sm sub_unit">
+                @foreach($sub_units as $key => $value)
+                    <option value="{{$key}}" data-multiplier="{{$value['multiplier']}}">
+                        {{$value['name']}}
+                    </option>
+                @endforeach
+            </select>
+        @else
+            @if($product->unit)
+                <span class="unit_text">{{ $product->unit }}</span>
+            @endif
         @endif
     </td>
     
@@ -51,6 +64,7 @@
                name="sales[{{ $row_count }}][unit_price]" 
                class="form-control sell_unit_price" 
                value="{{ number_format($variation->default_sell_price, 2, '.', '') }}" 
+               data-default-price="{{ number_format($variation->default_sell_price, 2, '.', '') }}"
                step="0.01" 
                min="0">
     </td>
@@ -76,18 +90,12 @@
     </td>
     
     <td>
-        {{-- Product Tax --}}
-        <select name="sales[{{ $row_count }}][tax_id]" class="form-select sell_line_tax_id">
-            <option value="" data-tax_amount="0">{{ __('None') }}</option>
-            @foreach($taxes as $tax)
-                <option value="{{ $tax->id }}" 
-                        data-tax_amount="{{ $tax->amount }}"
-                        @if($product->tax == $tax->id) selected @endif>
-                    {{ $tax->name }} ({{ $tax->amount }}%)
-                </option>
-            @endforeach
-        </select>
-        <input type="hidden" name="sales[{{ $row_count }}][item_tax]" class="sell_line_tax_amount" value="0">
+        {{-- Line Total --}}
+        <span class="row_line_total">{{ number_format($variation->sell_price_inc_tax ?? $variation->default_sell_price, 2) }}</span>
+        <input type="hidden" 
+               name="sales[{{ $row_count }}][line_total]" 
+               class="row_line_total_hidden" 
+               value="{{ $variation->sell_price_inc_tax ?? $variation->default_sell_price }}">
     </td>
     
     <td>

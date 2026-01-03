@@ -69,6 +69,7 @@
 
         <form action="{{ route('sales.store') }}" method="post" enctype="multipart/form-data" id="sales_form">
             @csrf
+            <input type="hidden" name="is_duplicate" value="0" id="is_duplicate">
             <div class="row">
                 <div class="col-md-12">
                     <div class="row">
@@ -121,6 +122,7 @@
                                     <option value="final">{{ __('Final') }}</option>
                                     <option value="draft">{{ __('Draft') }}</option>
                                     <option value="proforma">{{ __('Proforma') }}</option>
+                                    <option value="order">{{ __('Order') }}</option>
                                 </x-form.select>
                             </div>
                         </div>
@@ -169,6 +171,23 @@
                             </div>
                         </div>
 
+                        <div class="col-md-4">
+                            <div class="input-block mb-3">
+                                <label>{{ __('Subscribe?') }}</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="is_recurring" value="1" id="is_recurring">
+                                        <label class="form-check-label" for="is_recurring">
+                                            {{ __('Recurring Invoice') }}
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#recurringInvoiceModal">
+                                        <i class="fa fa-external-link"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-12">
                             <div class="input-block mb-3">
                                 <x-form.label>{{ __('Attach Document') }}</x-form.label>
@@ -200,14 +219,13 @@
                                         <th style="width: 160px">{{ __('Unit Price') }}</th>
                                         <th style="width: 140px">{{ __('Discount %') }}</th>
                                         <th style="width: 160px">{{ __('Subtotal') }}</th>
-                                        <th>{{ __('Tax') }}</th>
                                         <th style="width: 160px">{{ __('Line Total') }}</th>
                                         <th style="width: 50px">{{ __('Action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="product-table-body">
                                     <tr id="no-items-row">
-                                        <td colspan="9" class="text-center py-4 text-muted">
+                                        <td colspan="8" class="text-center py-4 text-muted">
                                             <i class="fas fa-box-open fa-2x mb-2"></i>
                                             <br>
                                             {{ __('No items added yet. Search and select products above to add them.') }}
@@ -280,6 +298,49 @@
                             </div>
                         </div>
 
+                        <div class="row mb-2">
+                             <div class="col-md-12">
+                                <a class="btn btn-link" data-bs-toggle="collapse" href="#shippingDetailsCollapse" role="button" aria-expanded="false" aria-controls="shippingDetailsCollapse">
+                                    + {{ __('Add Shipping Details') }}
+                                </a>
+                                <div class="collapse" id="shippingDetailsCollapse">
+                                    <div class="card card-body bg-light">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <x-form.label>{{ __('Shipping Details') }}</x-form.label>
+                                                    <x-form.textarea name="shipping_details" rows="1" class="form-control-sm" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <x-form.label>{{ __('Shipping Address') }}</x-form.label>
+                                                    <x-form.textarea name="shipping_address" rows="1" class="form-control-sm" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                 <div class="form-group mb-2">
+                                                    <x-form.label>{{ __('Shipping Status') }}</x-form.label>
+                                                    <select name="shipping_status" class="form-control form-control-sm">
+                                                        <option value="">{{ __('Please Select') }}</option>
+                                                        @foreach($shipping_statuses as $key => $status)
+                                                            <option value="{{ $key }}">{{ $status }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                 <div class="form-group mb-2">
+                                                    <x-form.label>{{ __('Delivered To') }}</x-form.label>
+                                                    <x-form.input type="text" name="delivered_to" class="form-control-sm" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row mb-3">
                             <div class="col-md-6"></div>
                             <div class="col-md-6 text-end">
@@ -295,6 +356,13 @@
                             <div class="input-block mb-3">
                                 <x-form.label>{{ __('Sales Note') }}</x-form.label>
                                 <x-form.textarea name="sale_note" rows="3" placeholder="{{ __('Any notes for this sale...') }}" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="input-block mb-3">
+                                <x-form.label>{{ __('Staff Note') }}</x-form.label>
+                                <x-form.textarea name="staff_note" rows="3" placeholder="{{ __('Private note for staff...') }}" />
                             </div>
                         </div>
 
@@ -330,6 +398,7 @@
                 <button type="reset" class="btn btn-outline-secondary px-4 me-2">{{ __('Reset') }}</button>
                 <button type="submit" class="btn btn-primary submit-btn px-5">{{ __('Save Sale') }}</button>
             </div>
+            @include('sales::partials.recurring_invoice_modal')
         </form>
     </div>
 @endsection
@@ -476,9 +545,13 @@
                         store_id: $('#store_id').val(),
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(html) {
+                    success: function(response) {
+                        if (response.success === false) {
+                            toastr.error(response.msg);
+                            return;
+                        }
                         $('#no-items-row').hide();
-                        $('#product-table-body').append(html);
+                        $('#product-table-body').append(response);
                         row_count++;
                         updateSerialNumbers();
                         calculateTotal();
@@ -491,6 +564,33 @@
 
             // ===== CALCULATIONS =====
             $(document).on('input change', '.sell_quantity, .sell_unit_price, .sell_line_discount, .sell_line_tax_id, #shipping_charges, #discount_amount, #discount_type, #tax_rate_id', function() {
+                // Quantity validation
+                if ($(this).hasClass('sell_quantity')) {
+                    const row = $(this).closest('tr');
+                    const maxQty = parseFloat(row.find('.max_qty_available').val()) || 0;
+                    let qty = parseFloat($(this).val());
+                    
+                    if (maxQty > 0 && qty > maxQty) {
+                        toastr.error("{{ __('Only') }} " + maxQty + " {{ __('quantity available') }}");
+                        $(this).val(maxQty);
+                        qty = maxQty;
+                    }
+                }
+                calculateTotal();
+            });
+
+            // Sub-unit Change
+            $(document).on('change', '.sub_unit', function() {
+                const row = $(this).closest('tr');
+                const multiplier = parseFloat($(this).find(':selected').data('multiplier')) || 1;
+                row.find('.base_unit_multiplier').val(multiplier);
+                
+                // Update prices based on multiplier
+                const basePriceExcTax = parseFloat(row.find('.sell_unit_price').data('default-price')) || 0;
+                const newPriceExcTax = basePriceExcTax * multiplier;
+                row.find('.sell_unit_price').val(newPriceExcTax.toFixed(2));
+
+                // Trigger calc
                 calculateTotal();
             });
 
@@ -647,6 +747,7 @@
                 const method = $(this).val();
                 const row = $(this).closest('.payment_row');
                 const methodFields = row.find('.method_fields');
+                const accountSelect = row.find('.payment_account');
                 
                 row.find('.cheque_fields, .card_fields').addClass('hide').hide();
                 methodFields.addClass('hide').hide();
@@ -659,7 +760,26 @@
                     row.find('.card_fields').removeClass('hide').show();
                 } else if (method === 'credit_sale') {
                     row.find('.payment_amount').val(0).trigger('change');
+                    accountSelect.empty().append('<option value="" selected disabled>-- Select Account --</option>');
+                    return; // No need to fetch accounts for credit sale
                 }
+
+                // Fetch Accounts for the selected method
+                $.ajax({
+                    url: "{{ route('sales.get_payment_accounts') }}",
+                    type: 'GET',
+                    data: { payment_method: method },
+                    dataType: 'json',
+                    success: function(accounts) {
+                        accountSelect.empty();
+                        accountSelect.append('<option value="" selected disabled>-- Select Account --</option>');
+                        if (accounts && Object.keys(accounts).length > 0) {
+                            $.each(accounts, function(id, name) {
+                                accountSelect.append(new Option(name, id));
+                            });
+                        }
+                    }
+                });
             });
 
             $(document).on('input change', '.payment_amount', function() {

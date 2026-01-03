@@ -1,9 +1,3 @@
-<div class="modal-dialog modal-dialog-centered modal-md" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">{{ isset($type) ? __('Edit Account Type') : __('Add Account Type') }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
         <form id="typeForm" method="POST"
             action="{{ isset($type) ? route('account-types.update', $type->id) : route('account-types.store') }}">
             @csrf
@@ -19,7 +13,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">{{ __('Parent Account Type') }}</label>
-                    <select name="parent_account_type_id" class="form-control select">
+                    <select name="parent_account_type_id" id="parent_type_select" class="form-control" style="width: 100%">
                         <option value="">{{ __('None') }}</option>
                         @foreach ($parent_types as $id => $name)
                             <option value="{{ $id }}"
@@ -41,29 +35,14 @@
                     class="btn btn-primary">{{ isset($type) ? __('Update') : __('Create') }}</button>
             </div>
         </form>
-    </div>
-</div>
 
-<script type="module">
-    $('#typeForm').submit(function(e) {
-        e.preventDefault();
+        <script>
+            $(document).ready(function() {
+                $('#parent_type_select').select2({
+                    dropdownParent: $('#generalModalPopup'),
+                    width: '100%'
+                });
+            });
+        </script>
 
-        $.ajax({
-            url: $(this).attr('action'),
-            method: $(this).attr('method'),
-            data: $(this).serialize(),
-            success: function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    $('.modal').modal('hide');
-                    $('.datatable').DataTable().ajax.reload();
-                } else {
-                    toastr.error(response.message);
-                }
-            },
-            error: function(xhr) {
-                toastr.error('An error occurred');
-            }
-        });
-    });
-</script>
+

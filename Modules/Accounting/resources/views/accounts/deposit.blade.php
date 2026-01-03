@@ -4,91 +4,101 @@
         <form action="{{ route('account.deposit', ['type' => $type ?? 'cash']) }}" method="post" id="deposit_form"
             enctype="multipart/form-data">
             @csrf
-            <div class="modal-header">
-                <h4 class="modal-title">Deposit</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
 
             <div class="modal-body">
+
                 @if (isset($error))
                     <div class="alert alert-danger">{{ $error }}</div>
                 @else
-                    <div class="alert alert-primary mb-3" role="alert">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Selected Account:</strong> {{ $account->name ?? '' }}
-                            </div>
-                            <div class="fw-bold">
-                                Balance:
-                                <span class="text-danger">
-                                    @if (isset($account_balance))
-                                        {{ number_format($account_balance, 2) }}
-                                    @else
-                                        0.00
-                                    @endif
+                    {{-- Cash account info --}}
+                    @if ($type === 'cash' && isset($account))
+                        <div class="alert alert-primary mb-1">
+                            <div class="d-flex justify-content-between">
+                                <strong>Cash Account:</strong> <span
+                                    style="color: rgb(240, 14, 123)">{{ $account->name }}</span>
+                                <span class="fw-bold text-danger">
+                                    {{ number_format($account_balance, 2) }}
                                 </span>
                             </div>
+                            <input type="hidden" name="from_account" value="{{ $account->id }}">
                         </div>
-                        <input type="hidden" name="to_account_id" value="{{ $account->id ?? '' }}">
+                    @endif
+                    <div class="row">
+                        <div class="col-md-12 mb-1">
+                            <!-- Placeholder for Cheque List filtering if needed, for now simplified -->
+                            <div class="alert alert-info">Select 'Deposit Account' to deposit money.</div>
+                        </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <div class="form-group">
-                                <label for="from_account">Deposit From:</label>
+
+                        {{-- Deposit FROM (only for card/others) --}}
+                        @if ($type !== 'cash')
+                            <div class="form-group mb-1">
+                                <label>Deposit From *</label>
                                 <select name="from_account" class="form-control select2" required style="width:100%">
                                     <option value="">Please Select</option>
-                                    @foreach ($from_accounts ?? [] as $id => $name)
+                                    @foreach ($from_accounts as $id => $name)
                                         <option value="{{ $id }}">{{ $name }}</option>
                                     @endforeach
                                 </select>
                             </div>
+                        @endif
+
+                        {{-- Deposit TO --}}
+                        <div class="form-group mb-1">
+                            <label for="to_account">Deposit To:</label>
+                            <select name="to_account_id" class="form-control select2" required style="width:100%">
+                                <option value="">Please Select</option>
+                                @foreach ($to_accounts as $id => $name)
+                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        <div class="col-sm-6 mb-3">
-                            <div class="form-group">
-                                <label for="operation_date">Date:*</label>
-                                <input type="date" name="operation_date" class="form-control" required
-                                    value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
-                            </div>
+
+                        <div class="col-sm-6 mb-1">
+                            <label>Date *</label>
+                            <input type="date" name="operation_date" class="form-control" required
+                                value="{{ now()->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-sm-6 mb-1">
+                            <label>Amount *</label>
+                            <input type="number" name="amount" class="form-control" required step="any"
+                                placeholder="Amount">
                         </div>
                     </div>
 
-                    <div class="row" id="amounts_row">
-                        <div class="col-sm-12 mb-3">
-                            <label for="amount">Amount:*</label>
-                            <input type="number" name="amount" class="form-control input_amount" required
-                                placeholder="Amount" step="any">
-                        </div>
+                    <div class="mb-1">
+                        <label>Note</label>
+                        <textarea name="note" class="form-control" rows="2"></textarea>
                     </div>
 
-                    <hr>
-
-                    <div class="form-group mb-3">
-                        <label for="note">Note</label>
-                        <textarea name="note" class="form-control" placeholder="Note" rows="4"></textarea>
-                    </div>
-
-                    <div class="form-group mb-3">
+                    <div class="form-group mb-1">
                         <label for="attachment">Add Image / Document (JPEG, PNG, Word, PDF, Excel)</label>
                         <input type="file" name="attachment" class="form-control">
                     </div>
+
                 @endif
             </div>
 
             <div class="modal-footer">
                 @if (!isset($error))
-                    <button type="submit" class="btn btn-primary submit_btn">Submit</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 @endif
-                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
             </div>
         </form>
 
     </div>
 </div>
 
-<script type="text/javascript">
+<script>
     $(document).ready(function() {
-        $(".select2").select2();
+        $('.select2').select2({
+            dropdownParent: $('.modal')
+        });
     });
 </script>

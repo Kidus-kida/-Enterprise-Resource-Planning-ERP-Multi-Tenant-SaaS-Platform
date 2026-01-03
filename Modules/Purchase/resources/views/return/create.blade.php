@@ -29,7 +29,7 @@
                 <div class="row">
                     <div class="col-sm-4">
                         <strong>@lang('Ref No'):</strong> {{ $purchase->ref_no }} <br>
-                        <strong>@lang('Date'):</strong> {{@format_date($purchase->transaction_date)}}
+                        <strong>@lang('Date'):</strong> {{$purchase->transaction_date->format('d-m-Y')}}
                     </div>
                     <div class="col-sm-4">
                         <strong>@lang('Supplier'):</strong> {{ $purchase->contact->name }} <br>

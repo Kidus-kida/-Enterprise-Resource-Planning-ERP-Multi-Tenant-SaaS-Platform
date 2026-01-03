@@ -214,7 +214,7 @@ class SellPosController extends Controller
         $categories = (request()->session()->get('business.enable_category') == 1) ? Category::catAndSubCategories($business_id, $enable_petro_module) : false;
         $brands     = (request()->session()->get('business.enable_brand') == 1) ? Brands::where('business_id', $business_id)
             ->pluck('name', 'id')
-            ->prepend(__('lang_v1.all_brands'), 'all') : false;
+            ->prepend(__(' all_brands'), 'all') : false;
         $change_return   = $this->dummyPaymentLine;
         $types           = Contact::getContactTypes();
         $customer_groups = ContactGroup::forDropdown($business_id);
@@ -418,7 +418,7 @@ $vehicle=[];
                 $credit_limit_amount = $this->transactionUtil->num_f($is_credit_limit_exeeded, true);
                 $output              = [
                     'success' => 0,
-                    'msg'     => __('lang_v1.cutomer_credit_limit_exeeded', ['credit_limit' => $credit_limit_amount]),
+                    'msg'     => __(' cutomer_credit_limit_exeeded', ['credit_limit' => $credit_limit_amount]),
                 ];
                 if (!$is_direct_sale) {
                     return $output;
@@ -473,7 +473,7 @@ $vehicle=[];
                 if ($current_monthly_sale > $monthly_max_sale_limit) {
                     $output = [
                         'success' => 0,
-                        'msg'     => __('lang_v1.monthly_max_sale_limit_exceeded', ['monthly_max_sale_limit' => $monthly_max_sale_limit]),
+                        'msg'     => __(' monthly_max_sale_limit_exceeded', ['monthly_max_sale_limit' => $monthly_max_sale_limit]),
                     ];
                     
                     if (!$is_direct_sale) {
@@ -489,7 +489,7 @@ $vehicle=[];
                 
                 DB::beginTransaction();
                 if (empty($request->input('transaction_date'))) {
-                    $input['transaction_date'] = \Carbon::now();
+                    $input['transaction_date'] = Carbon::now();
                 } else {
                     $input['transaction_date'] = $request->input('transaction_date');
                 }
@@ -712,7 +712,7 @@ $vehicle=[];
                 if ($input['status'] == 'draft' && $input['is_quotation'] == 0) {
                     $msg = trans("sale.draft_added");
                 } elseif ($input['status'] == 'draft' && $input['is_quotation'] == 1) {
-                    $msg = trans("lang_v1.quotation_added");
+                    $msg = trans(" quotation_added");
                     if (!$is_direct_sale) {
                         $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id);
                     } else {
@@ -914,7 +914,7 @@ $vehicle=[];
         if ($this->transactionUtil->isReturnExist($id)) {
             return back()->with('status', [
                 'success' => 0,
-                'msg'     => __('lang_v1.return_exist'),
+                'msg'     => __('Return Exist'),
             ]);
         }
         $price_later      = request()->price_later;
@@ -1088,7 +1088,7 @@ $vehicle=[];
         $categories = (request()->session()->get('business.enable_category') == 1) ? Category::catAndSubCategories($business_id) : false;
         $brands     = (request()->session()->get('business.enable_brand') == 1) ? Brands::where('business_id', $business_id)
             ->pluck('name', 'id')
-            ->prepend(__('lang_v1.all_brands'), 'all') : false;
+            ->prepend(__('All Brands'), 'all') : false;
         $change_return = $this->dummyPaymentLine;
         $types         = [];
         if (auth()->user()->can('supplier.create')) {
@@ -1098,7 +1098,7 @@ $vehicle=[];
             $types['customer'] = __('report.customer');
         }
         if (auth()->user()->can('supplier.create') && auth()->user()->can('customer.create')) {
-            $types['both'] = __('lang_v1.both_supplier_customer');
+            $types['both'] = __('Both Supplier Customer');
         }
         $customer_groups = ContactGroup::forDropdown($business_id);
         //Accounts
@@ -1180,7 +1180,7 @@ $vehicle=[];
                 if(!empty($has_reviewed)){
                     $output              = [
                         'success' => 0,
-                        'msg'     =>__('lang_v1.review_first'),
+                        'msg'     =>__('Review First'),
                     ];
                     
                     return redirect()->back()->with(['status' => $output]);
@@ -1210,7 +1210,7 @@ $vehicle=[];
                     $credit_limit_amount = $this->transactionUtil->num_f($is_credit_limit_exeeded, true);
                     $output              = [
                         'success' => 0,
-                        'msg'     => __('lang_v1.cutomer_credit_limit_exeeded', ['credit_limit' => $credit_limit_amount]),
+                        'msg'     => __('cutomer_credit_limit_exeeded', ['credit_limit' => $credit_limit_amount]),
                     ];
                     if (!$is_direct_sale) {
                         return $output;
@@ -1249,7 +1249,7 @@ $vehicle=[];
                 if ($current_monthly_sale > $monthly_max_sale_limit) {
                     $output = [
                         'success' => 0,
-                        'msg'     => __('lang_v1.monthly_max_sale_limit_exceeded', ['monthly_max_sale_limit' => $monthly_max_sale_limit]),
+                        'msg'     => __('monthly_max_sale_limit_exceeded', ['monthly_max_sale_limit' => $monthly_max_sale_limit]),
                     ];
                     if (!$is_direct_sale) {
                         return $output;
@@ -1389,7 +1389,7 @@ $vehicle=[];
                     $this->notificationUtil->autoSendNotification($business_id, 'customer_notify', $transaction, $transaction->contact);
                     $output = [
                         'success' => 1,
-                        'msg'     => __("lang_v1.notification_sent_to_customer"),
+                        'msg'     => __("notification_sent_to_customer"),
                     ];
                 }
                 DB::commit();
@@ -1401,7 +1401,7 @@ $vehicle=[];
                 if ($input['status'] == 'draft' && $input['is_quotation'] == 0) {
                     $msg = trans("sale.draft_added");
                 } elseif ($input['status'] == 'draft' && $input['is_quotation'] == 1) {
-                    $msg = trans("lang_v1.quotation_updated");
+                    $msg = trans("quotation_updated");
                     if (!$is_direct_sale) {
                         $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id);
                     } else {
@@ -1481,7 +1481,7 @@ $vehicle=[];
                 if(!empty($has_reviewed)){
                     $output              = [
                         'success' => 0,
-                        'msg'     =>__('lang_v1.review_first'),
+                        'msg'     =>__('review_first'),
                     ];
                     
                     return redirect()->back()->with(['status' => $output]);
@@ -1508,7 +1508,7 @@ $vehicle=[];
                 if ($this->transactionUtil->isReturnExist($id)) {
                     $output = [
                         'success' => false,
-                        'msg'     => __('lang_v1.return_exist'),
+                        'msg'     => __(' return_exist'),
                     ];
                     return $output;
                 }
@@ -1550,7 +1550,7 @@ $vehicle=[];
                 DB::commit();
                 $output = [
                     'success' => true,
-                    'msg'     => __('lang_v1.sale_delete_success'),
+                    'msg'     => __(' sale_delete_success'),
                 ];
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -1651,7 +1651,7 @@ $vehicle=[];
                 } else {
                     $toggle_popup = 1;
                 }
-                $discount_type          = ['fixed' => __('lang_v1.fixed'), 'percentage' => __('lang_v1.percentage')];
+                $discount_type          = ['fixed' => __(' fixed'), 'percentage' => __(' percentage')];
                 $is_sales_page          = request()->is_sales_page;
                 $output['html_content'] = view('sale_pos.product_row')
                     ->with(compact('is_sales_page', 'discount_type', 'price_later', 'toggle_popup', 'default_multiple_unit_price', 'temp_qty', 'product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters', 'edit_discount', 'edit_price', 'purchase_line_id', 'warranties'))
@@ -1670,7 +1670,7 @@ $vehicle=[];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
             $output['success'] = false;
-            $output['msg']     = __('lang_v1.item_out_of_stock');
+            $output['msg']     = __(' item_out_of_stock');
         }
         return $output;
     }
@@ -1766,7 +1766,7 @@ $vehicle=[];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
             $output['success'] = false;
-            $output['msg']     = __('lang_v1.item_out_of_stock');
+            $output['msg']     = __(' item_out_of_stock');
         }
         return $output;
     }
@@ -2134,7 +2134,7 @@ $vehicle=[];
                     function ($row) {
                         $html = '';
                         if ($row->is_recurring == 1 && auth()->user()->can("sell.update")) {
-                            $link_text  = !empty($row->recur_stopped_on) ? __('lang_v1.start_subscription') : __('lang_v1.stop_subscription');
+                            $link_text  = !empty($row->recur_stopped_on) ? __(' start_subscription') : __(' stop_subscription');
                             $link_class = !empty($row->recur_stopped_on) ? 'btn-success' : 'btn-danger';
                             $html .= '<a href="' . action('SellPosController@toggleRecurringInvoices', [$row->id]) . '" class="toggle_recurring_invoice btn btn-xs ' . $link_class . '"><i class="fa fa-power-off"></i> ' . $link_text . '</a>';
                             if ($row->is_direct_sale == 0) {
@@ -2149,7 +2149,7 @@ $vehicle=[];
                 ->removeColumn('id')
                 ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
                 ->editColumn('recur_interval', function ($row) {
-                    $type = $row->recur_interval == 1 ? str_singular(__('lang_v1.' . $row->recur_interval_type)) : __('lang_v1.' . $row->recur_interval_type);
+                    $type = $row->recur_interval == 1 ? str_singular(__(' ' . $row->recur_interval_type)) : __(' ' . $row->recur_interval_type);
                     return $row->recur_interval . $type;
                 })
                 ->addColumn('subscription_invoices', function ($row) {
@@ -2178,7 +2178,7 @@ $vehicle=[];
                 })
                 ->addColumn('upcoming_invoice', function ($row) {
                     if (empty($row->recur_stopped_on)) {
-                        $last_generated = !empty($row->subscription_invoices) ? \Carbon::parse($row->subscription_invoices->max('transaction_date')) : \Carbon::parse($row->transaction_date);
+                        $last_generated = !empty($row->subscription_invoices) ? Carbon::parse($row->subscription_invoices->max('transaction_date')) : Carbon::parse($row->transaction_date);
                         if ($row->recur_interval_type == 'days') {
                             $upcoming_invoice = $last_generated->addDays($row->recur_interval);
                         } elseif ($row->recur_interval_type == 'months') {
@@ -2214,14 +2214,14 @@ $vehicle=[];
                 ->where('is_recurring', 1)
                 ->findorfail($id);
             if (empty($transaction->recur_stopped_on)) {
-                $transaction->recur_stopped_on = \Carbon::now();
+                $transaction->recur_stopped_on = Carbon::now();
             } else {
                 $transaction->recur_stopped_on = null;
             }
             $transaction->save();
             $output = [
                 'success' => 1,
-                'msg'     => trans("lang_v1.updated_success"),
+                'msg'     => trans(" updated_success"),
             ];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
@@ -2308,7 +2308,7 @@ $vehicle=[];
                 'status'              => 'final',
                 'payment_status'      => 'due',
                 'additional_notes'    => '',
-                'transaction_date'    => \Carbon::now(),
+                'transaction_date'    => Carbon::now(),
                 'customer_group_id'   => $customer->customer_group_id,
                 'tax_rate_id'         => null,
                 'sale_note'           => null,

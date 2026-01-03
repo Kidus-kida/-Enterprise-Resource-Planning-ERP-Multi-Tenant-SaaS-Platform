@@ -16,7 +16,7 @@ use App\NotificationTemplate;
 use App\Printer;
 use App\Store;
 use App\System;
-use Modules\Contacts\Models\Transaction;
+use App\Transaction;
 use App\Unit;
 use App\User;
 use Carbon\Carbon;
@@ -306,21 +306,17 @@ class BusinessUtil extends Util
      */
     public function getDetails($business_id)
     {
-        $details = Business::leftjoin('tax_rates AS TR', 'business.default_sales_tax', 'TR.id')
-            ->leftjoin('currencies AS cur', 'business.currency_id', 'cur.id')
+        return Business::leftJoin('tax_rates as TR', 'businesses.default_sales_tax', '=', 'TR.id')
+            ->leftJoin('currencies as cur', 'businesses.currency_id', '=', 'cur.id')
             ->select(
-                'business.*',
+                'businesses.*',
                 'cur.code as currency_code',
                 'cur.symbol as currency_symbol',
-                'thousand_separator',
-                'decimal_separator',
-                'TR.amount AS tax_calculation_amount',
-                'business.default_sales_discount'
+                'TR.amount as tax_calculation_amount',
+                'businesses.default_sales_discount'
             )
-            ->where('business.id', $business_id)
+            ->where('businesses.id', $business_id)
             ->first();
-
-        return $details;
     }
 
     /**
@@ -523,9 +519,9 @@ class BusinessUtil extends Util
     {
         if (is_numeric($edit_transaction_period)) {
             return [
-                'start' => \Carbon::today()
+                'start' => Carbon::today()
                     ->subDays($edit_transaction_period),
-                'end' => \Carbon::today()
+                'end' => Carbon::today()
             ];
         } elseif ($edit_transaction_period == 'fy') {
             //Editing allowed for current financial year
@@ -600,13 +596,16 @@ class BusinessUtil extends Util
 
     public function check_customer_code($business_id, $increment =  false)
     {
-        $ref_count = $this->onlyGetReferenceCount('contacts', null, $increment);
+        $ref_count = $this->onlyGetReferenceCount('contacts', $business_id, $increment);
+        
         $ref_no_prefixes = request()->session()->get('business.ref_no_prefixes');
         $ref_no_starting_number = request()->session()->get('business.ref_no_starting_number');
-        $prefix =   $ref_no_prefixes['contacts'];
-        $starting_number =   $ref_no_starting_number['contacts'];
+        
+        $prefix = !empty($ref_no_prefixes['contacts']) ? $ref_no_prefixes['contacts'] : 'CO';
+        $starting_number = !empty($ref_no_starting_number['contacts']) ? $ref_no_starting_number['contacts'] : 1;
+        
         $contact_id = '';
-        $next_number = $starting_number + $ref_count;
+        $next_number = (int)$starting_number + $ref_count;
         $next_number =  str_pad($next_number, 4, 0, STR_PAD_LEFT);
         $contact_id =  $prefix . '-' . $next_number . '-' . $business_id;
 

@@ -56,7 +56,7 @@ class CashRegisterController extends Controller
         if ($this->cashRegisterUtil->countOpenedRegister() != 0) {
             return redirect()->route('sales.pos.create');
         }
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);
         $business_locations = BusinessLocation::forDropdown($business_id);
 
         return view('sales::cash_register.create')->with(compact('business_locations'));
@@ -75,8 +75,8 @@ class CashRegisterController extends Controller
             if (!empty($request->input('amount'))) {
                 $initial_amount = $this->cashRegisterUtil->num_uf($request->input('amount'));
             }
-            $user_id = $request->session()->get('user.id');
-            $business_id = $request->session()->get('user.business_id');
+            $user_id = $request->session()->get('user.id') ?? auth()->user()->id;
+            $business_id = $request->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);
 
             $register = CashRegister::create([
                         'business_id' => $business_id,
@@ -130,7 +130,7 @@ class CashRegisterController extends Controller
         $user_id = auth()->user()->id;
         $open_time = $register_details['open_time'];
         $close_time = \Carbon\Carbon::now()->toDateTimeString();
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);
         $business = Business::where('id', $business_id)->first();
         $pos_settings = empty($business->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business->pos_settings, true);
 
@@ -158,7 +158,7 @@ class CashRegisterController extends Controller
         $open_time = $register_details['open_time'];
         $close_time = \Carbon\Carbon::now()->toDateTimeString();
 
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);
         $business = Business::where('id', $business_id)->first();
         $pos_settings = empty($business->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business->pos_settings, true);
 
@@ -183,7 +183,7 @@ class CashRegisterController extends Controller
             $input = $request->only(['closing_amount', 'total_card_slips', 'total_cheques',
                                     'closing_note', 'total_credit_sale']);
             $input['closing_amount'] = $this->cashRegisterUtil->num_uf($input['closing_amount']);
-            $user_id = $request->session()->get('user.id');
+            $user_id = $request->session()->get('user.id') ?? auth()->user()->id;
             $input['closed_at'] = \Carbon\Carbon::now()->format('Y-m-d H:i:s');
             $input['status'] = 'close';
 

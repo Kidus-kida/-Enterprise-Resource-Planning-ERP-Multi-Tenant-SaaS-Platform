@@ -27,21 +27,21 @@ return [
     'discount_amount' => 'Discount Amount',
     'against_invoices' => 'Discount against Invoices',
     'invoice' => 'Invoice',
-    
-    
+
+
     'vat_invoice' => 'VAT Invoice',
     'vat_no' => 'VAT No',
-    
+
     'unit_price_inc_tax' => 'Unit Price',
-    
+
     'deleted_by' => 'Deleted By',
 
     'returned_cheques_details' => 'Returned Cheque Details',
-    
+
     'returned_cheques' => 'Returned Cheques',
-    
+
     'returned_cheque_charges' => 'Cheque Return Charges',
-    
+
     'sale' => 'Sale',
 
     'sells' => 'Sales',
@@ -78,7 +78,7 @@ return [
 
     'product' => 'Product',
 
-    'inventery'=> "Inventery",
+    'inventery' => "Inventery",
 
     'products' => 'Products',
 
@@ -120,11 +120,11 @@ return [
     'bank_name' => 'Bank Name',
     'payment_note' => 'Payment Note',
     'paid_on' => 'Paid On ',
-//
+    //
     'customer_name' => 'Customer name',
 
     'payment_status' => 'Payment status',
-    
+
     'status' => 'Status',
 
     'total_amount' => 'Total amount',
@@ -139,7 +139,7 @@ return [
 
     'all_drafts' => 'All drafts',
 
-    
+
     'payments' => 'Payments',
 
     'amount' => 'Amount',
@@ -177,12 +177,12 @@ return [
     'waiter_id' => 'Waiter',
 
     'current_qty' => 'Current Qty',
-    
+
     'balance_qty' => 'Balance Qty',
-    
+
     'transfer_qty' => 'Transfer Qty',
 
-    'type' => 'Type',
+    'type' => 'TYPe',
 
     'decrease' => 'Decrease',
 

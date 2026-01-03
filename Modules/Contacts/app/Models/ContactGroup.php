@@ -13,18 +13,16 @@ class ContactGroup extends Model
     protected $guarded = ['id'];
 
     /**
-     * Return list of contact groups for dropdown
+     * Return list of contact groups for a business
      *
+     * @param  int $business_id
      * @param  bool  $prepend_none
      * @param  string|null $type
      * @return array
      */
-    public static function forDropdown($prepend_none = true, $type = null)
+    public static function forDropdown($business_id, $prepend_none = true, $include_all = false, $type = null)
     {
-        $query = ContactGroup::query();
-
-        // If business logic expands, add business_id check here
-        // $query->where('business_id', auth()->user()->business_id);
+        $query = ContactGroup::where('business_id', $business_id);
 
         if (!empty($type)) {
             $query->where('type', $type);
@@ -34,6 +32,10 @@ class ContactGroup extends Model
 
         if ($prepend_none) {
             $groups->prepend(__('None'), '');
+        }
+
+        if ($include_all) {
+            $groups->prepend(__('All'), '');
         }
 
         return $groups;

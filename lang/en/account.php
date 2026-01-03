@@ -1,16 +1,16 @@
 <?php
 return [
-    
+
     'cheques' => 'Cheques',
     'transfer' => 'Transfer',
-    
+
     'pd_cheques_management' => 'PD Cheques Management',
     'add_pd_cheques' => 'Add PD Cheques',
     'transfer_to_account' => 'Transfer to Account',
     'post_dated_cheques_full' => 'Post Dated Cheques',
     'issued_post_dated_cheques' => 'Issued Post Dated Cheques',
-    
-    
+
+
     'date_based_on' => 'Date Filter By',
     'price_adjusted' => 'Price Adjusted',
     'payment_method_account' => 'Pmt Method Account',
@@ -20,7 +20,7 @@ return [
     'others' => 'Others',
     'expense_payments' => 'Expense Payments',
     'update_post_dated_cheque' => 'Update Post Dated Cheque on the same date in Account',
-    
+
     'total_longterm_liabilities' => 'Total Long Term Liabilities',
     'realize_cheque' => 'Cheques to Realize',
     'realize_date' => 'Realize Date',
@@ -30,17 +30,17 @@ return [
     'contact_superadmin' => 'Locked by superadmin',
     'cummulative_profit' => 'Cummulative Profit',
     'transferred_from_postdated_cheque' => 'Transferred from Post Dated Cheque Account',
-    
-    
-    'balance_sheet_comparison' => 'Balance Sheet -Comparison', 
-    
+
+
+    'balance_sheet_comparison' => 'Balance Sheet -Comparison',
+
     'fixed_assets' => 'Fixed Assets',
     'asset_name' => 'Asset Name',
     'asset_location' => 'Asset Location',
     'account_no' => 'Account Number',
     'add_fixed_asset' => 'Add Fixed Asset',
     'created_by' => 'Created By',
-    
+
     'account_numbers' => 'Account Numbers',
     'show_status' => 'Show in Financial Status',
     'show_in_ledger' => 'Show In Ledger',
@@ -70,7 +70,7 @@ return [
     'selected_account' => 'Selected Account',
     'transfer_to' => 'Transfer To',
     'fund_transfered_success' => 'Fund transfered successfully',
-    'deposit' => 'Deposit',
+    'deposit' => 'Deposite',
     'deposited_successfully' => 'Amount deposited successfully',
     'from' => 'From',
     'to' => 'To',
@@ -186,9 +186,9 @@ return [
     'disabled_accounts' => 'Disabled Accounts',
     'all_your_disabled_accounts' => 'All your disabled accounts',
     'opening_amount_adjusted' => 'Opening amount adjusted',
-    
+
     'advance_payment' => 'Advance Payment',
-    'deposit' => 'Deposit',
+    'deposit' => 'Deposite',
     'payment_type' => 'Payment Type',
     'deposit_to' => 'Deposit To',
     'cash_deposit' => 'Cash Deposit',
@@ -202,7 +202,7 @@ return [
     'no_item_found' => 'No item found',
     'insufficient_balance_msg' => 'Transaction Not Allowed. Insufficient balance Amount',
     'card_accounts' => 'Card Accounts',
-    'card_deposit' => 'Card Deposit',
+    'card_deposit' => 'card deposite',
     'no_data_available_in_table' => 'No data available in table',
     'not_subscribed_to_this_module' => 'Not Subscribed to this Module / page. Please contact the Administrator.',
     'journal_no' => 'Journal No',

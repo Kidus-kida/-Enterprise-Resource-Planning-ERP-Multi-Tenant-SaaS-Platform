@@ -259,7 +259,7 @@ class CashRegisterUtil extends Util
             DB::raw("SUM(IF(transaction_type='refund', IF(pay_method='custom_pay_3', amount, 0), 0)) as total_custom_pay_3_refund"),
             DB::raw("SUM(IF(pay_method='cheque', 1, 0)) as total_cheques"),
             DB::raw("SUM(IF(pay_method='card', 1, 0)) as total_card_slips"),
-            DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as user_name"),
+            DB::raw("CONCAT(COALESCE(firstname, ''), ' ', COALESCE(middlename, ''), ' ', COALESCE(lastname, '')) as user_name"),
             'u.email',
             'bl.name as location_name'
         )->first();

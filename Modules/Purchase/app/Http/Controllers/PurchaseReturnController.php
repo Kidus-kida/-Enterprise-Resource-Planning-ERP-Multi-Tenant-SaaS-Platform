@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
 use Modules\Contacts\Models\Transaction;
@@ -17,6 +18,8 @@ use App\BusinessLocation;
 use App\Store;
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
+use Carbon\Carbon;
+use App\Models\ContactLedger;
 
 class PurchaseReturnController extends Controller
 {
@@ -52,7 +55,7 @@ class PurchaseReturnController extends Controller
 
         if (request()->ajax()) {
             $business_id = auth()->user()->business_id ?? 1;
-
+            
             $purchases_returns = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                 ->join(
                     'business_locations AS BS',
@@ -106,22 +109,26 @@ class PurchaseReturnController extends Controller
             }
             return Datatables::of($purchases_returns)
                 ->addColumn('action', function ($row) {
-                    $html = '';
+                    $html = '<div class="dropdown dropdown-action">
+                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" href="' . route('purchase-return.show', $row->id) . '">
+                                        <i class="fa-solid fa-eye m-r-5"></i> ' . __('View') . '
+                                    </a>';
+                    
                     if (!empty($row->return_parent_id)) {
-                        $html .= '<a href="' . route('purchase-return.add', $row->return_parent_id) . '" class="btn btn-info btn-xs" ><i class="glyphicon glyphicon-edit"></i>' .
-                            __("Edit") .
-                            '</a>';
-                    } else {
-                        // $html .= '<a href="' . action('CombinedPurchaseReturnController@edit', $row->id) . '" class="btn btn-info btn-xs" ><i class="glyphicon glyphicon-edit"></i>' .
-                        //     __("messages.edit") .
-                        //     '</a>';
+                        $html .= '<a class="dropdown-item" href="' . route('purchase-return.add', $row->return_parent_id) . '">
+                                    <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
+                                </a>';
                     }
-
-                    // $html .= '<a href="' . action('PurchaseReturnController@destroy', $row->id) . '" class="btn btn-danger btn-xs delete_purchase_return" ><i class="fa fa-trash"></i>' .
-                    //     __("messages.delete") .
-                    //     '</a>';
-
-
+                    
+                    $html .= '<form action="' . route('purchase-return.destroy', $row->id) . '" method="POST" onsubmit="return confirm(\'' . __('Are you sure?') . '\');" style="display:inline">
+                                    ' . csrf_field() . '
+                                    ' . method_field("DELETE") . '
+                                    <button type="submit" class="dropdown-item"><i class="fa-solid fa-trash m-r-5"></i> ' . __('Delete') . '</button>
+                                </form>
+                            </div>
+                        </div>';
                     return $html;
                 })
                 ->removeColumn('id')
@@ -130,7 +137,9 @@ class PurchaseReturnController extends Controller
                     'final_total',
                     '<span class="display_currency final_total" data-currency_symbol="true" data-orig-value="{{$final_total}}">{{$final_total}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
+                ->editColumn('transaction_date', function ($row) {
+                    return \Carbon\Carbon::parse($row->transaction_date)->format('Y-m-d H:i');
+                })
 
                 ->editColumn(
                     'payment_status',
@@ -153,7 +162,7 @@ class PurchaseReturnController extends Controller
                 ->setRowAttr([
                     'data-href' => function ($row) {
                         // if (auth()->user()->can("purchase.view")) {
-                            $return_id = !empty($row->return_parent_id) ? $row->return_parent_id : $row->id;
+                            $return_id = $row->id;
                             return  route('purchase-return.show', [$return_id]);
                         // } else {
                         //     return '';
@@ -163,6 +172,8 @@ class PurchaseReturnController extends Controller
                 ->rawColumns(['final_total', 'action', 'payment_status', 'parent_purchase', 'payment_due'])
                 ->make(true);
         }
+        
+        Log::info('Purchase Return Index - Returning View (Non-AJAX)');
         return view('purchase::return.index');
     }
 
@@ -269,21 +280,15 @@ class PurchaseReturnController extends Controller
                 $store = Store::where('business_id', $business_id)->first();
                 $store_id = $store ? $store->id : 1; 
 
-                //Decrease quantity in variation location details
+                //Update quantity in variation location details
                 if ($old_return_qty != $purchase_line->quantity_returned) {
-                    $this->productUtil->decreaseProductQuantity(
+                    $this->productUtil->updateProductQuantity(
+                        $purchase->location_id,
                         $purchase_line->product_id,
                         $purchase_line->variation_id,
-                        $purchase->location_id,
                         $purchase_line->quantity_returned,
                         $old_return_qty
                     );
-                    
-                    if($purchase_line->quantity_returned > $old_return_qty){
-                        $type = "increase";
-                    }else{
-                        $type = "decrease";
-                    }
                     
                     $this->productUtil->decreaseProductQuantityStore(
                         $purchase_line->product_id,
@@ -291,10 +296,9 @@ class PurchaseReturnController extends Controller
                         $purchase->location_id,
                         $purchase_line->quantity_returned,
                         $store_id,
-                        $type,
+                        'decrease',
                         $old_return_qty
                     );
-                    
                 }
             }
             $return_total_inc_tax = $return_total + $request->input('tax_amount');
@@ -325,7 +329,7 @@ class PurchaseReturnController extends Controller
                 $return_transaction_data['type'] = 'purchase_return';
                 $return_transaction_data['status'] = 'final';
                 $return_transaction_data['contact_id'] = $purchase->contact_id;
-                $return_transaction_data['transaction_date'] = \Carbon::now();
+                $return_transaction_data['transaction_date'] = Carbon::now();
                 $return_transaction_data['created_by'] = request()->session()->get('user.id');
                 $return_transaction_data['return_parent_id'] = $purchase->id;
 
@@ -350,12 +354,15 @@ class PurchaseReturnController extends Controller
                 'note' => null
             ];
 
-            // $this->transactionUtil->manageStockAccount($return_transaction, $account_transaction_data, 'credit', $return_transaction->final_total);
-            // $account_transaction_data['account_id'] = Account::where('business_id', $business_id)->where('name', 'Accounts Payable')->where('is_closed', 0)->first()->id;
-            // $account_transaction_data['type'] = 'debit';
-            // AccountTransaction::createAccountTransaction($account_transaction_data);
-            // $account_transaction_data['type'] = 'debit';
-            // ContactLedger::createContactLedger($account_transaction_data);
+            $this->transactionUtil->manageStockAccount($return_transaction, $account_transaction_data, 'credit', $return_transaction->final_total);
+            
+            $accounts_payable = Account::where('business_id', $business_id)->where('name', 'Accounts Payable')->where('is_closed', 0)->first();
+            if(!empty($accounts_payable)){
+                $account_transaction_data['account_id'] = $accounts_payable->id;
+                $account_transaction_data['type'] = 'debit';
+                AccountTransaction::createAccountTransaction($account_transaction_data);
+                ContactLedger::createContactLedger($account_transaction_data);
+            }
 
             $output = [
                 'success' => 1,
@@ -431,7 +438,85 @@ class PurchaseReturnController extends Controller
      */
     public function destroy($id)
     {
-        // Implementation for destroy... skipping for now as not strictly requested to perfect it instantly
-        return response()->json(['success' => false, 'msg' => 'Feature not fully implemented']);
+        try {
+            $business_id = auth()->user()->business_id ?? 1;
+
+            $purchase_return = Transaction::where('business_id', $business_id)
+                ->where('type', 'purchase_return')
+                ->findOrFail($id);
+
+            $purchase = Transaction::where('business_id', $business_id)
+                ->where('type', 'purchase')
+                ->with(['purchase_lines'])
+                ->findOrFail($purchase_return->return_parent_id);
+
+            DB::beginTransaction();
+
+            foreach ($purchase->purchase_lines as $purchase_line) {
+                $return_qty = $purchase_line->quantity_returned;
+                if ($return_qty > 0) {
+                    $purchase_line->quantity_returned = 0;
+                    $purchase_line->save();
+
+                    // Adjust stock (Increase quantity as return is deleted)
+                    // Setting new_qty = 0 and old_qty = return_qty will result in increase (math: qty -= (0 - return_qty))
+                    $this->productUtil->updateProductQuantity(
+                        $purchase->location_id, 
+                        $purchase_line->product_id, 
+                        $purchase_line->variation_id, 
+                        0, 
+                        $return_qty
+                    );
+                    
+                    $store = Store::where('business_id', $business_id)->first();
+                    $store_id = $store ? $store->id : 1;
+                    
+                    $this->productUtil->decreaseProductQuantityStore(
+                        $purchase_line->product_id,
+                        $purchase_line->variation_id,
+                        $purchase->location_id,
+                        0,
+                        $store_id,
+                        'decrease',
+                        $return_qty
+                    );
+                }
+            }
+
+            // Delete associated account transactions and contact ledger entries
+            AccountTransaction::where('transaction_id', $purchase_return->id)->delete();
+            ContactLedger::where('transaction_id', $purchase_return->id)->delete();
+
+            // Delete the purchase return transaction
+            $purchase_return->delete();
+
+            // Update payment status of parent purchase if needed
+            $this->transactionUtil->updatePaymentStatus($purchase->id);
+
+            DB::commit();
+
+            if (request()->ajax()) {
+                $output = [
+                    'success' => true,
+                    'msg' => __("Purchase return deleted successfully")
+                ];
+                return $output;
+            }
+
+            return redirect()->route('purchase-return.index')->with('status', ['success' => 1, 'msg' => __('Purchase return deleted successfully')]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
+
+            if (request()->ajax()) {
+                $output = [
+                    'success' => false,
+                    'msg' => $e->getMessage()
+                ];
+                return $output;
+            }
+
+            return redirect()->back()->with('status', ['success' => 0, 'msg' => __('messages.something_went_wrong')]);
+        }
     }
 }

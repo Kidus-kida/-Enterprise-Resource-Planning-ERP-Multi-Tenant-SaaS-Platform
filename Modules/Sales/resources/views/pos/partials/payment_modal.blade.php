@@ -15,37 +15,19 @@
                                 <div class="card-body">
                                     <h6 class="card-title mb-3 fw-bold">{{ __('Payment Details') }}</h6>
                                     
-                                    <div class="payment-row mb-3 p-3 border rounded bg-white">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">{{ __('Amount') }}</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">$</span>
-                                                    <input type="number" name="payment[0][amount]" id="payment-amount-0" class="form-control payment_amount" step="0.01">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">{{ __('Payment Method') }}</label>
-                                                <select name="payment[0][method]" class="form-select payment_method">
-                                                    @foreach($payment_types as $val => $label)
-                                                        <option value="{{ $val }}">{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-12 account-field">
-                                                <label class="form-label">{{ __('Payment Account') }}</label>
-                                                <select name="payment[0][account_id]" class="form-select select2">
-                                                    <option value="">{{ __('Select Account') }}</option>
-                                                    @foreach($accounts as $id => $name)
-                                                        <option value="{{ $id }}">{{ $name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <label class="form-label">{{ __('Payment Note') }}</label>
-                                                <textarea name="payment[0][note]" class="form-control" rows="1" placeholder="{{ __('Payment notes...') }}"></textarea>
-                                            </div>
-                                        </div>
+                                    <div id="payment_rows_container">
+                                        @if(!empty($transaction))
+                                            @foreach($transaction->payment_lines as $payment_line)
+                                                @include('sales::pos.partials.payment_row', ['row_index' => $loop->index, 'payment_line' => $payment_line->toArray(), 'removable' => $loop->index > 0])
+                                            @endforeach
+                                        @else
+                                            @include('sales::pos.partials.payment_row', ['row_index' => 0, 'removable' => false])
+                                        @endif
+                                    </div>
+                                    <div class="text-center mb-3">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="add_payment_row_btn">
+                                            <i class="fa fa-plus"></i> {{ __('Add Payment Row') }}
+                                        </button>
                                     </div>
 
                                     <div class="row g-3">
@@ -96,8 +78,7 @@
                         </div>
                     </div>
                     
-                    {{-- Hidden Fields for Cart Data --}}
-                    <input type="hidden" name="status" value="final" id="sale_status">
+
                 </form>
             </div>
         </div>
@@ -113,18 +94,4 @@
     }
 </style>
 
-<script>
-    $(document).ready(function() {
-        $(document).on('change input', '.payment_amount', function() {
-            let totalPayable = parseFloat($('#payment-total-payable').val()) || 0;
-            let totalPaid = 0;
-            $('.payment_amount').each(function() {
-                totalPaid += parseFloat($(this).val()) || 0;
-            });
 
-            $('#payment-total-paid').text(totalPaid.toFixed(2));
-            let balance = totalPayable - totalPaid;
-            $('#payment-balance-due').text(balance.toFixed(2));
-        });
-    });
-</script>
