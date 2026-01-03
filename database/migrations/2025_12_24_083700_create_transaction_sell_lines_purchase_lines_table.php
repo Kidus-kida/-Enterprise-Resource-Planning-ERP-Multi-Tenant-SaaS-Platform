@@ -10,15 +10,17 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('transaction_sell_lines_purchase_lines', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('sell_line_id')->unsigned()->nullable()->index('tslpl_sell_line_id_idx');
-            $table->integer('stock_adjustment_line_id')->unsigned()->nullable()->index('tslpl_stock_adj_line_id_idx');
-            $table->integer('purchase_line_id')->unsigned()->index('tslpl_purchase_line_id_idx');
-            $table->decimal('quantity', 22, 4);
-            $table->decimal('qty_returned', 22, 4)->default(0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('transaction_sell_lines_purchase_lines')) {
+            Schema::create('transaction_sell_lines_purchase_lines', function (Blueprint $table) {
+                $table->increments('id');
+                $table->integer('sell_line_id')->unsigned()->nullable()->index('tslpl_sell_line_id_idx');
+                $table->integer('stock_adjustment_line_id')->unsigned()->nullable()->index('tslpl_stock_adj_line_id_idx');
+                $table->integer('purchase_line_id')->unsigned()->index('tslpl_purchase_line_id_idx');
+                $table->decimal('quantity', 22, 4);
+                $table->decimal('qty_returned', 22, 4)->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreign('account_type_id')
                 ->references('id')
                 ->on('account_types')
-                ->onDelete('cascade');
+                ->onDelete('cascade');    
         });
     }
 

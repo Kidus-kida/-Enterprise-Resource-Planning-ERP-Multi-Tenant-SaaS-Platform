@@ -28,7 +28,12 @@ class RolePermissionSeeder extends Seeder
             ]);
         }
 
-        $role = Role::findByName('HR');
+        // Ensure the HR role exists before assigning permissions
+        $role = Role::firstOrCreate([
+            'name' => 'HR',
+            'guard_name' => 'web'
+        ]);
+
         $role->givePermissionTo($permissions);
     }
 }

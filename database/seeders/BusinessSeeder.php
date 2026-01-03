@@ -32,7 +32,16 @@ class BusinessSeeder extends Seeder
         // 2. Ensure Currency Exists (using WorldSeeder if needed)
         // Check if currencies table is empty
         if (DB::table('currencies')->count() == 0) {
-            $this->call(WorldSeeder::class);
+            // WorldSeeder is resource intensive and may not be suitable for local test runs.
+            // Insert a minimal fallback currency (ETB) to satisfy dependencies.
+            DB::table('currencies')->insert([
+                'code' => 'ETB',
+                'name' => 'Ethiopian Birr',
+                'symbol' => 'Br',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+            $this->command->warn('Inserted fallback ETB currency (skipped WorldSeeder).');
         }
 
         // Fetch ETB currency
@@ -75,9 +84,14 @@ class BusinessSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
-        // Update user business_id
-        $owner->business_id = $business_id;
-        $owner->save();
+        // Update user business_id (if column exists)
+        if (\Schema::hasColumn('users', 'business_id')) {
+            $owner->business_id = $business_id;
+            $owner->save();
+        } else {
+            DB::table('users')->where('id', $owner->id)->update(['updated_at' => Carbon::now()]);
+            $this->command->warn('Skipping user.business_id update — column missing.');
+        }
 
         // 4. Create Business Location
         $location_id = DB::table('business_locations')->insertGetId([

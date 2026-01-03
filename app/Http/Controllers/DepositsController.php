@@ -6,8 +6,8 @@ use App\Account;
 use App\Product;
 use App\AccountGroup;
 use App\AccountSetting;
-use App\AccountTransaction;
 use App\AccountType;
+use App\Models\AccountTransaction;
 use App\Business;
 use App\BusinessLocation;
 use App\Contact;
@@ -189,8 +189,8 @@ class DepositsController extends Controller
                     'pat.name as parent_account_type_name',
                     'is_closed',
                     'account_groups.name as group_name',
-                    DB::raw("SUM( IF(AT.type='credit', -1*AT.amount, AT.amount) ) as ass_exp_balance"),
-                    DB::raw("SUM( IF(AT.type='debit', -1*AT.amount, AT.amount) ) as li_in_eq_balance"),
+                    DB::raw("SUM( IF(AT.transaction_type='credit', -1*AT.amount, AT.amount) ) as ass_exp_balance"),
+                    DB::raw("SUM( IF(AT.transaction_type='debit', -1*AT.amount, AT.amount) ) as li_in_eq_balance"),
                     DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
                 ]);
             $accounts->where('disabled', 0);
@@ -592,6 +592,7 @@ class DepositsController extends Controller
                     'success' => false,
                     'msg' => __("messages.something_went_wrong")
                 ];
+                
             }
             return $output;
         }
@@ -2075,25 +2076,88 @@ class DepositsController extends Controller
      * @param  int $id
      * @return Response
      */
+
+    private function getOrCreateDefaultAccount($business_id, $type)
+    {
+        $account_name = '';
+        $group_name = '';
+        $account_number_prefix = '';
+
+        if ($type == 'card') {
+            $account_name = 'Cards (Credit Debit) Account';
+            $group_name = 'Bank Account';
+            $account_number_prefix = 'CARD-';
+        } elseif ($type == 'cheque') {
+            $account_name = 'Cheques in Hand';
+            $group_name = 'Cheques in Hand (Customer\'s)';
+            $account_number_prefix = 'CHQ-';
+        }
+
+        $account = Account::where('business_id', $business_id)
+            ->where('name', $account_name)
+            ->first();
+
+        if (empty($account)) {
+            // Fuzzy search
+            $search_term = ($type == 'card') ? 'Card' : 'Cheque';
+            $account = Account::where('business_id', $business_id)
+                ->where('name', 'like', '%' . $search_term . '%')
+                ->first();
+        }
+
+        if (empty($account)) {
+            $account_type = AccountType::where('name', 'Current Assets')->first();
+            $account_group = AccountGroup::where('name', $group_name)->first();
+
+            $account_type_id = !empty($account_type) ? $account_type->id : 1;
+            $asset_type = !empty($account_group) ? $account_group->id : ($type == 'card' ? 1 : 3);
+
+            $account_number = $account_number_prefix . str_pad($business_id, 3, '0', STR_PAD_LEFT) . '-' . rand(100, 999);
+            $account = Account::create([
+                'business_id' => $business_id,
+                'name' => $account_name,
+                'account_number' => $account_number,
+                'account_type_id' => $account_type_id,
+                'asset_type' => $asset_type,
+                'is_main_account' => 0,
+                'is_closed' => 0,
+                'opening_balance' => 0,
+                'current_balance' => 0
+            ]);
+        }
+
+        return $account;
+    }
+
+    /**
+     * Shows deposit form.// id will treate as type for list page deopsit cheque buttons
+     * @param  int $id
+     * @return Response
+     */
     public function getChequeDeposit()
     {
 
         if (request()->ajax()) {
             $business_id = auth()->user()->business_id;
-            $account = Account::where('business_id', $business_id)
-                ->NotClosed()
-                ->where('name', 'Cheques in Hand')->first();
+
+            $account = $this->getOrCreateDefaultAccount($business_id, 'cheque');
+
+            if (empty($account)) {
+                return '<div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">Error</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body">Cheque account not found. Please create a "Cheques in Hand" account first.</div></div></div>';
+            }
+
             $id = $account->id;
-            $group_id = AccountGroup::where('business_id', $business_id)->where('name', 'Bank Account')->first()->id;
+            $group_id = AccountGroup::where('name', 'Bank Account')->first()->id;
 
             $to_accounts = Account::leftjoin('account_groups', 'accounts.asset_type', 'account_groups.id')
                 ->where('accounts.business_id', $business_id)
                 ->whereIn('account_groups.name', ['Bank Account', 'Loans Taken', 'Loans Given'])
                 ->pluck('accounts.name', 'accounts.id');
 
-            $account_balance = $this->getAccountBalance($id);
+            $account_balance_obj = $this->getAccountBalance($id);
+            $account_balance = !empty($account_balance_obj) ? $account_balance_obj->balance : 0;
             return view('deposits.cheque_deposit')
-                ->with(compact('account', 'account', 'to_accounts', 'account_balance'));
+                ->with(compact('account', 'to_accounts', 'account_balance'));
         }
     }
     /**
@@ -2178,27 +2242,26 @@ class DepositsController extends Controller
                                 'sub_type' => 'deposit',
                                 'operation_date' => $this->commonUtil->uf_date($request->input('operation_date'), true),
                                 'created_by' => session()->get('user.id'),
-                                'transaction_payment_id' => $transaction_payment->id,
                                 'note' => $note,
-                                'attachment' => $uploadFile
+                                'attachment' => $uploadFile,
+                                'reference_no' => $account_transaction->reference_no
                             ];
                             $credit = AccountTransaction::createAccountTransaction($credit_data);
 
-
                             $from_account = !empty($encash) ? $cash_account_id : $request->input('from_account');
-
-
 
                             if (!empty($from_account)) {
                                 $debit_data = $credit_data;
                                 $debit_data['type'] = 'debit';
                                 $debit_data['account_id'] = $from_account;
-                                $debit_data['transfer_transaction_id'] = $credit->id;
-                                $debit_data['transaction_payment_id'] = $transaction_payment->id;
+                                $debit_data['reference_id'] = !empty($credit) ? $credit->id : null;
                                 $debit_data['attachment'] = $uploadFile;
                                 $debit = AccountTransaction::createAccountTransaction($debit_data);
-                                $credit->transfer_transaction_id = $debit->id;
-                                $credit->save();
+
+                                if (!empty($credit) && !empty($debit)) {
+                                    $credit->reference_id = $debit->id;
+                                    $credit->save();
+                                }
                             }
                             $transaction_payment->is_deposited = 1;
                             $transaction_payment->save();
@@ -2445,17 +2508,14 @@ class DepositsController extends Controller
     }
 
 
-
     public function getDeposit($id)
     {
-
         $type = $id;
         if (request()->ajax()) {
             $business_id = auth()->user()->business_id;
             $sub_card_accounts = null;
-            $account = Account::where('business_id', $business_id)
-                ->NotClosed()
-                ->find($id);
+            $account = null;
+
             if ($type == 'cash') {
                 $account = Account::where('business_id', $business_id)
                     ->NotClosed()
@@ -2466,33 +2526,41 @@ class DepositsController extends Controller
                 }
                 $id = $account->id;
             } elseif ($type == 'card') {
-                $card_account = Account::getAccountByAccountName('Cards (Credit Debit) Account');
-                if (empty($card_account)) {
-                    return response()->json(['error' => 'Card account not found. Please create a Card account first.'], 404);
+                $account = $this->getOrCreateDefaultAccount($business_id, 'card');
+                $sub_card_accounts = Account::where('parent_account_id', $account->id)->pluck('name', 'id');
+                if ($sub_card_accounts->isEmpty()) {
+                    $sub_card_accounts = [$account->id => $account->name];
                 }
-                $sub_card_accounts = Account::where('parent_account_id', $card_account->id)->pluck('name', 'id');
                 $id = null;
             } else {
                 $account = Account::where('business_id', $business_id)
                     ->NotClosed()
                     ->find($id);
             }
+
+            if ($type != 'card' && empty($account)) {
+                return response()->json(['error' => 'Account not found.'], 404);
+            }
+
             $from_accounts = Account::where('business_id', $business_id)
                 ->where('id', '!=', $id)
                 ->NotClosed()
                 ->pluck('name', 'id');
+
             $group_name = null;
             if ($type != 'card' && !empty($account)) {
                 $from_account_group = AccountGroup::where('id', $account->asset_type)->first();
                 $group_name = !empty($from_account_group) ? $from_account_group->name : null;
             }
+
             //below value determine is need to check for balance for deposit or not
-            $check_insufficient = Account::checkInsufficientBalance($id);
+            $check_insufficient = !empty($id) ? Account::checkInsufficientBalance($id) : false;
             $account_groups = AccountGroup::pluck('name', 'id');
-            $account_balance = $type != 'card' ? $this->getAccountBalance($id) : 0.00;
-            // modified by iftekhar
+            $account_balance_obj = ($type != 'card' && !empty($id)) ? $this->getAccountBalance($id) : null;
+            $account_balance = !empty($account_balance_obj) ? $account_balance_obj->balance : 0.00;
+
             return view('deposits.deposit')
-                ->with(compact('account', 'account', 'from_accounts', 'account_balance', 'check_insufficient', 'sub_card_accounts', 'group_name', 'account_groups'));
+                ->with(compact('account', 'from_accounts', 'account_balance', 'check_insufficient', 'sub_card_accounts', 'group_name', 'account_groups', 'type'));
         }
     }
     /**
@@ -2563,7 +2631,7 @@ class DepositsController extends Controller
                     'operation_date' => $this->commonUtil->uf_date($request->input('operation_date'), true),
                     'created_by' => session()->get('user.id'),
                     'note' => $note,
-                    'cheque_number' => $cheque_number,
+                    'reference_no' => $cheque_number,
                     'attachment' => $uploadFile
                 ];
                 $credit = AccountTransaction::createAccountTransaction($credit_data);
@@ -2572,12 +2640,14 @@ class DepositsController extends Controller
                     $debit_data = $credit_data;
                     $debit_data['type'] = 'debit';
                     $debit_data['account_id'] = $from_account;
-                    $debit_data['transfer_transaction_id'] = $credit->id;
+                    $debit_data['reference_id'] = !empty($credit) ? $credit->id : null;
                     $debit_data['attachment'] = $uploadFile;
-                    $debit_data['cheque_number'] = $cheque_number;
                     $debit = AccountTransaction::createAccountTransaction($debit_data);
-                    $credit->transfer_transaction_id = $debit->id;
-                    $credit->save();
+
+                    if (!empty($credit) && !empty($debit)) {
+                        $credit->reference_id = $debit->id;
+                        $credit->save();
+                    }
                 }
             }
 
@@ -2627,10 +2697,16 @@ class DepositsController extends Controller
      */
     public function getAccountBalance($id)
     {
+        $account = Account::where('id', $id)->first();
+        if (empty($account)) {
+            return (object) ['balance' => 0];
+        }
 
-        $account_type_id = Account::where('id', $id)->first()->account_type_id;
-        $account_type_name = AccountType::where('id', $account_type_id)->first();
+        $account_type_id = $account->account_type_id;
+        $account_type = AccountType::where('id', $account_type_id)->first();
+        $account_type_name = !empty($account_type) ? $account_type->name : '';
         $business_id = session()->get('user.business_id');
+
         if (strpos($account_type_name, "Assets") !== false || strpos($account_type_name, "Expenses") !== false) {
             $account = Account::leftjoin(
                 'account_transactions as AT',
@@ -2638,20 +2714,12 @@ class DepositsController extends Controller
                 '=',
                 'accounts.id'
             )
-                ->leftJoin('transaction_payments AS TP', 'AT.transaction_payment_id', '=', 'TP.id')
                 ->whereNull('AT.deleted_at')
                 ->where('accounts.business_id', $business_id)
                 ->where('accounts.id', $id)
-                ->where(function ($query) {
-                    $query->whereNull('AT.transaction_payment_id')
-                        ->orWhere(function ($query2) {
-                            $query2->whereNotNull('AT.transaction_payment_id')
-                                ->whereNotNull('TP.id');
-                        });
-                })
                 ->select(
                     'accounts.*',
-                    DB::raw("SUM( IF(AT.type='credit', -1 * AT.amount, AT.amount) ) as balance")
+                    DB::raw("SUM( IF(AT.transaction_type='credit', -1 * AT.amount, AT.amount) ) as balance")
                 )
                 ->first();
         } else {
@@ -2666,11 +2734,11 @@ class DepositsController extends Controller
                 ->where('accounts.id', $id)
                 ->select(
                     'accounts.*',
-                    DB::raw("SUM( IF(AT.type='debit',-1 * amount,  amount) ) as balance")
+                    DB::raw("SUM( IF(AT.transaction_type='debit',-1 * AT.amount,  AT.amount) ) as balance")
                 )
                 ->first();
         }
-        $account->balance = round($account->balance, 2);
+        $account->balance = !empty($account->balance) ? round($account->balance, 2) : 0;
 
         return $account;
     }
@@ -2719,7 +2787,7 @@ class DepositsController extends Controller
                     'operation_date',
                     'account_transactions.sub_type',
                     'transfer_transaction_id',
-                    DB::raw("(SELECT SUM(IF(AT.type='credit', AT.amount, -1 * AT.amount)) from account_transactions as AT JOIN accounts as ac ON ac.id=AT.account_id WHERE ac.business_id= $business_id AND AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance"),
+                    DB::raw("(SELECT SUM(IF(AT.transaction_type='credit', AT.amount, -1 * AT.amount)) from account_transactions as AT JOIN accounts as ac ON ac.id=AT.account_id WHERE ac.business_id= $business_id AND AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance"),
                     'account_transactions.transaction_id',
                     'account_transactions.id',
                     'A.name as account_name',
@@ -3007,8 +3075,8 @@ class DepositsController extends Controller
                     'ats.name as account_type_name',
                     'pat.name as parent_account_type_name',
                     'is_closed',
-                    DB::raw("SUM( IF(AT.type='credit', -1*amount, amount) ) as ass_exp_balance"),
-                    DB::raw("SUM( IF(AT.type='debit', -1*amount, amount) ) as li_in_eq_balance"),
+                    DB::raw("SUM( IF(AT.transaction_type='credit', -1*amount, amount) ) as ass_exp_balance"),
+                    DB::raw("SUM( IF(AT.transaction_type='debit', -1*amount, amount) ) as li_in_eq_balance"),
                     DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
                 ]);
             $accounts->where('disabled', 1);
