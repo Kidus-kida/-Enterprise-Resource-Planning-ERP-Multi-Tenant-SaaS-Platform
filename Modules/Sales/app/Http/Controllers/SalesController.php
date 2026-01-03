@@ -83,7 +83,7 @@ class SalesController extends Controller
      */
     public function index()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $customers = Contact::customersDropdown($business_id, false);
         $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
         
@@ -104,7 +104,7 @@ class SalesController extends Controller
      */
     public function shipments()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         if (!auth()->user()->can('access_shipping')) {
             abort(403, 'Unauthorized action.');
         }
@@ -126,7 +126,7 @@ class SalesController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         $transaction = Transaction::where('business_id', $business_id)
             ->findOrFail($id);
@@ -226,7 +226,7 @@ class SalesController extends Controller
      */
     public function list(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         $sales = Transaction::where('transactions.business_id', $business_id)
             ->where('transactions.type', 'sell')
@@ -345,7 +345,7 @@ class SalesController extends Controller
      */
     public function create()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         $taxes = TaxRate::where('business_id', $business_id)->get();
         $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
@@ -386,7 +386,7 @@ class SalesController extends Controller
      */
     public function edit($id)
     {
-        $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $transaction = Transaction::where('business_id', $business_id)
             ->where('type', 'sell')
             ->findOrFail($id);
@@ -703,7 +703,7 @@ class SalesController extends Controller
      */
     public function getPaymentAccounts(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $payment_method = $request->payment_method;
         
         $query = Account::where('accounts.business_id', $business_id);
@@ -730,7 +730,7 @@ class SalesController extends Controller
      */
     public function show($id)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         
         $sale = Transaction::where('business_id', $business_id)
             ->where('id', $id)
@@ -884,7 +884,7 @@ class SalesController extends Controller
      */
     public function overLimitSales()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         if (request()->ajax()) {
             $payment_types = $this->transactionUtil->payment_types(null, false, false, false, true, "is_sale_enabled");
@@ -1063,7 +1063,7 @@ class SalesController extends Controller
         }
 
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
             $sells = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                 ->leftJoin('transaction_payments as tp', 'transactions.id', '=', 'tp.transaction_id')
@@ -1179,7 +1179,7 @@ class SalesController extends Controller
         }
 
         try {
-            $business_id = request()->session()->get('user.business_id') ?? 1;
+            $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
             $transaction = Transaction::where('business_id', $business_id)
                 ->where('type', 'sell')
                 ->where('is_recurring', 1)

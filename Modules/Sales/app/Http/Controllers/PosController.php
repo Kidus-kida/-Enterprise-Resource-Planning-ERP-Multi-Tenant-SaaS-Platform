@@ -93,7 +93,7 @@ class PosController extends Controller
      */
     public function list(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         $sales = Transaction::where('transactions.business_id', $business_id)
             ->where('transactions.type', 'sell')
@@ -169,7 +169,7 @@ class PosController extends Controller
      */
     public function create()
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         if (!auth()->user()->can('sell.create')) {
             // abort(403, 'Unauthorized action.');
@@ -244,7 +244,7 @@ class PosController extends Controller
      */
     public function edit($id)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
         if (!auth()->user()->can('sell.update')) {
              abort(403, 'Unauthorized action.');
@@ -782,7 +782,7 @@ class PosController extends Controller
 
         if (request()->ajax()) {
             try {
-                $business_id = request()->session()->get('user.business_id');
+                $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
 
                 $transaction = Transaction::where('business_id', $business_id)
                     ->where('id', $id)
@@ -822,7 +822,7 @@ class PosController extends Controller
      */
     public function getProductRow(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $variation_id = $request->input('variation_id');
         $location_id = $request->input('location_id');
         $store_id = $request->input('store_id');
@@ -855,7 +855,7 @@ class PosController extends Controller
      */
     public function getProductSuggestion(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $term = $request->input('term');
         $location_id = $request->input('location_id');
         $store_id = $request->input('store_id');
@@ -919,7 +919,7 @@ class PosController extends Controller
     }
 
     public function getCustomerDueDetails(Request $request) {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $contact_id = $request->contact_id;
         
         $contact = Contact::where('business_id', $business_id)
@@ -943,7 +943,7 @@ class PosController extends Controller
      */
     public function getPaymentAccounts(Request $request)
     {
-        $business_id = request()->session()->get('user.business_id') ?? 1;
+        $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
         $payment_method = $request->payment_method;
         
         $query = Account::where('business_id', $business_id);
