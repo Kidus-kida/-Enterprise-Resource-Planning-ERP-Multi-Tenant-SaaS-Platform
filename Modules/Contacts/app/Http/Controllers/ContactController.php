@@ -347,14 +347,14 @@ public function store(Request $request)
     try {
         DB::beginTransaction();
 
-        // 🔹 Safe business ID
+        // Safe business ID
         $business_id = session()->get('user.business_id') ?? auth()->user()->business_id;
 
         if (!$business_id) {
             return back()->withInput()->with(notify(__('Business ID not found'), 'error'));
         }
 
-        // 📦 Subscription check
+        // Subscription check
         if (!$this->moduleUtil->isSubscribed($business_id)) {
             return $this->moduleUtil->expiredResponse();
         }
@@ -388,9 +388,9 @@ public function store(Request $request)
 
         // PREPARE CONTACT DATA
         $input = $request->only([
-            'name','email','mobile','landline','alternate_mobile',
-            'city','state','country','address','landmark',
-            'supplier_group_id','customer_group_id','nic_number'
+            'name', 'email', 'mobile', 'landline', 'alternate_mobile',
+            'city', 'state', 'country', 'address', 'landmark',
+            'supplier_group_id', 'customer_group_id', 'nic_number'
         ]);
 
         $input['type'] = $request->contact_type;
@@ -466,6 +466,7 @@ public function store(Request $request)
 
         DB::commit();
 
+        // Create a success notification
         return redirect()
             ->route('contacts.index')
             ->with(notify(__('Contact added successfully')));
@@ -474,6 +475,7 @@ public function store(Request $request)
         DB::rollBack();
         Log::error($e);
 
+        // Create an error notification
         return back()
             ->withInput()
             ->with(notify(__('Something went wrong: ') . $e->getMessage(), 'error'));
@@ -587,160 +589,179 @@ public function store(Request $request)
 
 
    
-    public function update(Request $request, $id)
-    {
-        if (!auth()->user()->can('supplier.update') && !auth()->user()->can('customer.update')) {
-            abort(403, 'Unauthorized action.');
-        }
-        if(request()->ajax()) {
-            try {                                                                              // removed below line
-                $input = $request->only(['address_2','address_3','sub_customer','sub_customers','vat_number','address','credit_notification','transaction_date','should_notify','contact_id','nic_number', 'type', 'supplier_business_name', 'name', 'tax_number', 'pay_term_number', 'pay_term_type', 'mobile', 'landline', 'alternate_number', 'city', 'state', 'country', 'landmark', 'customer_group_id', 'supplier_group_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'email']);
-                $input['contact_transaction_date'] = $this->transactionUtil->uf_date($input['transaction_date']);
-                unset($input['transaction_date']);
-            
-                $input['sub_customers'] = json_encode($request->sub_customers ?? []);
-                $input['credit_limit'] = $request->input('credit_limit') != '' ? $this->commonUtil->num_uf($request->input('credit_limit')) : null;
-                $business_id = $request->session()->get('user.business_id');
-                if (!$this->moduleUtil->isSubscribed($business_id)) {
-                    return $this->moduleUtil->expiredResponse();
-                }
-                $contact_user = User::where('username', $input['contact_id'])->first();
-                if (request()->type == 'customer') {
+   public function update(Request $request, $id)
+{
+    if (!auth()->user()->can('supplier.update') && !auth()->user()->can('customer.update')) {
+        abort(403, 'Unauthorized action.');
+    }
+    
+    if (request()->ajax()) {
+        try {
+            $input = $request->only([
+                'address_2', 'address_3', 'sub_customer', 'sub_customers', 
+                'vat_number', 'address', 'credit_notification', 
+                'transaction_date', 'should_notify', 'contact_id', 
+                'nic_number', 'type', 'supplier_business_name', 
+                'name', 'tax_number', 'pay_term_number', 
+                'pay_term_type', 'mobile', 'landline', 
+                'alternate_number', 'city', 'state', 'country', 
+                'landmark', 'customer_group_id', 'supplier_group_id', 
+                'custom_field1', 'custom_field2', 'custom_field3', 
+                'custom_field4', 'email'
+            ]);
+            $input['contact_transaction_date'] = $this->transactionUtil->uf_date($input['transaction_date']);
+            unset($input['transaction_date']);
 
-                    if($request->hasFile('image')){
-                        $imageName = Media::uploadFile($request->file('image'));
-                        $input['image']=$imageName;
-                    }if($request->hasFile('signature')){
-                        $signatureName = Media::uploadFile($request->file('signature'));
-                        $input['signature']=$signatureName;
-                    }
+            $input['sub_customers'] = json_encode($request->sub_customers ?? []);
+            $input['credit_limit'] = $request->input('credit_limit') != '' ? $this->commonUtil->num_uf($request->input('credit_limit')) : null;
+            $business_id = $request->session()->get('user.business_id');
 
-                    if (!empty(request()->password)) {
-                        $validator = Validator::make(request()->all(), [
-                            'password' => 'required|min:4|max:255',
-                            'confirm_password' => 'required|same:password'
-                        ]);
-                        if ($validator->fails()) {
-                            $output = [
-                                'success' => false,
-                                'msg' => 'Password does not match'
-                            ];
-                            return $output;
-                        }
-                    }
-                    if (empty($contact_user)) {
-                        if (!$this->moduleUtil->isQuotaAvailable('customers', $business_id)) {
-                            return $this->moduleUtil->quotaExpiredResponse('customers', $business_id, action('ContactController@index'));
-                        }
-                        // it is company customer
-                        $customer_details = request()->only(['email', 'password']);
-                        $customer_details['language'] = env('APP_LOCALE');
-                        $customer_details['surname'] = '';
-                        $customer_details['first_name'] = request()->name;
-                        $customer_details['last_name'] = '';
-                        $customer_details['username'] = request()->contact_id;
-                        $customer_details['is_customer'] = 1;
-                        $customer_details['business_id'] = $business_id;
-                        if (!empty(request()->password)) {
-                            $customer_details['password'] = Hash::make(request()->password);
-                        }
-                        $user = User::create_user($customer_details);
-                        $user->business_id = $business_id;
-                        $user->is_customer = 1;
-                        $enable_customer_login = System::getProperty('enable_customer_login');
-                        if (!$enable_customer_login) {
-                            $user->status = 'inactive';
-                        }
-                        $user->save();
-                    } else {
-                        $contact_user->first_name = request()->name;
-                        if (!empty(request()->password)) {
-                            $contact_user->password = Hash::make(request()->password);
-                        }
-                        $contact_user->save();
-                    }
-                }
-                $count = 0;
-                //Check Contact id
-                if (!empty($input['contact_id'])) {
-                    $count = Contact::where('business_id', $business_id)
-                        ->where('contact_id', $input['contact_id'])
-                        ->where('id', '!=', $id)
-                        ->count();
-                }
-                if ($count == 0) {
-                    $contact = Contact::where('business_id', $business_id)->findOrFail($id);
-                    foreach ($input as $key => $value) {
-                        $contact->$key = $value;
-                    }
-                    $contact->save();
-                    //update data of user access table
-                    if( $request->assigned_to ){
-                        $user_contact_access = UserContactAccess::updateOrCreate(
-                                    ['contact_id' => $id],
-                                    ['user_id' => $request->assigned_to, 'contact_id' => $id]
-                                );
-
-                    }else{
-
-                        UserContactAccess::where('contact_id',$id)->delete();
-                    }
-                    //Get opening balance if exists
-                    $ob_transaction =  Transaction::where('contact_id', $id)
-                        ->where('type', 'opening_balance')
-                        ->first();
-                    if (!empty($ob_transaction)) {
-                        $amount = $this->commonUtil->num_uf($request->input('opening_balance'));
-                        // $opening_balance_paid = $this->transactionUtil->getTotalAmountPaid($ob_transaction->id);
-                        // if (!empty($opening_balance_paid)) {
-                        //     $amount -= $opening_balance_paid;
-                        // }
-                        $ob_transaction->final_total = $amount;
-                        $ob_transaction->total_before_tax = $amount;
-                        $ob_transaction->transaction_date = $this->transactionUtil->uf_date($request->transaction_date);
-                        $ob_transaction->save();
-                        $payable_account_id = $this->transactionUtil->account_exist_return_id('Accounts Payable');
-                        $receivealbe_account_id = $this->transactionUtil->account_exist_return_id('Accounts Receivable');
-                        $account_transaction = AccountTransaction::where('transaction_id', $ob_transaction->id)->whereIn('account_id', [$payable_account_id, $receivealbe_account_id])->first();
-                        
-                        if(!empty($account_transaction)){
-                            $account_transaction->amount = $ob_transaction->final_total;
-                            $account_transaction->save();
-                        }
-                        
-                        $contact_ledger_trnsaction = ContactLedger::where('transaction_id', $ob_transaction->id)->first();
-                        $contact_ledger_trnsaction->amount = $ob_transaction->final_total;
-                        $contact_ledger_trnsaction->save();
-                        //Update opening balance payment status
-                        $this->transactionUtil->updatePaymentStatus($ob_transaction->id, $ob_transaction->final_total);
-                    } else {
-                        //Add opening balance
-                        if (!empty($request->input('opening_balance'))) {
-                            $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $request->input('opening_balance'));
-                        }
-                    }
-
-                    $notification_parameters = json_decode($request->notification_parameters);
-                    $contact->notification_contacts = json_encode($notification_parameters);
-                    $contact->save();
-
-                    $output = [
-                        'success' => true,
-                        'msg' => __("contact updated successfully")
-                    ];
-                } else {
-                    throw new \Exception("Error Processing Request", 1);
-                }
-            } catch (\Exception $e) {
-                Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
-                $output = [
-                    'success' => false,
-                    'msg' => __("something went wrong")
-                ];
+            if (!$this->moduleUtil->isSubscribed($business_id)) {
+                return $this->moduleUtil->expiredResponse();
             }
-            return $output;
+
+            $contact_user = User::where('username', $input['contact_id'])->first();
+            if (request()->type == 'customer') {
+
+                if ($request->hasFile('image')) {
+                    $imageName = Media::uploadFile($request->file('image'));
+                    $input['image'] = $imageName;
+                }
+                if ($request->hasFile('signature')) {
+                    $signatureName = Media::uploadFile($request->file('signature'));
+                    $input['signature'] = $signatureName;
+                }
+
+                // Password validation
+                if (!empty(request()->password)) {
+                    $validator = Validator::make(request()->all(), [
+                        'password' => 'required|min:4|max:255',
+                        'confirm_password' => 'required|same:password'
+                    ]);
+                    if ($validator->fails()) {
+                        return [
+                            'success' => false,
+                            'msg' => 'Password does not match'
+                        ];
+                    }
+                }
+
+                // User creation or update
+                if (empty($contact_user)) {
+                    if (!$this->moduleUtil->isQuotaAvailable('customers', $business_id)) {
+                        return $this->moduleUtil->quotaExpiredResponse('customers', $business_id, action('ContactController@index'));
+                    }
+                    $customer_details = request()->only(['email', 'password']);
+                    $customer_details['language'] = env('APP_LOCALE');
+                    $customer_details['surname'] = '';
+                    $customer_details['first_name'] = request()->name;
+                    $customer_details['last_name'] = '';
+                    $customer_details['username'] = request()->contact_id;
+                    $customer_details['is_customer'] = 1;
+                    $customer_details['business_id'] = $business_id;
+                    if (!empty(request()->password)) {
+                        $customer_details['password'] = Hash::make(request()->password);
+                    }
+                    $user = User::create_user($customer_details);
+                    $user->business_id = $business_id;
+                    $user->is_customer = 1;
+                    $enable_customer_login = System::getProperty('enable_customer_login');
+                    if (!$enable_customer_login) {
+                        $user->status = 'inactive';
+                    }
+                    $user->save();
+                } else {
+                    $contact_user->first_name = request()->name;
+                    if (!empty(request()->password)) {
+                        $contact_user->password = Hash::make(request()->password);
+                    }
+                    $contact_user->save();
+                }
+            }
+
+            // Contact ID check
+            $count = 0;
+            if (!empty($input['contact_id'])) {
+                $count = Contact::where('business_id', $business_id)
+                    ->where('contact_id', $input['contact_id'])
+                    ->where('id', '!=', $id)
+                    ->count();
+            }
+
+            if ($count == 0) {
+                $contact = Contact::where('business_id', $business_id)->findOrFail($id);
+                foreach ($input as $key => $value) {
+                    $contact->$key = $value;
+                }
+                $contact->save();
+
+                // Update user access
+                if ($request->assigned_to) {
+                    UserContactAccess::updateOrCreate(
+                        ['contact_id' => $id],
+                        ['user_id' => $request->assigned_to]
+                    );
+                } else {
+                    UserContactAccess::where('contact_id', $id)->delete();
+                }
+
+                // Opening balance handling
+                $ob_transaction = Transaction::where('contact_id', $id)
+                    ->where('type', 'opening_balance')
+                    ->first();
+
+                if (!empty($ob_transaction)) {
+                    $amount = $this->commonUtil->num_uf($request->input('opening_balance'));
+                    $ob_transaction->final_total = $amount;
+                    $ob_transaction->total_before_tax = $amount;
+                    $ob_transaction->transaction_date = $this->transactionUtil->uf_date($request->transaction_date);
+                    $ob_transaction->save();
+                    // Other related transactions
+                    $payable_account_id = $this->transactionUtil->account_exist_return_id('Accounts Payable');
+                    $receivealbe_account_id = $this->transactionUtil->account_exist_return_id('Accounts Receivable');
+                    $account_transaction = AccountTransaction::where('transaction_id', $ob_transaction->id)
+                        ->whereIn('account_id', [$payable_account_id, $receivealbe_account_id])->first();
+                    
+                    if (!empty($account_transaction)) {
+                        $account_transaction->amount = $ob_transaction->final_total;
+                        $account_transaction->save();
+                    }
+
+                    $contact_ledger_trnsaction = ContactLedger::where('transaction_id', $ob_transaction->id)->first();
+                    $contact_ledger_trnsaction->amount = $ob_transaction->final_total;
+                    $contact_ledger_trnsaction->save();
+                    // Update payment status
+                    $this->transactionUtil->updatePaymentStatus($ob_transaction->id, $ob_transaction->final_total);
+                } else {
+                    // Add opening balance if applicable
+                    if (!empty($request->input('opening_balance'))) {
+                        $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $request->input('opening_balance'));
+                    }
+                }
+
+                // Update notification contacts
+                $notification_parameters = json_decode($request->notification_parameters);
+                $contact->notification_contacts = json_encode($notification_parameters);
+                $contact->save();
+
+                // Create a success notification
+                return [
+                    'success' => true,
+                    'msg' => __("Contact updated successfully")
+                ];
+            } else {
+                throw new \Exception("Error processing request: Duplicate Contact ID");
+            }
+        } catch (\Exception $e) {
+            Log::emergency("File:" . $e->getFile() . " Line:" . $e->getLine() . " Message:" . $e->getMessage());
+            // Create an error notification
+            return [
+                'success' => false,
+                'msg' => __("Something went wrong")
+            ];
         }
     }
+}
     /**
      * Remove the specified resource from storage.
      *
@@ -748,48 +769,58 @@ public function store(Request $request)
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
-    {
-        if (!auth()->user()->can('supplier.delete') && !auth()->user()->can('customer.delete')) {
-            abort(403, 'Unauthorized action.');
-        }
-        if (request()->ajax()) {
-            try {
-                $business_id = request()->user()->business_id;
-                //Check if any transaction related to this contact exists
-                $count = Transaction::where('business_id', $business_id)
-                    ->where('contact_id', $id)->where('final_total', '>', 0)
-                    ->count();
-                if ($count == 0) {
-                    $contact = Contact::where('business_id', $business_id)->findOrFail($id);
-                    $transactions = Transaction::where('business_id', $business_id)
-                        ->where('contact_id', $id)->get();
-                    foreach ($transactions as $transaction) {
-                        AccountTransaction::where('transaction_id', $transaction->id)->forcedelete();
-                        $transaction->delete();
-                    }
-                    if (!$contact->is_default) {
-                        $contact->delete();
-                    }
-                    $output = [
-                        'success' => true,
-                        'msg' => __("contact deleted successfully")
-                    ];
-                } else {
-                    $output = [
-                        'success' => false,
-                        'msg' => __("You cannot delete this contact ")
-                    ];
+{
+    if (!auth()->user()->can('supplier.delete') && !auth()->user()->can('customer.delete')) {
+        abort(403, 'Unauthorized action.');
+    }
+
+    if (request()->ajax()) {
+        try {
+            $business_id = request()->user()->business_id;
+
+            // Check if any transaction related to this contact exists
+            $count = Transaction::where('business_id', $business_id)
+                ->where('contact_id', $id)
+                ->where('final_total', '>', 0)
+                ->count();
+
+            if ($count == 0) {
+                $contact = Contact::where('business_id', $business_id)->findOrFail($id);
+                $transactions = Transaction::where('business_id', $business_id)
+                    ->where('contact_id', $id)
+                    ->get();
+
+                foreach ($transactions as $transaction) {
+                    AccountTransaction::where('transaction_id', $transaction->id)->forceDelete();
+                    $transaction->delete();
                 }
-            } catch (\Exception $e) {
-                Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
-                $output = [
+
+                if (!$contact->is_default) {
+                    $contact->delete();
+                }
+
+                // Create a success notification
+                return [
+                    'success' => true,
+                    'msg' => __("Contact deleted successfully")
+                ];
+            } else {
+                // Create a failure notification
+                return [
                     'success' => false,
-                    'msg' => __("messages.something_went_wrong")
+                    'msg' => __("You cannot delete this contact")
                 ];
             }
-            return $output;
+        } catch (\Exception $e) {
+            Log::emergency("File:" . $e->getFile() . " Line:" . $e->getLine() . " Message:" . $e->getMessage());
+            // Create an error notification
+            return [
+                'success' => false,
+                'msg' => __("Something went wrong")
+            ];
         }
     }
+}
     public function getImportBalance(){
         if (!auth()->user()->can('supplier.create') && !auth()->user()->can('customer.create')) {
             abort(403, 'Unauthorized action.');

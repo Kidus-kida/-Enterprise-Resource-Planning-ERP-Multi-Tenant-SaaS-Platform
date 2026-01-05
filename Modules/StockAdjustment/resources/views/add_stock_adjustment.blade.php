@@ -55,7 +55,12 @@
 
                         <div class="col-md-3">
                             <label>Date:*</label>
-                            <input type="datetime-local" name="transaction_date" id="transaction_date" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa fa-calendar"></i>
+                                </span>
+                                <input type="text" name="transaction_date" id="transaction_date" class="form-control" value="{{ $transaction_date }}" required readonly>
+                            </div>
                         </div>
                     </div>
 
@@ -149,7 +154,7 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    window.addEventListener('load', function() {
         if ($('#search_product_for_srock_adjustment').length > 0) {
             $('#search_product_for_srock_adjustment').autocomplete({
                 source: function(request, response) {
@@ -159,7 +164,8 @@
                         response
                     );
                 },
-                minLength: 2,
+                minLength: 1,
+                delay: 250,
                 response: function(event, ui) {
                     if (ui.content.length == 1) {
                         ui.item = ui.content[0];
@@ -168,13 +174,14 @@
                             $(this).autocomplete('close');
                         }
                     } else if (ui.content.length == 0) {
-                        swal("No matching product found!");
+                        toastr.error("No matching product found!");
                     }
                 },
                 select: function(event, ui) {
                     if (ui.item.qty_available > 0) {
                         $(this).val(null);
                         stock_adjustment_product_row(ui.item.variation_id);
+                        return false;
                     } else {
                         alert("Out of stock");
                     }
@@ -214,10 +221,10 @@
             update_table_total();
         });
 
-        $(document).on('change', 'input.product_quantity', function() {
+        $(document).on('keyup input', 'input.product_quantity', function() {
             update_table_row($(this).closest('tr'));
         });
-        $(document).on('change', 'input.product_unit_price', function() {
+        $(document).on('keyup input', 'input.product_unit_price', function() {
             update_table_row($(this).closest('tr'));
         });
 
@@ -232,45 +239,95 @@
         if($('#location_id').val()){
             $('#location_id').trigger('change');
         }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to initialize datepicker once library is loaded
+        function initDatePicker() {
+            if (typeof $.fn.datetimepicker !== 'undefined') {
+                // Define format variables
+                var moment_date_format = "{{ session('business.date_format', 'Y-m-d') }}"; 
+                moment_date_format = moment_date_format.replace('d', 'DD').replace('m', 'MM').replace('Y', 'YYYY'); 
+                var moment_time_format = "{{ session('business.time_format') == 12 ? 'hh:mm A' : 'HH:mm' }}";
+
+                $('#transaction_date').datetimepicker({
+                    format: moment_date_format + ' ' + moment_time_format,
+                    ignoreReadonly: true,
+                });
+            } else {
+                // Retry after 100ms
+                setTimeout(initDatePicker, 100);
+            }
+        }
+        
+        // Start checking
+        initDatePicker();
     });
 
-    function stock_adjustment_product_row(variation_id) {
-        var row_index = parseInt($('#product_row_index').val());
-        var location_id = $('select#location_id').val();
-        $.ajax({
-            method: 'POST',
-            url: '{{ route("stock_adjustment.get_product_row") }}',
-            data: { row_index: row_index, variation_id: variation_id, location_id: location_id },
-            dataType: 'html',
-            success: function(result) {
-                $('table#stock_adjustment_product_table tbody').append(result);
-                update_table_total();
-                $('#product_row_index').val(row_index + 1);
-            },
-        });
-    }
+   function stock_adjustment_product_row(variation_id) {
+    var row_index = parseInt($('#product_row_index').val());
+    var location_id = $('select#location_id').val();
+
+    $.ajax({
+        method: 'POST',
+        url: '{{ route("stock_adjustment.get_product_row") }}',
+        data: { row_index: row_index, variation_id: variation_id, location_id: location_id },
+        dataType: 'html',
+        success: function(result) {
+            console.log(result);  // Log the result for debugging
+            $('table#stock_adjustment_product_table tbody').append(result);
+            update_table_total();
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error: ", status, error);
+        }
+    });
+}
 
     function update_table_total() {
         var table_total = 0;
         $('table#stock_adjustment_product_table tbody tr').each(function() {
-            var this_total = parseFloat($(this).find('input.product_line_total').val().replace(/,/g, ''));
+            var line_total_input = $(this).find('input.product_line_total');
+            var this_total = 0;
+            if (typeof __read_number !== 'undefined') {
+                this_total = __read_number(line_total_input);
+            } else {
+                var line_total = line_total_input.val();
+                if (line_total) {
+                    this_total = parseFloat(line_total.replace(/,/g, ''));
+                }
+            }
             if (this_total) {
                 table_total += this_total;
             }
         });
         $('input#total_amount').val(table_total);
-        $('span#total_adjustment').text(table_total.toLocaleString());
+        var formatted_total = table_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        $('span#total_adjustment').text(formatted_total);
     }
 
     function update_table_row(tr) {
-        var quantity = parseFloat(tr.find('input.product_quantity').val().replace(/,/g, ''));
-        var unit_price = parseFloat(tr.find('input.product_unit_price').val().replace(/,/g, ''));
+        var quantity = 0;
+        var unit_price = 0;
+        var qty_input = tr.find('input.product_quantity');
+        var price_input = tr.find('input.product_unit_price');
+
+        if (typeof __read_number !== 'undefined') {
+            quantity = __read_number(qty_input);
+            unit_price = __read_number(price_input);
+        } else {
+            quantity = parseFloat(qty_input.val().replace(/,/g, ''));
+            unit_price = parseFloat(price_input.val().replace(/,/g, ''));
+        }
+
         var row_total = 0;
         if (quantity && unit_price) {
             row_total = quantity * unit_price;
         }
-        tr.find('input.product_line_total').val(row_total.toLocaleString());
+        var formatted_row_total = row_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        tr.find('input.product_line_total').val(formatted_row_total);
         update_table_total();
     }
+    
 </script>
 @endpush
