@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 class ContactLedger extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
     use SoftDeletes;
 
     protected static $logAttributes = ['*'];
@@ -31,11 +31,13 @@ class ContactLedger extends Model
      * Creates new contact ledger transaction
      * @return obj
      */
+    /*
      public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
     public static function createContactLedger($data)
     {
         // dd($data);

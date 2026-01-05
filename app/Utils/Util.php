@@ -147,7 +147,7 @@ class Util
 
         // if (auth()->user()->can('bypass.review')) { return []; }
 
-
+        return [];
         $business_id = request()->session()->get('user.business_id');
         $subscription = Subscription::current_subscription($business_id);
         $pacakge_details = $subscription->package_details;

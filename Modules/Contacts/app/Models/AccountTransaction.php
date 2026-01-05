@@ -4,6 +4,7 @@ namespace Modules\Contacts\Models;
 
 use App\Utils\TransactionUtil;
 use Illuminate\Database\Eloquent\Model;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +14,6 @@ class AccountTransaction extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = ['id'];
-    
     /**
      * The attributes that should be mutated to dates.
      *
@@ -29,7 +28,8 @@ class AccountTransaction extends Model
 
     public function transaction()
     {
-        return $this->belongsTo(\App\Transaction::class, 'transaction_id')->withTrashed();;
+        return $this->belongsTo(\App\Transaction::class, 'transaction_id')->withTrashed();
+        ;
     }
 
     /**
@@ -63,17 +63,12 @@ class AccountTransaction extends Model
     public static function createAccountTransaction($data)
     {
 
-        if (!empty($data['interest'])){
+        if (!empty($data['interest'])) {
             $transaction_data['interest'] = $data['interest'];
         }
-        
+
         $business_id = request()->session()->get('user.business_id');
-        
-        // Fallback to account ID 1 if account_id is 0 or null to prevent foreign key constraint violation
-        if (empty($data['account_id']) || $data['account_id'] == 0) {
-            $data['account_id'] = 1;
-        }
-        
+
         // $account = Account::where('id', $data['account_id'])->select('business_id')->first();
         $transaction_data = [
             'amount' => $data['amount'],
@@ -82,7 +77,7 @@ class AccountTransaction extends Model
             'type' => $data['type'],
             'sub_type' => !empty($data['sub_type']) ? $data['sub_type'] : null,
             'operation_date' => !empty($data['operation_date']) ? $data['operation_date'] : Carbon::now(),
-            'created_by' =>  !empty($data['created_by']) ? $data['created_by'] : Auth::user()->id,
+            'created_by' => !empty($data['created_by']) ? $data['created_by'] : Auth::user()->id,
             'transaction_id' => !empty($data['transaction_id']) ? $data['transaction_id'] : null,
             'transaction_payment_id' => !empty($data['transaction_payment_id']) ? $data['transaction_payment_id'] : null,
             'note' => !empty($data['note']) ? $data['note'] : null,
@@ -97,21 +92,21 @@ class AccountTransaction extends Model
             'installment_id' => !empty($data['installment_id']) ? $data['installment_id'] : null,
             'interest' => !empty($data['interest']) ? $data['interest'] : null,
             'fixed_asset_id' => !empty($data['fixed_asset_id']) ? $data['fixed_asset_id'] : null,
-            
+
             'pair_at_id' => !empty($data['pair_at_id']) ? $data['pair_at_id'] : null,
-            
-            'post_dated_cheque' => !empty($data['post_dated_cheque']) ? $data['post_dated_cheque'] : 0 , // post dated cheque input
-            
-            'update_post_dated_cheque' => !empty($data['update_post_dated_cheque']) ? $data['update_post_dated_cheque'] : 0 ,
-            
-            'related_account_id' => !empty($data['related_account_id']) ? $data['related_account_id'] : 0 ,
-            'credit_related_account' => !empty($data['credit_related_account']) ? $data['credit_related_account'] : 0 ,
-            
-            'bank_name' => !empty($data['bank_name']) ? $data['bank_name'] : 0 ,
-            
+
+            'post_dated_cheque' => !empty($data['post_dated_cheque']) ? $data['post_dated_cheque'] : 0, // post dated cheque input
+
+            'update_post_dated_cheque' => !empty($data['update_post_dated_cheque']) ? $data['update_post_dated_cheque'] : 0,
+
+            'related_account_id' => !empty($data['related_account_id']) ? $data['related_account_id'] : 0,
+            'credit_related_account' => !empty($data['credit_related_account']) ? $data['credit_related_account'] : 0,
+
+            'bank_name' => !empty($data['bank_name']) ? $data['bank_name'] : 0,
+
             'cheque_date' => !empty($data['cheque_date']) ? $data['cheque_date'] : null,
         ];
-        
+
         $account_transaction = AccountTransaction::create($transaction_data);
 
         return $account_transaction;
@@ -148,12 +143,12 @@ class AccountTransaction extends Model
             ContactLedger::where(
                 'transaction_id',
                 $transaction_payment->transaction_id
-            )->where('transaction_payment_id',  $transaction_payment->id)
+            )->where('transaction_payment_id', $transaction_payment->id)
                 ->update(['amount' => $transaction_payment->amount]);
         }
         if ($transaction_type == 'sell' || $transaction_type == 'property_sell') {
             //update contact ledger transaction
-            ContactLedger::where('transaction_payment_id',  $transaction_payment->id)
+            ContactLedger::where('transaction_payment_id', $transaction_payment->id)
                 ->update(['amount' => $transaction_payment->amount]);
         }
 
@@ -175,13 +170,13 @@ class AccountTransaction extends Model
                 'created_by' => $transaction_payment->created_by,
                 'transaction_id' => $transaction_payment->transaction_id,
                 'transaction_payment_id' => $transaction_payment->id,
-                'post_dated_cheque' => !empty($data['post_dated_cheque']) ? $data['post_dated_cheque'] : 0 , // post dated cheque input
-                
-                'update_post_dated_cheque' => !empty($data['update_post_dated_cheque']) ? $data['update_post_dated_cheque'] : 0 ,
-            
-                'related_account_id' => !empty($data['related_account_id']) ? $data['related_account_id'] : 0 ,
-                
-                'bank_name' => !empty($data['bank_name']) ? $data['bank_name'] : 0 ,
+                'post_dated_cheque' => !empty($data['post_dated_cheque']) ? $data['post_dated_cheque'] : 0, // post dated cheque input
+
+                'update_post_dated_cheque' => !empty($data['update_post_dated_cheque']) ? $data['update_post_dated_cheque'] : 0,
+
+                'related_account_id' => !empty($data['related_account_id']) ? $data['related_account_id'] : 0,
+
+                'bank_name' => !empty($data['bank_name']) ? $data['bank_name'] : 0,
 
             ];
 

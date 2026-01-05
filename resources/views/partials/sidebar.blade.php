@@ -4,9 +4,9 @@
             <nav class="greedys sidebar-horizantal">
                 {{-- Horizontal menu goes here --}}
             </nav>
-            {{-- Vertical menu starts here  --}}
+            {{-- Vertical menu starts here --}}
             {!! renderAppMenu() !!}
-            {{-- Vertical Menu ends here  --}}
+            {{-- Vertical Menu ends here --}}
         </div>
     </div>
 </div>
@@ -55,8 +55,8 @@
                         account_balance_wallet
                     </span>
                 </a>
-                <a class="nav-link" id="v-pills-crm-tab" title="Crm" data-bs-toggle="pill"
-                    href="#v-pills-crm" role="tab" aria-controls="v-pills-crm" aria-selected="false">
+                <a class="nav-link" id="v-pills-crm-tab" title="Crm" data-bs-toggle="pill" href="#v-pills-crm"
+                    role="tab" aria-controls="v-pills-crm" aria-selected="false">
                     <span class="material-icons-outlined">
                         Crm
                     </span>
@@ -77,12 +77,11 @@
                     </span>
                 </a>
                 <a class="nav-link" id="v-pills-performance-tab" title="Performance" data-bs-toggle="pill"
-                    href="#v-pills-performance" role="tab" aria-controls="v-pills-performance"
-                    aria-selected="false">
+                    href="#v-pills-performance" role="tab" aria-controls="v-pills-performance" aria-selected="false">
                     <span class="material-icons-outlined"> shutter_speed </span>
                 </a>
-                <a class="nav-link" id="v-pills-goals-tab" title="Goals" data-bs-toggle="pill"
-                    href="#v-pills-goals" role="tab" aria-controls="v-pills-goals" aria-selected="false">
+                <a class="nav-link" id="v-pills-goals-tab" title="Goals" data-bs-toggle="pill" href="#v-pills-goals"
+                    role="tab" aria-controls="v-pills-goals" aria-selected="false">
                     <span class="material-icons-outlined"> track_changes </span>
                 </a>
                 <a class="nav-link" id="v-pills-training-tab" title="Training" data-bs-toggle="pill"
@@ -90,26 +89,23 @@
                     <span class="material-icons-outlined"> checklist_rtl </span>
                 </a>
                 <a class="nav-link" id="v-pills-promotion-tab" title="Promotions" data-bs-toggle="pill"
-                    href="#v-pills-promotion" role="tab" aria-controls="v-pills-promotion"
-                    aria-selected="false">
+                    href="#v-pills-promotion" role="tab" aria-controls="v-pills-promotion" aria-selected="false">
                     <span class="material-icons-outlined"> auto_graph </span>
                 </a>
                 <a class="nav-link" id="v-pills-resignation-tab" title="Resignation" data-bs-toggle="pill"
-                    href="#v-pills-resignation" role="tab" aria-controls="v-pills-resignation"
-                    aria-selected="false">
+                    href="#v-pills-resignation" role="tab" aria-controls="v-pills-resignation" aria-selected="false">
                     <span class="material-icons-outlined">
                         do_not_disturb_alt
                     </span>
                 </a>
                 <a class="nav-link" id="v-pills-termination-tab" title="Termination" data-bs-toggle="pill"
-                    href="#v-pills-termination" role="tab" aria-controls="v-pills-termination"
-                    aria-selected="false">
+                    href="#v-pills-termination" role="tab" aria-controls="v-pills-termination" aria-selected="false">
                     <span class="material-icons-outlined">
                         indeterminate_check_box
                     </span>
                 </a>
-                <a class="nav-link" id="v-pills-assets-tab" title="Assets" data-bs-toggle="pill"
-                    href="#v-pills-assets" role="tab" aria-controls="v-pills-assets" aria-selected="false">
+                <a class="nav-link" id="v-pills-assets-tab" title="Assets" data-bs-toggle="pill" href="#v-pills-assets"
+                    role="tab" aria-controls="v-pills-assets" aria-selected="false">
                     <span class="material-icons-outlined"> web_asset </span>
                 </a>
                 <a class="nav-link" id="v-pills-jobs-tab" title="Jobs" data-bs-toggle="pill" href="#v-pills-jobs"
@@ -122,12 +118,11 @@
                     <span class="material-icons-outlined"> school </span>
                 </a>
                 <a class="nav-link" id="v-pills-activities-tab" title="Activities" data-bs-toggle="pill"
-                    href="#v-pills-activities" role="tab" aria-controls="v-pills-activities"
-                    aria-selected="false">
+                    href="#v-pills-activities" role="tab" aria-controls="v-pills-activities" aria-selected="false">
                     <span class="material-icons-outlined"> toggle_off </span>
                 </a>
-                <a class="nav-link" id="v-pills-users-tab" title="Users" data-bs-toggle="pill"
-                    href="#v-pills-users" role="tab" aria-controls="v-pills-users" aria-selected="false">
+                <a class="nav-link" id="v-pills-users-tab" title="Users" data-bs-toggle="pill" href="#v-pills-users"
+                    role="tab" aria-controls="v-pills-users" aria-selected="false">
                     <span class="material-icons-outlined"> group_add </span>
                 </a>
                 <a class="nav-link" id="v-pills-settings-tab" title="Settings" data-bs-toggle="pill"
@@ -146,8 +141,7 @@
                     </span>
                 </a>
                 <a class="nav-link" id="v-pills-errorpages-tab" title="Error Pages" data-bs-toggle="pill"
-                    href="#v-pills-errorpages" role="tab" aria-controls="v-pills-errorpages"
-                    aria-selected="false">
+                    href="#v-pills-errorpages" role="tab" aria-controls="v-pills-errorpages" aria-selected="false">
                     <span class="material-icons-outlined"> announcement </span>
                 </a>
                 <a class="nav-link" id="v-pills-subscriptions-tab" title="Subscriptions" data-bs-toggle="pill"
@@ -159,12 +153,12 @@
                     href="#v-pills-pages" role="tab" aria-controls="v-pills-pages" aria-selected="false">
                     <span class="material-icons-outlined"> layers </span>
                 </a>
-                <a class="nav-link" id="v-pills-forms-tab" title="Forms" data-bs-toggle="pill"
-                    href="#v-pills-forms" role="tab" aria-controls="v-pills-forms" aria-selected="false">
+                <a class="nav-link" id="v-pills-forms-tab" title="Forms" data-bs-toggle="pill" href="#v-pills-forms"
+                    role="tab" aria-controls="v-pills-forms" aria-selected="false">
                     <span class="material-icons-outlined"> view_day </span>
                 </a>
-                <a class="nav-link" id="v-pills-tables-tab" title="Tables" data-bs-toggle="pill"
-                    href="#v-pills-tables" role="tab" aria-controls="v-pills-tables" aria-selected="false">
+                <a class="nav-link" id="v-pills-tables-tab" title="Tables" data-bs-toggle="pill" href="#v-pills-tables"
+                    role="tab" aria-controls="v-pills-tables" aria-selected="false">
                     <span class="material-icons-outlined"> table_rows </span>
                 </a>
                 <a class="nav-link" id="v-pills-documentation-tab" title="Documentation" data-bs-toggle="pill"
@@ -173,13 +167,11 @@
                     <span class="material-icons-outlined"> description </span>
                 </a>
                 <a class="nav-link" id="v-pills-changelog-tab" title="Changelog" data-bs-toggle="pill"
-                    href="#v-pills-changelog" role="tab" aria-controls="v-pills-changelog"
-                    aria-selected="false">
+                    href="#v-pills-changelog" role="tab" aria-controls="v-pills-changelog" aria-selected="false">
                     <span class="material-icons-outlined"> sync_alt </span>
                 </a>
                 <a class="nav-link" id="v-pills-multilevel-tab" title="Multilevel" data-bs-toggle="pill"
-                    href="#v-pills-multilevel" role="tab" aria-controls="v-pills-multilevel"
-                    aria-selected="false">
+                    href="#v-pills-multilevel" role="tab" aria-controls="v-pills-multilevel" aria-selected="false">
                     <span class="material-icons-outlined"> library_add_check </span>
                 </a>
             </div>
@@ -187,7 +179,7 @@
 
         <div class="sidebar-right">
             <div class="tab-content" id="v-pills-tabContent">
-                
+
             </div>
         </div>
     </div>
