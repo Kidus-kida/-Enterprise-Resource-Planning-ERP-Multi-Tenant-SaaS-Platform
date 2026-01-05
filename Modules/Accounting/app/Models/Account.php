@@ -141,8 +141,7 @@ class Account extends Model
         $account_query->where('is_closed', 0);
 
         $result = $account_query->select(
-            DB::raw("SUM(IF(AT.type='credit',current_balance, 0)) as creditSum"),
-            DB::raw("SUM(IF(AT.type='debit', current_balance, 0)) as debitSum")
+
         )->first();
 
         // Calculate balance based on account type

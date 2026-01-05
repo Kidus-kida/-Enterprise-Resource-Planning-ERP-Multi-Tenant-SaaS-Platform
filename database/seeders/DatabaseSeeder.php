@@ -16,12 +16,14 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
-            // UserSeeder::class,
-            // DemoDataSeeder::class,
-            // WorldSeeder::class,
-            // RolePermissionSeeder::class,
+            RolePermissionSeeder::class,
+            BusinessSeeder::class,
+            AccountTypesSeeder::class,
+            AccountGroupsSeeder::class,
+            CreateCashAccountSeeder::class,
+            TaxRateSeeder::class,
+            AccountingModuleSeeder::class,
             LeaveSeeder::class
-
         ]);
     }
 }

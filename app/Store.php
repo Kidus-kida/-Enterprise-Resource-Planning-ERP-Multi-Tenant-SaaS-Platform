@@ -35,8 +35,8 @@ class Store extends Model
     */
     public static function forDropdown($business_id, $enable_petro_module = 0,$check_permissions = 0, $permission = null)
     {
-        $user_id = request()->session()->get('user.id');
-        $user = User::findOrFail($user_id);
+        $user = auth()->user();
+        $user_id = $user->id;
         
         
         if($check_permissions == 0 || (!empty($user->roles->first()) && $user->roles->first()->name == "Admin#$business_id" )){
@@ -56,8 +56,8 @@ class Store extends Model
     
     public static function getStores($business_id, $check_store_not = 0,$location_id,$permission = null)
     {
-        $user_id = request()->session()->get('user.id');
-        $user = User::findOrFail($user_id);
+        $user = auth()->user();
+        $user_id = $user->id;
         
         
         if((!empty($user->roles->first()) && $user->roles->first()->name == "Admin#$business_id" )){

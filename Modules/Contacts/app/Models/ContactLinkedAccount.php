@@ -3,29 +3,31 @@
 namespace Modules\Contacts\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 
 class ContactLinkedAccount extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
     protected static $logFillable = true;
 
-    protected static $logName = 'Business'; 
+    protected static $logName = 'Business';
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    
+
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable']);
     }
+    */
 
     /**
      * The attributes that aren't mass assignable.

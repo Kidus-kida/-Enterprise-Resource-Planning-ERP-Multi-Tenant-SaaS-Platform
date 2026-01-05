@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,9 @@ return new class extends Migration
     {
         Schema::table('account_transactions', function (Blueprint $table) {
             // Rename transaction_type to type to match original ERP schema
-            $table->renameColumn('transaction_type', 'type');
+            if (Schema::hasColumn('account_transactions', 'transaction_type') && !Schema::hasColumn('account_transactions', 'type')) {
+                $table->renameColumn('transaction_type', 'type');
+            }
         });
     }
 

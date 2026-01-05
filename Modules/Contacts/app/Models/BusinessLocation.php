@@ -4,19 +4,19 @@ namespace Modules\Contacts\Models;
 
 use DB;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 
 class BusinessLocation extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
     protected static $logFillable = true;
 
-    
-    protected static $logName = 'Business Location'; 
+
+    protected static $logName = 'Business Location';
 
     /**
      * The attributes that aren't mass assignable.
@@ -40,7 +40,7 @@ class BusinessLocation extends Model
 
         $permitted_locations = auth()->user()->permitted_locations();
         if ($permitted_locations != 'all') {
-            if(!auth()->user()->is_customer){
+            if (!auth()->user()->is_customer) {
                 $query->whereIn('id', $permitted_locations);
             }
         }
@@ -65,12 +65,13 @@ class BusinessLocation extends Model
 
         if ($receipt_printer_type_attribute) {
             $attributes = collect($result)->mapWithKeys(function ($item) {
-                return [$item->id => [
-                            'data-receipt_printer_type' => $item->receipt_printer_type,
-                            'data-default_price_group' => $item->selling_price_group_id,
-                            'data-default_payment_accounts' => $item->default_payment_accounts
-                        ]
-                    ];
+                return [
+                    $item->id => [
+                        'data-receipt_printer_type' => $item->receipt_printer_type,
+                        'data-default_price_group' => $item->selling_price_group_id,
+                        'data-default_payment_accounts' => $item->default_payment_accounts
+                    ]
+                ];
             })->all();
 
             return ['locations' => $locations, 'attributes' => $attributes];
@@ -78,14 +79,14 @@ class BusinessLocation extends Model
             return $locations;
         }
     }
-    
+
     public static function getDropdownCollection($business_id, $show_all = false, $receipt_printer_type_attribute = false, $append_id = true)
     {
         $query = BusinessLocation::where('business_id', $business_id)->Active();
 
         $permitted_locations = auth()->user()->permitted_locations();
         if ($permitted_locations != 'all') {
-            if(!auth()->user()->is_customer){
+            if (!auth()->user()->is_customer) {
                 $query->whereIn('id', $permitted_locations);
             }
         }
@@ -102,7 +103,7 @@ class BusinessLocation extends Model
 
         $result = $query->get();
 
-        $locations = $result/*->pluck('name', 'id')*/;
+        $locations = $result/*->pluck('name', 'id')*/ ;
 
         if ($show_all) {
             $locations->prepend(__('report.all_locations'), '');
@@ -110,12 +111,13 @@ class BusinessLocation extends Model
 
         if ($receipt_printer_type_attribute) {
             $attributes = collect($result)->mapWithKeys(function ($item) {
-                return [$item->id => [
-                            'data-receipt_printer_type' => $item->receipt_printer_type,
-                            'data-default_price_group' => $item->selling_price_group_id,
-                            'data-default_payment_accounts' => $item->default_payment_accounts
-                        ]
-                    ];
+                return [
+                    $item->id => [
+                        'data-receipt_printer_type' => $item->receipt_printer_type,
+                        'data-default_price_group' => $item->selling_price_group_id,
+                        'data-default_payment_accounts' => $item->default_payment_accounts
+                    ]
+                ];
             })->all();
 
             return ['locations' => $locations, 'attributes' => $attributes];
@@ -141,7 +143,7 @@ class BusinessLocation extends Model
     }
 
 
-    
+
     public function stores()
     {
         return $this->hasMany(\App\Store::class, 'location_id');
@@ -152,7 +154,7 @@ class BusinessLocation extends Model
     {
         $business_id = request()->session()->get('business.id');
         $account_id = null;
-        $defualt_accounts = BusinessLocation::where('business_id', $business_id)->where('id',  $location_id)->first();
+        $defualt_accounts = BusinessLocation::where('business_id', $business_id)->where('id', $location_id)->first();
         if (!empty($defualt_accounts)) {
             $default_payment_accounts = (array) json_decode($defualt_accounts->default_payment_accounts);
 
@@ -161,12 +163,14 @@ class BusinessLocation extends Model
 
         return $account_id;
     }
-    
+
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
 
 
 }

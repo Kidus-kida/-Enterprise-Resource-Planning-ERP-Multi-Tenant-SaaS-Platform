@@ -3,30 +3,30 @@
 namespace Modules\Contacts\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 
 class Business extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
 
     protected static $logAttributes = ['*'];
 
     protected static $logFillable = true;
 
-    protected static $logName = 'Business'; 
+    protected static $logName = 'Business';
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'businesses';
-    
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
 
     /**
      * The attributes that aren't mass assignable.
@@ -36,10 +36,10 @@ class Business extends Model
     protected $guarded = ['id', 'woocommerce_api_settings'];
 
     /**
-      * The attributes that should be hidden for arrays.
-      *
-      * @var array
-      */
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
     protected $hidden = ['woocommerce_api_settings'];
 
     /**
@@ -103,8 +103,8 @@ class Business extends Model
     }
 
     /**
-    * Get the Business subscriptions.
-    */
+     * Get the Business subscriptions.
+     */
     public function subscriptions()
     {
         return $this->hasMany('\Modules\Superadmin\Entities\Subscription');

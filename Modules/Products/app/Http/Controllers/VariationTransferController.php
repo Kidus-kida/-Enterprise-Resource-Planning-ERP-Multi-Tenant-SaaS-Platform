@@ -36,7 +36,7 @@ class VariationTransferController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+            $business_id = auth()->user()->business_id;
 
             $variation_transfers = VariationTransfer::leftjoin('variations as vf', 'vf.id', 'variation_transfers.from_variation_id')
                 ->leftjoin('variations as vt', 'vt.id', 'variation_transfers.to_variation_id')
@@ -161,7 +161,7 @@ class VariationTransferController extends Controller
 
     public function create()
     {
-        $business_id = request()->session()->get('business.id'); // Using business.id from session vs user->business_id? Standardize.
+        $business_id = auth()->user()->business_id;
         // Standardize to auth()->user()->business_id
         $business_id = auth()->user()->business_id;
 
@@ -327,7 +327,7 @@ class VariationTransferController extends Controller
 
             $business_details = [
                 'id' => $business_id,
-                'accounting_method' => $request->session()->get('business.accounting_method'),
+                'accounting_method' => auth()->user()->business->accounting_method,
                 'location_id' => $sell_transfer->location_id
             ];
             $this->transactionUtil->mapPurchaseSell($business_details, $sell_transfer->sell_lines, 'purchase');
@@ -491,7 +491,7 @@ class VariationTransferController extends Controller
     public function getTransferStoreId($location_id)
     {
         $business_id = request()->session()->get('user.business_id');
-        $stores = Store::where('business_id', $business_id)->where('location_id', $location_id)->select('id', 'name')->get();
+        $stores = Store::where('business_id', $business_id)->where('location_id', $location_id)->pluck('name', 'id');
         return $stores;
     }
 
@@ -499,7 +499,7 @@ class VariationTransferController extends Controller
     {
         $category_id = request()->cat_id;
         $sub_category_id = request()->sub_cat_id;
-        $business_id = request()->session()->get('business.id');
+        $business_id = auth()->user()->business_id;
 
         $variations = Variation::getVariationDropdown($business_id, $category_id, $sub_category_id);
         $html = $this->transactionUtil->createDropdownHtml($variations, 'Please Select');
@@ -508,7 +508,7 @@ class VariationTransferController extends Controller
 
     public function getVariationOfProduct($variation_id)
     {
-        $business_id = request()->session()->get('business.id');
+        $business_id = auth()->user()->business_id;
         $variations = Variation::getVariationDropdown($business_id, null, null, $variation_id);
         $html = $this->transactionUtil->createDropdownHtml($variations, 'Please Select');
         return $html;

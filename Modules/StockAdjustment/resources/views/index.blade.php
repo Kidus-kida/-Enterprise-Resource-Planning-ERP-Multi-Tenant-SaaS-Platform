@@ -6,19 +6,19 @@
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Stock-Adjustment') }}</x-slot>
+            <x-slot name="title">Stock-Adjustment</x-slot>
             <ul class="breadcrumb">
                 <!-- <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}">{{ __('Stock-Adjustment') }}</a>
+                    <a href="{{ route('dashboard') }}">Stock-Adjustment</a>
                 </li> -->
                 <li class="breadcrumb-item active">
-                    {{ __('All stock adjustments') }}
+                    All stock adjustments
                 </li>
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
                    <a href="{{ route('stock_adjustment.create') }}" class="btn add-btn">
-    <i class="fa-solid fa-plus"></i> {{ __('Add') }}
+    <i class="fa-solid fa-plus"></i> Add
 </a>
 
                 </div>
