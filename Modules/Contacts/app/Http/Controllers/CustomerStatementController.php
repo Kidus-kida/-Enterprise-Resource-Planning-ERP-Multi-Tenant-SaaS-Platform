@@ -7,7 +7,7 @@ use Modules\Contacts\Models\CustomerStatement;
 use Modules\Contacts\Models\CustomerStatementDetail;
 use Modules\Contacts\Models\Contact;
 use Modules\Contacts\Models\Transaction;
-use App\Models\Business;
+use App\Business;
 use App\Models\BusinessLocation;
 use Illuminate\Http\Request;
 use Modules\Contacts\DataTables\CustomerStatementDataTable;

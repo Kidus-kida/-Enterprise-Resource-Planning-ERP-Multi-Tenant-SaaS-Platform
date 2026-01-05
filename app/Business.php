@@ -73,7 +73,7 @@ class Business extends Model
      */
     public function owner()
     {
-        return $this->hasOne(\App\User::class, 'id', 'owner_id');
+        return $this->hasOne(\App\Models\User::class, 'id', 'owner_id');
     }
 
     /**
@@ -95,17 +95,41 @@ class Business extends Model
     /**
      * Get the Business printers.
      */
-    public function printers()
-    {
-        return $this->hasMany(\App\Printer::class);
-    }
+    // public function printers()
+    // {
+    //     return $this->hasMany(\App\Printer::class);
+    // }
 
     /**
      * Get the Business subscriptions.
      */
     public function subscriptions()
     {
-        return $this->hasMany('\Modules\Superadmin\Entities\Subscription');
+        return $this->hasMany('\Modules\Superadmin\Models\Subscription');
+    }
+
+    /**
+     * Get the tenant record for this business.
+     */
+    public function tenant()
+    {
+        return $this->hasOne('\Modules\Superadmin\Models\Tenant', 'business_id');
+    }
+
+    /**
+     * Get the package associated with this business.
+     */
+    public function package()
+    {
+        return $this->belongsTo('\Modules\Superadmin\Models\Package', 'package_id');
+    }
+
+    /**
+     * Get manual payments for this business.
+     */
+    public function manualPayments()
+    {
+        return $this->hasMany('\Modules\Superadmin\Models\ManualPayment');
     }
 
     /**
