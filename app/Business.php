@@ -46,6 +46,8 @@ class Business extends Model
      * @var array
      */
     protected $casts = [
+        'pos_settings' => 'array',
+        'keyboard_shortcuts' => 'array',
         'ref_no_prefixes' => 'array',
         'ref_no_starting_number' => 'array',
         'enabled_modules' => 'array',
