@@ -153,6 +153,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('company', [SettingsController::class, 'updateCompany'])->name('settings.company.update');
 
+        Route::get('business', [\App\Http\Controllers\BusinessSettingsController::class, 'index'])->name('settings.business.index');
+        Route::post('business', [\App\Http\Controllers\BusinessSettingsController::class, 'update'])->name('settings.business.update');
+
         Route::get('locale', [SettingsController::class, 'locale'])->name('settings.locale');
         Route::post('locale', [SettingsController::class, 'updateLocale'])->name('settings.locale.update');
         Route::get('theme', [SettingsController::class, 'theme'])->name('settings.theme');
@@ -166,6 +169,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('payroll', [SettingsController::class, 'payroll'])->name('settings.payroll');
         Route::post('payroll', [SettingsController::class, 'updatePayrollSettings'])->name('settings.payroll.update');
         Route::post('payroll/tax-brackets', [SettingsController::class, 'updateTaxBrackets'])->name('settings.payroll.tax-brackets.update');
+
+        // Business Locations
+        Route::get('location/{location}/activate-deactivate', [\App\Http\Controllers\BusinessLocationController::class, 'activateDeactivateLocation'])->name('settings.location.activate-deactivate');
+        Route::resource('location', \App\Http\Controllers\BusinessLocationController::class)->names('settings.location');
+        
+        // Invoice Settings
+        Route::get('invoice-schemes/{id}/set-default', [\App\Http\Controllers\InvoiceSchemeController::class, 'setDefault'])->name('settings.invoice-schemes.set-default');
+        Route::resource('invoice-schemes', \App\Http\Controllers\InvoiceSchemeController::class)->names('settings.invoice-schemes');
+        Route::resource('invoice-layouts', \App\Http\Controllers\InvoiceLayoutController::class)->names('settings.invoice-layouts');
     });
 
     // tax calculation
