@@ -38,11 +38,19 @@ use App\Http\Controllers\StockTransferRequestController;
 use Illuminate\Support\Facades\Auth;
 
 
+// Public landing routes
+Route::view('/', 'landing.home')->name('landing.home');
+Route::view('/apps', 'landing.apps')->name('landing.apps');
+Route::view('/pricing', 'landing.pricing')->name('landing.pricing');
+Route::view('/industries', 'landing.industries')->name('landing.industries');
+Route::view('/services', 'landing.services')->name('landing.services');
+Route::view('/resources', 'landing.resources')->name('landing.resources');
+
 include __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('home', [DashboardController::class, 'index'])->name('home');
     // files route 
 
 

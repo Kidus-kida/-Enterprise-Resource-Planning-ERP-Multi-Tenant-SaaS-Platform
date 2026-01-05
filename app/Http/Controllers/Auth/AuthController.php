@@ -16,6 +16,9 @@ class AuthController extends BaseController
 
     public function login()
     {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
         $this->data['pageTitle'] = __('Login');
         return view('auth.login', $this->data);
     }
