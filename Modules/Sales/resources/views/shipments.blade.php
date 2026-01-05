@@ -19,8 +19,8 @@
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
-                            {!! Form::label('shipping_status',  __('Shipping Status') . ':') !!}
-                            {!! Form::select('shipping_status', $shipping_statuses, null, ['class' => 'form-control', 'id' => 'shipping_status_filter', 'placeholder' => __('messages.all')]); !!}
+                            <x-form.label name="shipping_status" :label="__('Shipping Status') . ':'" />
+                            <x-form.select name="shipping_status" :options="$shipping_statuses" class="form-control" id="shipping_status_filter" :placeholder="__('All')" />
                         </div>
                     </div>
                 </div>
