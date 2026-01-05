@@ -30,6 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+
+            // Superadmin module middleware
+            'superadmin' => \Modules\Superadmin\Http\Middleware\SuperadminMiddleware::class,
+            'subscription.check' => \Modules\Superadmin\Http\Middleware\CheckSubscription::class,
+            'module.access' => \Modules\Superadmin\Http\Middleware\CheckModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

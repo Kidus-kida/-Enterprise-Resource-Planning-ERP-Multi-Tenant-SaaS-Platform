@@ -36,15 +36,15 @@ class AppMenuListener
         // Add Stock Adjustment Module Menu
         $menu
             ->submenu(
-                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-ship"></i><span>' . __("Stock-Adjustment") . '</span><span class="menu-arrow"></span></a>'),
+                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-ship"></i><span>Stock-Adjustment</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                  ->add(
-                        Link::toRoute('stock_adjustment.index', __('List Stock Adjustment'))
+                        Link::toRoute('stock_adjustment.index', 'List Stock Adjustment')
                             ->addClass(route_is(['stock_adjustment.index.*']) ? 'active' : ''),
                     )
                     
                     ->add(
-                        Link::toRoute('stockadjustment-settings.create', __('Stock Adjustment Settings'))
+                        Link::toRoute('stockadjustment-settings.create', 'Stock Adjustment Settings')
                             ->addClass(route_is(['stockadjustment-settings.create.*']) ? 'active' : ''),
                     )
                    

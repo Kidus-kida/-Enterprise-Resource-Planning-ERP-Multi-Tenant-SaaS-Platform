@@ -3,12 +3,12 @@
 namespace Modules\Contacts\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+// use Spatie\Activitylog\Traits\LogsActivity;
+// use Spatie\Activitylog\LogOptions;
 
 class ReferenceCount extends Model
 {
-    use LogsActivity;
+    // use LogsActivity;
     protected $table = 'reference_counts';
 
     protected static $logAttributes = ['*'];
@@ -16,7 +16,7 @@ class ReferenceCount extends Model
     protected static $logFillable = true;
 
 
-    protected static $logName = 'Reference Count'; 
+    protected static $logName = 'Reference Count';
 
     /**
      * The attributes that aren't mass assignable.
@@ -24,10 +24,12 @@ class ReferenceCount extends Model
      * @var array
      */
     protected $guarded = ['id'];
-    
+
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['fillable', 'some_other_attribute']);
     }
+    */
 }

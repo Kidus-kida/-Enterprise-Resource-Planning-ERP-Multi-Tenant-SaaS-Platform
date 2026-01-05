@@ -10,46 +10,45 @@
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('deposits.deposits') }}</x-slot>
+            <x-slot name="title">{{ __('Deposits') }}</x-slot>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
                 </li>
                 <li class="breadcrumb-item active">
-                    {{ __('deposits.deposits') }}
+                    {{ __('Deposits') }}
                 </li>
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    @can('deposits.transfer')
+                    @can('Transfer')
                         <a href="javascript:void(0)" data-url="{{ route('deposits.getFundTransfer') }}"
                             class="btn add-btn btn-success" data-ajax-modal="true" data-size="lg"
-                            data-title="{{ __('deposits.transfer') }}">
-                            <i class="fa fa-exchange"></i> {{ __('deposits.transfer') }}
+                            data-title="{{ __('Transfer') }}">
+                            <i class="fa fa-exchange"></i> {{ __('Transfer') }}
                         </a>
                     @endcan
 
                     @can('deposits.cash_deposit')
                         <a href="javascript:void(0)" data-url="{{ route('deposits.getDeposit', ['cash']) }}"
                             class="btn add-btn btn-primary" data-ajax-modal="true" data-size="lg"
-                            data-title="{{ __('deposits.cash_deposit') }}">
-                            <i class="fa fa-money"></i> {{ __('deposits.cash_deposit') }}
+                            data-title="{{ __('Cash Deposit') }}">
+                            <i class="fa fa-money"></i> {{ __('Cash Deposit') }}
                         </a>
                     @endcan
 
                     @can('deposits.card_deposit')
                         <a href="javascript:void(0)" data-url="{{ route('deposits.getDeposit', ['card']) }}"
-                            class="btn add-btn btn-warning" data-ajax-modal="true" data-size="lg"
-                            data-title="{{ __('deposits.card_deposit') }}">
-                            <i class="fa fa-credit-card"></i> {{ __('deposits.card_deposit') }}
+                            class="btn add-btn btn-warning" data-ajax-modal="true" data-size="lg" data-title="Card Deposit">
+                            <i class="fa fa-credit-card"></i> Card Deposit
                         </a>
                     @endcan
 
                     @can('deposits.cheque_deposit')
                         <a href="javascript:void(0)" data-url="{{ route('deposits.getChequeDeposit') }}"
                             class="btn add-btn btn-info" data-ajax-modal="true" data-size="lg"
-                            data-title="{{ __('deposits.cheque_deposit') }}">
-                            <i class="fa fa-address-card-o"></i> {{ __('deposits.cheque_deposit') }}
+                            data-title="{{ __('Cheque Deposit') }}">
+                            <i class="fa fa-address-card-o"></i> {{ __('Cheque Deposit') }}
                         </a>
                     @endcan
                 </div>
@@ -65,27 +64,27 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="list_deposit_transfer_date_range">@lang('lang_v1.date_range'):</label>
+                                    <label for="list_deposit_transfer_date_range">@lang('Date Range'):</label>
                                     <input class="form-control" name="list_deposit_transfer_date_range" type="text"
                                         id="list_deposit_transfer_date_range">
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="list_deposit_transfer_type">@lang('lang_v1.type'):</label>
+                                    <label for="list_deposit_transfer_type">@lang('Type'):</label>
                                     <select class="form-control select2" name="list_deposit_transfer_type"
                                         id="list_deposit_transfer_type">
-                                        <option value="">@lang('lang_v1.all')</option>
-                                        <option value="deposit">{{ __('deposits.deposit') }}</option>
-                                        <option value="fund_transfer">{{ __('deposits.transfer') }}</option>
+                                        <option value="">@lang('All')</option>
+                                        <option value="deposit">{{ __('Deposit') }}</option>
+                                        <option value="fund_transfer">{{ __('Transfer') }}</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="from_account_id">@lang('lang_v1.from_account'):</label>
+                                    <label for="from_account_id">@lang('From Account'):</label>
                                     <select class="form-control select2" name="from_account_id" id="from_account_id">
-                                        <option value="">@lang('lang_v1.all')</option>
+                                        <option value="">@lang('All')</option>
                                         @foreach($accounts as $id => $name)
                                             <option value="{{ $id }}">{{ $name }}</option>
                                         @endforeach
@@ -94,9 +93,9 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="to_account_id">@lang('lang_v1.to_account'):</label>
+                                    <label for="to_account_id">@lang('To Account'):</label>
                                     <select class="form-control select2" name="to_account_id" id="to_account_id">
-                                        <option value="">@lang('lang_v1.all')</option>
+                                        <option value="">@lang('All')</option>
                                         @foreach($accounts as $id => $name)
                                             <option value="{{ $id }}">{{ $name }}</option>
                                         @endforeach
@@ -107,9 +106,9 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="user_id">@lang('lang_v1.user'):</label>
+                                    <label for="user_id">@lang('User'):</label>
                                     <select class="form-control select2" name="user_id" id="user_id">
-                                        <option value="">@lang('lang_v1.all')</option>
+                                        <option value="">@lang('All')</option>
                                         @foreach($users as $id => $name)
                                             <option value="{{ $id }}">{{ $name }}</option>
                                         @endforeach
@@ -131,15 +130,15 @@
                             <table class="table table-striped custom-table" id="list_deposit_transfer_table">
                                 <thead>
                                     <tr>
-                                        <th>@lang('lang_v1.action')</th>
-                                        <th>@lang('lang_v1.date')</th>
-                                        <th>@lang('lang_v1.name')</th>
-                                        <th>@lang('lang_v1.type')</th>
-                                        <th>@lang('lang_v1.amount')</th>
-                                        <th>@lang('lang_v1.from_account')</th>
-                                        <th>@lang('lang_v1.to_account')</th>
-                                        <th>@lang('lang_v1.cheque_number')</th>
-                                        <th>@lang('lang_v1.user')</th>
+                                        <th>@lang('Action')</th>
+                                        <th>@lang('Date')</th>
+                                        <th>@lang('Name')</th>
+                                        <th>@lang('Type')</th>
+                                        <th>@lang('Amount')</th>
+                                        <th>@lang('From Account')</th>
+                                        <th>@lang('To Account')</th>
+                                        <th>@lang('Cheque Number')</th>
+                                        <th>@lang('User')</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -349,7 +348,7 @@
 
                 ],
                 @include('layouts.partials.datatable_export_button')
-                                        "fnDrawCallback": function (oSettings) {
+                                            "fnDrawCallback": function (oSettings) {
                     __currency_convert_recursively($('#other_account_table'));
                 },
                 "rowCallback": function (row, data, index) {
@@ -860,7 +859,7 @@
 
                 ],
                 @include('layouts.partials.datatable_export_button')
-                                        "fnDrawCallback": function (oSettings) {
+                                            "fnDrawCallback": function (oSettings) {
                     __currency_convert_recursively($('#list_deposit_transfer_table'));
                 },
                 "rowCallback": function (row, data, index) {
@@ -907,7 +906,7 @@
 
                 ],
                 @include('layouts.partials.datatable_export_button')
-                                        "fnDrawCallback": function (oSettings) {
+                                            "fnDrawCallback": function (oSettings) {
 
                     __currency_convert_recursively($('#cheques_ob_details_table'));
                 },
