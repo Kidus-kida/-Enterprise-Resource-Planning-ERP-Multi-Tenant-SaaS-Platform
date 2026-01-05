@@ -377,12 +377,26 @@ $(document).ready(function () {
 		if ($('body').hasClass('mini-sidebar')) {
 			$('body').removeClass('mini-sidebar');
 			$('.subdrop + ul').show();
+			// Store the expanded state in sessionStorage
+			sessionStorage.setItem('sidebar-state', 'expanded');
 		} else {
 			$('body').addClass('mini-sidebar');
 			$('.subdrop + ul').hide();
+			// Store the collapsed state in sessionStorage
+			sessionStorage.setItem('sidebar-state', 'collapsed');
 		}
 		return false;
 	});
+
+	// Check sidebar state on page load
+	$(document).ready(function () {
+		var sidebarState = sessionStorage.getItem('sidebar-state');
+		if (sidebarState === 'expanded') {
+			$('body').removeClass('mini-sidebar');
+			$('.subdrop + ul').show();
+		}
+	});
+
 	$(document).on('mouseover', function (e) {
 		e.stopPropagation();
 		if ($('body').hasClass('mini-sidebar') && $('#toggle_btn').is(':visible')) {

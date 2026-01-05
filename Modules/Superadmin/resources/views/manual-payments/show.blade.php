@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="page-wrapper">
+@section('page-content')
     <div class="content container-fluid">
         
         <!-- Page Header -->
@@ -296,7 +295,33 @@
         </div>
 
     </div>
-</div>
+@endsection
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+.timeline-item i {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+}
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 20px;
+    bottom: -20px;
+    width: 2px;
+    background: #e0e0e0;
+}
+</style>
+@endpush
+@endsection
 
 @push('styles')
 <style>
@@ -324,4 +349,3 @@
 }
 </style>
 @endpush
-@endsection
