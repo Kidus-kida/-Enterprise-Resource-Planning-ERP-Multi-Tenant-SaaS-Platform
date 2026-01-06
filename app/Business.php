@@ -103,11 +103,19 @@ class Business extends Model
     // }
 
     /**
-     * Get the Business subscriptions.
+     * Get the Business subscriptions history.
      */
     public function subscriptions()
     {
         return $this->hasMany('\Modules\Superadmin\Models\Subscription');
+    }
+
+    /**
+     * Get the current Business subscription.
+     */
+    public function subscription()
+    {
+        return $this->hasOne('\Modules\Superadmin\Models\Subscription')->latestOfMany();
     }
 
     /**

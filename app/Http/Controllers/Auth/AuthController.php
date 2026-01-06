@@ -25,15 +25,52 @@ class AuthController extends BaseController
 
     public function loginAuth(Request $request)
     {
+        \Log::info("AuthController: loginAuth REACHED. Tenant: " . $request->query('tenant', 'none'));
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
         ]);
+        // Logic for TENANT Login overriding default Auth
+        if ($request->has('tenant')) {
+            $tenantId = $request->query('tenant');
+            
+            // Self-contained connection setup - DO NOT RELY ON MIDDLEWARE HERE
+            $this->setupTenantConnection($tenantId);
+
+            // Ensure connection is set
+            if (config('database.connections.tenant')) {
+                 // Force a new user instance on the tenant connection
+                 $tenantUser = (new \App\Models\User)->setConnection('tenant')->where('email', $request->email)->first();
+                 
+                 if ($tenantUser) {
+                     if (Hash::check($request->password, $tenantUser->password)) {
+                         if ($tenantUser->is_active === 1) {
+                             // SUCCESS: Manual Login
+                             Auth::guard('web')->login($tenantUser);
+                             session(['current_tenant_id' => $tenantId]);
+                             $tenantUser->update(['is_online' => true]);
+                             
+                             return redirect()->route('dashboard');
+                         }
+                         return back()->withErrors(['email' => 'Your account is disabled.']);
+                     }
+                     return back()->withErrors(['password' => 'Incorrect Password']);
+                 }
+                 // If not found in tenant, fall through? No, tenant login should be strict.
+                 return back()->withErrors(['email' => 'Account could not be found in Tenant Database.']);
+            }
+        }
+
+        // ORIGINAL LOGIC (Master DB)
         $user = User::where('email', $request->email)->first();
+        
+        // DEBUG: Check connection
+        // \Log::info("AuthController: Tenant Config present? " . (config('database.connections.tenant') ? 'YES' : 'NO'));
         if (!empty($user)) {
             if ($user->is_active === 1) {
                 $credentials = $request->only('email', 'password');
                 if (Auth::attempt($credentials)) {
+                    // Start session...
                     $user->update([
                         'is_online' => true,
                     ]);
@@ -107,5 +144,42 @@ class AuthController extends BaseController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('login');
+    }
+
+    private function setupTenantConnection($tenantId)
+    {
+        try {
+            $tenant = \Modules\Superadmin\Models\Tenant::on('mysql')->find($tenantId);
+
+            if ($tenant && !empty($tenant->data) && isset($tenant->data['db_host'])) {
+                $credentials = $tenant->data;
+
+                if (isset($credentials['db_name'], $credentials['db_username'], $credentials['db_password'])) {
+                    try {
+                        $password = decrypt($credentials['db_password']);
+                    } catch (\Exception $e) {
+                        $password = $credentials['db_password'];
+                    }
+
+                    \Illuminate\Support\Facades\Config::set('database.connections.tenant', [
+                        'driver' => 'mysql',
+                        'host' => $credentials['db_host'],
+                        'port' => $credentials['db_port'] ?? 3306,
+                        'database' => $credentials['db_name'],
+                        'username' => $credentials['db_username'],
+                        'password' => $password,
+                        'charset' => 'utf8mb4',
+                        'collation' => 'utf8mb4_unicode_ci',
+                        'prefix' => '',
+                        'strict' => false,
+                    ]);
+
+                    \Illuminate\Support\Facades\DB::purge('tenant');
+                    \Illuminate\Support\Facades\DB::reconnect('tenant');
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error("AuthController: Failed to setup tenant connection: " . $e->getMessage());
+        }
     }
 }

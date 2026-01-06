@@ -36,6 +36,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription.check' => \Modules\Superadmin\Http\Middleware\CheckSubscription::class,
             'module.access' => \Modules\Superadmin\Http\Middleware\CheckModuleAccess::class,
         ]);
+        
+        $middleware->web(append: [
+            \App\Http\Middleware\SwitchTenantDatabase::class,
+        ]);
+        
+        // CRITICAL: Ensure SwitchTenantDatabase runs BEFORE Authenticate middleware
+        // Laravel has a built-in priority where Authenticate runs first by default
+        $middleware->priority([
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\SwitchTenantDatabase::class,  // Run BEFORE Auth
+            \Illuminate\Auth\Middleware\Authenticate::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

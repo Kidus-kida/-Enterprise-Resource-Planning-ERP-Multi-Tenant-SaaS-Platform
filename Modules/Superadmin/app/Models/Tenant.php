@@ -10,6 +10,8 @@ use App\Business;
 class Tenant extends Model
 {
     use HasFactory;
+    
+    protected $connection = 'mysql';
 
     protected $keyType = 'string';
     public $incrementing = false;

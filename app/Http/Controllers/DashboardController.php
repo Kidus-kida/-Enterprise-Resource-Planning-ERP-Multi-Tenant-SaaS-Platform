@@ -17,6 +17,10 @@ use App\Http\Controllers\BaseController;
 
 class DashboardController extends BaseController
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
     /**
      * Cache duration in seconds (5 minutes)
      */

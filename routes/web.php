@@ -48,7 +48,7 @@ Route::view('/resources', 'landing.resources')->name('landing.resources');
 
 include __DIR__ . '/auth.php';
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('home', [DashboardController::class, 'index'])->name('home');
     // files route 

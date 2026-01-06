@@ -139,44 +139,30 @@
                                         $permissions = old('custom_permissions', $package->custom_permissions ?? []);
                                     @endphp
                                     
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[contacts]" value="1" class="form-check-input" id="perm_contacts" {{ isset($permissions['contacts']) && $permissions['contacts'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_contacts">Contacts</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[products]" value="1" class="form-check-input" id="perm_products" {{ isset($permissions['products']) && $permissions['products'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_products">Products</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[pos]" value="1" class="form-check-input" id="perm_pos" {{ isset($permissions['pos']) && $permissions['pos'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_pos">POS</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[purchases]" value="1" class="form-check-input" id="perm_purchases" {{ isset($permissions['purchases']) && $permissions['purchases'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_purchases">Purchases</label>
-                                            </div>
+                                    @if($modules->count() > 0)
+                                        <div class="row">
+                                            @foreach($modules as $module)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" name="custom_permissions[{{ $module->key }}]" 
+                                                            value="1" class="form-check-input" 
+                                                            id="perm_{{ $module->key }}" 
+                                                            {{ isset($permissions[$module->key]) && $permissions[$module->key] ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="perm_{{ $module->key }}">
+                                                            <i class="la {{ $module->icon ?? 'la-cube' }}"></i> {{ $module->name }}
+                                                        </label>
+                                                        @if($module->description)
+                                                            <br><small class="text-muted">{{ $module->description }}</small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[accounting]" value="1" class="form-check-input" id="perm_accounting" {{ isset($permissions['accounting']) && $permissions['accounting'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_accounting">Accounting</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[reports]" value="1" class="form-check-input" id="perm_reports" {{ isset($permissions['reports']) && $permissions['reports'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_reports">Reports</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[hr]" value="1" class="form-check-input" id="perm_hr" {{ isset($permissions['hr']) && $permissions['hr'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_hr">HR Management</label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" name="custom_permissions[payroll]" value="1" class="form-check-input" id="perm_payroll" {{ isset($permissions['payroll']) && $permissions['payroll'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="perm_payroll">Payroll</label>
-                                            </div>
+                                    @else
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="fa fa-exclamation-triangle"></i> No modules found. Please run the module seeder first.
                                         </div>
-                                    </div>
+                                    @endif
 
                                     <h4 class="card-title mt-4">Settings</h4>
                                     
