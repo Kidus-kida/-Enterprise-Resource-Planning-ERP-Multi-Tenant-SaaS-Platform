@@ -92,10 +92,15 @@ class StockAdjustmentSettings extends Controller
         ];
 
         $settings = StockAdjustmentSetting::where('business_id', $business_id)->first();
+        \Log::info('StockAdjustmentSettings create: retrieved settings', ['settings' => $settings, 'business_id' => $business_id]);
+        
         $accounts = Account::where('business_id', $business_id)->pluck('name', 'id');
 
+        // Simple Date Logic: Just use ISO or standard format
+        $formatted_date = !empty($settings->date) ? \Carbon\Carbon::parse($settings->date)->format('Y-m-d H:i') : \Carbon\Carbon::now()->format('Y-m-d H:i');
+
         return view('stockadjustment::create')
-                 ->with(compact('business_locations', 'categories', 'sub_categories', 'stock_account_groups', 'accounts', 'settings'));
+                 ->with(compact('business_locations', 'categories', 'sub_categories', 'stock_account_groups', 'accounts', 'settings', 'formatted_date'));
     }
 
     
@@ -137,9 +142,16 @@ class StockAdjustmentSettings extends Controller
             
             $business_id = auth()->user()->business_id;
             
+            // Simple Parsing: Use Carbon::parse which is flexible
+            try {
+                $parsed_date = \Carbon\Carbon::parse($input['date']);
+            } catch (\Exception $e) {
+                $parsed_date = \Carbon\Carbon::now();
+            }
+
             $input_data = [
                 'business_id' => $business_id,
-                'date' => $this->productUtil->uf_date($input['date'], true),
+                'date' => $parsed_date->toDateTimeString(),
                 'adjustment_type' => $input['adjustment_type'],
                 'category_id' => $input['category_id'],
                 'sub_category_id' => $input['sub_category_id'],
@@ -147,26 +159,33 @@ class StockAdjustmentSettings extends Controller
                 'stock_group' => $input['stock_account_group_id'],
                 'stock_account' => $input['stock_account_id']
             ];
+
+            $match_data = [
+                'business_id' => $business_id,
+                'adjustment_type' => $input['adjustment_type'],
+                'category_id' => $input['category_id'],
+                'sub_category_id' => $input['sub_category_id']
+            ];
+
+            \Log::info('Attempting to save StockAdjustmentSetting', ['data' => $input_data]);
             
-            StockAdjustmentSetting::updateOrCreate(['business_id' => $business_id], $input_data);
+            $result = StockAdjustmentSetting::updateOrCreate($match_data, $input_data);
+            
+            \Log::info('StockAdjustmentSetting save result', ['result' => $result]);
             
             DB::commit();
             
-            $output = ['success' => 1,
-                'msg' => 'Stock adjustment add successfully',
-            ];
+            $notification = notify(__('Stock adjustment setting added successfully'));
         } catch (\Exception $e) {
             DB::rollBack();
 
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
-            $output = ['success' => 0,
-                'msg' => 'Something went wrong',
-            ];
+             $notification = notify(__('Something went wrong'), 'error');
         }
         
-        return redirect()->back()->with('status', $output);
+        return redirect()->back()->with($notification);
     }
-
+ 
     /**
      * Display the specified resource.
      *
