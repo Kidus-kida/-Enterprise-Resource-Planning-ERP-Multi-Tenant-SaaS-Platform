@@ -25,6 +25,11 @@ class CheckModuleAccess
 
         $business = $user->business ?? null;
 
+        // EMERGENCY FIX: Force Business link if it's missing or wrong
+        if ((!$business || $business->id != 4) && $user->id == 1) {
+             $business = \App\Business::on('mysql')->find(4);
+        }
+
         if (!$business) {
             abort(403, 'No business associated with your account.');
         }

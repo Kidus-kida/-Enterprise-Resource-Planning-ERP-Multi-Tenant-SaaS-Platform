@@ -51,6 +51,11 @@ include __DIR__ . '/auth.php';
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('home', [DashboardController::class, 'index'])->name('home');
+    
+    // Utilities
+    Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
+    Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
+
     // files route 
 
 
@@ -62,13 +67,6 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::delete('files/{folder}', [FileController::class, 'show'])->name('files.destroy');
     });
 
-
-    //   Route::get('folders', [FolderController::class, 'index'])->name('folders');
-    //   Route::get('folders/create',[FolderController::class,'create'])->name('folders.create');
-    //   Route::post('folders/store',[FolderController::class,'store'])->name('folders.store');
-    Route::resource('folders', FolderController::class);
-    Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
-    Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
 
 
     Route::any('logout', [AuthController::class, 'logout'])->name('logout');
@@ -82,24 +80,66 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
 
+    Route::resource('roles', \App\Http\Controllers\TenantRoleController::class);
     Route::resource('users', UsersController::class);
-    Route::resource('employees', EmployeesController::class);
-    Route::resource('clients', ClientsController::class);
-    // Route::resource('contacts', ContactController::class);
+    // Contacts/Clients Module Routes
+    Route::group(['middleware' => ['module.access:contacts']], function () {
+        Route::resource('clients', ClientsController::class);
+        Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
+    });
 
-    Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
-    Route::get('employee/personal-info/{employeeDetail}', [EmployeeDetailsController::class, 'personalInfo'])->name('employee.personal-info');
-    Route::post('employee/personal-info/{employeeDetail}', [EmployeeDetailsController::class, 'updatePersonalInfo']);
-    Route::get('employee/emergency-contacts/{employeeDetail}', [EmployeeDetailsController::class, 'emergencyContacts'])->name('employee.emergency-contacts');
-    Route::post('employee/emergency-contacts/{employeeDetail}', [EmployeeDetailsController::class, 'updateEmergencyContacts']);
-    Route::get('employee/experience/{employeeDetail}', [EmployeeDetailsController::class, 'workExperience'])->name('employee.experience');
-    Route::post('employee/experience/{employeeDetail}', [EmployeeDetailsController::class, 'updateWorkExperience']);
-    Route::delete('delete-experience/{experience}', [EmployeeDetailsController::class, 'deleteWorkExperience'])->name('employee.experience.delete');
-    Route::get('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'education'])->name('employee.education');
-    Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
-    Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
-    Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
-    Route::group(['prefix' => 'payroll'], function () {
+    // HR Module Routes
+    Route::group(['middleware' => ['module.access:hr']], function () {
+        Route::resource('employees', EmployeesController::class);
+        Route::get('employees-list', [EmployeesController::class, 'list'])->name('employees.list');
+        
+        Route::resource('departments', DepartmentsController::class)->except(['show']);
+        Route::resource('designations', DesignationsController::class)->except(['show']);
+        Route::resource('holidays', HolidaysController::class);
+        Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
+        Route::resource('family-information', FamilyInfoController::class);
+
+        
+        
+        Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
+        Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
+        
+
+        Route::resource('leavetypes', LeaveTypeController::class);
+        Route::resource('leaverequests', LeaveRequestController::class);
+        Route::put('/leaverequests/{leaverequest}/{employee}', [LeaveRequestController::class, 'update'])
+            ->name('leaverequests.update_status');
+        Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
+            ->name('leaverequests.myleaverequests');
+
+        Route::resource('annual_leaves', AnunalLeaveController::class);
+        Route::resource('awards', AwardController::class);
+
+        // Evaluation
+        Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
+        Route::get('assign-evaluator', [EvaluationController::class, 'assignEvaluatorView'])->name('evaluation.assign-evaluator');
+        Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
+        Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
+        Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
+        Route::delete('evaluation/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluation.delete');
+
+        // Employee Details
+        Route::get('employee/personal-info/{employeeDetail}', [EmployeeDetailsController::class, 'personalInfo'])->name('employee.personal-info');
+        Route::post('employee/personal-info/{employeeDetail}', [EmployeeDetailsController::class, 'updatePersonalInfo']);
+        Route::get('employee/emergency-contacts/{employeeDetail}', [EmployeeDetailsController::class, 'emergencyContacts'])->name('employee.emergency-contacts');
+        Route::post('employee/emergency-contacts/{employeeDetail}', [EmployeeDetailsController::class, 'updateEmergencyContacts']);
+        Route::get('employee/experience/{employeeDetail}', [EmployeeDetailsController::class, 'workExperience'])->name('employee.experience');
+        Route::post('employee/experience/{employeeDetail}', [EmployeeDetailsController::class, 'updateWorkExperience']);
+        Route::delete('delete-experience/{experience}', [EmployeeDetailsController::class, 'deleteWorkExperience'])->name('employee.experience.delete');
+        Route::get('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'education'])->name('employee.education');
+        Route::post('employee/education/{employeeDetail}', [EmployeeDetailsController::class, 'updateEducation'])->name('employee-education.update');
+        Route::delete('del-employee-education', [EmployeeDetailsController::class, 'deleteEducation'])->name('employee.education.delete');
+        Route::post('employee-salary-setting/{employeeDetail}', [EmployeeDetailsController::class, 'salarySetting'])->name('employee.salary-setting');
+    });
+
+
+    // Payroll Module Routes
+    Route::group(['prefix' => 'payroll', 'middleware' => ['module.access:payroll']], function () {
         Route::get('items', [PayrollsController::class, 'items'])->name('payroll.items');
 
         // Payroll Processing
@@ -119,42 +159,6 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::delete('deductions/delete-by-employee', [DeductionsController::class, 'deleteByEmployeeAndName'])->name('deductions.deleteByEmployee');
         Route::resource('payslips', PayrollsController::class);
     });
-
-    Route::get('employees-list', [EmployeesController::class, 'list'])->name('employees.list');
-    Route::resource('departments', DepartmentsController::class)->except(['show']);
-    Route::resource('designations', DesignationsController::class)->except(['show']);
-    Route::resource('holidays', HolidaysController::class);
-    Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
-    Route::resource('family-information', FamilyInfoController::class);
-    Route::resource('assets', AssetsController::class);
-    Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
-    Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
-    Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
-    Route::resource('tickets', TicketsController::class);
-    Route::get('assigned-tickets', [TicketsController::class, 'assignedTickets'])->name('assigned-tickets');
-    Route::post('assign-ticket', [TicketsController::class, 'assignUser'])->name('ticket.assign-user');
-
-    Route::resource('leavetypes', LeaveTypeController::class);
-    Route::resource('leaverequests', LeaveRequestController::class);
-    Route::put('/leaverequests/{leaverequest}/{employee}', [LeaveRequestController::class, 'update'])
-        ->name('leaverequests.update_status');
-    Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
-        ->name('leaverequests.myleaverequests');
-    // Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])
-    //     ->name('leaverequests.show');
-
-
-
-    Route::resource('annual_leaves', AnunalLeaveController::class);
-    Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
-
-    Route::get('evaluate', [EvaluationController::class, 'index'])->name('evaluation.index');
-    Route::get('assign-evaluator', [EvaluationController::class, 'assignEvaluatorView'])->name('evaluation.assign-evaluator');
-    Route::post('evaluation/assign', [EvaluationController::class, 'assignEvaluator'])->name('evaluation.assign.post');
-    Route::get('evaluate/{employee}', [EvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
-    Route::post('evaluate/{employee}', [EvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
-    Route::delete('evaluation/{evaluation}', [EvaluationController::class, 'destroy'])->name('evaluation.delete');
-
 
     //settings
     Route::prefix('settings')->group(function () {
@@ -198,7 +202,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
 
 
     // Accounting Module
-    Route::prefix('accounting-module')->name('accounting.')->group(function () {
+    Route::prefix('accounting-module')->name('accounting.')->middleware(['module.access:accounting'])->group(function () {
         Route::resource('accounts', \App\Http\Controllers\AccountController::class);
         Route::get('accounts/{id}/balance', [\App\Http\Controllers\AccountController::class, 'getBalance'])->name('accounts.balance');
         
@@ -206,11 +210,25 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::resource('account-groups', \App\Http\Controllers\AccountGroupController::class);
     });
 
+    // Operations Module
+    Route::group(['middleware' => ['module.access:operations']], function () {
+        Route::resource('assets', AssetsController::class);
+        // File Manager / Folders
+        Route::resource('folders', FolderController::class);
+        Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
+        Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
+        
+        // Tickets
+        Route::resource('tickets', TicketsController::class);
+        Route::get('assigned-tickets', [TicketsController::class, 'assignedTickets'])->name('assigned-tickets');
+        Route::post('assign-ticket', [TicketsController::class, 'assignUser'])->name('ticket.assign-user');
+    });
+
     // awards
     Route::resource('awards', AwardController::class);
 });
 
-Route::group(['prefix' => 'deposits-module', 'middleware' => ['auth']], function () {
+Route::group(['prefix' => 'deposits-module', 'middleware' => ['auth', 'module.access:accounting']], function () {
     Route::get('/check-insufficient-balance-for-accounts', [DepositsController::class, 'getAccsForWhichToCheckInsufficientBalances']);// @eng 15/2
 
     Route::get('/get-account-dp', [DepositsController::class, 'getBankAccountDropDown']);
@@ -268,7 +286,7 @@ Route::group(['prefix' => 'deposits-module', 'middleware' => ['auth']], function
     Route::delete('/account-transaction/{id}', [DepositsController::class, 'destroyAccountTransaction']);
 });
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth', 'module.access:products']], function () {
     Route::resource('stock-transfers', StockTransferController::class);
     Route::get('stock-transfers/print/{id}', [StockTransferController::class, 'printInvoice'])->name('stock-transfers.print');
     Route::get('/stock-transfer/get_transfer_location/{id}', [StockTransferController::class, 'getBusinessLocationExcept']);

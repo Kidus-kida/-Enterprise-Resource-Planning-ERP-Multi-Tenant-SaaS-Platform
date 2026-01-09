@@ -23,7 +23,8 @@ class DatabaseSeeder extends Seeder
             CreateCashAccountSeeder::class,
             TaxRateSeeder::class,
             AccountingModuleSeeder::class,
-            LeaveSeeder::class
+            LeaveSeeder::class,
+            \Modules\Superadmin\Database\Seeders\ModuleSeeder::class,
         ]);
     }
 }

@@ -22,7 +22,7 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 1,
                 'routes' => ['contacts.*'],
-                'permissions' => ['contacts.view', 'contacts.create', 'contacts.edit', 'contacts.delete']
+                'permissions' => ['view-clients', 'create-client', 'edit-client', 'delete-client']
             ],
             [
                 'name' => 'Products',
@@ -33,7 +33,7 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 2,
                 'routes' => ['products.*'],
-                'permissions' => ['products.view', 'products.create', 'products.edit', 'products.delete']
+                'permissions' => ['purchase.view', 'purchase.create', 'purchase.edit', 'purchase.delete']
             ],
             [
                 'name' => 'POS',
@@ -55,7 +55,7 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 4,
                 'routes' => ['purchases.*'],
-                'permissions' => ['purchases.view', 'purchases.create', 'purchases.edit', 'purchases.delete']
+                'permissions' => ['view-taxes','view-expenses','view-estimates','view-invoices']
             ],
             [
                 'name' => 'Accounting',
@@ -66,7 +66,10 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 5,
                 'routes' => ['accounting.*'],
-                'permissions' => ['accounting.view', 'accounting.manage']
+                'permissions' => [
+                    'view-budgetCategories', 'view-budgets', 'view-budgetExpenses', 'view-budgetRevenues',
+                    'view-accounts', 'view-journals', 'view-assets'
+                ]
             ],
             [
                 'name' => 'Reports',
@@ -77,7 +80,7 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 6,
                 'routes' => ['reports.*'],
-                'permissions' => ['reports.view', 'reports.export']
+                'permissions' => ['view-reports']
             ],
             [
                 'name' => 'HR Management',
@@ -88,7 +91,12 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 7,
                 'routes' => ['hr.*'],
-                'permissions' => ['hr.view', 'hr.manage_employees']
+                'permissions' => [
+                    'view-employees', 'view-attendances', 'view-departments', 'view-designations',
+                    'view-request', 'edit-request', 'create-annual-leave', 'create-leave-type',
+                    'view-award', 'view-evaluation', 'view-evaluation-assignment',
+                    'view-holidays', 'view-users', 'view-roles', 'view-backups', 'view-settings'
+                ]
             ],
             [
                 'name' => 'Payroll',
@@ -99,8 +107,30 @@ class ModuleSeeder extends Seeder
                 'is_active' => true,
                 'sort_order' => 8,
                 'routes' => ['payroll.*'],
-                'permissions' => ['payroll.view', 'payroll.process']
+                'permissions' => ['view-PayrollAllowances', 'view-PayrollDeductions', 'view-payrolls', 'view-payslips']
             ],
+            [
+                'name' => 'Deposits',
+                'key' => 'deposits',
+                'icon' => 'la-money',
+                'description' => 'Deposits Module',
+                'is_core' => true,
+                'is_active' => true,
+                'sort_order' => 9,
+                'routes' => ['deposits.*'],
+                'permissions' => ['deposits_module']
+            ],
+            [
+                'name' => 'Operations',
+                'key' => 'operations',
+                'icon' => 'la-briefcase',
+                'description' => 'Assets, File Manager, and Tickets',
+                'is_core' => true,
+                'is_active' => true,
+                'sort_order' => 10,
+                'routes' => ['assets.*', 'folders.*', 'tickets.*'],
+                'permissions' => ['view-assets', 'view-file-manager', 'view-tickets']
+            ]
         ];
 
         foreach ($modules as $moduleData) {

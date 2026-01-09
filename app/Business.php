@@ -14,6 +14,14 @@ class Business extends Model
 
     protected static $logName = 'Business';
     /**
+     * The database connection that should be used by the model.
+     * Business data is stored in the Master database.
+     *
+     * @var string
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string

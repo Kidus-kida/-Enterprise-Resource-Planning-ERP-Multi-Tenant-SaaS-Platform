@@ -62,6 +62,11 @@ class User extends Authenticatable
         'sidebar_color',
     ];
 
+    public function business()
+    {
+        return $this->belongsTo(\App\Business::class);
+    }
+
 
     public function chatMessages()
     {

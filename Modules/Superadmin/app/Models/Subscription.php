@@ -13,6 +13,8 @@ class Subscription extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'business_id',
         'package_id',
