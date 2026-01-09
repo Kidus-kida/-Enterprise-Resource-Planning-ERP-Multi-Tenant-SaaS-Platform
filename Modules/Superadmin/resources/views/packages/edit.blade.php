@@ -175,6 +175,17 @@
                                         <input type="checkbox" name="is_private" value="1" class="form-check-input" id="is_private" {{ old('is_private', $package->is_private) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="is_private">Private Package</label>
                                     </div>
+
+                                    <div class="alert alert-info mt-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="update_subscriptions" value="1" class="form-check-input" id="update_subscriptions">
+                                            <label class="form-check-label font-weight-bold text-dark" for="update_subscriptions">
+                                                Update all existing active subscriptions?
+                                            </label>
+                                            <br>
+                                            <small>Check this to sync permission changes to all tenants currently on this package.</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
