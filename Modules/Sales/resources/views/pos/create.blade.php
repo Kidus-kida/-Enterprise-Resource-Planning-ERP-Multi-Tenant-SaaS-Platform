@@ -343,11 +343,27 @@
         padding: 0 15px;
         z-index: 100;
     }
+    .header-left {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    .header-info {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
     .pos-logo {
         font-size: 1.5rem;
         font-weight: 800;
         color: #1a237e;
         margin-right: 20px;
+        white-space: nowrap;
     }
     .pos-body {
         flex: 1;

@@ -197,7 +197,7 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-cart"></i><span>' . __("Sales") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-taxes', Link::toRoute('sales.index', __('List Sales'))->addClass(route_is(['sales.index']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.index', __('List Sales'))->addClass(request()->get('status') != 'order' && route_is(['sales.index']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('sales.create', __('Add Sales'))->addClass(route_is(['sales.create']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('sales.pos.create', __('POS'))->addClass(route_is(['sales.pos.create']) ? 'active' : ''))
                     ->addIfCan('view-taxes', Link::toRoute('sales.pos.index', __('List POS'))->addClass(route_is(['sales.pos.index']) ? 'active' : ''))
