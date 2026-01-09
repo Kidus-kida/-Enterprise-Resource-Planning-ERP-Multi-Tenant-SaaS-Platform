@@ -23,6 +23,8 @@ use Modules\Sales\Http\Controllers\CashRegisterController;
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('list', [SalesController::class, 'list'])->name('sales.list');
     Route::resource('sales', SalesController::class);
+    Route::get('sales-return/add/{id}', [\Modules\Sales\Http\Controllers\SalesReturnController::class, 'add'])->name('sales-return.add');
+    Route::resource('sales-return', \Modules\Sales\Http\Controllers\SalesReturnController::class);
     Route::get('get_products', [SalesController::class, 'getProducts'])->name('sales.get_products');
     Route::post('get_sell_entry_row', [SalesController::class, 'getSellEntryRow'])->name('sales.get_sell_entry_row');
     Route::get('pos/list', [PosController::class, 'list'])->name('sales.pos.list');

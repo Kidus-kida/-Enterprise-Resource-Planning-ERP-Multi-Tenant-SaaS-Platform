@@ -129,7 +129,8 @@ class PurchaseController extends Controller
                 'transactions.shipping_status',
                 'transactions.shipping_details',
                 'transactions.delivered_to',
-                DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
+                DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid'),
+                DB::raw('COALESCE((SELECT SUM(final_total) FROM transactions as t2 WHERE t2.return_parent_id = transactions.id AND t2.type = "purchase_return" AND t2.deleted_at IS NULL), 0) as amount_returned')
             );
             
         return DataTables::of($purchases)
@@ -167,17 +168,37 @@ class PurchaseController extends Controller
                 return \Carbon\Carbon::parse($row->transaction_date)->format('Y-m-d');
             })
             ->editColumn('status', function ($row) {
+                    $returned = (float) $row->amount_returned;
+                    $net_total = (float) $row->final_total - $returned;
+                    
+                    // If fully returned, show Returned status
+                    if ($net_total <= 0) {
+                        return '<span class="badge bg-warning text-dark">Returned</span>';
+                    }
                     return '<span class="badge" style="color: black">' . ucfirst($row->status) . '</span>';
             })
                 ->editColumn('payment_status', function ($row) {
                     return '<span class="badge" style="color: black">' . ucfirst($row->payment_status) . '</span>';
             })
             ->editColumn('final_total', function ($row) {
-                return number_format((float) $row->final_total, 2);
+                $returned = (float) $row->amount_returned;
+                $net_total = (float) $row->final_total - $returned;
+                
+                // If fully returned, show badge
+                if ($net_total <= 0) {
+                    return '<span class="badge bg-warning text-dark" style="font-size: 0.9em;">Fully Returned</span>';
+                }
+                return number_format($net_total, 2);
             })
             ->addColumn('due', function ($row) {
                 $paid = (float) $row->amount_paid;
-                $total = (float) $row->final_total;
+                $returned = (float) $row->amount_returned;
+                $total = (float) $row->final_total - $returned;
+                
+                // If fully returned, show 0.00
+                if ($total <= 0) {
+                    return '<span class="text-muted">0.00</span>';
+                }
                 return number_format($total - $paid, 2);
             })
             ->editColumn('shipping_status', function ($row) {
@@ -187,7 +208,7 @@ class PurchaseController extends Controller
                 if ($status == 'cancelled') $class = 'bg-danger';
                 return '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
             })
-            ->rawColumns(['action', 'status', 'payment_status', 'shipping_status'])
+            ->rawColumns(['action', 'status', 'payment_status', 'shipping_status', 'final_total', 'due'])
             ->make(true);
     }
 
@@ -205,7 +226,8 @@ class PurchaseController extends Controller
                 ->with(['contact'])
                 ->select(
                     'transactions.*',
-                    DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid')
+                    DB::raw('COALESCE((SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id = transactions.id AND transaction_payments.deleted_at IS NULL), 0) as amount_paid'),
+                    DB::raw('COALESCE((SELECT SUM(final_total) FROM transactions as t2 WHERE t2.return_parent_id = transactions.id AND t2.type = "purchase_return" AND t2.deleted_at IS NULL), 0) as amount_returned')
                 )
                 ->latest()
                 ->get();
@@ -339,7 +361,7 @@ class PurchaseController extends Controller
                 'ref_no', 'status', 'contact_id', 'transaction_date', 'total_before_tax',
                 'location_id', 'discount_amount', 'discount_type', 'tax_id', 'tax_amount', 'shipping_details', 'shipping_charges',
                 'final_total', 'additional_notes', 'pay_term_number', 'pay_term_type',
-                'invoice_no', 'invoice_date', 'is_vat', 'exchange_rate'
+                'invoice_no', 'invoice_date', 'is_vat', 'exchange_rate', 'shipping_status', 'shipping_address', 'delivered_to'
             ]);
 
             $exchange_rate = $transaction_data['exchange_rate'] ?? 1;
@@ -505,7 +527,14 @@ class PurchaseController extends Controller
             ->with(['contact', 'purchase_lines', 'payments']) 
             ->firstOrFail();
 
-        return view('purchase::show', compact('transaction'));
+        // Calculate total returns for this purchase
+        $total_returns = Transaction::where('business_id', $business_id)
+            ->where('type', 'purchase_return')
+            ->where('return_parent_id', $id)
+            ->whereNull('deleted_at')
+            ->sum('final_total');
+
+        return view('purchase::show', compact('transaction', 'total_returns'));
     }
 
     /**
@@ -546,16 +575,17 @@ class PurchaseController extends Controller
                                 ->select('c1.name as category_name')
                                 ->first();
                                 
-            if(!empty($product) && $product->category_name == "Fuel"){
-                 $fuel_tanks = FuelTank::where('product_id', $product_id)->where('location_id', $location_id)->get();
-                 $current_stock = 0;
-                 foreach($fuel_tanks as $tank){
-                     $current_stock +=  $this->transactionUtil->getTankBalanceById($tank->id);
-                 }
-            }else{
+            // Note: FuelTank functionality commented out - FuelTank class doesn't exist in this project
+            // if(!empty($product) && $product->category_name == "Fuel"){
+            //      $fuel_tanks = FuelTank::where('product_id', $product_id)->where('location_id', $location_id)->get();
+            //      $current_stock = 0;
+            //      foreach($fuel_tanks as $tank){
+            //          $current_stock +=  $this->transactionUtil->getTankBalanceById($tank->id);
+            //      }
+            // }else{
                 $current_stock = DB::table('variation_location_details')->where('variation_id', $variation_id)->select('qty_available')->first();
                 $current_stock = !empty($current_stock) ? $current_stock->qty_available : 0;
-            }
+            // }
 
             
             $hide_tax = 'hide';

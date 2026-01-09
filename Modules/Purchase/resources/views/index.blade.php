@@ -138,10 +138,19 @@
     </div>
 @endsection
 
-@push('page-script')
+@push('page-scripts')
 <script>
     window.addEventListener('load', function() {
+        init_purchase_table();
+    });
+
+    function init_purchase_table() {
         if ($('#purchase_table').length) {
+            if (typeof $.fn.DataTable === 'undefined') {
+                setTimeout(init_purchase_table, 100);
+                return;
+            }
+
             var purchase_table = $('#purchase_table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -158,6 +167,6 @@
                 ]
             });
         }
-    });
+    }
 </script>
 @endpush

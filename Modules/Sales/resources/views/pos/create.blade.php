@@ -52,7 +52,10 @@
                                         <div style="display: flex; align-items: center; gap: 5px; width: 100%;">
                                             <span class="input-group-text bg-white"><i class="fa fa-user"></i></span>
                                             <select name="contact_id" id="contact_id" class="form-select select2">
-                                                <option selected value="" disabled>{{ __('-- select option --') }}</option>
+                                                    <option value="" 
+                                                        @if(empty($transaction) || (!empty($transaction) && empty($transaction->contact_id))) selected @endif>
+                                                        {{ __('Walk-in Customer') }}
+                                                    </option>
                                                 @foreach($customers as $id => $name)
                                                     <option value="{{ $id }}" @if(!empty($transaction) && $transaction->contact_id == $id) selected @endif>{{ $name }}</option>
                                                 @endforeach

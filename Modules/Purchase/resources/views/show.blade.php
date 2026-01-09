@@ -38,13 +38,17 @@
                              <strong>{{ __('Ref No') }}:</strong> {{ $transaction->ref_no }}
                         </div>
                         <div class="text-secondary">
-                            <strong>{{ __('Date') }}:</strong> {{ @format_date($transaction->transaction_date) }}
+                            <strong>{{ __('Date') }}:</strong> {{ $transaction->transaction_date->format('Y-m-d H:i') }}
                         </div>
                         <div class="text-secondary">
                             <strong>{{ __('Purchase Status') }}:</strong> 
-                            <span class="badge @if($transaction->status == 'received') bg-success @elseif($transaction->status == 'pending') bg-warning @else bg-secondary @endif">
-                                {{ ucfirst($transaction->status) }}
-                            </span>
+                            @if(($total_returns ?? 0) >= $transaction->final_total && $total_returns > 0)
+                                <span class="badge bg-warning text-dark">Fully Returned</span>
+                            @else
+                                <span class="badge @if($transaction->status == 'received') bg-success @elseif($transaction->status == 'pending') bg-warning @else bg-secondary @endif">
+                                    {{ ucfirst($transaction->status) }}
+                                </span>
+                            @endif
                         </div>
                         <div class="text-secondary">
                             <strong>{{ __('Payment Status') }}:</strong>
@@ -124,13 +128,23 @@
                                         <th>{{ __('Grand Total') }}:</th>
                                         <td>{{ @num_format($transaction->final_total) }}</td>
                                     </tr>
+                                    @if($total_returns > 0)
+                                    <tr class="text-warning">
+                                        <th>{{ __('Returns') }}:</th>
+                                        <td>(-) {{ @num_format($total_returns) }}</td>
+                                    </tr>
+                                    <tr class="fw-bold">
+                                        <th>{{ __('Net Total') }}:</th>
+                                        <td>{{ @num_format($transaction->final_total - $total_returns) }}</td>
+                                    </tr>
+                                    @endif
                                      <tr>
                                         <th>{{ __('Paid') }}:</th>
                                         <td>{{ @num_format($transaction->payments->sum('amount')) }}</td>
                                     </tr>
                                     <tr class="text-danger fw-bold">
                                         <th>{{ __('Due') }}:</th>
-                                        <td>{{ @num_format($transaction->final_total - $transaction->payments->sum('amount')) }}</td>
+                                        <td>{{ @num_format($transaction->final_total - ($total_returns ?? 0) - $transaction->payments->sum('amount')) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -155,7 +169,7 @@
                             <tbody>
                                 @foreach($transaction->payments as $payment)
                                     <tr>
-                                        <td>{{ @format_date($payment->paid_on) }}</td>
+                                        {{ $payment->paid_on->format('Y-m-d H:i') }}
                                         <td>{{ $payment->payment_ref_no }}</td>
                                         <td>{{ @num_format($payment->amount) }}</td>
                                         <td>{{ ucfirst($payment->method) }}</td>

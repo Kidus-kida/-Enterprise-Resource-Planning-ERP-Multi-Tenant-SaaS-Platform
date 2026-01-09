@@ -2269,7 +2269,7 @@ class ProductUtil extends Util
         
         
         
-        $sum = Transaction::leftJoin('purchase_lines', 'transactions.id', 'purchase_lines.transaction_id')
+                $sum = Transaction::leftJoin('purchase_lines', 'transactions.id', 'purchase_lines.transaction_id')
                     ->where('transactions.location_id', $location_id)
                     
                     ->where(function ($query) {
@@ -2282,7 +2282,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['purchase','purchase_return']) 
-                    ->where('purchase_lines.product_id', $variation_id)
                     ->where('purchase_lines.variation_id', $variation_id)
                     ->where('transactions.status','received')
                     ->whereNull('purchase_lines.deleted_at')
@@ -2305,7 +2304,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['purchase_transfer'])
-                    ->where('purchase_lines.product_id', $variation_id)
                     ->where('purchase_lines.variation_id', $variation_id)
                     ->where('transactions.status','received')
                     ->whereNull('purchase_lines.deleted_at')
@@ -2327,7 +2325,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['production_purchase'])
-                    ->where('purchase_lines.product_id', $variation_id)
                     ->where('purchase_lines.variation_id', $variation_id)
                     ->where('transactions.status','received')
                     ->whereNull('purchase_lines.deleted_at')
@@ -2350,7 +2347,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['opening_stock'])
-                    ->where('purchase_lines.product_id', $variation_id)
                     ->where('purchase_lines.variation_id', $variation_id)
                     ->where('transactions.status','received')
                     ->whereNull('purchase_lines.deleted_at')
@@ -2372,7 +2368,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['stock_adjustment'])
-                    ->where('stock_adjustment_lines.product_id', $variation_id)
                     ->where('stock_adjustment_lines.variation_id', $variation_id)
                     ->where('transactions.status','received')
                     ->select(
@@ -2407,7 +2402,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['sell','sell_return'])
-                    ->where('transaction_sell_lines.product_id', $variation_id)
                     ->where('transaction_sell_lines.variation_id', $variation_id)
                     ->where('transactions.status','final')
                     ->whereNull('transaction_sell_lines.deleted_at')
@@ -2451,7 +2445,6 @@ class ProductUtil extends Util
                     })
                     
                     ->whereIn('transactions.type',['production_sell'])
-                    ->where('transaction_sell_lines.product_id', $variation_id)
                     ->where('transaction_sell_lines.variation_id', $variation_id)
                     ->where('transactions.status','final')
                     ->whereNull('transaction_sell_lines.deleted_at')

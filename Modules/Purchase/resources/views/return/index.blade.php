@@ -47,11 +47,19 @@
 
 @endsection
 
-@push('page-script')
+@push('page-scripts')
 <script>
     window.addEventListener('load', function() {
+        init_purchase_return_table();
+    });
 
+    function init_purchase_return_table() {
         if ($('#purchase_return_datatable').length) {
+            if (typeof $.fn.DataTable === 'undefined') {
+                setTimeout(init_purchase_return_table, 100);
+                return;
+            }
+
             var purchase_return_table = $('#purchase_return_datatable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -75,6 +83,6 @@
                 ]
             });
         }
-    });
+    }
 </script>
 @endpush

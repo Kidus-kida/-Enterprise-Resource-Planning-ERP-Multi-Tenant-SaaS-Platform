@@ -162,7 +162,7 @@ class AppMenuListener
 
         // Sales
         if (auth()->user()->canAny(['view-taxes', 'view-expenses', 'view-estimates', 'view-invoices'])) {
-            $activeClass = route_is(["sales.*", "taxes.*", "expenses.*", "estimates.*", "invoices.*"]) ? "active" : "";
+            $activeClass = route_is(["sales.*", "taxes.*", "expenses.*", "estimates.*", "invoices.*", "sales-return.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-cart"></i><span>' . __("Sales") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
@@ -175,6 +175,7 @@ class AppMenuListener
                     ->addIfCan('view-taxes', Link::toRoute('sales.quotation.index', __('List Quotation'))->addClass(route_is(['sales.quotation.index']) ? 'active' : ''))
                     ->addIfCan('view-taxes', Link::to(route('sales.index', ['status' => 'order']), __('Sales Order'))->addClass(request()->get('status') == 'order' && route_is('sales.index') ? 'active' : ''))
                     ->addIfCan('view-taxes', Link::toRoute('sales.over_limit_sales', __('Over Limit Sales'))->addClass(route_is(['sales.over_limit_sales']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales-return.index', __('Sales Returns'))->addClass(route_is(['sales-return.*']) ? 'active' : ''))
                     ->addIfCan('view-taxes', Link::toRoute('taxes.index', __('Taxes'))->addClass(route_is(['taxes.*']) ? 'active' : ''))
                     ->addIfCan('view-expenses', Link::toRoute('expenses.index', __('Expenses'))->addClass(route_is(['expenses.*']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('estimates.index', __('Estimates'))->addClass(route_is(['estimates.*']) ? 'active' : ''))

@@ -110,7 +110,8 @@ class PosController extends Controller
                 'transactions.payment_status',
                 'transactions.final_total',
                 'transactions.status as status',
-                DB::raw('(SELECT SUM(IF(tp.is_return = 1, -1*tp.amount, tp.amount)) FROM transaction_payments AS tp WHERE tp.transaction_id=transactions.id) as total_paid')
+                DB::raw('(SELECT SUM(IF(tp.is_return = 1, -1*tp.amount, tp.amount)) FROM transaction_payments AS tp WHERE tp.transaction_id=transactions.id) as total_paid'),
+                DB::raw('(SELECT SUM(final_total) FROM transactions AS T WHERE T.return_parent_id=transactions.id AND T.type="sell_return") as amount_returned'),
             ]);
 
         return datatables()->of($sales)
@@ -123,6 +124,9 @@ class PosController extends Controller
                                 </a>
                                 <a class="dropdown-item pointer" onclick="pos_print_invoice(' . $row->id . ')">
                                     <i class="fa-solid fa-print m-r-5"></i> ' . __('Print') . '
+                                </a>
+                                <a class="dropdown-item" href="' . route('sales-return.add', $row->id) . '">
+                                    <i class="fa-solid fa-rotate-left m-r-5"></i> ' . __('Sales Return') . '
                                 </a>
                                 <a class="dropdown-item" href="' . route('sales.edit', $row->id) . '">
                                     <i class="fa-solid fa-pencil m-r-5"></i> ' . __('Edit') . '
@@ -137,7 +141,10 @@ class PosController extends Controller
                 return $html;
             })
             ->editColumn('customer_name', function ($row) {
-                $name = $row->customer_name ?? '';
+                $name = $row->customer_name;
+                if (empty($name)) {
+                    return '<span class="badge bg-secondary">Walk-in Customer</span>';
+                }
                 if ($row->is_walk_in == 1) {
                     return $name . ' <span class="badge bg-secondary">Walk-in</span>';
                 }
@@ -146,10 +153,19 @@ class PosController extends Controller
             ->editColumn('transaction_date', function ($row) {
                 return $row->transaction_date ? \Carbon\Carbon::parse($row->transaction_date)->format('Y-m-d H:i') : '';
             })
-            ->editColumn('final_total', '<span class="display_currency" data-currency_symbol="true">{{$final_total}}</span>')
+            ->editColumn('final_total', function ($row) {
+                $html = '<span class="display_currency" data-currency_symbol="true">' . $row->final_total . '</span>';
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    $html .= '<br><span class="badge bg-danger">' . __('Fully Returned') . '</span>';
+                }
+                return $html;
+            })
             ->editColumn('total_paid', '<span class="display_currency" data-currency_symbol="true">{{$total_paid}}</span>')
             ->addColumn('total_due', function ($row) {
-                $due = $row->final_total - ($row->total_paid ?? 0);
+                $due = $row->final_total - ($row->total_paid ?? 0) - ($row->amount_returned ?? 0);
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    return '<span class="text-muted">0.00</span>';
+                }
                 return '<span class="display_currency" data-currency_symbol="true">' . number_format($due, 2) . '</span>';
             })
             ->editColumn('payment_status', function ($row) {
@@ -158,9 +174,31 @@ class PosController extends Controller
                 if ($status == 'due') $class = 'bg-danger';
                 if ($status == 'partial') $class = 'bg-warning';
                 if ($status == 'paid') $class = 'bg-success';
-                return '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                $html = '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                if ($row->amount_returned > 0) {
+                    $html .= ' <span class="badge bg-danger">' . __('Returned') . '</span>';
+                }
+                
+                return $html;
             })
-            ->rawColumns(['action', 'customer_name', 'final_total', 'total_paid', 'total_due', 'payment_status', 'transaction_date'])
+            ->editColumn('status', function ($row) {
+                $status = $row->status;
+                $class = 'bg-light text-dark';
+                if ($status == 'final') $class = 'bg-success';
+                if ($status == 'draft') $class = 'bg-secondary';
+                if ($status == 'order') $class = 'bg-info';
+                
+                $html = '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    $html = '<span class="badge bg-danger">' . __('Returned') . '</span>';
+                }
+                
+                return $html;
+            })
+            ->rawColumns(['action', 'customer_name', 'final_total', 'total_paid', 'total_due', 'payment_status', 'status', 'transaction_date'])
             ->make(true);
     }
 
@@ -181,7 +219,6 @@ class PosController extends Controller
         }
 
         $register_details = $this->cashRegisterUtil->getCurrentCashRegister(auth()->user()->id);
-        $walk_in_customer = $this->contactUtil->getWalkInCustomer($business_id);
         $business_details = $this->businessUtil->getDetails($business_id);
         
         $business_locations = BusinessLocation::where('business_id', $business_id)->pluck('name', 'id');
@@ -214,9 +251,6 @@ class PosController extends Controller
         $default_store_id = Store::where('location_id', $default_location_id)->first()->id ?? null;
 
         $total_outstanding = 0;
-        if (!empty($walk_in_customer)) {
-            $total_outstanding = $this->contactUtil->getCustomerBalance($walk_in_customer['id'], $business_id, true);
-        }
 
         return view('sales::pos.create', compact(
             'business_locations',
@@ -234,7 +268,6 @@ class PosController extends Controller
             'shortcuts',
             'price_groups',
             'types_of_service',
-            'walk_in_customer',
             'total_outstanding'
         ));
     }
@@ -354,9 +387,9 @@ class PosController extends Controller
 
             // Handle Walk-in Customer if contact_id is empty
             $contact_id = $request->get('contact_id', null);
+            // If contact_id is empty, we treat it as a Walk-in Customer (Null contact)
             if (empty($contact_id)) {
-                $walk_in_customer = $this->contactUtil->getWalkInCustomer($business_id);
-                $contact_id = $walk_in_customer['id'] ?? null;
+                $contact_id = null;
             }
             $input['contact_id'] = $contact_id;
 
@@ -542,8 +575,7 @@ class PosController extends Controller
             // Customer group details
             $contact_id = $request->get('contact_id', null);
             if (empty($contact_id)) {
-                $walk_in_customer = $this->contactUtil->getWalkInCustomer($business_id);
-                $contact_id = $walk_in_customer['id'] ?? null;
+                $contact_id = null;
             }
             $input['contact_id'] = $contact_id;
             
@@ -794,6 +826,12 @@ class PosController extends Controller
                     return ['success' => 0, 'msg' => __('messages.something_went_wrong')];
                 }
 
+                // Check if return exists
+                $return_exists = Transaction::where('return_parent_id', $id)->where('type', 'sell_return')->exists();
+                if ($return_exists) {
+                    return ['success' => 0, 'msg' => __('Cannot delete sale as it has associated returns')];
+                }
+
                 DB::beginTransaction();
 
                 // Delete sell lines and adjust stock
@@ -805,6 +843,10 @@ class PosController extends Controller
                 }
 
                 $transaction->delete();
+                
+                // Delete account transactions - using instance deletion to trigger balance reversal
+                \Modules\Accounting\Models\AccountTransaction::where('transaction_id', $id)->get()->each->delete();
+                \App\Models\ContactLedger::where('transaction_id', $id)->delete();
                 
                 DB::commit();
 

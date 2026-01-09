@@ -266,7 +266,8 @@ class SalesController extends Controller
                 'transactions.shipping_status',
                 'transactions.shipping_details',
                 'transactions.delivered_to',
-                DB::raw('(SELECT SUM(IF(tp.is_return = 1, -1*tp.amount, tp.amount)) FROM transaction_payments AS tp WHERE tp.transaction_id=transactions.id) as total_paid')
+                DB::raw('(SELECT SUM(IF(tp.is_return = 1, -1*tp.amount, tp.amount)) FROM transaction_payments AS tp WHERE tp.transaction_id=transactions.id) as total_paid'),
+                DB::raw('(SELECT SUM(final_total) FROM transactions AS T WHERE T.return_parent_id=transactions.id AND T.type="sell_return") as amount_returned'),
             ]);
 
         return datatables()->of($sales)
@@ -276,6 +277,9 @@ class SalesController extends Controller
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" href="' . route('sales.show', $row->id) . '">
                                     <i class="fa-solid fa-eye m-r-5"></i> ' . __('View') . '
+                                </a>
+                                <a class="dropdown-item" href="' . route('sales-return.add', $row->id) . '">
+                                    <i class="fa-solid fa-rotate-left m-r-5"></i> ' . __('Sales Return') . '
                                 </a>';
                 
                 if ($request->has('only_shipments')) {
@@ -298,7 +302,10 @@ class SalesController extends Controller
                 return $html;
             })
             ->editColumn('customer_name', function ($row) {
-                $name = $row->customer_name ?? '';
+                $name = $row->customer_name;
+                if (empty($name)) {
+                    return '<span class="badge bg-secondary">Walk-in Customer</span>';
+                }
                 if ($row->is_walk_in == 1) {
                     return $name . ' <span class="badge bg-secondary">Walk-in</span>';
                 }
@@ -307,10 +314,16 @@ class SalesController extends Controller
             ->editColumn('transaction_date', function ($row) {
                 return $row->transaction_date ? \Carbon\Carbon::parse($row->transaction_date)->format('Y-m-d H:i') : '';
             })
-            ->editColumn('final_total', '<span class="display_currency" data-currency_symbol="true">{{$final_total}}</span>')
+            ->editColumn('final_total', function ($row) {
+                $html = '<span class="display_currency" data-currency_symbol="true">' . $row->final_total . '</span>';
+                return $html;
+            })
             ->editColumn('total_paid', '<span class="display_currency" data-currency_symbol="true">{{$total_paid}}</span>')
             ->addColumn('total_due', function ($row) {
-                $due = $row->final_total - ($row->total_paid ?? 0);
+                $due = $row->final_total - ($row->total_paid ?? 0) - ($row->amount_returned ?? 0);
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    return '<span class="text-muted">0.00</span>';
+                }
                 return '<span class="display_currency" data-currency_symbol="true">' . number_format($due, 2) . '</span>';
             })
             ->editColumn('payment_status', function ($row) {
@@ -319,7 +332,14 @@ class SalesController extends Controller
                 if ($status == 'due') $class = 'bg-danger';
                 if ($status == 'partial') $class = 'bg-warning';
                 if ($status == 'paid') $class = 'bg-success';
-                return '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                $html = '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    $html = '<span class="badge bg-danger">' . __('Fully Returned') . '</span>';
+                }
+                
+                return $html;
             })
             ->editColumn('shipping_status', function ($row) {
                 $status = $row->shipping_status;
@@ -334,7 +354,14 @@ class SalesController extends Controller
                 if ($status == 'final') $class = 'bg-success';
                 if ($status == 'draft') $class = 'bg-secondary';
                 if ($status == 'order') $class = 'bg-info';
-                return '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                $html = '<span class="badge ' . $class . '">' . ucfirst($status) . '</span>';
+                
+                if ($row->final_total - $row->amount_returned <= 0 && $row->amount_returned > 0) {
+                    $html = '<span class="badge bg-danger">' . __('Returned') . '</span>';
+                }
+                
+                return $html;
             })
             ->rawColumns(['action', 'customer_name', 'final_total', 'total_paid', 'total_due', 'payment_status', 'shipping_status', 'status', 'transaction_date'])
             ->make(true);
@@ -745,6 +772,12 @@ class SalesController extends Controller
             ])
             ->firstOrFail();
 
+        // Calculate amount returned
+        $amount_returned = Transaction::where('return_parent_id', $sale->id)
+            ->where('type', 'sell_return')
+            ->sum('final_total');
+        $sale->amount_returned = $amount_returned;
+
         foreach ($sale->sell_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
                 $formated_sell_line = $this->transactionUtil->recalculateSellLineTotals($business_id, $value);
@@ -767,6 +800,57 @@ class SalesController extends Controller
     }
 
 
+
+    public function destroy($id)
+    {
+        if (!auth()->user()->can('sell.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = request()->session()->get('user.business_id') ?? (auth()->user()->business_id ?? 1);;
+
+            $transaction = Transaction::where('business_id', $business_id)
+                ->where('id', $id)
+                ->where('type', 'sell')
+                ->with(['sell_lines'])
+                ->first();
+
+            if (!$transaction) {
+                return redirect()->back()->with('error', __('messages.something_went_wrong'));
+            }
+
+            // Check if return exists
+            $return_exists = Transaction::where('return_parent_id', $id)->where('type', 'sell_return')->exists();
+            if ($return_exists) {
+                return redirect()->back()->with('error', __('Cannot delete sale as it has associated returns'));
+            }
+
+            DB::beginTransaction();
+
+            // Delete sell lines and adjust stock
+            foreach ($transaction->sell_lines as $sell_line) {
+                if ($transaction->status == 'final') {
+                     $this->productUtil->updateProductQuantity($transaction->location_id, $sell_line->product_id, $sell_line->variation_id, $sell_line->quantity, 0, 'increase', $transaction->store_id);
+                     $this->productUtil->updateProductQuantityStore($transaction->location_id, $sell_line->product_id, $sell_line->variation_id, $sell_line->quantity, $transaction->store_id, 'increase');
+                }
+            }
+
+            $transaction->delete();
+            
+            // Delete account transactions - using instance deletion to trigger balance reversal
+            \Modules\Accounting\Models\AccountTransaction::where('transaction_id', $id)->get()->each->delete();
+            \App\Models\ContactLedger::where('transaction_id', $id)->delete();
+            
+            DB::commit();
+
+            return redirect()->route('sales.index')->with(notify(__('Sale deleted successfully')));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Delete Sale Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', __('Something went wrong'));
+        }
+    }
 
     public function getProducts(Request $request)
     {

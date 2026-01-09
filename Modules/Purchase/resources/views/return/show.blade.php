@@ -123,8 +123,13 @@
 </div>
 
 <script type="text/javascript">
-	$(document).ready(function(){
-		var element = $('div.modal-xl');
-		__currency_convert_recursively(element);
-	});
+    function init_return_show() {
+        if (typeof $ === 'undefined' || typeof __currency_convert_recursively === 'undefined') {
+            setTimeout(init_return_show, 100);
+            return;
+        }
+        var element = $('div.modal-xl');
+        __currency_convert_recursively(element);
+    }
+    init_return_show();
 </script>
