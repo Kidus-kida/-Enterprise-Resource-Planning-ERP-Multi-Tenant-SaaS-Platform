@@ -52,6 +52,32 @@ class TenantService
         ];
     }
 
+    public function validateConnection($host, $database, $username, $password, $port = 3306)
+    {
+        try {
+            // Create a temporary connection config
+            config(['database.connections.tenant_temp' => [
+                'driver' => 'mysql',
+                'host' => $host,
+                'port' => $port,
+                'database' => $database,
+                'username' => $username,
+                'password' => $password,
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => false,
+            ]]);
+
+            DB::purge('tenant_temp');
+            DB::connection('tenant_temp')->getPdo();
+            
+            return ['success' => true, 'message' => 'Connection successful'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function validateTenantDatabaseConnection(Tenant $tenant)
     {
         try {

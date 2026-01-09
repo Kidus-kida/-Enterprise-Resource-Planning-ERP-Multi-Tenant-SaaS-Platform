@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="page-wrapper">
+@section('page-content')
     <div class="content container-fluid">
         
         <!-- Page Header -->
@@ -41,7 +40,13 @@
                                     <div class="form-group">
                                         <label>Package</label>
                                         <input type="text" class="form-control" value="{{ $subscription->package->name ?? 'N/A' }}" disabled>
-                                        <small class="form-text text-muted">Package cannot be changed. Create new subscription to change package.</small>
+                                        <div class="form-check mt-2">
+                                            <input type="checkbox" name="sync_package" value="1" class="form-check-input" id="sync_package">
+                                            <label class="form-check-label" for="sync_package">
+                                                Update/Sync with current Package Permissions
+                                                <i class="fa fa-info-circle text-info" data-bs-toggle="tooltip" title="Check this to update the subscription's permissions to match the current Package settings. Use this if you added new modules to the package."></i>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div class="form-group">

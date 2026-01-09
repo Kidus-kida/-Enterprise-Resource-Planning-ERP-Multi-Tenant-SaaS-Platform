@@ -42,10 +42,11 @@ class TenantManagementController extends Controller
         $tenant = $business->tenant;
         
         if (!$tenant) {
-            $tenant = $this->tenantService->createTenantRecord($business);
+            $subdomain = $business->subdomain ?: \Illuminate\Support\Str::slug($business->name);
+            $tenant = $this->tenantService->createTenantRecord($business, $subdomain);
         }
         
-        $setupInstructions = $this->tenantService->generateSetupInstructions($business, $tenant);
+        $setupInstructions = $this->tenantService->generateSetupInstructions($tenant);
         
         return view('superadmin::tenant-management.setup-wizard', compact('business', 'tenant', 'setupInstructions'));
     }
@@ -57,8 +58,9 @@ class TenantManagementController extends Controller
         $validated = $request->validate([
             'database_name' => 'required|string',
             'database_host' => 'required|string',
+            'database_port' => 'required|numeric',
             'database_username' => 'required|string',
-            'database_password' => 'required|string',
+            'database_password' => 'nullable|string',
         ]);
         
         try {
@@ -66,17 +68,19 @@ class TenantManagementController extends Controller
                 $validated['database_host'],
                 $validated['database_name'],
                 $validated['database_username'],
-                $validated['database_password']
+                $validated['database_password'] ?? '',
+                $validated['database_port']
             );
             
             if ($result['success']) {
                 $tenant->update([
-                    'data' => json_encode([
+                    'data' => [
                         'db_host' => $validated['database_host'],
+                        'db_port' => $validated['database_port'],
                         'db_name' => $validated['database_name'],
                         'db_username' => $validated['database_username'],
-                        'db_password' => encrypt($validated['database_password']),
-                    ])
+                        'db_password' => encrypt($validated['database_password'] ?? ''),
+                    ]
                 ]);
                 
                 return redirect()->back()->with('success', 'Database connection verified and saved!');
@@ -88,20 +92,39 @@ class TenantManagementController extends Controller
         }
     }
 
-    public function runMigrations($tenantId)
+    public function runMigrations(Request $request, $tenantId)
     {
+        // Increase execution time for heavy migration tasks
+        set_time_limit(0);
+        ini_set('max_execution_time', 0);
+
         $tenant = \Modules\Superadmin\Models\Tenant::with('business')->findOrFail($tenantId);
         
-        if (!$tenant->data) {
+        if (!isset($tenant->data['db_host'])) {
             return redirect()->back()->with('error', 'Database credentials not configured!');
         }
+
+        // Validate Admin User Input
+        $request->validate([
+            'admin_firstname' => 'required|string',
+            'admin_lastname' => 'required|string',
+            'admin_email' => 'required|email',
+            'admin_password' => 'required|min:8',
+            'admin_username' => 'required|string',
+        ]);
         
         try {
-            $credentials = json_decode($tenant->data, true);
+            $credentials = isset($tenant->data['db_host']) ? $tenant->data : json_decode($tenant->data, true);
             
+            // Handle if data is array or object/string due to recent changes/casts
+            if (!is_array($credentials)) {
+                 $credentials = json_decode($tenant->data, true);
+            }
+
             config(['database.connections.tenant' => [
                 'driver' => 'mysql',
                 'host' => $credentials['db_host'],
+                'port' => $credentials['db_port'] ?? 3306,
                 'database' => $credentials['db_name'],
                 'username' => $credentials['db_username'],
                 'password' => decrypt($credentials['db_password']),
@@ -110,20 +133,153 @@ class TenantManagementController extends Controller
             ]]);
             
             \DB::purge('tenant');
-            \DB::connection('tenant')->getPdo();
+            \DB::reconnect('tenant');
             
-            \Artisan::call('migrate', [
+            // LOGGING START
+            $debugLog = "--- DEBUG INFO ---\n";
+            $debugLog .= "Host: " . config('database.connections.tenant.host') . "\n";
+            $debugLog .= "Port: " . config('database.connections.tenant.port') . "\n";
+            $debugLog .= "Database: " . config('database.connections.tenant.database') . "\n";
+            $debugLog .= "Username: " . config('database.connections.tenant.username') . "\n";
+            $debugLog .= "------------------\n\n";
+
+            // COLLECT MIGRATION PATHS
+            $migrationPaths = [];
+            $migrationPaths[] = 'database/migrations'; // Root migrations
+            
+            // Add Module migrations
+            $modules = \Nwidart\Modules\Facades\Module::all();
+            foreach ($modules as $module) {
+                $modulePath = 'Modules/' . $module->getName() . '/database/migrations';
+                if (file_exists(base_path($modulePath))) {
+                    $migrationPaths[] = $modulePath;
+                }
+            }
+            
+            $debugLog .= "Migration Paths:\n" . implode("\n", $migrationPaths) . "\n\n";
+
+            // Use migrate:fresh to Ensure clean slate (drops existing tables like label_task from failed runs)
+            \Artisan::call('migrate:fresh', [
                 '--database' => 'tenant',
                 '--force' => true,
+                '--path' => $migrationPaths,
             ]);
+            
+            $migrationOutput = \Artisan::output();
+            $debugLog .= "Migration Command Output:\n" . ($migrationOutput ?: "(No output captured)") . "\n\n";
+
+            // VERIFY TABLES
+            try {
+                $tables = \DB::connection('tenant')->select('SHOW TABLES');
+                $debugLog .= "--- VERIFICATION ---\n";
+                $debugLog .= "Tables Found in '" . config('database.connections.tenant.database') . "': " . count($tables) . "\n";
+                foreach ($tables as $table) {
+                    $tableArray = (array)$table;
+                    $debugLog .= "- " . reset($tableArray) . "\n";
+                }
+            } catch (\Exception $e) {
+                $debugLog .= "Error listing tables: " . $e->getMessage() . "\n";
+            }
+            // LOGGING END
+
+            $output = $debugLog;
+
+            // SEEDING LOGIC
+            // Create Business in Tenant DB
+            $tenantBusinessId = \DB::connection('tenant')->table('businesses')->insertGetId([
+                'name' => $tenant->business->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+                 // Add other necessary fields default or from main business if structure matches
+            ]);
+
+            // Create Admin User in Tenant DB
+            // Create Admin User in Tenant DB
+            $tenantUserId = \DB::connection('tenant')->table('users')->insertGetId([
+                'firstname' => $request->admin_firstname,
+                'lastname' => $request->admin_lastname,
+                'email' => $request->admin_email,
+                'username' => $request->admin_username,
+                'password' => \Hash::make($request->admin_password),
+                'type' => 'admin', // Changed from Super Admin to restricted admin
+                'is_active' => 1,
+                'business_id' => $tenantBusinessId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // RUN TENANT PERMISSION SEEDER
+            \Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\TenantPermissionSeeder',
+                '--database' => 'tenant',
+                '--force' => true
+            ]);
+            $debugLog .= "Permission Seeder Output:\n" . \Artisan::output() . "\n";
+
+            // ASSIGN 'Tenant Admin' ROLE
+            try {
+                $roleId = \DB::connection('tenant')->table('roles')->where('name', 'Tenant Admin')->value('id');
+                if ($roleId) {
+                    \DB::connection('tenant')->table('model_has_roles')->insert([
+                        'role_id' => $roleId,
+                        'model_type' => 'App\Models\User',
+                        'model_id' => $tenantUserId
+                    ]);
+                    $debugLog .= "Assigned 'Tenant Admin' role to user.\n";
+                } else {
+                    $debugLog .= "WARNING: 'Tenant Admin' role not found after seeding.\n";
+                }
+            } catch (\Exception $e) {
+                $debugLog .= "Error assigning role: " . $e->getMessage() . "\n";
+            }
+
+            // SEED DEFAULT SETTINGS (Theme & Localization)
+            $now = now();
+            $settings = [
+                // Theme Settings
+                ['group' => 'theme', 'name' => 'name', 'payload' => json_encode('Tewos HR')],
+                ['group' => 'theme', 'name' => 'theme', 'payload' => json_encode('light')],
+                ['group' => 'theme', 'name' => 'layout', 'payload' => json_encode('vertical')],
+                ['group' => 'theme', 'name' => 'color_scheme', 'payload' => json_encode('light')],
+                ['group' => 'theme', 'name' => 'layout_width', 'payload' => json_encode('fluid')],
+                ['group' => 'theme', 'name' => 'layout_position', 'payload' => json_encode('fixed')],
+                ['group' => 'theme', 'name' => 'topbar_color', 'payload' => json_encode('light')],
+                ['group' => 'theme', 'name' => 'sidebar_size', 'payload' => json_encode('lg')],
+                ['group' => 'theme', 'name' => 'sidebar_view', 'payload' => json_encode('default')],
+                ['group' => 'theme', 'name' => 'sidebar_color', 'payload' => json_encode('dark')],
+                ['group' => 'theme', 'name' => 'logo_light', 'payload' => json_encode('')],
+                ['group' => 'theme', 'name' => 'logo_dark', 'payload' => json_encode('')],
+                ['group' => 'theme', 'name' => 'favicon', 'payload' => json_encode('')],
+                ['group' => 'theme', 'name' => 'sidebar_img', 'payload' => json_encode('')],
+                
+                // Localization Settings
+                ['group' => 'localization', 'name' => 'country', 'payload' => json_encode('')],
+                ['group' => 'localization', 'name' => 'date_format', 'payload' => json_encode('d-m-Y')],
+                ['group' => 'localization', 'name' => 'timezone', 'payload' => json_encode('UTC')],
+                ['group' => 'localization', 'name' => 'lang', 'payload' => json_encode('en')],
+                ['group' => 'localization', 'name' => 'currency_symbol', 'payload' => json_encode('$')],
+                ['group' => 'localization', 'name' => 'currency_code', 'payload' => json_encode('USD')],
+            ];
+
+            foreach ($settings as $setting) {
+                \DB::connection('tenant')->table('settings')->insert(array_merge($setting, [
+                    'locked' => 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]));
+            }
             
             $tenant->business->update(['is_active' => 1]);
             
             return redirect()->route('superadmin.tenant-management.setup-wizard', $tenant->business_id)
-                ->with('success', 'Migrations completed successfully! Tenant is now active.');
+                ->with('success', 'Migrations completed and Admin User created successfully! You can now login.')
+                ->with('migration_output', $output);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Migration failed: ' . $e->getMessage());
+            $output = \Artisan::output() ?? 'No output captured.';
+            return redirect()->back()
+                ->with('error', 'Migration/Seeding failed: ' . $e->getMessage())
+                ->with('migration_output', $output);
         }
     }
 

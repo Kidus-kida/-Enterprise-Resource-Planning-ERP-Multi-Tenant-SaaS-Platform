@@ -2132,7 +2132,7 @@ class ProductController extends Controller
 
             $result = [];
 
-            if (strlen($search_term) > 2) {
+            if (strlen($search_term) > 0) {
                 $result = $this->productUtil->filterProductStockAdjustment($business_id, $search_term, $location_id, $not_for_selling, $price_group_id, $product_types, $search_fields, $check_qty, null, $store_id, $module);
             }
 

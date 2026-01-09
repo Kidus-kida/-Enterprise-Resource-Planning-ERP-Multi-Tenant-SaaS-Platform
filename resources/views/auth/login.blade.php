@@ -5,7 +5,7 @@
     <p class="account-subtitle">{{ __('Access to our dashboard') }}</p>
 
     <!-- Account Form -->
-    <form action="{{ route('login') }}" method="POST">
+    <form action="{{ route('login', request()->query()) }}" method="POST">
         @csrf
         <x-form.input-block>
             <x-form.label>{{ __('Email Address') }}</x-form.label>

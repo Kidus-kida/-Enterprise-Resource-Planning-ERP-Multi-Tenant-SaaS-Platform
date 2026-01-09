@@ -15,6 +15,20 @@ class User extends Authenticatable
     use \Spatie\Permission\Traits\HasRoles;
 
     /**
+     * Get the database connection for the model.
+     * Dynamically uses 'tenant' connection when configured, otherwise uses default.
+     *
+     * @return string
+     */
+    public function getConnectionName()
+    {
+        if (!empty(config('database.connections.tenant'))) {
+            return 'tenant';
+        }
+        return config('database.default');
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -47,6 +61,11 @@ class User extends Authenticatable
         'sidebar_view',
         'sidebar_color',
     ];
+
+    public function business()
+    {
+        return $this->belongsTo(\App\Business::class);
+    }
 
 
     public function chatMessages()

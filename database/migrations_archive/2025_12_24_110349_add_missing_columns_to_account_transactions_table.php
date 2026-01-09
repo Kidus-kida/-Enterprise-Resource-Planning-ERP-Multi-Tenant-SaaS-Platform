@@ -10,6 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
+
         Schema::table('account_transactions', function (Blueprint $table) {
             // Add related_account_id
             if (!Schema::hasColumn('account_transactions', 'related_account_id')) {
@@ -184,6 +185,7 @@ return new class extends Migration {
         });
 
         // Ensure created_by is not nullable (skipped to avoid foreign key constraint issues)
+
         // DB::statement("ALTER TABLE account_transactions MODIFY COLUMN created_by INT NOT NULL");
     }
 

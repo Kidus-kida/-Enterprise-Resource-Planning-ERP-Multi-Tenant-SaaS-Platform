@@ -14,6 +14,14 @@ class Business extends Model
 
     protected static $logName = 'Business';
     /**
+     * The database connection that should be used by the model.
+     * Business data is stored in the Master database.
+     *
+     * @var string
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -46,6 +54,8 @@ class Business extends Model
      * @var array
      */
     protected $casts = [
+        'pos_settings' => 'array',
+        'keyboard_shortcuts' => 'array',
         'ref_no_prefixes' => 'array',
         'ref_no_starting_number' => 'array',
         'enabled_modules' => 'array',
@@ -101,11 +111,19 @@ class Business extends Model
     // }
 
     /**
-     * Get the Business subscriptions.
+     * Get the Business subscriptions history.
      */
     public function subscriptions()
     {
         return $this->hasMany('\Modules\Superadmin\Models\Subscription');
+    }
+
+    /**
+     * Get the current Business subscription.
+     */
+    public function subscription()
+    {
+        return $this->hasOne('\Modules\Superadmin\Models\Subscription')->latestOfMany();
     }
 
     /**

@@ -60,7 +60,8 @@ class PackagesController extends Controller
     public function show(Package $package)
     {
         $package->load('subscriptions');
-        return view('superadmin::packages.show', compact('package'));
+        $modules = \Modules\Superadmin\Models\Module::active()->orderBy('sort_order')->get();
+        return view('superadmin::packages.show', compact('package', 'modules'));
     }
 
     public function edit(Package $package)

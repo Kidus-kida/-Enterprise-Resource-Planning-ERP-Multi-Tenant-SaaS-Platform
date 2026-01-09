@@ -21,7 +21,7 @@
     @include('partials.styles')
 </head>
 
-<body @isset($bodyClass) class="{{ $bodyClass }}" @endisset>
+<body @isset($bodyClass) class="{{ $bodyClass }} mini-sidebar" @else class="mini-sidebar" @endisset>
     <!-- Main Wrapper -->
     <div class="main-wrapper">
         @yield('content')

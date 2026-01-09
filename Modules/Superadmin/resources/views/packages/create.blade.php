@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="page-wrapper">
+@section('page-content')
     <div class="content container-fluid">
         
         <!-- Page Header -->
@@ -133,70 +132,33 @@
                                         @enderror
                                     </div>
 
-                                    <h4 class="card-title mt-4">Base Module Permissions</h4>
-                                    <small class="text-muted">Select modules included in this package (Core modules are always included)</small>
+                                    <h4 class="card-title mt-4">Module Permissions</h4>
+                                    <small class="text-muted">Select modules included in this package</small>
                                     
-                                    <div class="row mt-3">
-                                        @php
-                                            $coreModules = $modules->where('is_core', true);
-                                            $optionalModules = $modules->where('is_core', false);
-                                        @endphp
-
-                                        @if($coreModules->count() > 0)
-                                            <div class="col-12 mb-3">
-                                                <h6 class="text-info"><i class="fa fa-star"></i> Core Modules (Always Included)</h6>
-                                                <div class="row">
-                                                    @foreach($coreModules as $module)
-                                                        <div class="col-md-6 mb-2">
-                                                            <div class="form-check">
-                                                                <input type="checkbox" name="custom_permissions[{{ $module->key }}]" 
-                                                                    value="1" class="form-check-input" 
-                                                                    id="perm_{{ $module->key }}" checked disabled>
-                                                                <label class="form-check-label" for="perm_{{ $module->key }}">
-                                                                    <i class="la {{ $module->icon ?? 'la-cube' }}"></i> {{ $module->name }}
-                                                                    <span class="badge bg-info">Core</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <input type="hidden" name="custom_permissions[{{ $module->key }}]" value="1">
-                                                    @endforeach
+                                    @if($modules->count() > 0)
+                                        <div class="row mt-3">
+                                            @foreach($modules as $module)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" name="custom_permissions[{{ $module->key }}]" 
+                                                            value="1" class="form-check-input" 
+                                                            id="perm_{{ $module->key }}" 
+                                                            {{ old('custom_permissions.' . $module->key) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="perm_{{ $module->key }}">
+                                                            <i class="la {{ $module->icon ?? 'la-cube' }}"></i> {{ $module->name }}
+                                                        </label>
+                                                        @if($module->description)
+                                                            <br><small class="text-muted">{{ $module->description }}</small>
+                                                        @endif
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        @endif
-
-                                        @if($optionalModules->count() > 0)
-                                            <div class="col-12">
-                                                <h6><i class="fa fa-puzzle-piece"></i> Optional Modules</h6>
-                                                <div class="row">
-                                                    @foreach($optionalModules as $module)
-                                                        <div class="col-md-6 mb-2">
-                                                            <div class="form-check">
-                                                                <input type="checkbox" name="custom_permissions[{{ $module->key }}]" 
-                                                                    value="1" class="form-check-input" 
-                                                                    id="perm_{{ $module->key }}" 
-                                                                    {{ old('custom_permissions.' . $module->key) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="perm_{{ $module->key }}">
-                                                                    <i class="la {{ $module->icon ?? 'la-cube' }}"></i> {{ $module->name }}
-                                                                </label>
-                                                                @if($module->description)
-                                                                    <br><small class="text-muted">{{ $module->description }}</small>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="alert alert-info mt-3">
-                                        <h6><i class="fa fa-lightbulb-o"></i> Tip:</h6>
-                                        <ul class="mb-0">
-                                            <li>Core modules are included in all packages automatically</li>
-                                            <li>Optional modules not selected here can be sold as add-ons</li>
-                                            <li>Customers can purchase additional modules later</li>
-                                        </ul>
-                                    </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="fa fa-exclamation-triangle"></i> No modules found. Please run the module seeder first.
+                                        </div>
+                                    @endif
 
                                     <h4 class="card-title mt-4">Settings</h4>
                                     
@@ -223,5 +185,4 @@
         </div>
 
     </div>
-</div>
 @endsection

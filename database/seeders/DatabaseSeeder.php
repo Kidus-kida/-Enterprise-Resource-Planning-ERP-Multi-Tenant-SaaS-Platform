@@ -17,13 +17,16 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolePermissionSeeder::class,
+            \Modules\Roles\Database\Seeders\RolesDatabaseSeeder::class,
+            UserSeeder::class, // Add Users and assign roles
             BusinessSeeder::class,
             AccountTypesSeeder::class,
             AccountGroupsSeeder::class,
             CreateCashAccountSeeder::class,
             TaxRateSeeder::class,
             AccountingModuleSeeder::class,
-            LeaveSeeder::class
+            LeaveSeeder::class,
+            \Modules\Superadmin\Database\Seeders\ModuleSeeder::class,
         ]);
     }
 }

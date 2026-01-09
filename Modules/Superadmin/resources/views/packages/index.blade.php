@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="page-wrapper">
+@section('page-content')
     <div class="content container-fluid">
         
         <!-- Page Header -->
@@ -129,5 +128,4 @@
         </div>
 
     </div>
-</div>
 @endsection
