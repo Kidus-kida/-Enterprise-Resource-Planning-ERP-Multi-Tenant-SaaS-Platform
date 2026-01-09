@@ -41,7 +41,7 @@
                             <x-form.label>{{ __('Business Location') }}</x-form.label>
                             <x-form.select id="location_id" name="location_id">
                                 <option value="">{{ __('All') }}</option>
-                                @foreach($business_locations as $key => $value)
+                                @foreach($business_locations ?? [] as $key => $value)
                                     <option value="{{ $key }}">{{ $value }}</option>
                                 @endforeach
                             </x-form.select>
@@ -52,7 +52,7 @@
                             <x-form.label>{{ __('Supplier') }}</x-form.label>
                             <x-form.select id="supplier_id" name="supplier_id">
                                 <option value="">{{ __('All') }}</option>
-                                @foreach($suppliers as $key => $value)
+                                @foreach($suppliers ?? [] as $key => $value)
                                     <option value="{{ $key }}">{{ $value }}</option>
                                 @endforeach
                             </x-form.select>
@@ -63,7 +63,7 @@
                             <x-form.label>{{ __('Status') }}</x-form.label>
                             <x-form.select id="status" name="status">
                                 <option value="">{{ __('All') }}</option>
-                                @foreach($orderStatuses as $key => $value)
+                                @foreach($orderStatuses ?? [] as $key => $value)
                                     <option value="{{ $key }}">{{ $value }}</option>
                                 @endforeach
                             </x-form.select>
@@ -98,7 +98,7 @@
         @if(request('view') == 'grid')
             <div class="row staff-grid-row">
                 @if (!empty($purchases))
-                    @foreach ($purchases as $purchase)
+                    @foreach ($purchases ?? [] as $purchase)
                     <div class="col-md-4 col-sm-6 col-12 col-lg-4 col-xl-3">
                         <div class="profile-widget">
                             <div class="profile-img">
@@ -138,10 +138,19 @@
     </div>
 @endsection
 
-@push('page-script')
+@push('page-scripts')
 <script>
     window.addEventListener('load', function() {
+        init_purchase_table();
+    });
+
+    function init_purchase_table() {
         if ($('#purchase_table').length) {
+            if (typeof $.fn.DataTable === 'undefined') {
+                setTimeout(init_purchase_table, 100);
+                return;
+            }
+
             var purchase_table = $('#purchase_table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -158,6 +167,6 @@
                 ]
             });
         }
-    });
+    }
 </script>
 @endpush

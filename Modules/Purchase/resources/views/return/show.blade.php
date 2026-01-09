@@ -2,7 +2,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <button type="button" class="close no-print" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <h4 class="modal-title" id="modalTitle"> @lang('Purchase Return Details') (<b>@lang('Ref No'):</b> #{{ $purchase->return_parent->ref_no ?? $purchase->ref_no}})
+      <h4 class="modal-title" id="modalTitle"> @lang('Purchase Return Details') (<b>@lang('Ref No'):</b> #{{ $purchase->ref_no }})
         </h4>
     </div>
 
@@ -11,14 +11,14 @@
         @if(!empty($purchase->return_parent))
         <div class="col-sm-6 col-xs-6">
             <h4>@lang('Purchase Return Details'):</h4>
-            <strong>@lang('Return Date'):</strong> {{@format_date($purchase->return_parent->transaction_date)}}<br>
+            <strong>@lang('Return Date'):</strong> {{@format_date($purchase->transaction_date)}}<br>
             <strong>@lang('Supplier'):</strong> {{ $purchase->contact->name }} <br>
             <strong>@lang('Location'):</strong> {{ $purchase->location->name }}
         </div>
         <div class="col-sm-6 col-xs-6">
             <h4>@lang('Purchase Details'):</h4>
-            <strong>@lang('Ref No'):</strong> {{ $purchase->ref_no }} <br>
-            <strong>@lang('Date'):</strong> {{@format_date($purchase->transaction_date)}}
+            <strong>@lang('Ref No'):</strong> {{ $purchase->return_parent->ref_no }} <br>
+            <strong>@lang('Date'):</strong> {{@format_date($purchase->return_parent->transaction_date)}}
         </div>
         @else
             <div class="col-sm-6 col-xs-6">
@@ -107,7 +107,7 @@
           <tr>
             <th>@lang('Return Total'):</th>
             <td></td>
-            <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $purchase->return_parent->final_total ??  $purchase->final_total }}</span></td>
+            <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $purchase->final_total }}</span></td>
           </tr>
         </table>
       </div>
@@ -123,8 +123,13 @@
 </div>
 
 <script type="text/javascript">
-	$(document).ready(function(){
-		var element = $('div.modal-xl');
-		__currency_convert_recursively(element);
-	});
+    function init_return_show() {
+        if (typeof $ === 'undefined' || typeof __currency_convert_recursively === 'undefined') {
+            setTimeout(init_return_show, 100);
+            return;
+        }
+        var element = $('div.modal-xl');
+        __currency_convert_recursively(element);
+    }
+    init_return_show();
 </script>

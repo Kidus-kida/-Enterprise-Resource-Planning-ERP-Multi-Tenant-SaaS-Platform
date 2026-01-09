@@ -18,6 +18,9 @@ use Modules\Purchase\Http\Controllers\PurchaseReturnController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('purchase-list-json', [PurchaseController::class, 'list'])->name('purchase.list');
+    Route::get('purchase/shipments', [PurchaseController::class, 'shipments'])->name('purchase.shipments');
+    Route::get('purchase/edit-shipping/{id}', [PurchaseController::class, 'editShipping'])->name('purchase.edit_shipping');
+    Route::put('purchase/update-shipping/{id}', [PurchaseController::class, 'updateShipping'])->name('purchase.update_shipping');
 
     // AJAX routes for purchase creation
     Route::post('purchases/get_purchase_entry_row', [PurchaseController::class, 'getPurchaseEntryRow'])->name('purchase.get_purchase_entry_row');

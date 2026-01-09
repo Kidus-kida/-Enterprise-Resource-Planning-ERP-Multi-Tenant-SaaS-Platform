@@ -117,11 +117,11 @@ class StockTransferRequestController extends Controller
                     $html .= '<li><a href="#" data-href="' . route('stock-transfers-request.destroy', [$row->id]) . '" class="delete-request" ><i class="glyphicon glyphicon-trash"></i> ' . __("messages.delete") . '</a></li>';
 
                     if (auth()->user()->can('purchase.create')) {
-                        $html .= '<li><a target="_blank" href="' . route('stock-transfers-request.createTransfer', [$row->id]) . '" class="create_transfer" ><i class="fa fa-exchange"></i> ' . __("lang_v1.create_transfer") . '</a></li>';
+                        $html .= '<li><a target="_blank" href="' . route('stock-transfers-request.createTransfer', [$row->id]) . '" class="create_transfer" ><i class="fa fa-exchange"></i> ' . __(" create_transfer") . '</a></li>';
                     }
                     if ($row->status == 'transit') {
                         if ($row->created_by == auth()->user()->id) {
-                            $html .= '<li><a href="#" data-href="' . route('stock-transfers-request.getReceivedTrasnfer', [$row->id]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-arrow-down"></i> ' . __("lang_v1.received") . '</a></li>';
+                            $html .= '<li><a href="#" data-href="' . route('stock-transfers-request.getReceivedTrasnfer', [$row->id]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-arrow-down"></i> ' . __(" received") . '</a></li>';
                         }
                     }
 
@@ -136,7 +136,7 @@ class StockTransferRequestController extends Controller
                 ->addColumn('received_status', function ($row) {
                     if ($row->status == 'received') {
                         $cls = ($row->qty == $row->good_condition) ? 'success' : 'warning';
-                        return '<label class="label label-' . $cls . '">' . __("lang_v1.received") . '</label>';
+                        return '<label class="label label-' . $cls . '">' . __(" received") . '</label>';
                     }
                     return '';
                 })
@@ -328,7 +328,7 @@ class StockTransferRequestController extends Controller
             }
 
             DB::table('transfer_shipment')->where('id', $id)->update($input);
-            $output = ['success' => true, 'msg' => __('lang_v1.shipping_updated')];
+            $output = ['success' => true, 'msg' => __(' shipping_updated')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -340,7 +340,7 @@ class StockTransferRequestController extends Controller
     {
         try {
             DB::table('transfer_shipment')->where('id', $id)->delete();
-            $output = ['success' => true, 'msg' => __('lang_v1.shipping_delete_success')];
+            $output = ['success' => true, 'msg' => __(' shipping_delete_success')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -384,7 +384,7 @@ class StockTransferRequestController extends Controller
             $input['created_by'] = auth()->user()->id;
 
             StockTransferRequest::create($input);
-            $output = ['success' => true, 'msg' => __('lang_v1.request_create_success')];
+            $output = ['success' => true, 'msg' => __(' request_create_success')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -404,7 +404,7 @@ class StockTransferRequestController extends Controller
             $request_ids = explode(',', $input['request_id']);
             DB::table('stock_transfer_requests')->whereIn('id', $request_ids)->update(['status' => 'transit']);
 
-            $output = ['success' => true, 'msg' => __('lang_v1.request_create_success')];
+            $output = ['success' => true, 'msg' => __(' request_create_success')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . ' Line: ' . $e->getLine() . ' Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -458,7 +458,7 @@ class StockTransferRequestController extends Controller
             $input['created_by'] = auth()->user()->id;
 
             StockTransferRequest::where('id', $id)->update($input);
-            $output = ['success' => true, 'msg' => __('lang_v1.request_update_success')];
+            $output = ['success' => true, 'msg' => __(' request_update_success')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -470,7 +470,7 @@ class StockTransferRequestController extends Controller
     {
         try {
             StockTransferRequest::where('id', $id)->delete();
-            $output = ['success' => true, 'msg' => __('lang_v1.request_delete_success')];
+            $output = ['success' => true, 'msg' => __(' request_delete_success')];
         } catch (\Exception $e) {
             Log::emergency('File: ' . $e->getFile() . 'Line: ' . $e->getLine() . 'Message: ' . $e->getMessage());
             $output = ['success' => false, 'msg' => __('messages.something_went_wrong')];
@@ -589,7 +589,7 @@ class StockTransferRequestController extends Controller
             StockTransferRequest::where('id', $request->request_id)->update(['status' => 'issued', 'transaction_id' => $purchase_transfer->id]);
 
             DB::commit();
-            $output = ['success' => 1, 'msg' => __('lang_v1.stock_transfer_added_successfully')];
+            $output = ['success' => 1, 'msg' => __(' stock_transfer_added_successfully')];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
@@ -630,7 +630,7 @@ class StockTransferRequestController extends Controller
             }
 
             DB::commit();
-            $output = ['success' => 1, 'msg' => __('lang_v1.qty_update_success')];
+            $output = ['success' => 1, 'msg' => __(' qty_update_success')];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());

@@ -21,6 +21,7 @@
         <div class="input-block mb-3">
             <x-form.label>{{ __('Payment Method') }}</x-form.label>
             <select name="payment[{{ $row_index }}][method]" class="form-select payment_method">
+                <option value="" selected disabled>-- {{ __('select method') }} --</option>
                 @foreach($payment_types as $key => $value)
                     <option value="{{ $key }}">{{ $value }}</option>
                 @endforeach

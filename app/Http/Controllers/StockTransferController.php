@@ -178,7 +178,7 @@ class StockTransferController extends Controller
             if (method_exists($this->transactionUtil, 'hasReviewed')) {
                 $has_reviewed = $this->transactionUtil->hasReviewed($input_data['transaction_date']);
                 if (!empty($has_reviewed)) {
-                    return redirect()->back()->with(['status' => ['success' => 0, 'msg' => __('lang_v1.review_first')]]);
+                    return redirect()->back()->with(['status' => ['success' => 0, 'msg' => __(' review_first')]]);
                 }
             }
 
@@ -316,7 +316,7 @@ class StockTransferController extends Controller
             $this->transactionUtil->mapPurchaseSell($business, $sell_transfer->sell_lines, 'purchase');
 
             DB::commit();
-            $output = ['success' => 1, 'msg' => __('lang_v1.stock_transfer_added_successfully')];
+            $output = ['success' => 1, 'msg' => __(' stock_transfer_added_successfully')];
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
@@ -428,7 +428,7 @@ class StockTransferController extends Controller
                 $purchase_transfer->delete();
 
                 DB::commit();
-                $output = ['success' => 1, 'msg' => __('lang_v1.stock_transfer_delete_success')];
+                $output = ['success' => 1, 'msg' => __(' stock_transfer_delete_success')];
             }
         } catch (\Exception $e) {
             DB::rollBack();
