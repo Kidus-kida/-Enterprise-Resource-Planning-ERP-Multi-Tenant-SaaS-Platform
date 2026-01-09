@@ -30,11 +30,18 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Date <span class="text-danger">*</span></label>
-                            <input type="datetime-local"
-                                   name="date"
-                                   class="form-control"
-                                   value="{{ !empty($settings->date) ? \Carbon\Carbon::parse($settings->date)->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i') }}"
-                                   required>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa fa-calendar"></i>
+                                </span>
+                                <input type="text" 
+                                       name="date" 
+                                       id="transaction_date" 
+                                       class="form-control" 
+                                       value="{{ $formatted_date }}" 
+                                       required 
+                                       readonly>
+                            </div>
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -107,4 +114,9 @@
     </div>
 
 </div>
+@endsection
+
+
+
+@section('javascript')
 @endsection

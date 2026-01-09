@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('business', function (Blueprint $table) {
+        Schema::table('businesses', function (Blueprint $table) {
             $table->text('email_settings')->nullable();
             $table->text('sms_settings')->nullable();
             $table->text('common_settings')->nullable();
@@ -37,7 +37,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('business', function (Blueprint $table) {
+        Schema::table('businesses', function (Blueprint $table) {
             $table->dropColumn([
                 'email_settings',
                 'sms_settings',

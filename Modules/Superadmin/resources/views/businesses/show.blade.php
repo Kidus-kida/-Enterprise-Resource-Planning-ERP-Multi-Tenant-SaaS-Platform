@@ -19,7 +19,7 @@
                         <i class="fa fa-pencil"></i> Edit Business
                     </a>
                     @if(!$business->tenant_id)
-                        <a href="{{ route('superadmin.tenants.create', $business->id) }}" class="btn btn-success">
+                        <a href="{{ route('superadmin.tenant-management.setup-wizard', $business->id) }}" class="btn btn-success">
                             <i class="fa fa-server"></i> Create Tenant
                         </a>
                     @endif
@@ -116,14 +116,14 @@
                                 @endif
                             </div>
                             @if($business->tenant)
-                                <a href="{{ route('superadmin.tenants.setup-instructions', $business->tenant_id) }}" class="btn btn-sm btn-info">
+                                <a href="{{ route('superadmin.tenant-management.setup-wizard', $business->id) }}" class="btn btn-sm btn-info">
                                     <i class="fa fa-info-circle"></i> View Setup Instructions
                                 </a>
                             @endif
                         @else
                             <div class="alert alert-warning">
                                 <p class="mb-2">Tenant not created yet</p>
-                                <a href="{{ route('superadmin.tenants.create', $business->id) }}" class="btn btn-sm btn-success">
+                                <a href="{{ route('superadmin.tenant-management.setup-wizard', $business->id) }}" class="btn btn-sm btn-success">
                                     <i class="fa fa-server"></i> Create Tenant Now
                                 </a>
                             </div>

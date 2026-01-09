@@ -55,4 +55,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(Transaction::class, 'return_parent_id');
     }
+
+    public function stock_adjustment_lines()
+    {
+        return $this->hasMany(\Modules\StockAdjustment\Models\StockAdjustmentLine::class, 'transaction_id');
+    }
 }
