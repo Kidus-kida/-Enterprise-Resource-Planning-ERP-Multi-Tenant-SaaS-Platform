@@ -61,11 +61,15 @@ class Transaction extends Model
     {
         return $this->belongsTo(Transaction::class, 'return_parent_id');
     }
-<<<<<<< HEAD
     
     public function sell_lines()
     {
         return $this->hasMany(\App\TransactionSellLine::class);
+    }
+
+    public function stock_adjustment_lines()
+    {
+        return $this->hasMany(\Modules\StockAdjustment\Models\StockAdjustmentLine::class, 'transaction_id');
     }
 
     /**
@@ -156,11 +160,5 @@ class Transaction extends Model
     public function subscription_invoices()
     {
         return $this->hasMany(Transaction::class, 'recur_parent_id');
-=======
-
-    public function stock_adjustment_lines()
-    {
-        return $this->hasMany(\Modules\StockAdjustment\Models\StockAdjustmentLine::class, 'transaction_id');
->>>>>>> d93517002937a04b1f3a88c3292089e247d67ef1
     }
 }
