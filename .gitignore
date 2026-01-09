@@ -1,29 +1,118 @@
+# Laravel & PHP
 /.phpunit.cache
+/vendor
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+!/storage/framework/cache/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/testing/.gitkeep
+!/storage/framework/views/.gitkeep
+!/storage/logs/.gitkeep
+.phpunit.result.cache
+auth.json
+composer.phar
+php_errors.log
+*.log
+
+# Environment Files
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+
+# Node.js & Frontend
 /node_modules
 /public/build
 /public/hot
-/public/storage
-/public/uploads
-/storage/*.key
-/vendor
-.idea
-.env.backup
-.env.production
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-auth.json
-npm-debug.log
-yarn-error.log
-/.fleet
-/.idea
-/.vscode
-/.idea
-/bootstrap/cache/*.tmp
-/bootstrap/cache/*_module.php
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn-integrity
+*.tsbuildinfo
+
+# Module-specific
 /Modules/*/node_modules
 /Modules/*/public/build
 /Modules/*/public/hot
-Modules.md
-TODO.md
-/storage/framework/*
+
+# Cache Directories
+/bootstrap/cache/*.php
+/bootstrap/cache/*.tmp
+!/bootstrap/cache/.gitkeep
+.cache
+*.cache
+
+# Public Uploads & Storage
+/public/storage
+/public/uploads
+
+# IDE & Editor Files
+/.idea
+/.vscode
+/.fleet
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.settings
+.buildpath
+.sublime-project
+.sublime-workspace
+
+# Homestead & Vagrant
+Homestead.json
+Homestead.yaml
+.vagrant
+
+# OS Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Temporary & Log Files
+*.tmp
+*.temp
+*_log.txt
+log_dump.txt
+temp_log.txt
+
+# Documentation & Notes (optional - uncomment if needed)
+# Modules.md
+# TODO.md
+
+# Database & Backup Files
+*.sql
+*.sqlite
+*.db
+*.bak
+
+# Compiled & Binary Files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Excel/Office Files (uncomment if you don't want to track these)
+# *.xlsx
+# *.xls
+# *.docx
+# *.pptx
+
+# Large binary files (uncomment if needed)
+# hr3
+
