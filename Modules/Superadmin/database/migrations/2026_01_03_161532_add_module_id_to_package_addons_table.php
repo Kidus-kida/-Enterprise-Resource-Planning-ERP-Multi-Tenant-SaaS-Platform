@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('package_addons', function (Blueprint $table) {
-            $table->foreignId('module_id')->nullable()->after('id')
-                  ->constrained('modules')->onDelete('set null');
+            if (!Schema::hasColumn('package_addons', 'module_id')) {
+                $table->foreignId('module_id')->nullable()->after('id')
+                      ->constrained('modules')->onDelete('set null');
+            }
         });
     }
 
