@@ -19,60 +19,79 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::insert([
+        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $clientRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Client', 'guard_name' => 'web']);
+        $employeeRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Employee', 'guard_name' => 'web']);
+
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@smarthr.com'],
             [
                 'firstname' => 'Mushe',
                 'lastname' => 'Abdul-Hakim',
-                'email' => 'superadmin@smarthr.com',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'type' => UserType::SUPERADMIN,
                 'is_active' => 1,
                 'created_at' => now(),
-            ],
+            ]
+        );
+        $superAdmin->assignRole($superAdminRole);
+
+        $client = User::firstOrCreate(
+            ['email' => 'client@smarthr.com'],
             [
                 'firstname' => 'John',
                 'lastname' => 'Doe',
-                'email' => 'client@smarthr.com',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'type' => UserType::CLIENT,
                 'is_active' => 1,
                 'created_at' => now(),
-            ],
-        ]);
-        $employee = User::create([
-            'firstname' => 'Smart',
-            'lastname' => 'Employee',
-            'email' => 'employee@smarthr.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-            'type' => UserType::EMPLOYEE,
-            'is_active' => 1,
-            'created_at' => now(),
-        ]);
-        EmployeeDetail::create([
-            'emp_id' => 'EMP-0001',
-            'user_id' => $employee->id,
-            'department_id' => Department::factory()->count(1)->create([
-                'name' => 'Nuclues',
-                'location' => 'Bay Area',
-            ])->first()->id,
-            'designation_id' => Designation::factory()->count(1)->create([
-                'name' => 'Software Developer'
-            ])->first()->id,
-            'passport_no' => '1234567899',
-            'passport_expiry_date' => '2024-06-30',
-            'passport_tel' => '1234567899',
-            'nationality' => 'Ghanain',
-            'religion' => null,
-            'ethnicity' => null,
-            'marital_status' => MaritalStatus::SINGLE,
-            'spouse_occupation' => 'no',
-            'no_of_children' => '0',
-            'emergency_contacts' => null,
-            'date_joined' => now(),
-            'dob' => '2023-01-01',
-        ]);
+            ]
+        );
+        $client->assignRole($clientRole);
+
+        $employee = User::firstOrCreate(
+            ['email' => 'employee@smarthr.com'],
+            [
+                'firstname' => 'Smart',
+                'lastname' => 'Employee',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'type' => UserType::EMPLOYEE,
+                'is_active' => 1,
+                'created_at' => now(),
+            ]
+        );
+        $employee->assignRole($employeeRole);
+        $department = Department::firstOrCreate(
+            ['name' => 'Nuclues'],
+            ['location' => 'Bay Area']
+        );
+
+        $designation = Designation::firstOrCreate(
+            ['name' => 'Software Developer']
+        );
+
+        EmployeeDetail::firstOrCreate(
+            ['emp_id' => 'EMP-0001'],
+            [
+                'user_id' => $employee->id,
+                'department_id' => $department->id,
+                'designation_id' => $designation->id,
+                'passport_no' => '1234567899',
+                'passport_expiry_date' => '2024-06-30',
+                'passport_tel' => '1234567899',
+                'nationality' => 'Ghanain',
+                'religion' => null,
+                'ethnicity' => null,
+                'marital_status' => MaritalStatus::SINGLE,
+                'spouse_occupation' => 'no',
+                'no_of_children' => 0,
+                'emergency_contacts' => null,
+                'date_joined' => now(),
+                'dob' => '2023-01-01',
+            ]
+        );
     }
 }

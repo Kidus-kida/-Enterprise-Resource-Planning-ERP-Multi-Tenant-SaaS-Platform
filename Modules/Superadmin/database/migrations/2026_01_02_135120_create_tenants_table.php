@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tenants', function (Blueprint $table) {
-            $table->string('id')->primary(); // Tenant ID (e.g., 'tenant_abc')
-            $table->unsignedBigInteger('business_id')->unique()->nullable();
-            $table->string('database_name')->nullable(); // Tenant database name
-            $table->json('data')->nullable(); // Additional tenant metadata
-            $table->timestamps();
-            
-            $table->foreign('business_id')->references('id')->on('businesses')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('tenants')) {
+            Schema::create('tenants', function (Blueprint $table) {
+                $table->string('id')->primary(); // Tenant ID (e.g., 'tenant_abc')
+                $table->unsignedBigInteger('business_id')->unique()->nullable();
+                $table->string('database_name')->nullable(); // Tenant database name
+                $table->json('data')->nullable(); // Additional tenant metadata
+                $table->timestamps();
+                
+                $table->foreign('business_id')->references('id')->on('businesses')->onDelete('cascade');
+            });
+        }
     }
 
     /**
