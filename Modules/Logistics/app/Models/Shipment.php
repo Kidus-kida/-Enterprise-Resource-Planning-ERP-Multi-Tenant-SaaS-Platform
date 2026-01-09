@@ -26,6 +26,13 @@ class Shipment extends Model
         'dry_port_id',
         'user_id',
         'value_etb',
+        'business_id',
+        'transaction_id',
+        'shipping_details',
+        'shipping_address',
+        'shipping_status',
+        'delivered_to',
+        'shipping_charges',
     ];
 
     protected $casts = [

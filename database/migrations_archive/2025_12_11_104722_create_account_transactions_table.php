@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('account_transactions', function (Blueprint $table) {
+        if (!Schema::hasTable('account_transactions')) {
+            Schema::create('account_transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('account_id');
             $table->decimal('amount', 22, 4);
@@ -38,6 +39,7 @@ return new class extends Migration
             $table->index(['account_id', 'operation_date']);
             $table->index('type');
         });
+        }
     }
 
     /**

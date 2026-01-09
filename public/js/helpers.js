@@ -105,3 +105,27 @@ function __disable_submit_button(element) {
     }
 }
 
+// Format currency from 'en' format (dot decimal)
+function __currency_trans_from_en(amount, show_symbol) {
+    var symbol = '';
+    if (show_symbol && typeof __currency_symbol !== 'undefined') {
+        symbol = __currency_symbol;
+    }
+    
+    if (typeof accounting !== 'undefined') {
+        return accounting.formatMoney(amount, symbol);
+    }
+    return parseFloat(amount).toFixed(2);
+}
+
+// Calculate amount based on type (percentage or fixed)
+function __calculate_amount(calculation_type, calculation_percentage, amount) {
+    var calculation_amount = 0;
+    if (calculation_type == 'percentage') {
+        calculation_amount = (parseFloat(calculation_percentage) * parseFloat(amount)) / 100;
+    } else if (calculation_type == 'fixed') {
+        calculation_amount = parseFloat(calculation_percentage);
+    }
+
+    return calculation_amount;
+}

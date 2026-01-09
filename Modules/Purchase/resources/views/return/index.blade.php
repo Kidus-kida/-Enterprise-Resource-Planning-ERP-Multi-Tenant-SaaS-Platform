@@ -23,7 +23,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-bordered datatable" id="purchase_return_datatable">
+                <table class="table table-striped table-bordered" id="purchase_return_datatable">
                     <thead>
                         <tr>
                             <th>@lang('Date')</th>
@@ -47,32 +47,42 @@
 
 @endsection
 
-@push('page-script')
+@push('page-scripts')
 <script>
-    $(document).ready( function(){
-        //Purchase return table
-        var purchase_return_table = $('#purchase_return_datatable').DataTable({
-            processing: true,
-            serverSide: true,
-            aaSorting: [[0, 'desc']],
-            ajax: '{{ route('purchase-return.index') }}',
-            columnDefs: [ {
-                "targets": [7, 8],
-                "orderable": false,
-                "searchable": false
-            } ],
-            columns: [
-                { data: 'transaction_date', name: 'transaction_date'  },
-                { data: 'ref_no', name: 'ref_no'},
-                { data: 'parent_purchase', name: 'T.ref_no'},
-                { data: 'location_name', name: 'BS.name'},
-                { data: 'name', name: 'contacts.name'},
-                { data: 'payment_status', name: 'payment_status'},
-                { data: 'final_total', name: 'final_total'},
-                { data: 'payment_due', name: 'payment_due'},
-                { data: 'action', name: 'action'}
-            ]
-        });
+    window.addEventListener('load', function() {
+        init_purchase_return_table();
     });
+
+    function init_purchase_return_table() {
+        if ($('#purchase_return_datatable').length) {
+            if (typeof $.fn.DataTable === 'undefined') {
+                setTimeout(init_purchase_return_table, 100);
+                return;
+            }
+
+            var purchase_return_table = $('#purchase_return_datatable').DataTable({
+                processing: true,
+                serverSide: true,
+                aaSorting: [[0, 'desc']],
+                ajax: "{{ route('purchase-return.index') }}",
+                columnDefs: [ {
+                    "targets": [7, 8],
+                    "orderable": false,
+                    "searchable": false
+                } ],
+                columns: [
+                    { data: 'transaction_date', name: 'transaction_date'  },
+                    { data: 'ref_no', name: 'ref_no'},
+                    { data: 'parent_purchase', name: 'parent_purchase'},
+                    { data: 'location_name', name: 'location_name'},
+                    { data: 'name', name: 'name'},
+                    { data: 'payment_status', name: 'payment_status'},
+                    { data: 'final_total', name: 'final_total'},
+                    { data: 'payment_due', name: 'payment_due'},
+                    { data: 'action', name: 'action', orderable: false, searchable: false}
+                ]
+            });
+        }
+    }
 </script>
 @endpush

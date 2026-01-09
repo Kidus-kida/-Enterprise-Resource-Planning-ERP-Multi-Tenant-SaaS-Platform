@@ -15,12 +15,7 @@ class Business extends Model
     protected static $logFillable = true;
 
     protected static $logName = 'Business';
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-
+    /*
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

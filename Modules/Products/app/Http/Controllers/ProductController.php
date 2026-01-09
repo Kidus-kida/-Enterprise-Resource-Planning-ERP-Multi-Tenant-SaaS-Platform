@@ -2178,6 +2178,9 @@ class ProductController extends Controller
                         "like",
                         $store_id,
                         $brand_id,
+                        null,
+                        false,
+                        20,
                         $module
                     );
                 }
