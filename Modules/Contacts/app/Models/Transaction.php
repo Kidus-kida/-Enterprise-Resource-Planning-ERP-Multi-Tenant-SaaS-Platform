@@ -27,8 +27,7 @@ class Transaction extends Model
 
     public function business()
     {
-        // return $this->belongsTo(Business::class);
-        // Assuming Business model implementation comes later or uses User business_id
+        return $this->belongsTo(\App\Business::class);
     }
 
     public function purchase_lines()
