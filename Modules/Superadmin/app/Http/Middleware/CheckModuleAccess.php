@@ -23,6 +23,11 @@ class CheckModuleAccess
             return redirect()->route('login');
         }
 
+        // Super Admin bypass
+        if ($user->type === \App\Enums\UserType::SUPERADMIN) {
+            return $next($request);
+        }
+
         $business = $user->business ?? null;
 
         // Dynamic Tenant Resolution: identify which business owns the current DB
