@@ -1,7 +1,7 @@
 <div class="header" style="height: 45px !important;">
 
     <!-- Logo -->
-<div style="height: 40px !important; line-height: 40px !important; float: left; text-align: center; transform: translateY(-8px);">
+    <div style="text-align: center; transform: translateY(-8px);">
         <x-logo />
     </div>
     <!-- /Logo -->
