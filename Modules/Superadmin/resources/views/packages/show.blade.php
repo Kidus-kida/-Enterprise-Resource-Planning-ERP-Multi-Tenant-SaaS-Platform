@@ -124,78 +124,20 @@
                                         @endphp
                                         
                                         <div class="row">
-                                            <div class="col-md-6">
-                                                <ul class="list-unstyled">
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['contacts']) && $permissions['contacts'])
-                                                            <i class="fa fa-check-circle text-success"></i>
+                                            @foreach($modules as $module)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        @if(isset($permissions[$module->key]) && $permissions[$module->key])
+                                                            <i class="fa fa-check-circle text-success me-2"></i>
                                                         @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
+                                                            <i class="fa fa-times-circle text-danger me-2"></i>
                                                         @endif
-                                                        Contacts
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['products']) && $permissions['products'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        Products
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['pos']) && $permissions['pos'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        POS
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['purchases']) && $permissions['purchases'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        Purchases
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <ul class="list-unstyled">
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['accounting']) && $permissions['accounting'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        Accounting
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['reports']) && $permissions['reports'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        Reports
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['hr']) && $permissions['hr'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        HR Management
-                                                    </li>
-                                                    <li class="mb-2">
-                                                        @if(isset($permissions['payroll']) && $permissions['payroll'])
-                                                            <i class="fa fa-check-circle text-success"></i>
-                                                        @else
-                                                            <i class="fa fa-times-circle text-danger"></i>
-                                                        @endif
-                                                        Payroll
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                                        <span class="ms-2">
+                                                            <i class="la {{ $module->icon ?? 'la-cube' }}"></i> {{ $module->name }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>

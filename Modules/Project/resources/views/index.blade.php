@@ -86,10 +86,10 @@
                         <div class="project-members m-b-15">
                             <div>{{ __('Project Leader') }} :</div>
                             <ul class="team-members">
-                                @if (!empty($project->leader_id))     
+                                @if (!empty($project->leader_id) && !empty($project->leader))     
                                 <li>
-                                    <a href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($project->leader_id)]) }} @else # @endcan" data-bs-toggle="tooltip" title="{{ $project->leader->fullname }}">
-                                        <img src="{{ !empty($project->leader->avatar) ? uploadedAsset($project->leader->avatar,'users'): asset('images/user.jpg') }}" alt="{{ __('Avatar') }}">
+                                    <a href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($project->leader_id)]) }} @else # @endcan" data-bs-toggle="tooltip" title="{{ optional($project->leader)->fullname }}">
+                                        <img src="{{ !empty(optional($project->leader)->avatar) ? uploadedAsset(optional($project->leader)->avatar,'users'): asset('images/user.jpg') }}" alt="{{ __('Avatar') }}">
                                     </a>
                                 </li>
                                 @endif
@@ -103,11 +103,13 @@
                             <div>{{ __('Team') }} :</div>
                             <ul class="team-members">
                                 @foreach ($projectTeam->take(4) as $member)
-                                <li>
-                                    <a href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($member->user->id)]) }} @else # @endcan" data-bs-toggle="tooltip" title="{{ $member->user->fullname }}">
-                                        <img src="{{ !empty($member->user->avatar) ? uploadedAsset($member->user->avatar,'users'): asset('images/user.jpg') }}" alt="{{ __('Avatar') }}">
-                                    </a>
-                                </li>
+                                    @if(!empty($member->user))
+                                    <li>
+                                        <a href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($member->user->id)]) }} @else # @endcan" data-bs-toggle="tooltip" title="{{ optional($member->user)->fullname }}">
+                                            <img src="{{ !empty(optional($member->user)->avatar) ? uploadedAsset(optional($member->user)->avatar,'users'): asset('images/user.jpg') }}" alt="{{ __('Avatar') }}">
+                                        </a>
+                                    </li>
+                                    @endif
                                 @endforeach
                                 @if (!empty($projectTeam) && $projectTeam->count() > 4)    
                                 <li class="dropdown avatar-dropdown">
@@ -115,9 +117,11 @@
                                     <div class="dropdown-menu dropdown-menu-right">
                                         <div class="avatar-group">
                                             @foreach ($projectTeam as $member)
-                                            <a class="avatar avatar-xs" data-bs-toggle="tooltip" title="{{ $member->user->fullname }}" href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($member->user->id)]) }} @else # @endcan">
-                                                <img src="{{ !empty($member->user->avatar) ? uploadedAsset($member->user->avatar,'users'): asset('images/user.jpg') }}" alt="{{ $member->user->fullname }}">
-                                            </a>
+                                                @if(!empty($member->user))
+                                                <a class="avatar avatar-xs" data-bs-toggle="tooltip" title="{{ optional($member->user)->fullname }}" href="@can('show-Employeeprofile') {{ route('employees.show', ['employee' => \Crypt::encrypt($member->user->id)]) }} @else # @endcan">
+                                                    <img src="{{ !empty(optional($member->user)->avatar) ? uploadedAsset(optional($member->user)->avatar,'users'): asset('images/user.jpg') }}" alt="{{ optional($member->user)->fullname }}">
+                                                </a>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>

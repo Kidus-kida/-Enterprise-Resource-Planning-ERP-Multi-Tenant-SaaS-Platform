@@ -1,0 +1,30 @@
+Array
+(
+    [timestamp] => 2026-01-09 14:12:15
+    [user_id] => 1
+    [user_business_id] => 1
+    [business_relation_result] => FOUND
+    [business_connection] => mysql
+    [business_table] => businesses
+    [Explicit_Find_4] => FOUND
+    [subscription_loaded] => NO
+    [module_details] => N/A
+)
+Array
+(
+    [timestamp] => 2026-01-09 14:43:33
+    [active_db_connection] => mysql
+    [active_db_database] => tewoshr2
+    [user_id] => 1
+    [user_business_id] => 1
+    [business_relation_result] => FOUND
+    [business_id_1_exists] => YES
+    [business_id_4_exists] => YES
+    [subscription_loaded] => NO
+    [module_details] => N/A
+)
+--- OVERRIDE APPLIED: Forcing Business ID 4 ---
+--- OVERRIDE APPLIED: Forcing Business ID 4 ---
+--- OVERRIDE APPLIED: Forcing Business ID 4 ---
+--- OVERRIDE APPLIED: Forcing Business ID 4 ---
+--- OVERRIDE APPLIED: Forcing Business ID 4 ---

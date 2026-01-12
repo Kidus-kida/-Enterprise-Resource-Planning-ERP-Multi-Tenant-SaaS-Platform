@@ -29,7 +29,7 @@
                 <div class="row">
                     <div class="col-sm-4">
                         <strong>@lang('Ref No'):</strong> {{ $purchase->ref_no }} <br>
-                        <strong>@lang('Date'):</strong> {{@format_date($purchase->transaction_date)}}
+                        <strong>@lang('Date'):</strong> {{$purchase->transaction_date->format('d-m-Y')}}
                     </div>
                     <div class="col-sm-4">
                         <strong>@lang('Supplier'):</strong> {{ $purchase->contact->name }} <br>
@@ -80,7 +80,8 @@
                                                 $check_decimal = 'false';
                                             }
                                         }
-                                        $qty_available = $purchase_line->quantity - $purchase_line->quantity_sold - $purchase_line->quantity_adjusted;
+                                        $qty_available = $purchase_line->quantity - $purchase_line->quantity_returned - $purchase_line->quantity_sold - $purchase_line->quantity_adjusted;
+                                        $max_return = $qty_available + $purchase_line->quantity_returned;
                                     @endphp
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
@@ -100,8 +101,11 @@
                                             data-rule-abs_digit="{{$check_decimal}}" 
                                             data-msg-abs_digit="@lang('Decimal value not allowed')"
                                             @if($purchase_line->product->enable_stock) 
-                                                data-rule-max-value="{{$qty_available}}"
-                                                data-msg-max-value="@lang('Quantity not available')" 
+                                                data-rule-max="{{$max_return}}"
+                                                data-msg-max="@lang('Quantity not available')" 
+                                            @endif
+                                            @if($purchase_line->quantity <= 0)
+                                                disabled
                                             @endif
                                             >
                                             <input type="hidden" class="unit_price" value="{{@num_format($purchase_line->purchase_price_inc_tax)}}">
@@ -158,17 +162,31 @@
 </div>
 @stop
 
-@push('page-script')
+@push('page-scripts')
 <script type="text/javascript">
-    $(document).ready( function(){
-        update_purchase_return_total();
-    });
-    
-    $(document).on('change', 'input.return_qty', function(){
-        update_purchase_return_total()
+    window.__currency_symbol = "{{ session('currency.symbol') }}";
+
+    window.addEventListener('load', function() {
+        $(document).ready( function(){
+            update_purchase_return_total();
+            
+            if (typeof $.fn.validate !== 'undefined') {
+                $('form#purchase_return_form').validate();
+            }
+        });
+        
+        $(document).on('change', 'input.return_qty', function(){
+            update_purchase_return_total()
+        });
     });
 
     function update_purchase_return_total(){
+        // Check if helpers are loaded
+        if (typeof __read_number === 'undefined' || typeof __currency_trans_from_en === 'undefined') {
+            setTimeout(update_purchase_return_total, 100);
+            return;
+        }
+
         var net_return = 0;
         $('table#purchase_return_table tbody tr').each( function(){
             var quantity = __read_number($(this).find('input.return_qty'));

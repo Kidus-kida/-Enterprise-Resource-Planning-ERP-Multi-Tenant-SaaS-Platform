@@ -657,6 +657,7 @@ return [
   'request_method' => 'Request Method',
   'purchase_return' => 'Purchase Return',
   'return_quantity' => 'Return Quantity',
+  'return_quantity_cannot_be_more_than_purchased_quantity' => 'Return quantity cannot be more than purchased quantity',
   'return_subtotal' => 'Return Subtotal',
   'quantity_left' => 'Quantity Remaining',
   'return_total' => 'Return Total',

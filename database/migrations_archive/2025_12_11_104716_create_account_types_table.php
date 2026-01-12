@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('account_types', function (Blueprint $table) {
+        if (!Schema::hasTable('account_types')) {
+            Schema::create('account_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('parent_account_type_id')->nullable();
@@ -24,6 +25,7 @@ return new class extends Migration
                 ->on('account_types')
                 ->onDelete('cascade');
         });
+        }
     }
 
     /**

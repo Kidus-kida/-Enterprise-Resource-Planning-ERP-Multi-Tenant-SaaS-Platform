@@ -194,18 +194,44 @@ class TenantManagementController extends Controller
             ]);
 
             // Create Admin User in Tenant DB
-            \DB::connection('tenant')->table('users')->insert([
+            // Create Admin User in Tenant DB
+            $tenantUserId = \DB::connection('tenant')->table('users')->insertGetId([
                 'firstname' => $request->admin_firstname,
                 'lastname' => $request->admin_lastname,
                 'email' => $request->admin_email,
                 'username' => $request->admin_username,
                 'password' => \Hash::make($request->admin_password),
-                'type' => 'Super Admin', 
+                'type' => 'admin', // Changed from Super Admin to restricted admin
                 'is_active' => 1,
                 'business_id' => $tenantBusinessId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // RUN TENANT PERMISSION SEEDER
+            \Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\TenantPermissionSeeder',
+                '--database' => 'tenant',
+                '--force' => true
+            ]);
+            $debugLog .= "Permission Seeder Output:\n" . \Artisan::output() . "\n";
+
+            // ASSIGN 'Tenant Admin' ROLE
+            try {
+                $roleId = \DB::connection('tenant')->table('roles')->where('name', 'Tenant Admin')->value('id');
+                if ($roleId) {
+                    \DB::connection('tenant')->table('model_has_roles')->insert([
+                        'role_id' => $roleId,
+                        'model_type' => 'App\Models\User',
+                        'model_id' => $tenantUserId
+                    ]);
+                    $debugLog .= "Assigned 'Tenant Admin' role to user.\n";
+                } else {
+                    $debugLog .= "WARNING: 'Tenant Admin' role not found after seeding.\n";
+                }
+            } catch (\Exception $e) {
+                $debugLog .= "Error assigning role: " . $e->getMessage() . "\n";
+            }
 
             // SEED DEFAULT SETTINGS (Theme & Localization)
             $now = now();

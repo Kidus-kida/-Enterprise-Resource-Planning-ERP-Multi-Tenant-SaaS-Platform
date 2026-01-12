@@ -78,6 +78,38 @@ class AccountTransaction extends Model
         
         return !empty($amount) ? $amount : 0;
     }
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::created(function ($account_transaction) {
+            $account = Account::find($account_transaction->account_id);
+            if ($account) {
+                if ($account_transaction->type == 'debit') {
+                    $account->current_balance += $account_transaction->amount;
+                } else {
+                    $account->current_balance -= $account_transaction->amount;
+                }
+                $account->save();
+            }
+        });
+
+        static::deleted(function ($account_transaction) {
+            $account = Account::find($account_transaction->account_id);
+            if ($account) {
+                if ($account_transaction->type == 'debit') {
+                    $account->current_balance -= $account_transaction->amount;
+                } else {
+                    $account->current_balance += $account_transaction->amount;
+                }
+                $account->save();
+            }
+        });
+    }
+
     public static function createAccountTransaction($data)
     {
         if (empty($data['account_id'])) {
@@ -110,10 +142,6 @@ class AccountTransaction extends Model
         
         // Ensure transaction_type is set (required by schema)
         if (!isset($transaction_data['transaction_type'])) {
-             // Derive from type if possible, or set a default. 
-             // The migration had transaction_type as a string. 
-             // In ERP code 'type' (debit/credit) seems to be the main indicator.
-             // We might need to map it or duplicate it.
              $transaction_data['transaction_type'] = $data['type'];
         }
 

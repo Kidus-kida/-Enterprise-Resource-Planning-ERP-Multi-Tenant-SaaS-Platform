@@ -27,7 +27,14 @@
                                 <h6><strong>{{ __('Invoice Info') }}:</strong></h6>
                                 <p><strong>{{ __('Invoice No') }}:</strong> {{ $sale->invoice_no }}<br>
                                    <strong>{{ __('Date') }}:</strong> {{ $sale->transaction_date->format('Y-m-d H:i') }}<br>
-                                   <strong>{{ __('Status') }}:</strong> <span class="badge bg-primary">{{ ucfirst($sale->status) }}</span></p>
+                                   <strong>{{ __('Status') }}:</strong> <span class="badge bg-primary">{{ ucfirst($sale->status) }}</span>
+                                   @if($sale->amount_returned > 0)
+                                        <span class="badge bg-danger">{{ __('Returned') }}</span>
+                                        @if($sale->final_total - $sale->amount_returned <= 0)
+                                            <span class="badge bg-danger">{{ __('Fully Returned') }}</span>
+                                        @endif
+                                   @endif
+                                </p>
                             </div>
                             <div class="col-md-4">
                                 <h6><strong>{{ __('Location') }}:</strong></h6>
@@ -92,7 +99,36 @@
                                         <th><strong>{{ __('Final Total') }}</strong></th>
                                         <td class="text-end"><strong>{{ number_format($sale->final_total, 2) }}</strong></td>
                                     </tr>
+                                    @if($sale->amount_returned > 0)
+                                        <tr>
+                                            <th>{{ __('Total Returned') }}</th>
+                                            <td class="text-end">(-) {{ number_format($sale->amount_returned, 2) }}</td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <th><strong>{{ __('Net Total') }}</strong></th>
+                                            <td class="text-end"><strong>{{ number_format($sale->final_total - $sale->amount_returned, 2) }}</strong></td>
+                                        </tr>
+                                    @endif
+                                    <tr>
+                                        <th>{{ __('Total Paid') }}</th>
+                                        <td class="text-end">{{ number_format($sale->payment_lines->sum('amount'), 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>{{ __('Payment Due') }}</strong></th>
+                                        <td class="text-end text-danger"><strong>{{ number_format($sale->final_total - $sale->payment_lines->sum('amount') - $sale->amount_returned, 2) }}</strong></td>
+                                    </tr>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4 no-print">
+                            <div class="col-md-12 text-end">
+                                <a href="{{ route('sales-return.add', $sale->id) }}" class="btn btn-danger">
+                                    <i class="fa fa-rotate-left"></i> {{ __('Sales Return') }}
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="window.print();">
+                                    <i class="fa fa-print"></i> {{ __('Print') }}
+                                </button>
                             </div>
                         </div>
 

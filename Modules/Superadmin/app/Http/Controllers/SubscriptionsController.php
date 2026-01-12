@@ -78,8 +78,10 @@ class SubscriptionsController extends Controller
     {
         $subscription = Subscription::with(['business', 'package', 'manualPayments', 'addons'])
             ->findOrFail($id);
+        
+        $modules = \Modules\Superadmin\Models\Module::active()->orderBy('sort_order')->get();
             
-        return view('superadmin::subscriptions.show', compact('subscription'));
+        return view('superadmin::subscriptions.show', compact('subscription', 'modules'));
     }
 
     public function edit($id)
@@ -110,6 +112,14 @@ class SubscriptionsController extends Controller
             'end_date' => $validated['end_date'],
             'status' => $validated['status']
         ]);
+
+        if ($request->has('sync_package')) {
+            $package = $subscription->package;
+            $subscription->update([
+                'package_details' => $package->toArray(),
+                'module_activation_details' => $package->custom_permissions ?? [],
+            ]);
+        }
 
         // Sync add-ons
         $addonService = new \Modules\Superadmin\Services\AddonService();

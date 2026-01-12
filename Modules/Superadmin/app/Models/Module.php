@@ -11,6 +11,8 @@ class Module extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'name',
         'key',

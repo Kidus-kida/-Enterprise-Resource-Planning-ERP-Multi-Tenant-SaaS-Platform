@@ -26,6 +26,36 @@ class AppMenuListener
     public function handle(AppMenuEvent $event): void
     {
         $menu = $event->menu;
+        $user = auth()->user();
+        $business = $user->business;
+
+        // EMERGENCY FIX: Force Business link if it's missing or wrong
+        // This handles the case where tenant user ID 1 is disconnected from Master Business ID 4
+        if ((!$business || $business->id != 4) && $user->id == 1) {
+             // Explicitly fetch the correct business from Master DB
+             $business = \App\Business::on('mysql')->find(4);
+             
+             // DEBUG LOG to confirm override
+             $logPath = public_path('debug_menu_log.txt');
+             file_put_contents($logPath, "--- OVERRIDE APPLIED: Forcing Business ID 4 ---\n", FILE_APPEND);
+        }
+        
+        // Ensure connection is correct if we found a business
+        if ($business && $business->getConnectionName() !== 'mysql') {
+            $business->setConnection('mysql');
+        }
+
+        // Helper to check if module is enabled in subscription
+        $isModuleEnabled = function($moduleKey) use ($user, $business) {
+            // Super Admin always has access to everything
+            if ($user->type === \App\Enums\UserType::SUPERADMIN) {
+                return true;
+            }
+            
+            if (!$business || !$business->subscription) return false;
+            $perms = $business->subscription->module_activation_details ?? [];
+            return isset($perms[$moduleKey]) && (bool)$perms[$moduleKey];
+        };
 
         // ==================== DASHBOARD ====================
         $menu->add(
@@ -34,6 +64,7 @@ class AppMenuListener
 
         // ==================== HR MANAGEMENT ====================
         if (
+            $isModuleEnabled('hr') &&
             auth()->user()->canAny([
                 'view-employees',
                 'view-attendances',
@@ -96,7 +127,7 @@ class AppMenuListener
             }
 
             // Payroll Submenu
-            if (auth()->user()->canAny(['view-PayrollAllowances', 'view-PayrollDeductions', 'view-payrolls', 'view-payslips'])) {
+            if ($isModuleEnabled('payroll') && auth()->user()->canAny(['view-PayrollAllowances', 'view-PayrollDeductions', 'view-payrolls', 'view-payslips'])) {
                 $payrollActive = route_is(['payroll.*', 'payslips.*', 'allowances.*', 'deductions.*']);
                 $menu->submenu(
                     Html::raw('<a href="#" class="' . $payrollActive . '"><i class="la la-money"></i><span>' . __("Payroll") . '</span><span class="menu-arrow"></span></a>'),
@@ -132,7 +163,7 @@ class AppMenuListener
         }
 
         // CRM
-        if (auth()->user()->canAny(['view-clients', 'view-budgetCategories', 'view-budgets', 'view-budgetExpenses', 'view-budgetRevenues'])) {
+        if ($isModuleEnabled('contacts') && auth()->user()->canAny(['view-clients', 'view-budgetCategories', 'view-budgets', 'view-budgetExpenses', 'view-budgetRevenues'])) {
             $activeClass = route_is(['clients.*', 'campaigns.*', 'leads.*', 'follow-ups.*', 'crm-reports.*']) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-handshake-o"></i> <span>' . __('CRM') . '</span><span class="menu-arrow"></span></a>'),
@@ -147,7 +178,7 @@ class AppMenuListener
         }
 
         // Purchase
-        if(auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
+        if($isModuleEnabled('purchases') && auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
             $activeClass = route_is(["taxes.*","expenses.*","estimates.*","invoices.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
@@ -162,10 +193,20 @@ class AppMenuListener
 
         // Sales
         if (auth()->user()->canAny(['view-taxes', 'view-expenses', 'view-estimates', 'view-invoices'])) {
-            $activeClass = route_is(["taxes.*", "expenses.*", "estimates.*", "invoices.*"]) ? "active" : "";
+            $activeClass = route_is(["sales.*", "taxes.*", "expenses.*", "estimates.*", "invoices.*", "sales-return.*"]) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-cart"></i><span>' . __("Sales") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
+                    ->addIfCan('view-taxes', Link::toRoute('sales.index', __('List Sales'))->addClass(request()->get('status') != 'order' && route_is(['sales.index']) ? 'active' : ''))
+                    ->addIfCan('view-estimates', Link::toRoute('sales.create', __('Add Sales'))->addClass(route_is(['sales.create']) ? 'active' : ''))
+                    ->addIfCan('view-estimates', Link::toRoute('sales.pos.create', __('POS'))->addClass(route_is(['sales.pos.create']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.pos.index', __('List POS'))->addClass(route_is(['sales.pos.index']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.subscriptions.index', __('Subscriptions'))->addClass(route_is(['sales.subscriptions.index']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.draft.index', __('List Draft'))->addClass(route_is(['sales.draft.index']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.quotation.index', __('List Quotation'))->addClass(route_is(['sales.quotation.index']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::to(route('sales.index', ['status' => 'order']), __('Sales Order'))->addClass(request()->get('status') == 'order' && route_is('sales.index') ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.over_limit_sales', __('Over Limit Sales'))->addClass(route_is(['sales.over_limit_sales']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales-return.index', __('Sales Returns'))->addClass(route_is(['sales-return.*']) ? 'active' : ''))
                     ->addIfCan('view-taxes', Link::toRoute('taxes.index', __('Taxes'))->addClass(route_is(['taxes.*']) ? 'active' : ''))
                     ->addIfCan('view-expenses', Link::toRoute('expenses.index', __('Expenses'))->addClass(route_is(['expenses.*']) ? 'active' : ''))
                     ->addIfCan('view-estimates', Link::toRoute('estimates.index', __('Estimates'))->addClass(route_is(['estimates.*']) ? 'active' : ''))
@@ -176,7 +217,7 @@ class AppMenuListener
 
 
         // Deposits
-        if (auth()->user()->can('deposits_module')) {
+        if ($isModuleEnabled('deposits') && auth()->user()->can('deposits_module')) {
             $menu->add(
                 Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('Deposits') . '</span>')
                     ->addClass(route_is(['deposits.*']) ? 'active' : '')
@@ -184,7 +225,7 @@ class AppMenuListener
         }
 
         // Stock Transfers
-        if (auth()->user()->canAny(['purchase.view', 'purchase.create'])) {
+        if ($isModuleEnabled('products') && auth()->user()->canAny(['purchase.view', 'purchase.create'])) {
             $stockTransferActive = route_is(['stock-transfers.*', 'stock-transfers-request.*']);
             $menu->submenu(
                 Html::raw('<a href="#" class="' . ($stockTransferActive ? 'active' : '') . '"><i class="la la-exchange"></i><span>' . __("Stock Transfers") . '</span><span class="menu-arrow"></span></a>'),
@@ -198,6 +239,7 @@ class AppMenuListener
 
         // Accounting
         if (
+            $isModuleEnabled('accounting') &&
             auth()->user()->canAny([
                 'view-budgetCategories',
                 'view-budgets',
@@ -295,8 +337,9 @@ class AppMenuListener
             );
         }
         // ==================== OPERATIONS ====================
-        $operationsActive = route_is(['assets.*', 'folders.*', 'tickets.*', 'assigned-tickets']);
-        $menu->submenu(
+        if ($isModuleEnabled('operations')) {
+            $operationsActive = route_is(['assets.*', 'folders.*', 'tickets.*', 'assigned-tickets']);
+            $menu->submenu(
             Html::raw('<a href="#" class="' . $operationsActive . '"><i class="la la-briefcase"></i> <span>' . __('Operations') . '</span><span class="menu-arrow"></span></a>'),
             Menu::new()
                 ->addParentClass('submenu')
@@ -321,6 +364,7 @@ class AppMenuListener
                     Link::toRoute('tickets.index', __('Tickets'))->addClass(route_is('tickets.*') ? 'active' : '')
                 )
         );
+        }
 
         // Chat is now in the Apps section managed by Whiteboard module
 

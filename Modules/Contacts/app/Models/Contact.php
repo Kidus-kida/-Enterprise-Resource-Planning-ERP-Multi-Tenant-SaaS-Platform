@@ -32,7 +32,7 @@ class Contact extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('active', '1');
+        return $query->where('contact_status', 'active');
     }
 
     public function scopeOnlySuppliers($query)
@@ -47,7 +47,7 @@ class Contact extends Model
 
     public function scopeOnlyActive($query)
     {
-        return $query->where('contacts.active', 1);
+        return $query->where('contacts.contact_status', 'active');
     }
 
     // Removed relationships to non-existent models: loans, documentsAndnote, business

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->integer('business_id')->nullable();
             $table->string('firstname');
             $table->string('middlename')->nullable();
             $table->string('lastname');
@@ -30,7 +31,7 @@ return new class extends Migration
             $table->string('dial_code')->nullable();
             $table->integer('created_by')->nullable();
             $table->boolean('is_active')->nullable()->default(false);
-            $table->unsignedBigInteger('business_id')->nullable();
+            $table->boolean('is_online')->nullable()->default(false);
             $table->string('lang')->nullable();
             $table->string('layout')->nullable();
             $table->string('color_scheme')->nullable();

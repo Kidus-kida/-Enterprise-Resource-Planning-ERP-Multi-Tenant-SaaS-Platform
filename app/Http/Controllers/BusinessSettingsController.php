@@ -93,7 +93,7 @@ class BusinessSettingsController extends Controller
                 'date_format', 'time_format', 'currency_precision', 'quantity_precision',
                 'default_profit_percent', 'font_style', 'font_size', 'reg_no',
                 'sku_prefix', 'expiry_type', 'on_product_expiry', 'stop_selling_before',
-                'sales_cmsn_agnt', 'item_addition_method', 'theme_color'
+                'sales_cmsn_agnt', 'item_addition_method', 'theme_color', 'business_categories'
             ]);
 
             // Handle Checkboxes (convert to 1 or 0)

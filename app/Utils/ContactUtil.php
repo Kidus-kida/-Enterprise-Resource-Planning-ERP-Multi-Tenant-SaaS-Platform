@@ -7,9 +7,9 @@ use App\ContactGroup;
 use App\Transaction;
 use App\TransactionPayment;
 use Illuminate\Support\Facades\DB;
-use Modules\Petro\Entities\CustomerPayment;
-use Modules\Vat\Entities\VatPayment;
-use Modules\Vat\Entities\VatPayableToAccount;
+// use Modules\Petro\Entities\CustomerPayment;
+// use Modules\Vat\Entities\VatPayment;
+// use Modules\Vat\Entities\VatPayableToAccount;
 
 class ContactUtil
 {
@@ -77,9 +77,11 @@ class ContactUtil
         
         $balance_details['total_paid'] = $pmts;
         
-        $customer_payments = CustomerPayment::where('customer_id', $contact_id)->sum('sub_total');
-        if(!empty($customer_payments)){
-            $balance_details['total_paid'] += $customer_payments;
+        if (class_exists('Modules\Petro\Entities\CustomerPayment')) {
+            $customer_payments = \Modules\Petro\Entities\CustomerPayment::where('customer_id', $contact_id)->sum('sub_total');
+            if(!empty($customer_payments)){
+                $balance_details['total_paid'] += $customer_payments;
+            }
         }
         
         
@@ -204,12 +206,14 @@ class ContactUtil
         
         $balance_details['total_paid'] = $pmts;
         
-        $customer_payments = CustomerPayment::leftjoin('settlements','customer_payments.settlement_no','settlements.id')
-                                            ->whereDate('settlements.transaction_date','<',$start_date)
-                                            ->where('customer_payments.customer_id', $contact_id)
-                                            ->sum('customer_payments.sub_total');
-        if(!empty($customer_payments)){
-            $balance_details['total_paid'] += $customer_payments;
+        if (class_exists('Modules\Petro\Entities\CustomerPayment')) {
+            $customer_payments = \Modules\Petro\Entities\CustomerPayment::leftjoin('settlements','customer_payments.settlement_no','settlements.id')
+                                                ->whereDate('settlements.transaction_date','<',$start_date)
+                                                ->where('customer_payments.customer_id', $contact_id)
+                                                ->sum('customer_payments.sub_total');
+            if(!empty($customer_payments)){
+                $balance_details['total_paid'] += $customer_payments;
+            }
         }
         
         
@@ -246,23 +250,26 @@ class ContactUtil
                 $balance = $txns->sell_tax + $txns->penalty_tax - ($txns->purchase_tax + $txns->expense_tax) ;
             }
             
-            $pmts = VatPayment::whereDate('date','<',$start_date)
+            if (class_exists('Modules\Vat\Entities\VatPayment')) {
+                $pmts = \Modules\Vat\Entities\VatPayment::whereDate('date','<',$start_date)
                     ->where('business_id', $business_id)
                     ->whereDate('date','>',$minimum_date)
                     ->sum('amount');
-            $obs = VatPayableToAccount::whereDate('created_at','<',$start_date)
+                $balance -= $pmts;
+            }
+            
+            if (class_exists('Modules\Vat\Entities\VatPayableToAccount')) {
+                $obs = \Modules\Vat\Entities\VatPayableToAccount::whereDate('created_at','<',$start_date)
                     ->whereDate('created_at','>',$minimum_date)
                     ->where('business_id', $business_id)
                     ->select([
                         DB::raw("SUM(IF(type = 'vat_receivable_account', amount, 0)) as input_ob"),
                         DB::raw("SUM(IF(type = 'vat_payable_account', amount, 0)) as output_ob")
                     ])->first();
-                    
-            if(!empty($obs)){
-                $balance += $obs->ouput_ob - $obs->input_ob;
+                if(!empty($obs)){
+                    $balance += $obs->ouput_ob - $obs->input_ob;
+                }
             }
-            
-            $balance -= $pmts;
             
         
         
@@ -298,20 +305,23 @@ class ContactUtil
                 $balance['output_tax'] = $txns->sell_tax + $txns->penalty_tax;
             }
         
-            $pmts = VatPayment::whereDate('date','>',$minimum_date)
+            if (class_exists('Modules\Vat\Entities\VatPayment')) {
+                $pmts = \Modules\Vat\Entities\VatPayment::whereDate('date','>',$minimum_date)
                     ->where('business_id', $business_id)
                     ->sum('amount');
-            $balance['total_paid'] = $pmts;
+                $balance['total_paid'] = $pmts;
+            }
             
-            $obs = VatPayableToAccount::whereDate('created_at','>',$minimum_date)
+            if (class_exists('Modules\Vat\Entities\VatPayableToAccount')) {
+                $obs = \Modules\Vat\Entities\VatPayableToAccount::whereDate('created_at','>',$minimum_date)
                     ->where('business_id', $business_id)
                     ->select([
                         DB::raw("SUM(IF(type = 'vat_receivable_account', amount, 0)) as input_ob"),
                         DB::raw("SUM(IF(type = 'vat_payable_account', amount, 0)) as output_ob")
                     ])->first();
-                    
-            if(!empty($obs)){
-                $balance += $obs->ouput_ob - $obs->input_ob;
+                if(!empty($obs)){
+                    $balance += $obs->ouput_ob - $obs->input_ob;
+                }
             }
                     
         
@@ -350,40 +360,49 @@ class ContactUtil
                         
                     ]);
                     
-        $pmts = VatPayment::where('vat_payments.business_id', $business_id)
-                    ->whereDate('date','>',$minimum_date)
-                    ->whereDate('date','>=',$start_date)
-                    ->whereDate('date','<=',$end_date)
-                    ->select([
-                        'id',
-                        'date as date',
-                        DB::raw('"vat_payment" as type'),
-                        'amount as amount',
-                        'note as transaction_note'
-
-                    ]);
+        if (class_exists('Modules\Vat\Entities\VatPayment')) {
+            $pmts = \Modules\Vat\Entities\VatPayment::where('vat_payments.business_id', $business_id)
+                        ->whereDate('date','>',$minimum_date)
+                        ->whereDate('date','>=',$start_date)
+                        ->whereDate('date','<=',$end_date)
+                        ->select([
+                            'id',
+                            'date as date',
+                            DB::raw('"vat_payment" as type'),
+                            'amount as amount',
+                            'note as transaction_note'
+                        ]);
+        }
                     
-        $obs = VatPayableToAccount::where('business_id', $business_id)
-                    ->whereDate('created_at','>',$minimum_date)
-                    ->whereDate('created_at','>=',$start_date)
-                    ->whereDate('created_at','<=',$end_date)
-                    ->select([
-                        'id',
-                        'created_at as date',
-                        DB::raw('
-                            CASE 
-                                WHEN type = "vat_receivable_account" THEN "input_ob"
-                                WHEN type = "vat_payable_account" THEN "output_ob" 
-                            END as type'
-                        ),
-                        'amount as amount',
-                        'note as transaction_note'
-
-                    ]);
+        if (class_exists('Modules\Vat\Entities\VatPayableToAccount')) {
+            $obs = \Modules\Vat\Entities\VatPayableToAccount::where('business_id', $business_id)
+                        ->whereDate('created_at','>',$minimum_date)
+                        ->whereDate('created_at','>=',$start_date)
+                        ->whereDate('created_at','<=',$end_date)
+                        ->select([
+                            'id',
+                            'created_at as date',
+                            DB::raw('
+                                CASE 
+                                    WHEN type = "vat_receivable_account" THEN "input_ob"
+                                    WHEN type = "vat_payable_account" THEN "output_ob" 
+                                END as type'
+                            ),
+                            'amount as amount',
+                            'note as transaction_note'
+                        ]);
+        }
                     
                     
         
-        $txnResult = $txns->unionAll($pmts)->unionAll($obs)->orderBy('date', 'asc');
+        $txnResult = $txns;
+        if (isset($pmts)) {
+            $txnResult = $txnResult->unionAll($pmts);
+        }
+        if (isset($obs)) {
+            $txnResult = $txnResult->unionAll($obs);
+        }
+        $txnResult = $txnResult->orderBy('date', 'asc');
         
         
         return $txnResult->get();
@@ -501,30 +520,37 @@ class ContactUtil
                     ]);
                     
                     
-        $customer_payments = CustomerPayment::leftjoin('settlements','customer_payments.settlement_no','settlements.id')
-                                        ->leftjoin('transactions','transactions.invoice_no','settlements.settlement_no')
-                                        ->leftjoin('business_locations','business_locations.id','transactions.location_id')
-                                        ->whereDate('settlements.transaction_date','>=',$start_date)
-                                        ->whereDate('settlements.transaction_date','<=',$end_date)
-                                        ->where('customer_payments.customer_id', $contact_id)
-                                        ->select([
-                                            'transactions.id',
-                                            'settlements.transaction_date as date',
-                                            DB::raw('"customer_payment" as type'),
-                                            'settlements.settlement_no as invoice_no',
-                                            'business_locations.name as location_name',
-                                            DB::raw('NULL as payment_status'),
-                                            'customer_payments.sub_total as amount',
-                                            DB::raw('NULL as ch_charges'),
-                                            DB::raw('customer_payments.id as payment_row'),
-                                            DB::raw('customer_payments.bank_name as account_id'),
-                                            DB::raw('NULL as deleted_at'),
-                                            DB::raw('NULL as deleted_by'),
-                                        ])->groupBy('customer_payments.id');
+        if (class_exists('Modules\Petro\Entities\CustomerPayment')) {
+            $customer_payments = \Modules\Petro\Entities\CustomerPayment::leftjoin('settlements','customer_payments.settlement_no','settlements.id')
+                                            ->leftjoin('transactions','transactions.invoice_no','settlements.settlement_no')
+                                            ->leftjoin('business_locations','business_locations.id','transactions.location_id')
+                                            ->where('customer_payments.business_id', $business_id)
+                                            ->whereDate('settlements.transaction_date','>=',$start_date)
+                                            ->whereDate('settlements.transaction_date','<=',$end_date)
+                                            ->where('customer_payments.customer_id', $contact_id)
+                                            ->select([
+                                                'transactions.id',
+                                                'settlements.transaction_date as date',
+                                                DB::raw('"customer_payment" as type'),
+                                                'settlements.settlement_no as invoice_no',
+                                                'business_locations.name as location_name',
+                                                DB::raw('NULL as payment_status'),
+                                                'customer_payments.sub_total as amount',
+                                                DB::raw('NULL as ch_charges'),
+                                                DB::raw('customer_payments.id as payment_row'),
+                                                DB::raw('customer_payments.bank_name as account_id'),
+                                                DB::raw('NULL as deleted_at'),
+                                                DB::raw('NULL as deleted_by'),
+                                            ])->groupBy('customer_payments.id');
+        }
         
         
         
-        $txnResult = $txns->unionAll($pmts)->unionAll($customer_payments)->orderBy('date', 'asc');
+        $txnResult = $txns->unionAll($pmts);
+        if (isset($customer_payments)) {
+            $txnResult = $txnResult->unionAll($customer_payments);
+        }
+        $txnResult = $txnResult->orderBy('date', 'asc');
         
         return $txnResult->get();
     }
@@ -590,11 +616,10 @@ class ContactUtil
         $contact = Contact::where('type', 'customer')
                     ->where('business_id', $business_id)
                     ->where('is_default', 1)
-                    ->first()
-                    ->toArray();
+                    ->first();
 
         if (!empty($contact)) {
-            return $contact;
+            return $contact->toArray();
         } else {
             return false;
         }

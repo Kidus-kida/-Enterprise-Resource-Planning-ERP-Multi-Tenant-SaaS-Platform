@@ -59,7 +59,7 @@ class SubscriptionService
 
         $permissions = $subscription->module_activation_details ?? [];
         
-        return isset($permissions[$moduleName]) && $permissions[$moduleName] === true;
+        return isset($permissions[$moduleName]) && (bool)$permissions[$moduleName];
     }
 
     public function handleExpiredSubscriptions()
