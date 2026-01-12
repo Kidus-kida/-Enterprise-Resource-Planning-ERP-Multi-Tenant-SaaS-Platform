@@ -1,4 +1,4 @@
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar" style="top: 45px !important;">
     <div class="sidebar-inner slimscroll">
         <div id="sidebar-menu" class="sidebar-menu">
             <nav class="greedys sidebar-horizantal">
@@ -11,7 +11,7 @@
     </div>
 </div>
 <!-- Two Col Sidebar -->
-<div class="two-col-bar" id="two-col-bar">
+<div class="two-col-bar" id="two-col-bar" style="top: 45px !important;">
     <div class="sidebar sidebar-twocol">
         <div class="sidebar-left slimscroll">
             <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
