@@ -4,8 +4,8 @@
     <div class="col-md-4">
         <div class="form-group mb-3">
             <label class="form-label">Business Name <span class="text-danger">*</span></label>
-            <input type="text" name="name" class="form-control" value="{{ optional($business)->name ?? '' }}"
-                required readonly>
+            <input type="text" name="name" class="form-control" value="{{ $business->name ?? '' }}"
+                required>
         </div>
     </div>
     <div class="col-md-4">
