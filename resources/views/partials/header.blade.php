@@ -1,10 +1,12 @@
-<div class="header">
+<div class="header" style="height: 45px !important;">
 
     <!-- Logo -->
-    <x-logo />
+<div style="height: 40px !important; line-height: 40px !important; float: left; text-align: center; transform: translateY(-8px);">
+        <x-logo />
+    </div>
     <!-- /Logo -->
 
-    <a id="toggle_btn" href="javascript:void(0);">
+    <a id="toggle_btn" href="javascript:void(0);" style="line-height: 45px !important;">
         <span class="bar-icon">
             <span></span>
             <span></span>
@@ -13,19 +15,19 @@
     </a>
 
     <!-- Header Title -->
-    <div class="page-title-box">
+    <div class="page-title-box" style="height: 45px !important; line-height: 45px !important; transform: translateY(-8px);">
         <h3>{{ Theme('name') ?? config('app.name') }}</h3>
     </div>
     <!-- /Header Title -->
 
-    <a id="mobile_btn" class="mobile_btn" href="#sidebar"><i class="fa-solid fa-bars"></i></a>
+    <a id="mobile_btn" class="mobile_btn" href="#sidebar" style="height: 45px !important; line-height: 45px !important;"><i class="fa-solid fa-bars"></i></a>
 
     <!-- Header Menu -->
-    <ul class="nav user-menu">
+    <ul class="nav user-menu" style="height: 45px !important;">
 
 
         <li class="nav-item dropdown has-arrow main-drop">
-            <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+            <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
                 <span class="user-img"><img src="{{ !empty(auth()->user()->avatar) ? uploadedAsset(auth()->user()->avatar,'users'): asset('images/user.jpg') }}" alt="User Image">
                     <span class="status online"></span></span>
                 <span>{{ auth()->user()->fullname }}</span>
