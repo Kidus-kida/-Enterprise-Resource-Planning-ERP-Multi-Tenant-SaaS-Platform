@@ -120,5 +120,6 @@ temp_log.txt
 /storage/framework/sessions/
 /storage/framework/views/
 /storage/framework/testing/
+/public/debug_menu_log.txt
 
 
