@@ -54,6 +54,23 @@ window.addEventListener('load', function() {
             var script = document.createElement('script');
             script.id = scriptInfo.id;
             script.src = scriptInfo.src;
+            script.onload = function() {
+                if (scriptInfo.id === 'datetimepicker-js') {
+                    if ($(".datetimepicker").length > 0) {
+                        $(".datetimepicker").each(function () {
+                            $(this).datetimepicker({
+                                format: "YYYY-MM-DD H:i",
+                                icons: {
+                                    up: "fa fa-angle-up",
+                                    down: "fa fa-angle-down",
+                                    next: "fa fa-angle-right",
+                                    previous: "fa fa-angle-left",
+                                },
+                            });
+                        });
+                    }
+                }
+            };
             document.body.appendChild(script);
         }
     });

@@ -175,7 +175,7 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
     });
 });
 
-if ($(".datetimepicker").length > 0) {
+if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
     $(".datetimepicker").each(function () {
         $(this).datetimepicker({
             format: "YYYY-MM-DD H:i",
