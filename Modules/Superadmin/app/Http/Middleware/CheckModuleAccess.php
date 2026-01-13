@@ -23,11 +23,29 @@ class CheckModuleAccess
             return redirect()->route('login');
         }
 
+        // Super Admin bypass
+        if ($user->type === \App\Enums\UserType::SUPERADMIN) {
+            return $next($request);
+        }
+
         $business = $user->business ?? null;
 
-        // EMERGENCY FIX: Force Business link if it's missing or wrong
-        if ((!$business || $business->id != 4) && $user->id == 1) {
-             $business = \App\Business::on('mysql')->find(4);
+        // Dynamic Tenant Resolution: identify which business owns the current DB
+        $currentDb = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+        $tenantBusinessId = null;
+        
+        $tenantRecord = \Illuminate\Support\Facades\DB::connection('mysql')
+            ->table('tenants')
+            ->where('database_name', $currentDb)
+            ->first();
+            
+        if ($tenantRecord) {
+             $tenantBusinessId = $tenantRecord->business_id;
+        }
+
+        // Prefer tenant's business ID if mismatch
+        if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
+             $business = \App\Business::on('mysql')->find($tenantBusinessId);
         }
 
         if (!$business) {

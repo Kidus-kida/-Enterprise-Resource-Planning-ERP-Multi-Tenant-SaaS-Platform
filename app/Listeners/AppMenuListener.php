@@ -27,23 +27,72 @@ class AppMenuListener
     {
         $menu = $event->menu;
         $user = auth()->user();
+        $user = auth()->user();
         $business = $user->business;
 
-        // EMERGENCY FIX: Force Business link if it's missing or wrong
-        // This handles the case where tenant user ID 1 is disconnected from Master Business ID 4
-        if ((!$business || $business->id != 4) && $user->id == 1) {
-             // Explicitly fetch the correct business from Master DB
-             $business = \App\Business::on('mysql')->find(4);
-             
-             // DEBUG LOG to confirm override
-             $logPath = public_path('debug_menu_log.txt');
-             file_put_contents($logPath, "--- OVERRIDE APPLIED: Forcing Business ID 4 ---\n", FILE_APPEND);
+        // Dynamic Tenant Resolution: identify which business owns the current context
+        // We prioritize the session 'current_tenant_id' set by SwitchTenantDatabase middleware
+        $tenantBusinessId = null;
+        $tenantId = session('current_tenant_id');
+        
+        if ($tenantId) {
+            $tenantRecord = \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', $tenantId)
+                ->first();
+                
+            if ($tenantRecord) {
+                $tenantBusinessId = $tenantRecord->business_id;
+            }
+        } 
+        
+        // Fallback: Check if the current database connection name resembles a tenant DB
+        // precise check if session didn't work (e.g. CLI or weird state)
+        if (!$tenantBusinessId) {
+             try {
+                 // Check if tenant connection is configured before accessing
+                 if (\Illuminate\Support\Facades\Config::has('database.connections.tenant')) {
+                     $currentDb = \Illuminate\Support\Facades\DB::connection('tenant')->getDatabaseName();
+                     // Only query if we have a connection named 'tenant' that is different from 'mysql'
+                     if ($currentDb && $currentDb !== \Illuminate\Support\Facades\DB::connection('mysql')->getDatabaseName()) {
+                         $tenantRecord = \Illuminate\Support\Facades\DB::connection('mysql')
+                            ->table('tenants')
+                            ->where('database_name', $currentDb)
+                            ->first();
+                         if ($tenantRecord) {
+                            $tenantBusinessId = $tenantRecord->business_id;
+                         }
+                     }
+                 }
+             } catch (\Exception $e) {
+                 // Tenant connection might not be configured, ignore error
+             }
+        }
+
+        // If the user's business_id doesn't match the tenant's business_id, prefer the tenant's ID
+        // This fixes the case where seeding set user->business_id = 1, but the tenant is actually business_id = 6
+        if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
+             $business = \App\Business::on('mysql')->find($tenantBusinessId);
         }
         
         // Ensure connection is correct if we found a business
         if ($business && $business->getConnectionName() !== 'mysql') {
             $business->setConnection('mysql');
         }
+
+        // DEBUG: Write final state to log
+        $logPath = public_path('debug_menu_log.txt');
+        $debugData = [
+            'timestamp' => now()->toDateTimeString(),
+            'user_id' => $user->id,
+            'session_tenant_id' => $tenantId,
+            'tenant_business_id_found' => $tenantBusinessId,
+            'final_business_id' => $business ? $business->id : 'NULL',
+            'subscription_loaded' => $business && $business->subscription ? 'YES' : 'NO',
+            'sub_id' => $business && $business->subscription ? $business->subscription->id : 'N/A',
+            'module_details' => $business && $business->subscription ? $business->subscription->module_activation_details : 'N/A'
+        ];
+        file_put_contents($logPath, print_r($debugData, true), FILE_APPEND);
 
         // Helper to check if module is enabled in subscription
         $isModuleEnabled = function($moduleKey) use ($user, $business) {

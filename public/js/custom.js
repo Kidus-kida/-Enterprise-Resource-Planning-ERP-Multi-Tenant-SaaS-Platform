@@ -26,21 +26,18 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
             if (!$("#generalModalPopup").length) {
                 $("body").append(
                     $(
-                        `<div class="modal custom-modal ${
-                            style ? style : "fade"
+                        `<div class="modal custom-modal ${style ? style : "fade"
                         }" id="generalModalPopup" role="dialog">
-                            <div class="modal-dialog modal-dialog-centered ${
-                                size ? "modal-" + size : ""
-                            }" role="document">
+                            <div class="modal-dialog modal-dialog-centered ${size ? "modal-" + size : ""
+                        }" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        ${
-                                            title
-                                                ? '<h5 class="modal-title">' +
-                                                    title +
-                                                    "</h5>"
-                                                : ""
-                                        }
+                                        ${title
+                            ? '<h5 class="modal-title">' +
+                            title +
+                            "</h5>"
+                            : ""
+                        }
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
@@ -51,6 +48,10 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
                         </div>`
                     )
                 );
+            } else {
+                // Update title and size for existing modal
+                $("#generalModalPopup .modal-title").html(title || "");
+                $("#generalModalPopup .modal-dialog").attr("class", `modal-dialog modal-dialog-centered ${size ? "modal-" + size : ""}`);
             }
             $("#generalModalPopup .body").html(data);
             $("#generalModalPopup").modal("show");
@@ -88,10 +89,28 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
                 });
             }
         },
-        error: function (xhr) {                
+        error: function (xhr) {
             $(".loader-wrapper").addClass('d-none');
             console.log(xhr);
             alert("something went wrong")
+        }
+    });
+});
+
+$(document).on('click', '.view_modal', function (e) {
+    e.preventDefault();
+    var href = $(this).data('href');
+    var container = '#view_modal';
+
+    if (!$(container).length) {
+        $('body').append('<div class="modal fade" id="view_modal" tabindex="-1" role="dialog"></div>');
+    }
+
+    $.ajax({
+        url: href,
+        dataType: 'html',
+        success: function (result) {
+            $(container).html(result).modal('show');
         }
     });
 });

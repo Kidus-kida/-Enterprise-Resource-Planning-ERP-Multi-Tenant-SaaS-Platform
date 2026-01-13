@@ -114,7 +114,14 @@ class SubscriptionsController extends Controller
         ]);
 
         if ($request->has('sync_package')) {
-            $package = $subscription->package;
+            $package = $subscription->package()->first(); // Ensure fresh load
+            
+            \Illuminate\Support\Facades\Log::info('Syncing Permissions for Sub #' . $subscription->id, [
+                'package_id' => $package->id,
+                'package_name' => $package->name,
+                'package_permissions' => $package->custom_permissions
+            ]);
+
             $subscription->update([
                 'package_details' => $package->toArray(),
                 'module_activation_details' => $package->custom_permissions ?? [],
