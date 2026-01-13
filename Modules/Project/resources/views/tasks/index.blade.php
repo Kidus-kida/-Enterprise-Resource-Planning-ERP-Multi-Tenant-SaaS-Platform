@@ -2,14 +2,90 @@
 
 @push('page-styles')
     <style>
-        .kanban-list {
-            min-width: 300px; /* Ensure lists have a minimum width */
+        /* Viewport Layout fixes */
+        .content {
+            height: calc(100vh - 64px); /* Subtract approximate header height */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent window scroll */
+            padding-bottom: 0 !important;
         }
 
+        .board-view-header {
+            flex: 0 0 auto;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Responsive spacing for filter form */
+        .board-view-header .form-control {
+            margin-bottom: 0;
+        }
+
+        .kanban-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: none;
+            box-shadow: none;
+            margin-bottom: 0 !important;
+            background: transparent;
+        }
+
+        .kanban-board .card-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .kanban-cont {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex: 1;
+            padding-bottom: 10px; /* Space for horizontal scrollbar */
+            gap: 15px; /* Gap between columns */
+        }
+
+        .kanban-list {
+            min-width: 300px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: #f8f9fa; /* Light background for column */
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .kanban-header {
+            flex: 0 0 auto;
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+
+        .kanban-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            min-height: 0; /* Enable scrolling in flex child */
+        }
+
+        /* Task Card Styling */
         .task-card {
             margin-bottom: 10px;
+            border: 1px solid #e3e6f0;
             border-left: 4px solid transparent; /* For priority indicator */
             transition: all 0.2s ease-in-out;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .task-card:last-child {
+            margin-bottom: 0px;
         }
 
         .task-card:hover {
@@ -26,7 +102,7 @@
         }
 
         .task-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             line-height: 1.3;
         }
@@ -42,13 +118,13 @@
 
         .task-priority-indicator {
             width: 100%;
-            height: 4px;
+            height: 3px;
             border-radius: 2px;
-            margin-bottom: 8px;
+            margin: 8px 0;
         }
 
         .task-card-footer {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #6c757d;
         }
 
@@ -57,29 +133,68 @@
             height: 24px;
         }
 
-        .kanban-task-action .dropdown-toggle::after {
-            display: none; /* Hide default caret */
-        }
+        .kanban-task-action .dropdown-toggle::after { display: none; }
         .kanban-task-action .dropdown-toggle i {
             font-size: 1rem;
             color: #6c757d;
         }
 
-        /* Custom styles for larger, circular avatars */
-        .pro-team-lead .avatar,
-        .pro-team-members .avatar {
-            width: 40px; /* Reduced size */
-            height: 40px; /* Reduced size */
-            border-radius: 50%; /* Ensure perfect circle */
-            overflow: hidden; /* Clip content outside the circle */
+        /* Scrollbar Styling */
+        .kanban-cont::-webkit-scrollbar,
+        .kanban-wrap::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        .pro-team-lead .avatar img,
-        .pro-team-members .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensure image fills the circle without distortion */
-            border-radius: 50%; /* Redundant but good for safety */
+        .kanban-cont::-webkit-scrollbar-track,
+        .kanban-wrap::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .kanban-cont::-webkit-scrollbar-thumb,
+        .kanban-wrap::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .kanban-cont::-webkit-scrollbar-thumb:hover,
+        .kanban-wrap::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Odoo Header Styles */
+        .odoo-task-header {
+            min-height: 50px;
+            border-bottom: 1px solid #e3e6f0;
+            background: #fff;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .odoo-search-bar .form-control {
+            border-radius: 0;
+            border-color: #ced4da;
+        }
+        
+        .odoo-search-bar .form-control:focus {
+            box-shadow: none;
+            border-color: #ced4da;
+        }
+
+        .odoo-search-bar .input-group-text {
+            border-radius: 4px 0 0 4px;
+            border-color: #ced4da;
+        }
+        
+        /* Adjust content height since header is smaller */
+        .content {
+            height: calc(100vh - 60px); 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            padding-bottom: 0 !important;
+            padding-top: 0 !important; /* Remove top padding to fit flush */
         }
     </style>
     <!-- Page Css -->
@@ -89,50 +204,76 @@
 @section('page-content')
     <div class="content container-fluid">
 
-        <!-- Page Header -->
-        <x-breadcrumb class="col">
-            <x-slot name="title">{{ $project->name }}</x-slot>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
-                </li>
-                <li class="breadcrumb-item active">
-                    {{ __('Task Board') }}
-                </li>
-            </ul>
-        </x-breadcrumb>
-        <!-- /Page Header -->
-
-        <div class="row board-view-header mb-3">
-            <div class="col-12 col-md-8">
-                <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET" class="d-flex gap-2 align-items-center">
-                    <div style="min-width: 200px;">
-                        <select name="person" id="person-filter-select" class="form-control">
-                            <option value="">{{ __('All People') }}</option>
-                            @foreach($employees as $employee)
-                                <option value="{{ $employee->id }}" @if(request('person') == $employee->id) selected @endif>{{ $employee->fullname }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div style="min-width: 150px;">
-                        <input type="text" name="start_date" class="form-control datetimepicker" value="{{ request('start_date') }}" placeholder="Start Date">
-                    </div>
-                    <div style="min-width: 150px;">
-                        <input type="text" name="end_date" class="form-control datetimepicker" value="{{ request('end_date') }}" placeholder="End Date">
-                    </div>
-                    <button type="submit" class="btn btn-primary">{{ __('Filter') }}</button>
-                    <a href="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" class="btn btn-outline-secondary">{{ __('Clear') }}</a>
-                </form>
-            </div>
-            <div class="col-12 col-md-4 text-end">
-                <a href="javascript:void(0)" class="btn btn-white float-end ms-2"
-                    data-url="{{ route('task-boards.create', ['project_id' => $project->id]) }}" data-ajax-modal="true"
-                    data-size="md" data-title="Add Task Board">
-                    <i class="fa-solid fa-plus"></i> {{ __('Create List') }}
+        <!-- Odoo-style Compact Header -->
+        <div class="odoo-task-header d-flex justify-content-between align-items-center mb-2 px-1">
+            <div class="d-flex align-items-center gap-3">
+                <h4 class="mb-0 fw-bold">{{ $project->name }}</h4>
+                <a href="javascript:void(0)" class="btn btn-primary btn-sm"
+                    data-url="{{ route('project-tasks.create', ['project' => $project->id]) }}" data-ajax-modal="true"
+                    data-size="md" data-title="{{ __('Add Task') }}">
+                    {{ __('New') }}
                 </a>
-                <a href="{{ route('projects.show', ['project' => \Crypt::encrypt($project->id)]) }}"
-                    class="btn btn-white float-end" data-bs-toggle="tooltip" title="View Project"><i
-                        class="fa fa-link"></i></a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <!-- Search & Filter Bar -->
+                <div class="odoo-search-bar input-group input-group-sm" style="width: 300px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search..." aria-label="Search">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-filter"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
+                        <li><h6 class="dropdown-header">Filters</h6></li>
+                        <li>
+                            <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET">
+                                <div class="mb-2">
+                                    <select name="person" class="form-select form-select-sm">
+                                        <option value="">{{ __('All People') }}</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}" @if(request('person') == $employee->id) selected @endif>{{ $employee->fullname }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" name="start_date" class="form-control form-control-sm datetimepicker" value="{{ request('start_date') }}" placeholder="Start Date">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" name="end_date" class="form-control form-control-sm datetimepicker" value="{{ request('end_date') }}" placeholder="End Date">
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ __('Apply') }}</button>
+                                </div>
+                            </form>
+                        </li>
+                    </ul>
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-bars"></i></button>
+                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">Group By</h6></li>
+                        <li><a class="dropdown-item" href="#">Stage</a></li>
+                        <li><a class="dropdown-item" href="#">Assignee</a></li>
+                        <li><a class="dropdown-item" href="#">Priority</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Action Menu -->
+                 <div class="dropdown">
+                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                             <a href="javascript:void(0)" class="dropdown-item"
+                                data-url="{{ route('task-boards.create', ['project_id' => $project->id]) }}" data-ajax-modal="true"
+                                data-size="md" data-title="Add Column">
+                                {{ __('Add Column') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('projects.show', ['project' => \Crypt::encrypt($project->id)]) }}" class="dropdown-item">
+                                {{ __('Project Settings') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="kanban-board card mb-0">
@@ -300,13 +441,15 @@
         }
     </script>
     <script>
-        $(function() {
-            // Initialize Select2 for person filter
-            $('#person-filter-select').select2({
-                placeholder: 'Select a person',
-                allowClear: true,
-                width: '100%',
-                minimumResultsForSearch: 0 // Ensure search is enabled
+        window.addEventListener('load', function() {
+            $(function() {
+                // Initialize Select2 for person filter
+                $('#person-filter-select').select2({
+                    placeholder: 'Select a person',
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0 // Ensure search is enabled
+                });
             });
         });
     </script>
