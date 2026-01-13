@@ -6,6 +6,127 @@ import sort from '@alpinejs/sort'
 window.Livewire = Livewire
 window.Alpine = Alpine
 Alpine.plugin(sort)
+
+// Register odooSearch Alpine component
+document.addEventListener('alpine:init', () => {
+    Alpine.data('odooSearch', (action, fields, initialParams) => ({
+        action: action,
+        fields: fields,
+        searchQuery: '',
+        showDropdown: false,
+        showFilters: false,
+        activeFilters: [],
+
+        init() {
+            // Initialize active filters from server request params
+            Object.keys(initialParams).forEach(key => {
+                const field = this.fields.find(f => f.key === key);
+                if (field) {
+                    this.activeFilters.push({
+                        key: key,
+                        label: field.label,
+                        value: initialParams[key]
+                    });
+                } else if (key === 'search') {
+                    this.activeFilters.push({
+                        key: 'search',
+                        label: 'Search',
+                        value: initialParams[key]
+                    });
+                }
+            });
+        },
+
+        addFilter(key, label, value) {
+            this.activeFilters.push({ key, label, value });
+            this.searchQuery = '';
+            this.showDropdown = false;
+            this.submitSearch();
+        },
+
+        selectField(field) {
+            this.addFilter(field.key, field.label, this.searchQuery);
+        },
+
+        removeFilter(index) {
+            this.activeFilters.splice(index, 1);
+            this.submitSearch();
+        },
+
+        handleBackspace() {
+            if (this.searchQuery === '' && this.activeFilters.length > 0) {
+                this.activeFilters.pop();
+            }
+        },
+
+        submitSearch() {
+            const params = new URLSearchParams();
+            this.activeFilters.forEach(filter => {
+                params.append(filter.key, filter.value);
+            });
+            
+            const url = `${this.action}?${params.toString()}`;
+            console.log('Fetching URL:', url);
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();
+            })
+            .then(html => {
+                console.log('Response HTML length:', html.length);
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const newBoard = doc.querySelector('.kanban-cont');
+                const currentBoard = document.querySelector('.kanban-cont');
+                
+                console.log('New board found:', !!newBoard);
+                console.log('Current board found:', !!currentBoard);
+                
+                if (newBoard && currentBoard) {
+                    console.log('Replacing board content...');
+                    currentBoard.outerHTML = newBoard.outerHTML;
+                    
+                    console.log('Board content replaced successfully');
+                    
+                    if (typeof Sortable !== 'undefined') {
+                        var taskBoxWrapper = [].slice.call(document.querySelectorAll('.kanban-wrap'));
+                        console.log('Reinitializing Sortable for', taskBoxWrapper.length, 'elements');
+                        for (var i = 0; i < taskBoxWrapper.length; i++) {
+                            new Sortable(taskBoxWrapper[i], {
+                                group: 'taskboard',
+                                handle: ".kanban-box",
+                                draggable: ".panel",
+                                animation: 150,
+                                fallbackOnBody: true,
+                                swapThreshold: 0.65,
+                                dataIdAttr: 'data-id'
+                            });
+                        }
+                    }
+                } else {
+                    console.error('Could not find kanban board elements');
+                    if (!newBoard) console.error('New board not found in response');
+                    if (!currentBoard) console.error('Current board not found on page');
+                }
+                
+                window.history.pushState({}, '', url);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                alert('Search failed. Please try again or refresh the page.');
+            });
+        }
+    }));
+});
+
 Livewire.start()
 
 // DataTables
