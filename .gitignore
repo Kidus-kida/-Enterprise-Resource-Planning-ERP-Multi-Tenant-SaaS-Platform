@@ -116,3 +116,10 @@ temp_log.txt
 # Large binary files (uncomment if needed)
 # hr3
 
+
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/framework/testing/
+
+
