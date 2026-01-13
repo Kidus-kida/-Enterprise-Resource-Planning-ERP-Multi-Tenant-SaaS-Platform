@@ -248,11 +248,75 @@
             },
 
             submitSearch() {
-                // We can either update the URL via JS or submit the form. 
-                // Submitting form is easier for standard Laravel controllers.
-                // We need to wait for Vue/Alpine to render the hidden inputs.
-                this.$nextTick(() => {
-                    this.$refs.searchForm.submit();
+                // Build query string from active filters
+                const params = new URLSearchParams();
+                this.activeFilters.forEach(filter => {
+                    params.append(filter.key, filter.value);
+                });
+                
+                const url = `${this.action}?${params.toString()}`;
+                console.log('Fetching URL:', url);
+                
+                // Fetch the filtered results via AJAX
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.text();
+                })
+                .then(html => {
+                    console.log('Response HTML length:', html.length);
+                    
+                    // Parse the response HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Find the kanban board container in the response
+                    const newBoard = doc.querySelector('.kanban-cont');
+                    const currentBoard = document.querySelector('.kanban-cont');
+                    
+                    console.log('New board found:', !!newBoard);
+                    console.log('Current board found:', !!currentBoard);
+                    
+                    if (newBoard && currentBoard) {
+                        console.log('Replacing board content...');
+                        // Replace the entire board element to preserve structure
+                        currentBoard.outerHTML = newBoard.outerHTML;
+                        
+                        console.log('Board content replaced successfully');
+                        
+                        // Reinitialize Sortable if needed
+                        if (typeof Sortable !== 'undefined') {
+                            var taskBoxWrapper = [].slice.call(document.querySelectorAll('.kanban-wrap'));
+                            console.log('Reinitializing Sortable for', taskBoxWrapper.length, 'elements');
+                            for (var i = 0; i < taskBoxWrapper.length; i++) {
+                                new Sortable(taskBoxWrapper[i], {
+                                    group: 'taskboard',
+                                    handle: ".kanban-box",
+                                    draggable: ".panel",
+                                    animation: 150,
+                                    fallbackOnBody: true,
+                                    swapThreshold: 0.65,
+                                    dataIdAttr: 'data-id'
+                                });
+                            }
+                        }
+                    } else {
+                        console.error('Could not find kanban board elements');
+                        if (!newBoard) console.error('New board not found in response');
+                        if (!currentBoard) console.error('Current board not found on page');
+                    }
+                    
+                    // Update URL without reload
+                    window.history.pushState({}, '', url);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    alert('Search failed. Please try again or refresh the page.');
                 });
             }
         }));

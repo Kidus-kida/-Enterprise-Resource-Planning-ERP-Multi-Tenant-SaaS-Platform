@@ -24,6 +24,8 @@ class ProjectTaskBoardController extends Controller
         $project = Project::findOrFail(Crypt::decrypt($id));
         
         $filters = $request->all();
+        \Log::info('Board filters: ' . json_encode($filters));
+        
         $taskBoards = $project->taskBoard()
             ->orderBy('priority')
             ->with(['tasks' => function ($query) use ($filters) {
@@ -32,6 +34,11 @@ class ProjectTaskBoardController extends Controller
                     ->orderBy('priority');
             }])
             ->get();
+
+        // Log task counts per board
+        foreach ($taskBoards as $board) {
+            \Log::info('Board: ' . $board->name . ' - Tasks: ' . $board->tasks->count());
+        }
 
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
         return view('project::tasks.index', compact(
@@ -58,6 +65,11 @@ class ProjectTaskBoardController extends Controller
         $project_id = $project->id;
         $board = $request->board;
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
+        
+        // Debug logging
+        \Log::info('Create Task - Employees Count: ' . $employees->count());
+        \Log::info('Create Task - Employees: ' . $employees->pluck('fullname', 'id')->toJson());
+        
         return view('project::tasks.create', compact(
             'project_id',
             'board',
