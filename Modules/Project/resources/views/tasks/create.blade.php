@@ -43,6 +43,14 @@
                     <x-form.label>
                         {{ __('Assign Team') }}
                     </x-form.label>
+                    
+                    {{-- Debug: Check if employees exist --}}
+                    @if(isset($employees))
+                        <small class="text-muted">Employees found: {{ $employees->count() }}</small>
+                    @else
+                        <small class="text-danger">No employees variable passed!</small>
+                    @endif
+                    
                     <select name="team[]" class="form-control select" data-placeholder="{{ __('Select Employee') }}" multiple>
                         @if (!empty($employees))
                             @foreach ($employees as $employee)
@@ -58,3 +66,17 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Ensure Select2 is initialized after modal loads
+    $(document).ready(function() {
+        if ($('select[name="team[]"]').length > 0) {
+            $('select[name="team[]"]').select2({
+                dropdownAutoWidth: true,
+                width: '100%',
+                placeholder: '{{ __("Select Employee") }}',
+                dropdownParent: $('#generalModalPopup')
+            });
+        }
+    });
+</script>

@@ -280,34 +280,9 @@
                                     </div>
                                 </div>
                             </div>
-                            @php
-                                $taskQuery = $board->tasks()->orderBy('priority');
-
-                                if (request('person')) {
-                                    $taskQuery->whereHas('followers', function($q) {
-                                        $q->where('user_id', request('person'));
-                                    });
-                                }
-
-                                if (request('start_date') && request('end_date')) {
-                                    $startDate = \Carbon\Carbon::parse(request('start_date'))->startOfDay();
-                                    $endDate = \Carbon\Carbon::parse(request('end_date'))->endOfDay();
-                                    $taskQuery->where(function($q) use ($startDate, $endDate) {
-                                        $q->whereBetween('startDate', [$startDate, $endDate])
-                                          ->orWhereBetween('endDate', [$startDate, $endDate]);
-                                    });
-                                } elseif (request('start_date')) {
-                                    $startDate = \Carbon\Carbon::parse(request('start_date'))->startOfDay();
-                                    $taskQuery->where('endDate', '>=', $startDate);
-                                } elseif (request('end_date')) {
-                                    $endDate = \Carbon\Carbon::parse(request('end_date'))->endOfDay();
-                                    $taskQuery->where('startDate', '<=', $endDate);
-                                }
-
-                                $tasks = $taskQuery->get();
-                            @endphp
+                            {{-- Use the already-filtered tasks from the controller's eager load --}}
                             <div class="kanban-wrap" data-board="{{ $board->id }}">
-                                @foreach ($tasks as $task)
+                                @foreach ($board->tasks as $task)
                                 <div class="card panel task-card" data-id="{{ $task->priority }}" data-task="{{ $task->id }}" data-board="{{ $board->id }}">
                                     <div class="kanban-box">
                                         <div class="task-card-header d-flex justify-content-between align-items-start">

@@ -19,16 +19,25 @@ class ProjectTaskFilter extends SearchFilter
 
     protected function filterPerson($term)
     {
+        \Log::info('filterPerson called with term: ' . $term);
+        
         $this->query->whereHas('followers', function ($q) use ($term) {
             if (is_numeric($term)) {
+                \Log::info('Searching by user_id: ' . $term);
                 $q->where('user_id', $term);
             } else {
+                \Log::info('Searching by name/email: ' . $term);
                 $q->whereHas('user', function ($uq) use ($term) {
-                    $uq->where('name', 'LIKE', "%{$term}%")
+                    $uq->where('firstname', 'LIKE', "%{$term}%")
+                       ->orWhere('lastname', 'LIKE', "%{$term}%")
+                       ->orWhere('middlename', 'LIKE', "%{$term}%")
                        ->orWhere('email', 'LIKE', "%{$term}%");
                 });
             }
         });
+        
+        \Log::info('Query after filterPerson: ' . $this->query->toSql());
+        \Log::info('Query bindings: ' . json_encode($this->query->getBindings()));
     }
 
     protected function filterStartDate($date)
