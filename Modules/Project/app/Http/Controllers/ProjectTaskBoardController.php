@@ -18,11 +18,21 @@ class ProjectTaskBoardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function board(string $id)
+    public function board(Request $request, string $id)
     {
         $pageTitle = __('Taskboard');
         $project = Project::findOrFail(Crypt::decrypt($id));
-        $taskBoards = $project->taskBoard()->orderBy('priority')->get();
+        
+        $filters = $request->all();
+        $taskBoards = $project->taskBoard()
+            ->orderBy('priority')
+            ->with(['tasks' => function ($query) use ($filters) {
+                // Apply the search filters to the tasks query
+                (new \Modules\Project\Services\ProjectTaskFilter($query, $filters))->apply()
+                    ->orderBy('priority');
+            }])
+            ->get();
+
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
         return view('project::tasks.index', compact(
             'project',

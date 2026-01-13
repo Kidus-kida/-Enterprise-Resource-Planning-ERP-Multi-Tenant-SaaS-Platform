@@ -205,8 +205,9 @@
     <div class="content container-fluid">
 
         <!-- Odoo-style Compact Header -->
-        <div class="odoo-task-header d-flex justify-content-between align-items-center mb-2 px-1">
-            <div class="d-flex align-items-center gap-3">
+        <div class="odoo-task-header d-flex align-items-center mb-2 px-1 gap-2">
+            <!-- Left: Title & New Button -->
+            <div class="d-flex align-items-center gap-3 flex-shrink-0">
                 <h4 class="mb-0 fw-bold">{{ $project->name }}</h4>
                 <a href="javascript:void(0)" class="btn btn-primary btn-sm"
                     data-url="{{ route('project-tasks.create', ['project' => $project->id]) }}" data-ajax-modal="true"
@@ -215,47 +216,24 @@
                 </a>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
-                <!-- Search & Filter Bar -->
-                <div class="odoo-search-bar input-group input-group-sm" style="width: 300px;">
-                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
-                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search..." aria-label="Search">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-filter"></i></button>
-                    <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 250px;">
-                        <li><h6 class="dropdown-header">Filters</h6></li>
-                        <li>
-                            <form action="{{ route('project.taskboard', ['id' => \Crypt::encrypt($project->id)]) }}" method="GET">
-                                <div class="mb-2">
-                                    <select name="person" class="form-select form-select-sm">
-                                        <option value="">{{ __('All People') }}</option>
-                                        @foreach($employees as $employee)
-                                            <option value="{{ $employee->id }}" @if(request('person') == $employee->id) selected @endif>{{ $employee->fullname }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="mb-2">
-                                    <input type="text" name="start_date" class="form-control form-control-sm datetimepicker" value="{{ request('start_date') }}" placeholder="Start Date">
-                                </div>
-                                <div class="mb-2">
-                                    <input type="text" name="end_date" class="form-control form-control-sm datetimepicker" value="{{ request('end_date') }}" placeholder="End Date">
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ __('Apply') }}</button>
-                                </div>
-                            </form>
-                        </li>
-                    </ul>
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-bars"></i></button>
-                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><h6 class="dropdown-header">Group By</h6></li>
-                        <li><a class="dropdown-item" href="#">Stage</a></li>
-                        <li><a class="dropdown-item" href="#">Assignee</a></li>
-                        <li><a class="dropdown-item" href="#">Priority</a></li>
-                    </ul>
+            <!-- Center: Search Bar -->
+            <div class="d-flex justify-content-center flex-grow-1">
+                <div style="width: 100%; max-width: 500px;">
+                    <x-odoo-search-bar 
+                        :action="route('project.taskboard', ['id' => \Crypt::encrypt($project->id)])"
+                        :fields="[
+                            ['key' => 'person', 'label' => 'Assigned To'],
+                            ['key' => 'startDate', 'label' => 'Start Date'],
+                            ['key' => 'endDate', 'label' => 'End Date'],
+                            ['key' => 'search', 'label' => 'Text']
+                        ]"
+                    />
                 </div>
-                
-                <!-- Action Menu -->
-                 <div class="dropdown">
+            </div>
+
+            <!-- Right: Action Menu -->
+            <div class="flex-shrink-0">
+                <div class="dropdown">
                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-gear"></i>
                     </button>
