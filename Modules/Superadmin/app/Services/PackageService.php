@@ -12,6 +12,37 @@ class PackageService
         return $package->price * $count;
     }
 
+    /**
+     * Calculate dynamic price based on user count
+     * 
+     * @param Package $package
+     * @param int $userCount Number of users for the subscription
+     * @return float Calculated price
+     */
+    public function calculateDynamicPrice(Package $package, int $userCount = null): float
+    {
+        // If per-user pricing is not enabled, return base price
+        if (!$package->is_per_user_pricing) {
+            return (float) $package->price;
+        }
+
+        // If no user count provided, use minimum users
+        if ($userCount === null) {
+            $userCount = $package->min_users ?? 1;
+        }
+
+        // If requested users <= minimum users, return base price
+        if ($userCount <= $package->min_users) {
+            return (float) $package->price;
+        }
+
+        // Calculate additional users beyond minimum
+        $additionalUsers = $userCount - $package->min_users;
+        $additionalCost = $additionalUsers * ($package->price_per_user ?? 0);
+
+        return (float) ($package->price + $additionalCost);
+    }
+
     public function getModulePermissions(Package $package)
     {
         return $package->custom_permissions ?? [];

@@ -54,6 +54,9 @@
                                                     data-price="{{ $package->price }}"
                                                     data-interval="{{ $package->interval }}"
                                                     data-interval-count="{{ $package->interval_count }}"
+                                                    data-is-per-user-pricing="{{ $package->is_per_user_pricing }}"
+                                                    data-price-per-user="{{ $package->price_per_user ?? 0 }}"
+                                                    data-min-users="{{ $package->min_users ?? 1 }}"
                                                     {{ old('package_id') == $package->id ? 'selected' : '' }}>
                                                     {{ $package->name }} - {{ number_format($package->price, 2) }} ETB/{{ $package->interval_count }} {{ ucfirst($package->interval) }}
                                                 </option>
@@ -67,6 +70,13 @@
                                     <div id="package_details" class="alert alert-info" style="display: none;">
                                         <h6>Package Details:</h6>
                                         <p class="mb-0" id="package_info"></p>
+                                    </div>
+
+                                    <div id="user_count_wrapper" class="form-group" style="display: none;">
+                                        <label>Number of Users <span class="text-danger">*</span></label>
+                                        <input type="number" name="subscribed_user_count" id="user_count_input" 
+                                            class="form-control" value="{{ old('subscribed_user_count', 1) }}" min="1">
+                                        <small class="form-text text-muted" id="user_count_help"></small>
                                     </div>
 
                                     <div class="form-group">
@@ -152,6 +162,10 @@
                                             <span>Base Package:</span>
                                             <strong id="base-price-display">0 ETB</strong>
                                         </div>
+                                        <div class="d-flex justify-content-between mb-1 text-muted small" id="user-price-breakdown" style="display: none;">
+                                            <span>User Pricing:</span>
+                                            <span id="user-price-details"></span>
+                                        </div>
                                         <div class="d-flex justify-content-between mb-1">
                                             <span>Add-ons:</span>
                                             <strong id="addons-price-display">0 ETB</strong>
@@ -179,29 +193,55 @@
     </div>
 </div>
 
-@push('scripts')
+
 <script>
 let basePrice = 0;
+let currentPackage = null;
 
 // Package selection handler
 document.getElementById('package_select').addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     const details = document.getElementById('package_details');
     const info = document.getElementById('package_info');
+    const userCountWrapper = document.getElementById('user_count_wrapper');
     
     if (this.value) {
-        basePrice = parseFloat(selected.dataset.price) || 0;
-        const interval = selected.dataset.interval;
-        const intervalCount = selected.dataset.intervalCount;
-        info.innerHTML = `<strong>Price:</strong> ${basePrice.toLocaleString()} ETB<br><strong>Billing Cycle:</strong> ${intervalCount} ${interval}`;
+        // Store package data
+        currentPackage = {
+            price: parseFloat(selected.dataset.price) || 0,
+            interval: selected.dataset.interval,
+            intervalCount: selected.dataset.intervalCount,
+            isPerUserPricing: selected.dataset.isPerUserPricing === '1',
+            pricePerUser: parseFloat(selected.dataset.pricePerUser) || 0,
+            minUsers: parseInt(selected.dataset.minUsers) || 1
+        };
+
+        basePrice = currentPackage.price;
+        info.innerHTML = `<strong>Base Price:</strong> ${basePrice.toLocaleString()} ETB<br><strong>Billing Cycle:</strong> ${currentPackage.intervalCount} ${currentPackage.interval}`;
         details.style.display = 'block';
+
+        // Toggle user count input
+        if (currentPackage.isPerUserPricing) {
+            userCountWrapper.style.display = 'block';
+            document.getElementById('user_count_help').textContent = 
+                `Base price includes ${currentPackage.minUsers} users. Additional users charged at ${currentPackage.pricePerUser} ETB/user.`;
+            document.getElementById('user_count_input').min = 1;
+        } else {
+            userCountWrapper.style.display = 'none';
+        }
+
         updatePriceSummary();
     } else {
         basePrice = 0;
+        currentPackage = null;
         details.style.display = 'none';
+        userCountWrapper.style.display = 'none';
         updatePriceSummary();
     }
 });
+
+// User count input handler
+document.getElementById('user_count_input').addEventListener('input', updatePriceSummary);
 
 // Addon checkbox handler
 document.querySelectorAll('.addon-checkbox').forEach(checkbox => {
@@ -209,25 +249,55 @@ document.querySelectorAll('.addon-checkbox').forEach(checkbox => {
 });
 
 function updatePriceSummary() {
+    if (!currentPackage) {
+        document.getElementById('base-price-display').textContent = '0 ETB';
+        document.getElementById('addons-price-display').textContent = '0 ETB';
+        document.getElementById('total-price-display').textContent = '0 ETB';
+        document.getElementById('user-price-breakdown').style.display = 'none';
+        return;
+    }
+
+    let calculatedBasePrice = currentPackage.price;
+    let userBreakdown = '';
+    let showBreakdown = false;
+
+    // Calculate dynamic base price if per-user pricing
+    if (currentPackage.isPerUserPricing) {
+        const userCount = parseInt(document.getElementById('user_count_input').value) || 1;
+        
+        if (userCount > currentPackage.minUsers) {
+            const additionalUsers = userCount - currentPackage.minUsers;
+            const extraCost = additionalUsers * currentPackage.pricePerUser;
+            calculatedBasePrice += extraCost;
+            
+            userBreakdown = `(+${additionalUsers} users × ${currentPackage.pricePerUser} ETB)`;
+            showBreakdown = true;
+        }
+    }
+
+    // Calculate addons price
     let addonsPrice = 0;
-    
-    // Calculate total addons price
     document.querySelectorAll('.addon-checkbox:checked').forEach(checkbox => {
         const addonItem = checkbox.closest('.addon-item');
         const price = parseFloat(addonItem.dataset.addonPrice) || 0;
         addonsPrice += price;
     });
     
-    const totalPrice = basePrice + addonsPrice;
+    const totalPrice = calculatedBasePrice + addonsPrice;
     
     // Update display
-    document.getElementById('base-price-display').textContent = basePrice.toLocaleString() + ' ETB';
+    document.getElementById('base-price-display').textContent = calculatedBasePrice.toLocaleString() + ' ETB';
     document.getElementById('addons-price-display').textContent = addonsPrice.toLocaleString() + ' ETB';
     document.getElementById('total-price-display').textContent = totalPrice.toLocaleString() + ' ETB';
+    
+    const breakdownEl = document.getElementById('user-price-breakdown');
+    if (showBreakdown) {
+        breakdownEl.style.display = 'flex';
+        document.getElementById('user-price-details').textContent = userBreakdown;
+    } else {
+        breakdownEl.style.display = 'none';
+    }
 }
-
-// Initialize
-updatePriceSummary();
 </script>
-@endpush
+
 @endsection

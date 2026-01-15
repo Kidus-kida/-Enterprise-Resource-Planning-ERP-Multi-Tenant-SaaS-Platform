@@ -40,7 +40,7 @@ class SubscriptionsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'business_id' => 'required|exists:business,id',
+            'business_id' => 'required|exists:businesses,id',
             'package_id' => 'required|exists:packages,id',
             'start_date' => 'required|date',
             'status' => 'required|in:approved,waiting,declined',
@@ -97,20 +97,31 @@ class SubscriptionsController extends Controller
 
     public function update(Request $request, $id): RedirectResponse
     {
-        $subscription = Subscription::findOrFail($id);
+        $subscription = Subscription::with('package')->findOrFail($id);
         
         $validated = $request->validate([
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'status' => 'required|in:approved,waiting,declined',
+            'subscribed_user_count' => 'nullable|integer|min:1',
             'addons' => 'nullable|array',
             'addons.*' => 'exists:package_addons,id',
         ]);
 
+        // Calculate new base price if user count changed or if manual sync
+        $userCount = $validated['subscribed_user_count'] ?? $subscription->subscribed_user_count;
+        $package = $subscription->package;
+        
+        $packageService = new PackageService();
+        $newBasePrice = $packageService->calculateDynamicPrice($package, $userCount);
+
         $subscription->update([
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
-            'status' => $validated['status']
+            'status' => $validated['status'],
+            'subscribed_user_count' => $userCount,
+            'base_price' => $newBasePrice,
+            // total_price will be updated by syncAddons logic below or we need to update it here
         ]);
 
         if ($request->has('sync_package')) {
@@ -128,13 +139,10 @@ class SubscriptionsController extends Controller
             ]);
         }
 
-        // Sync add-ons
+        // Sync add-ons (this also updates total_price)
         $addonService = new \Modules\Superadmin\Services\AddonService();
-        if (isset($validated['addons'])) {
-            $addonService->syncAddons($subscription, $validated['addons']);
-        } else {
-            $addonService->syncAddons($subscription, []);
-        }
+        $addons = $validated['addons'] ?? [];
+        $addonService->syncAddons($subscription, $addons);
 
         if ($validated['status'] === 'approved' && $subscription->wasChanged('status')) {
             $this->subscriptionService->approveSubscription($subscription);

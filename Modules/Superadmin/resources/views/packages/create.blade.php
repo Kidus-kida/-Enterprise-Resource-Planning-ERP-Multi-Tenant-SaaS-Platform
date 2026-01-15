@@ -160,6 +160,35 @@
                                         </div>
                                     @endif
 
+                                    <h4 class="card-title mt-4">Per-User Pricing</h4>
+                                    <small class="text-muted">Enable dynamic pricing based on number of users</small>
+                                    
+                                    <div class="form-check mb-3 mt-3">
+                                        <input type="checkbox" name="is_per_user_pricing" value="1" 
+                                            class="form-check-input" id="is_per_user_pricing"
+                                            {{ old('is_per_user_pricing') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="is_per_user_pricing">
+                                            <strong>Enable Per-User Pricing</strong>
+                                            <br><small class="text-muted">Charge based on number of users beyond minimum</small>
+                                        </label>
+                                    </div>
+
+                                    <div id="per_user_fields" style="display: none;">
+                                        <div class="form-group">
+                                            <label>Minimum Users Included</label>
+                                            <input type="number" name="min_users" class="form-control" 
+                                                value="{{ old('min_users', 1) }}" min="1">
+                                            <small class="text-muted">Number of users included in base price</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Price Per Additional User (ETB)</label>
+                                            <input type="number" name="price_per_user" step="0.01" class="form-control" 
+                                                value="{{ old('price_per_user', 0) }}" min="0">
+                                            <small class="text-muted">Cost per user beyond minimum</small>
+                                        </div>
+                                    </div>
+
                                     <h4 class="card-title mt-4">Settings</h4>
                                     
                                     <div class="form-check mb-2">
@@ -185,4 +214,24 @@
         </div>
 
     </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('is_per_user_pricing');
+    const perUserFields = document.getElementById('per_user_fields');
+    
+    function togglePerUserFields() {
+        if (checkbox.checked) {
+            perUserFields.style.display = 'block';
+        } else {
+            perUserFields.style.display = 'none';
+        }
+    }
+    
+    checkbox.addEventListener('change', togglePerUserFields);
+    togglePerUserFields(); // Run on page load
+});
+</script>
+@endpush
 @endsection

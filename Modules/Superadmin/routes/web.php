@@ -9,6 +9,7 @@ use Modules\Superadmin\Http\Controllers\TenantManagementController;
 use Modules\Superadmin\Http\Controllers\ManualPaymentController;
 use Modules\Superadmin\Http\Controllers\SuperadminSettingsController;
 use Modules\Superadmin\Http\Controllers\ModuleController;
+use Modules\Superadmin\Http\Controllers\AddonController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,10 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']],
     // Module Management
     Route::resource('modules', ModuleController::class)->names('superadmin.modules');
     Route::post('modules/{module}/toggle-active', [ModuleController::class, 'toggleActive'])->name('superadmin.modules.toggle-active');
+
+    // Add-on Management
+    Route::resource('addons', AddonController::class)->names('superadmin.addons');
+    Route::post('addons/{addon}/toggle-active', [AddonController::class, 'toggleActive'])->name('superadmin.addons.toggle-active');
 
     // Package Management
     Route::resource('packages', PackagesController::class)->names('superadmin.packages');
