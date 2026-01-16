@@ -1,11 +1,29 @@
 @props(['fields' => [], 'action' => ''])
 
 <div x-data="odooSearch('{{ $action }}', {{ json_encode($fields) }}, {{ json_encode(request()->all()) }})"
-    class="odoo-search-component position-relative w-100"
-    @click.away="showFilters = false; showDropdown = false">
+    class="odoo-search-component position-relative"
+    @click.away="showFilters = false; showDropdown = false; if(mobileSearchOpen) toggleMobileSearch()">
+
+    <!-- Mobile Toggle Button (Visible only on mobile) -->
+    <div class="d-flex d-md-none justify-content-end" x-show="!mobileSearchOpen">
+        <button class="btn btn-white btn-sm rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center border" 
+                style="width: 38px; height: 38px;" 
+                @click="toggleMobileSearch()">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
 
     <!-- Search Bar Container -->
-    <div class="d-flex flex-wrap align-items-center border rounded bg-white py-0 px-1" style="min-height: 38px;">
+    <div class="align-items-center border rounded bg-white py-0 px-1"
+         :class="mobileSearchOpen ? 'd-flex position-absolute top-100 p-2 shadow mt-1' : 'd-none d-md-flex'"
+         :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 94vw; z-index: 9999;' : 'min-height: 38px;'">
+        
+        <!-- Mobile Close Button -->
+        <button class="btn btn-link text-secondary p-0 me-2 d-md-none" 
+                x-show="mobileSearchOpen" 
+                @click="toggleMobileSearch()">
+            <i class="fa fa-arrow-left"></i>
+        </button>
 
         <!-- Active Filter Chips -->
         <template x-for="(filter, index) in activeFilters" :key="index">
@@ -146,9 +164,11 @@
         </div>
 
         <!-- Dropdown Icon (Right) -->
-        <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 ms-1" type="button"
-            @click.stop="showFilters = !showFilters; showDropdown = false" style="line-height: 1;">
-            <i class="fa-solid fa-caret-down"></i>
+        <button class="btn btn-white btn-sm rounded shadow-sm p-1 ms-1 border d-flex align-items-center justify-content-center" 
+                type="button"
+                @click.stop="showFilters = !showFilters; showDropdown = false" 
+                style="width: 24px; height: 24px;">
+            <i class="fa-solid fa-caret-down" style="font-size: 0.8rem;"></i>
         </button>
     </div>
 

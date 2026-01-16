@@ -15,6 +15,7 @@ Alpine.data('odooSearch', (action, fields, initialParams) => ({
     showDropdown: false,
     showFilters: false,
     activeFilters: [],
+    mobileSearchOpen: false,
 
     init() {
         // Initialize active filters from server request params
@@ -34,6 +35,28 @@ Alpine.data('odooSearch', (action, fields, initialParams) => ({
                 });
             }
         });
+    },
+
+    toggleMobileSearch() {
+        this.mobileSearchOpen = !this.mobileSearchOpen;
+        // Target the specific content container (Kanban or Main Content)
+        const content = document.querySelector('.kanban-cont') || document.querySelector('.content-body') || document.querySelector('.page-wrapper > .content');
+        
+        if (this.mobileSearchOpen) {
+             // Push content down
+             if (content) {
+                 content.style.transition = 'margin-top 0.2s ease';
+                 content.style.marginTop = '60px';
+             }
+             
+             setTimeout(() => {
+                const input = document.querySelector('.odoo-search-component input');
+                if(input) input.focus();
+             }, 100);
+        } else {
+             // Reset content position
+             if (content) content.style.marginTop = '';
+        }
     },
 
     addFilter(key, label, value) {
