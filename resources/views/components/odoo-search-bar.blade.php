@@ -16,7 +16,7 @@
     <!-- Search Bar Container -->
     <div class="align-items-center border rounded bg-white py-0 px-1"
         :class="mobileSearchOpen ? 'd-flex position-fixed p-2 shadow' : 'd-none d-md-flex'"
-        :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 96%; z-index: 9999; max-width: 600px;' : 'min-height: 38px;'">
+        :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 93%; z-index: 9999; max-width: 600px;' : 'min-height: 42px;'">
 
         <!-- Mobile Close Button -->
         <button class="btn btn-link text-secondary p-0 me-2 d-md-none" x-show="mobileSearchOpen"
