@@ -6,22 +6,21 @@
 
     <!-- Mobile Toggle Button (Visible only on mobile) -->
     <div class="d-flex d-md-none justify-content-end" x-show="!mobileSearchOpen">
-        <button class="btn btn-white btn-sm rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center border" 
-                style="width: 38px; height: 38px;" 
-                @click="toggleMobileSearch()">
+        <button
+            class="btn btn-white btn-sm rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center border"
+            style="width: 38px; height: 38px;" @click="toggleMobileSearch()">
             <i class="fa fa-search"></i>
         </button>
     </div>
 
     <!-- Search Bar Container -->
     <div class="align-items-center border rounded bg-white py-0 px-1"
-         :class="mobileSearchOpen ? 'd-flex position-absolute top-100 p-2 shadow mt-1' : 'd-none d-md-flex'"
-         :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 94vw; z-index: 9999;' : 'min-height: 38px;'">
-        
+        :class="mobileSearchOpen ? 'd-flex position-fixed p-2 shadow' : 'd-none d-md-flex'"
+        :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 96%; z-index: 9999; max-width: 600px;' : 'min-height: 38px;'">
+
         <!-- Mobile Close Button -->
-        <button class="btn btn-link text-secondary p-0 me-2 d-md-none" 
-                x-show="mobileSearchOpen" 
-                @click="toggleMobileSearch()">
+        <button class="btn btn-link text-secondary p-0 me-2 d-md-none" x-show="mobileSearchOpen"
+            @click="toggleMobileSearch()">
             <i class="fa fa-arrow-left"></i>
         </button>
 
@@ -42,15 +41,10 @@
 
         <!-- Input Field -->
         <div class="flex-grow-1 position-relative d-flex align-items-center" style="min-width: 150px;">
-            <input type="text" x-model="searchQuery" 
-                   @click.stop
-                   @input="showDropdown = true; showFilters = false" 
-                   @focus="showFilters = true; showDropdown = false"
-                   @keydown.enter.prevent="submitSearch()" 
-                   @keydown.backspace="handleBackspace()"
-                   class="form-control border-0 shadow-none py-0 px-1" 
-                   placeholder="Search..." 
-                   style="min-width: 100px; font-size: 0.9rem; height: 32px;">
+            <input type="text" x-model="searchQuery" @click.stop @input="showDropdown = true; showFilters = false"
+                @focus="showFilters = true; showDropdown = false" @keydown.enter.prevent="submitSearch()"
+                @keydown.backspace="handleBackspace()" class="form-control border-0 shadow-none py-0 px-1"
+                placeholder="Search..." style="min-width: 100px; font-size: 0.9rem; height: 32px;">
 
             <!-- Search Suggestions Dropdown -->
             <div x-show="showDropdown && searchQuery.length > 0"
@@ -164,10 +158,10 @@
         </div>
 
         <!-- Dropdown Icon (Right) -->
-        <button class="btn btn-white btn-sm rounded shadow-sm p-1 ms-1 border d-flex align-items-center justify-content-center" 
-                type="button"
-                @click.stop="showFilters = !showFilters; showDropdown = false" 
-                style="width: 24px; height: 24px;">
+        <button
+            class="btn btn-white btn-sm rounded shadow-sm p-1 ms-1 border d-flex align-items-center justify-content-center"
+            type="button" @click.stop="showFilters = !showFilters; showDropdown = false"
+            style="width: 24px; height: 24px;">
             <i class="fa-solid fa-caret-down" style="font-size: 0.8rem;"></i>
         </button>
     </div>
