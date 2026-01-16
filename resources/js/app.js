@@ -139,10 +139,7 @@ import nProgress from "nprogress";
 import Toastify from 'toastify-js'
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
+// FullCalendar and PDFMake removed from static imports
 import { jsPDF } from "jspdf";
 
 // DataTables
@@ -152,20 +149,30 @@ import 'datatables.net-buttons/js/buttons.colVis.mjs';
 import 'datatables.net-buttons/js/buttons.html5.mjs';
 import 'datatables.net-buttons/js/buttons.print.mjs';
 import JSZip from 'jszip';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+// Lazy Load PDFMake
+if (document.querySelectorAll('.table, .datatable, table').length > 0) {
+    Promise.all([
+        import('pdfmake/build/pdfmake'),
+        import('pdfmake/build/vfs_fonts')
+    ]).then(([pdfMakeModule, pdfFontsModule]) => {
+        const pdfMake = pdfMakeModule.default;
+        const pdfFonts = pdfFontsModule.default;
 
-// Assign to global
-window.JSZip = JSZip;
-if (pdfFonts && pdfFonts.pdfMake) {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
-} else if (pdfFonts && pdfFonts.vfs) {
-    pdfMake.vfs = pdfFonts.vfs;
+        if (pdfFonts && pdfFonts.pdfMake) {
+            pdfMake.vfs = pdfFonts.pdfMake.vfs;
+        } else if (pdfFonts && pdfFonts.vfs) {
+            pdfMake.vfs = pdfFonts.vfs;
+        }
+        window.pdfMake = pdfMake;
+
+        // Register with DataTables Buttons if available
+        if (DataTable.Buttons && typeof DataTable.Buttons.pdfMake === 'function') {
+            DataTable.Buttons.pdfMake(pdfMake);
+        }
+    });
 }
-window.pdfMake = pdfMake;
-if (DataTable.Buttons) {
-    if (typeof DataTable.Buttons.jszip === 'function') DataTable.Buttons.jszip(JSZip);
-    if (typeof DataTable.Buttons.pdfMake === 'function') DataTable.Buttons.pdfMake(pdfMake);
+if (DataTable.Buttons && typeof DataTable.Buttons.jszip === 'function') {
+    DataTable.Buttons.jszip(JSZip);
 }
 
 window.intlTelInput = intlTelInput;
@@ -174,10 +181,23 @@ window.moment = moment;
 window.Moment = moment;
 window.toastr = toastr;
 window.Toastify = Toastify;
-window.Calendar = Calendar
-window.dayGridPlugin = dayGridPlugin
-window.timeGridPlugin = timeGridPlugin
-window.listPlugin = listPlugin
+// Lazy Load FullCalendar
+if (document.querySelector('.calendar') || document.getElementById('calendar')) {
+    Promise.all([
+        import('@fullcalendar/core'),
+        import('@fullcalendar/daygrid'),
+        import('@fullcalendar/timegrid'),
+        import('@fullcalendar/list')
+    ]).then(([core, dayGrid, timeGrid, list]) => {
+        window.Calendar = core.Calendar;
+        window.dayGridPlugin = dayGrid.default;
+        window.timeGridPlugin = timeGrid.default;
+        window.listPlugin = list.default;
+        
+        // Dispatch event if needed, or rely on script execution order
+        // Scripts that use Calendar should check if it's available or wait
+    });
+}
 window.Sortable = Sortable
 window.jsPDF = jsPDF;
 Select2();
