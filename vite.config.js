@@ -34,7 +34,7 @@ async function getConfig() {
             // Enable CSS code splitting
             cssCodeSplit: true,
             // Use esbuild for fast minification
-            minify: false,
+            minify: 'esbuild',
             // Code splitting configuration
             rollupOptions: {
                 output: {
