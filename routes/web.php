@@ -45,6 +45,7 @@ Route::view('/pricing', 'landing.pricing')->name('landing.pricing');
 Route::view('/industries', 'landing.industries')->name('landing.industries');
 Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
+Route::view('/test-alpine', 'test-alpine');
 
 include __DIR__ . '/auth.php';
 

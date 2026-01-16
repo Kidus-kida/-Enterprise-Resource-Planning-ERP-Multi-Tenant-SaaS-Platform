@@ -34,7 +34,7 @@ async function getConfig() {
             // Enable CSS code splitting
             cssCodeSplit: true,
             // Use esbuild for fast minification
-            minify: 'esbuild',
+            minify: false,
             // Code splitting configuration
             rollupOptions: {
                 output: {
@@ -49,7 +49,7 @@ async function getConfig() {
             // Generate source maps for debugging
             sourcemap: false,
             // Target modern browsers
-            target: 'es2015',
+            target: 'es2020',
         },
         define: {
             "process.env.IS_PREACT": JSON.stringify("true"),
