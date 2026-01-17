@@ -81,7 +81,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
 
-    Route::resource('roles', \App\Http\Controllers\TenantRoleController::class);
+    //Route::resource('roles', \App\Http\Controllers\TenantRoleController::class);
     Route::resource('users', UsersController::class);
     // Contacts/Clients Module Routes
     Route::group(['middleware' => ['module.access:contacts']], function () {
