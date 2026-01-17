@@ -25,14 +25,19 @@ class AuthController extends BaseController
 
     public function loginAuth(Request $request)
     {
-        \Log::info("AuthController: loginAuth REACHED. Tenant: " . $request->query('tenant', 'none'));
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
         ]);
+        
+        // Check for tenant from BOTH query parameter AND subdomain (set by middleware)
+        $tenantId = $request->query('tenant') ?? $request->input('tenant') ?? session('current_tenant_id');
+        
+        \Log::info("AuthController: loginAuth - Tenant ID: " . ($tenantId ?? 'NONE') . ", Email: " . $request->email);
+        
         // Logic for TENANT Login overriding default Auth
-        if ($request->has('tenant')) {
-            $tenantId = $request->query('tenant');
+        if ($tenantId) {
+            \Log::info("AuthController: Tenant login mode for tenant: $tenantId");
             
             // Self-contained connection setup - DO NOT RELY ON MIDDLEWARE HERE
             $this->setupTenantConnection($tenantId);
@@ -50,22 +55,28 @@ class AuthController extends BaseController
                              session(['current_tenant_id' => $tenantId]);
                              $tenantUser->update(['is_online' => true]);
                              
+                             \Log::info("AuthController: Tenant login SUCCESS for user {$tenantUser->id}");
                              return redirect()->route('dashboard');
                          }
+                         \Log::warning("AuthController: Tenant user account disabled: " . $request->email);
                          return back()->withErrors(['email' => 'Your account is disabled.']);
                      }
+                     \Log::warning("AuthController: Tenant login - incorrect password for: " . $request->email);
                      return back()->withErrors(['password' => 'Incorrect Password']);
                  }
                  // If not found in tenant, fall through? No, tenant login should be strict.
+                 \Log::warning("AuthController: User not found in tenant DB: " . $request->email);
                  return back()->withErrors(['email' => 'Account could not be found in Tenant Database.']);
             }
+            
+            \Log::error("AuthController: Tenant connection could not be established for tenant: $tenantId");
+            return back()->withErrors(['email' => 'Tenant database connection failed.']);
         }
 
-        // ORIGINAL LOGIC (Master DB)
+        // ORIGINAL LOGIC (Master DB) - SuperAdmin/Central Login
+        \Log::info("AuthController: Central/SuperAdmin login mode");
         $user = User::where('email', $request->email)->first();
         
-        // DEBUG: Check connection
-        // \Log::info("AuthController: Tenant Config present? " . (config('database.connections.tenant') ? 'YES' : 'NO'));
         if (!empty($user)) {
             if ($user->is_active === 1) {
                 $credentials = $request->only('email', 'password');
@@ -74,6 +85,7 @@ class AuthController extends BaseController
                     $user->update([
                         'is_online' => true,
                     ]);
+                    \Log::info("AuthController: Central login SUCCESS for user {$user->id}");
                     return redirect()->route('dashboard');
                 }
                 return back()->withErrors(['password' => 'Incorrect Password']);

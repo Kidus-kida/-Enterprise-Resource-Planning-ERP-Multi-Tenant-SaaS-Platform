@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->web(append: [
+            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
         ]);
         
@@ -49,19 +50,21 @@ return Application::configure(basePath: dirname(__DIR__))
          * Problem: Laravel's default middleware priority runs Authenticate before custom middleware.
          * This caused redirect loops because Auth checked the Master DB before tenant DB was configured.
          * 
-         * Solution: Force SwitchTenantDatabase to run BEFORE Authenticate.
+         * Solution: Force tenant resolution and database switching BEFORE Authenticate.
          * 
          * Order:
-         * 1. StartSession - Session must be available to read tenant ID
+         * 1. StartSession - Session must be available to read/store tenant ID
          * 2. ShareErrorsFromSession - For validation error display
-         * 3. SwitchTenantDatabase - Configures tenant database connection from session
-         * 4. Authenticate - Now correctly validates user against tenant database
+         * 3. IdentifyTenantBySubdomain - Extracts tenant from subdomain (e.g., tenant.tewostechsolutions.com)
+         * 4. SwitchTenantDatabase - Configures tenant database connection from session
+         * 5. Authenticate - Now correctly validates user against tenant database
          * 
          * DO NOT REMOVE - Removing this will break tenant login (causes ERR_TOO_MANY_REDIRECTS)
          */
         $middleware->priority([
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
             \Illuminate\Auth\Middleware\Authenticate::class,
         ]);

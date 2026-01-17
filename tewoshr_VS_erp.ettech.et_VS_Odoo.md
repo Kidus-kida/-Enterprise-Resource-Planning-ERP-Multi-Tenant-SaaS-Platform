@@ -484,7 +484,7 @@ class TenantService
             // 6. Create domain record
             // 7. Link to business
 
-            // Example: business123.tewoshr.com → business123_erp_db
+            // Example: business123.tewostechsolutions.com → business123_erp_db
         }
 
         public function deleteTenant($tenantId)
@@ -509,8 +509,8 @@ class TenantService
 ```env
 # .env additions
 TENANT_DATABASE_PREFIX=tenant_
-CENTRAL_DOMAIN=tewoshr.com
-SUPERADMIN_EMAIL=admin@tewoshr.com
+CENTRAL_DOMAIN=tewostechsolutions.com
+SUPERADMIN_EMAIL=admin@tewostechsolutions.com
 ```
 
 ---
@@ -1093,7 +1093,7 @@ This analysis provides a **production-ready roadmap** combining the best practic
 248. Configure production database credentials
 249. Configure production SMTP settings
 250. Set `TENANT_DATABASE_PREFIX=tewoserp_tenant_`
-251. Set `CENTRAL_DOMAIN=tewoshr.com`
+251. Set `CENTRAL_DOMAIN=tewostechsolutions.com`
 252. Generate production `APP_KEY`
 253. Set `SESSION_DRIVER=database` for production
 254. Configure `QUEUE_CONNECTION=database`

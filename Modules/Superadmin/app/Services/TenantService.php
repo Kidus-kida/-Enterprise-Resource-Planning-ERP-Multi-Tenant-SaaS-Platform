@@ -26,7 +26,7 @@ class TenantService
         ]);
 
         Domain::create([
-            'domain' => $subdomain . '.' . config('tenancy.central_domain', 'tewoshr.com'),
+            'domain' => $subdomain . '.' . config('tenancy.central_domain', 'tewostechsolutions.com'),
             'tenant_id' => $tenant->id
         ]);
 
