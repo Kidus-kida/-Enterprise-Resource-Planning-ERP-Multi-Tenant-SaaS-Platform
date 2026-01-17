@@ -41,26 +41,29 @@
 
                                     <div class="form-group">
                                         <label>Email</label>
-                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $business->email) }}">
+                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $business->owner->email ?? '') }}" readonly>
                                         @error('email')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">From Business Owner</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Phone</label>
-                                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $business->phone) }}">
+                                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $business->owner->phone ?? '') }}" readonly>
                                         @error('phone')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">From Business Owner</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Address</label>
-                                        <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3">{{ old('address', $business->address) }}</textarea>
+                                        <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3" readonly>{{ old('address', $business->owner->address ?? '') }}</textarea>
                                         @error('address')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">From Business Owner</small>
                                     </div>
                                 </div>
 
@@ -113,6 +116,52 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Add-ons Section (Optional) -->
+                            @if($business->subscription)
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <h4 class="card-title">Subscription Add-ons (Optional)</h4>
+                                        <small class="text-muted">Manage add-ons for the current subscription</small>
+                                        
+                                        <div class="row mt-3">
+                                            @forelse($addons as $addon)
+                                                <div class="col-md-6">
+                                                    <div class="form-check mb-3 border p-3 rounded">
+                                                        <input type="checkbox" name="addons[]" value="{{ $addon->id }}" 
+                                                            class="form-check-input" id="addon_{{ $addon->id }}"
+                                                            {{ $business->subscription->addons->contains($addon->id) ? 'checked' : '' }}>
+                                                        <label class="form-check-label w-100" for="addon_{{ $addon->id }}">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div>
+                                                                    <strong>{{ $addon->name }}</strong>
+                                                                    <span class="badge bg-success ms-2">+{{ number_format($addon->price, 0) }} ETB</span>
+                                                                </div>
+                                                            </div>
+                                                            <small class="text-muted d-block mt-1">{{ $addon->description }}</small>
+                                                            @if($addon->features)
+                                                                <div class="mt-2">
+                                                                    @foreach($addon->features as $feature)
+                                                                        <span class="badge bg-light text-dark me-1">✓ {{ $feature }}</span>
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <div class="col-12">
+                                                    <p class="text-muted">No add-ons available</p>
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="alert alert-info mt-4">
+                                    <i class="fa fa-info-circle"></i> No active subscription. Create a subscription first to manage add-ons.
+                                </div>
+                            @endif
 
                             <div class="submit-section mt-4">
                                 <button type="submit" class="btn btn-primary submit-btn">Update Business</button>

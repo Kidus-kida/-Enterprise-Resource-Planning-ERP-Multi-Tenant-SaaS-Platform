@@ -15,13 +15,23 @@ class SubscriptionService
         $startDate = $additionalData['start_date'] ?? Carbon::now();
         $endDate = $this->calculateExpiryDate($startDate, $package);
 
+        // Get user count from additional data
+        $userCount = $additionalData['subscribed_user_count'] ?? null;
+
+        // Calculate dynamic price if per-user pricing is enabled
+        $packageService = new PackageService();
+        $calculatedPrice = $packageService->calculateDynamicPrice($package, $userCount);
+
         $subscription = Subscription::create([
             'business_id' => $business->id,
             'package_id' => $package->id,
+            'subscribed_user_count' => $userCount,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'package_details' => $package->toArray(),
             'module_activation_details' => $package->custom_permissions ?? [],
+            'base_price' => $calculatedPrice,
+            'total_price' => $calculatedPrice, // Will be updated if add-ons are added
             'status' => $additionalData['status'] ?? 'waiting',
             'created_id' => $additionalData['created_by'] ?? auth()->id()
         ]);

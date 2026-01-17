@@ -6,6 +6,148 @@ import sort from '@alpinejs/sort'
 window.Livewire = Livewire
 window.Alpine = Alpine
 Alpine.plugin(sort)
+
+// Register odooSearch Alpine component BEFORE Livewire starts
+Alpine.data('odooSearch', (action, fields, initialParams) => ({
+    action: action,
+    fields: fields,
+    searchQuery: '',
+    showDropdown: false,
+    showFilters: false,
+    activeFilters: [],
+    mobileSearchOpen: false,
+
+    init() {
+        // Initialize active filters from server request params
+        Object.keys(initialParams).forEach(key => {
+            const field = this.fields.find(f => f.key === key);
+            if (field) {
+                this.activeFilters.push({
+                    key: key,
+                    label: field.label,
+                    value: initialParams[key]
+                });
+            } else if (key === 'search') {
+                this.activeFilters.push({
+                    key: 'search',
+                    label: 'Search',
+                    value: initialParams[key]
+                });
+            }
+        });
+    },
+
+    toggleMobileSearch() {
+        this.mobileSearchOpen = !this.mobileSearchOpen;
+        // Target the specific content container (Kanban or Main Content)
+        const content = document.querySelector('.kanban-cont') || document.querySelector('.content-body') || document.querySelector('.page-wrapper > .content');
+        
+        if (this.mobileSearchOpen) {
+             // Push content down
+             if (content) {
+                 content.style.transition = 'margin-top 0.2s ease';
+                 content.style.marginTop = '60px';
+             }
+             
+             setTimeout(() => {
+                const input = document.querySelector('.odoo-search-component input');
+                if(input) input.focus();
+             }, 100);
+        } else {
+             // Reset content position
+             if (content) content.style.marginTop = '';
+        }
+    },
+
+    addFilter(key, label, value) {
+        this.activeFilters.push({ key, label, value });
+        this.searchQuery = '';
+        this.showDropdown = false;
+        this.submitSearch();
+    },
+
+    selectField(field) {
+        this.addFilter(field.key, field.label, this.searchQuery);
+    },
+
+    removeFilter(index) {
+        this.activeFilters.splice(index, 1);
+        this.submitSearch();
+    },
+
+    handleBackspace() {
+        if (this.searchQuery === '' && this.activeFilters.length > 0) {
+            this.activeFilters.pop();
+        }
+    },
+
+    submitSearch() {
+        const params = new URLSearchParams();
+        this.activeFilters.forEach(filter => {
+            params.append(filter.key, filter.value);
+        });
+        
+        const url = `${this.action}?${params.toString()}`;
+        console.log('Fetching URL:', url);
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.text();
+        })
+        .then(html => {
+            console.log('Response HTML length:', html.length);
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newBoard = doc.querySelector('.kanban-cont');
+            const currentBoard = document.querySelector('.kanban-cont');
+            
+            console.log('New board found:', !!newBoard);
+            console.log('Current board found:', !!currentBoard);
+            
+            if (newBoard && currentBoard) {
+                console.log('Replacing board content...');
+                currentBoard.outerHTML = newBoard.outerHTML;
+                
+                console.log('Board content replaced successfully');
+                
+                if (typeof Sortable !== 'undefined') {
+                    var taskBoxWrapper = [].slice.call(document.querySelectorAll('.kanban-wrap'));
+                    console.log('Reinitializing Sortable for', taskBoxWrapper.length, 'elements');
+                    for (var i = 0; i < taskBoxWrapper.length; i++) {
+                        new Sortable(taskBoxWrapper[i], {
+                            group: 'taskboard',
+                            handle: ".kanban-box",
+                            draggable: ".panel",
+                            animation: 150,
+                            fallbackOnBody: true,
+                            swapThreshold: 0.65,
+                            dataIdAttr: 'data-id'
+                        });
+                    }
+                }
+            } else {
+                console.error('Could not find kanban board elements');
+                if (!newBoard) console.error('New board not found in response');
+                if (!currentBoard) console.error('Current board not found on page');
+            }
+            
+            window.history.pushState({}, '', url);
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            alert('Search failed. Please try again or refresh the page.');
+        });
+    }
+}));
+
 Livewire.start()
 
 // DataTables
@@ -20,10 +162,7 @@ import nProgress from "nprogress";
 import Toastify from 'toastify-js'
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
+// FullCalendar and PDFMake removed from static imports
 import { jsPDF } from "jspdf";
 
 // DataTables
@@ -33,20 +172,30 @@ import 'datatables.net-buttons/js/buttons.colVis.mjs';
 import 'datatables.net-buttons/js/buttons.html5.mjs';
 import 'datatables.net-buttons/js/buttons.print.mjs';
 import JSZip from 'jszip';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+// Lazy Load PDFMake
+if (document.querySelectorAll('.table, .datatable, table').length > 0) {
+    Promise.all([
+        import('pdfmake/build/pdfmake'),
+        import('pdfmake/build/vfs_fonts')
+    ]).then(([pdfMakeModule, pdfFontsModule]) => {
+        const pdfMake = pdfMakeModule.default;
+        const pdfFonts = pdfFontsModule.default;
 
-// Assign to global
-window.JSZip = JSZip;
-if (pdfFonts && pdfFonts.pdfMake) {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
-} else if (pdfFonts && pdfFonts.vfs) {
-    pdfMake.vfs = pdfFonts.vfs;
+        if (pdfFonts && pdfFonts.pdfMake) {
+            pdfMake.vfs = pdfFonts.pdfMake.vfs;
+        } else if (pdfFonts && pdfFonts.vfs) {
+            pdfMake.vfs = pdfFonts.vfs;
+        }
+        window.pdfMake = pdfMake;
+
+        // Register with DataTables Buttons if available
+        if (DataTable.Buttons && typeof DataTable.Buttons.pdfMake === 'function') {
+            DataTable.Buttons.pdfMake(pdfMake);
+        }
+    });
 }
-window.pdfMake = pdfMake;
-if (DataTable.Buttons) {
-    if (typeof DataTable.Buttons.jszip === 'function') DataTable.Buttons.jszip(JSZip);
-    if (typeof DataTable.Buttons.pdfMake === 'function') DataTable.Buttons.pdfMake(pdfMake);
+if (DataTable.Buttons && typeof DataTable.Buttons.jszip === 'function') {
+    DataTable.Buttons.jszip(JSZip);
 }
 
 window.intlTelInput = intlTelInput;
@@ -55,10 +204,23 @@ window.moment = moment;
 window.Moment = moment;
 window.toastr = toastr;
 window.Toastify = Toastify;
-window.Calendar = Calendar
-window.dayGridPlugin = dayGridPlugin
-window.timeGridPlugin = timeGridPlugin
-window.listPlugin = listPlugin
+// Lazy Load FullCalendar
+if (document.querySelector('.calendar') || document.getElementById('calendar')) {
+    Promise.all([
+        import('@fullcalendar/core'),
+        import('@fullcalendar/daygrid'),
+        import('@fullcalendar/timegrid'),
+        import('@fullcalendar/list')
+    ]).then(([core, dayGrid, timeGrid, list]) => {
+        window.Calendar = core.Calendar;
+        window.dayGridPlugin = dayGrid.default;
+        window.timeGridPlugin = timeGrid.default;
+        window.listPlugin = list.default;
+        
+        // Dispatch event if needed, or rely on script execution order
+        // Scripts that use Calendar should check if it's available or wait
+    });
+}
 window.Sortable = Sortable
 window.jsPDF = jsPDF;
 Select2();
@@ -175,7 +337,7 @@ $(document).on('click', 'a[data-ajax-modal="true"], button[data-ajax-modal="true
     });
 });
 
-if ($(".datetimepicker").length > 0) {
+if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
     $(".datetimepicker").each(function () {
         $(this).datetimepicker({
             format: "YYYY-MM-DD H:i",

@@ -294,7 +294,15 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Admin Password <span class="text-danger">*</span></label>
-                                            <input type="password" name="admin_password" class="form-control" required minlength="8">
+                                            <div class="input-group">
+                                                <input type="password" name="admin_password" id="admin_password" class="form-control" required minlength="8">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword" title="Show/Hide Password">
+                                                        <i class="fa fa-eye" id="togglePasswordIcon"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">Minimum 8 characters</small>
                                         </div>
                                     </div>
                                 </div>
@@ -369,4 +377,32 @@
         </div>
 
     </div>
+
+
+<script>
+// Password visibility toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('admin_password');
+    const toggleIcon = document.getElementById('togglePasswordIcon');
+    
+    if (togglePassword && passwordField && toggleIcon) {
+        togglePassword.addEventListener('click', function() {
+            // Toggle password visibility
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            // Toggle icon
+            if (type === 'password') {
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            } else {
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            }
+        });
+    }
+});
+</script>
+
 @endsection

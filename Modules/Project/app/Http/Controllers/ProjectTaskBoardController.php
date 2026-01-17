@@ -18,11 +18,28 @@ class ProjectTaskBoardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function board(string $id)
+    public function board(Request $request, string $id)
     {
         $pageTitle = __('Taskboard');
         $project = Project::findOrFail(Crypt::decrypt($id));
-        $taskBoards = $project->taskBoard()->orderBy('priority')->get();
+        
+        $filters = $request->all();
+        \Log::info('Board filters: ' . json_encode($filters));
+        
+        $taskBoards = $project->taskBoard()
+            ->orderBy('priority')
+            ->with(['tasks' => function ($query) use ($filters) {
+                // Apply the search filters to the tasks query
+                (new \Modules\Project\Services\ProjectTaskFilter($query, $filters))->apply()
+                    ->orderBy('priority');
+            }])
+            ->get();
+
+        // Log task counts per board
+        foreach ($taskBoards as $board) {
+            \Log::info('Board: ' . $board->name . ' - Tasks: ' . $board->tasks->count());
+        }
+
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
         return view('project::tasks.index', compact(
             'project',
@@ -48,6 +65,11 @@ class ProjectTaskBoardController extends Controller
         $project_id = $project->id;
         $board = $request->board;
         $employees = User::where('is_active', true)->where('type', UserType::EMPLOYEE)->get();
+        
+        // Debug logging
+        \Log::info('Create Task - Employees Count: ' . $employees->count());
+        \Log::info('Create Task - Employees: ' . $employees->pluck('fullname', 'id')->toJson());
+        
         return view('project::tasks.create', compact(
             'project_id',
             'board',

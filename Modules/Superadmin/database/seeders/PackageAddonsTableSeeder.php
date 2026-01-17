@@ -4,6 +4,7 @@ namespace Modules\Superadmin\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\Superadmin\Models\PackageAddon;
+use Modules\Superadmin\Models\Module;
 
 class PackageAddonsTableSeeder extends Seeder
 {
@@ -100,6 +101,13 @@ class PackageAddonsTableSeeder extends Seeder
         ];
 
         foreach ($addons as $addonData) {
+            // Find module by key and set module_id
+            $module = Module::where('key', $addonData['module_key'])->first();
+            
+            if ($module) {
+                $addonData['module_id'] = $module->id;
+            }
+            
             PackageAddon::updateOrCreate(
                 ['module_key' => $addonData['module_key']],
                 $addonData

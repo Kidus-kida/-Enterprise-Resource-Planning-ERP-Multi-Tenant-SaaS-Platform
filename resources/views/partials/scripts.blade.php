@@ -20,27 +20,8 @@ window.addEventListener('load', function() {
     fileinputCSS.href = '{{ asset("js/plugins/bootstrap-fileinput/fileinput.min.css") }}';
     document.head.appendChild(fileinputCSS);
     
-    // Load scripts that depend on jQuery
+    // Load local legacy scripts (libraries are now in app.js bundle)
     var scripts = [
-        // DataTables and dependencies
-        { src: 'https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js', id: 'datatables-js' },
-        { src: 'https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js', id: 'datatables-bs5-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js', id: 'datatables-buttons-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js', id: 'datatables-buttons-bs5-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', id: 'jszip-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', id: 'pdfmake-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', id: 'pdfmake-fonts-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js', id: 'datatables-html5-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js', id: 'datatables-print-js' },
-        
-        // Select2
-        { src: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', id: 'select2-js' },
-        
-        // DateRangePicker (requires moment.js)
-        { src: 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', id: 'moment-js' },
-        { src: 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', id: 'daterangepicker-js' },
-        
-        // App scripts
         { src: '{{ asset("js/accounting.min.js") }}', id: 'accounting-js' },
         { src: '{{ asset("js/helpers.js") }}', id: 'helpers-js' },
         { src: '{{ asset("js/jquery.validate.min.js") }}', id: 'validate-js' },
@@ -54,6 +35,24 @@ window.addEventListener('load', function() {
             var script = document.createElement('script');
             script.id = scriptInfo.id;
             script.src = scriptInfo.src;
+            script.onload = function() {
+                // Initialize datetimepicker if present and script loaded
+                if (scriptInfo.id === 'datetimepicker-js') {
+                    if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
+                        $(".datetimepicker").each(function () {
+                            $(this).datetimepicker({
+                                format: "YYYY-MM-DD H:i",
+                                icons: {
+                                    up: "fa fa-angle-up",
+                                    down: "fa fa-angle-down",
+                                    next: "fa fa-angle-right",
+                                    previous: "fa fa-angle-left",
+                                },
+                            });
+                        });
+                    }
+                }
+            };
             document.body.appendChild(script);
         }
     });

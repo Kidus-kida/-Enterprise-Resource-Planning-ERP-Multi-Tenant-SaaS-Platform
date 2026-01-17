@@ -45,6 +45,7 @@ Route::view('/pricing', 'landing.pricing')->name('landing.pricing');
 Route::view('/industries', 'landing.industries')->name('landing.industries');
 Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
+Route::view('/test-alpine', 'test-alpine');
 
 include __DIR__ . '/auth.php';
 
@@ -307,4 +308,39 @@ Route::group(['middleware' => ['auth', 'module.access:products']], function () {
     Route::match(['put', 'post'], 'update-shipping/{id}', [StockTransferRequestController::class, 'updateShipping'])->name('stock-transfers-request.updateShipping');
     Route::delete('destroy-shipping/{id}', [StockTransferRequestController::class, 'destroyShipping'])->name('stock-transfers-request.destroyShipping');
     Route::get('shippment-list', [StockTransferRequestController::class, 'shippment_list'])->name('stock-transfers-request.shippment_list');
+});
+
+// Test route for debugging task search
+Route::get('/test-task-search', function() {
+    // Test 1: Check if tasks have followers
+    $tasks = \Modules\Project\Models\Task::with('followers.user')->get();
+    dump('Total tasks: ' . $tasks->count());
+    
+    foreach ($tasks as $task) {
+        dump('Task: ' . $task->name);
+        dump('Followers count: ' . $task->followers->count());
+        foreach ($task->followers as $follower) {
+            dump('  - Follower user_id: ' . $follower->user_id);
+            if ($follower->user) {
+                dump('  - User: ' . $follower->user->firstname . ' ' . $follower->user->lastname);
+            } else {
+                dump('  - User not found!');
+            }
+        }
+    }
+    
+    // Test 2: Try the filter
+    $searchTerm = request('term', 'test');
+    dump('Searching for: ' . $searchTerm);
+    
+    $query = \Modules\Project\Models\Task::query();
+    $filter = new \Modules\Project\Services\ProjectTaskFilter($query, ['person' => $searchTerm]);
+    $results = $filter->apply()->get();
+    
+    dump('Results count: ' . $results->count());
+    foreach ($results as $result) {
+        dump('Found task: ' . $result->name);
+    }
+    
+    return 'Check the output above';
 });

@@ -41,7 +41,11 @@ class TaskController extends Controller
      */
     public function create()
     {
-        return view('project::create');
+        $employees = \App\Models\User::all();
+        $project_id = request('project');
+        $board = request('board');
+        
+        return view('project::tasks.create', compact('employees', 'project_id', 'board'));
     }
 
     /**

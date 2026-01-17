@@ -18,6 +18,7 @@ class Subscription extends Model
     protected $fillable = [
         'business_id',
         'package_id',
+        'subscribed_user_count',
         'start_date',
         'end_date',
         'package_details',
@@ -36,6 +37,7 @@ class Subscription extends Model
         'end_date' => 'date',
         'package_details' => 'array',
         'module_activation_details' => 'array',
+        'subscribed_user_count' => 'integer',
         'base_price' => 'decimal:4',
         'addons_price' => 'decimal:4',
         'total_price' => 'decimal:4'

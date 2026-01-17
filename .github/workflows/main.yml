@@ -21,6 +21,12 @@ jobs:
         extensions: mbstring, bcmath, intl, pdo, mysql
         tools: composer
 
+    - name: Create storage directories
+      run: |
+        mkdir -p storage/framework/{sessions,views,cache}
+        mkdir -p bootstrap/cache
+        chmod -R 775 storage bootstrap/cache
+
     - name: Install Composer dependencies
       run: composer install --no-dev --optimize-autoloader
 
@@ -59,4 +65,3 @@ jobs:
           **/storage/**
           .env
           .env.*
-          
