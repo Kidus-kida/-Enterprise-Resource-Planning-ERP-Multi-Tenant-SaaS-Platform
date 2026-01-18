@@ -108,7 +108,9 @@ class AppMenuListener
 
         // ==================== DASHBOARD ====================
         $menu->add(
-            Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __('Dashboard') . '</span>')->setActive(route_is('dashboard'))
+            Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __('Dashboard') . '</span>')
+                ->setActive(route_is('dashboard'))
+                ->setAttributes(['wire:navigate' => 'true'])
         );
 
         // ==================== SUPERADMIN ====================
@@ -117,6 +119,7 @@ class AppMenuListener
             $menu->add(
                 Link::toRoute('superadmin.dashboard', '<i class="la la-user-shield"></i> <span>' . __('Superadmin') . '</span>')
                     ->setActive(route_is('superadmin.*'))
+                    ->setAttributes(['wire:navigate' => 'true'])
             );
         }
 
@@ -150,10 +153,10 @@ class AppMenuListener
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-users"></i> <span>' . __('Employees') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
-                        ->addIfCan('view-employees', Link::toRoute('employees.index', __('All Employees'))->addClass(route_is(['employees.index', 'employees.list']) ? 'active' : ''))
-                        ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : ''))
-                        ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : ''))
-                        ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : ''))
+                        ->addIfCan('view-employees', Link::toRoute('employees.index', __('All Employees'))->addClass(route_is(['employees.index', 'employees.list']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
@@ -164,10 +167,10 @@ class AppMenuListener
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calendar-check-o"></i> <span>' . __('Leave Management') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
-                        ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : ''))
-                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : ''))
-                        ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : ''))
-                        ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : ''))
+                        ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
@@ -178,9 +181,9 @@ class AppMenuListener
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-chart-line"></i> <span>' . __('Performance') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
-                        ->addIfCan('view-evaluation', Link::toRoute('evaluation.index', __('Evaluations'))->addClass(route_is('evaluation.index') ? 'active' : ''))
-                        ->addIfCan('view-evaluation-assignment', Link::toRoute('evaluation.assign-evaluator', __('Evaluation Assignments'))->addClass(route_is('evaluation.assign-evaluator') ? 'active' : ''))
-                        ->addIfCan('view-award', Link::toRoute('awards.index', __('Awards & Recognition'))->addClass(route_is('awards.*') ? 'active' : ''))
+                        ->addIfCan('view-evaluation', Link::toRoute('evaluation.index', __('Evaluations'))->addClass(route_is('evaluation.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-evaluation-assignment', Link::toRoute('evaluation.assign-evaluator', __('Evaluation Assignments'))->addClass(route_is('evaluation.assign-evaluator') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-award', Link::toRoute('awards.index', __('Awards & Recognition'))->addClass(route_is('awards.*') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
@@ -194,10 +197,10 @@ class AppMenuListener
                             function () {
                                 return auth()->user()->can(['view-PayrollAllowances', 'view-PayrollDeductions']);
                             },
-                            Link::toRoute('payroll.items', __('Payroll Items'))->addClass(route_is(['payroll.items']) ? 'active' : '')
+                            Link::toRoute('payroll.items', __('Payroll Items'))->addClass(route_is(['payroll.items']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true'])
                         )
-                        ->addIfCan("view-payrolls", Link::toRoute('payroll.processing.index', __('Payroll Processing'))->addClass(route_is(['payroll.processing.*']) ? 'active' : ''))
-                        ->addIfCan("view-payslips", Link::toRoute('payslips.index', __('Payslips'))->addClass(route_is(['payslips.*']) ? 'active' : ''))
+                        ->addIfCan("view-payrolls", Link::toRoute('payroll.processing.index', __('Payroll Processing'))->addClass(route_is(['payroll.processing.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan("view-payslips", Link::toRoute('payslips.index', __('Payslips'))->addClass(route_is(['payslips.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addParentClass('submenu')
                 );
             }
@@ -214,8 +217,8 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-rocket"></i><span>' . __("Projects") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-projects', Link::toRoute('projects.index', __('Projects'))->addClass(route_is(['projects.*']) ? 'active' : ''))
-                    ->addIfCan('view-taskboards', Link::toRoute('task-boards.index', __('Default TaskBoards'))->addClass(route_is(['task-boards.index']) ? 'active' : ''))
+                    ->addIfCan('view-projects', Link::toRoute('projects.index', __('Projects'))->addClass(route_is(['projects.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taskboards', Link::toRoute('task-boards.index', __('Default TaskBoards'))->addClass(route_is(['task-boards.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                     ->addParentClass('submenu')
             );
         }
@@ -227,11 +230,11 @@ class AppMenuListener
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-handshake-o"></i> <span>' . __('CRM') . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addParentClass('submenu')
-                    ->addIfCan('view-clients', Link::toRoute('clients.index', __('Clients'))->addClass(route_is('clients.*') ? 'active' : ''))
-                    ->add(Link::toRoute('leads.index', __('Leads'))->addClass(route_is(['leads.*']) ? 'active' : ''))
-                    ->add(Link::toRoute('follow-ups.index', __('Follow-ups'))->addClass(route_is(['follow-ups.*']) ? 'active' : ''))
-                    ->addIfCan('view-budgetCategories', Link::toRoute('campaigns.index', __('Campaigns'))->addClass(route_is(['campaigns.*']) ? 'active' : ''))
-                    ->add(Link::toRoute('crm-reports.index', __('Report'))->addClass(route_is(['crm-reports.*']) ? 'active' : ''))
+                    ->addIfCan('view-clients', Link::toRoute('clients.index', __('Clients'))->addClass(route_is('clients.*') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->add(Link::toRoute('leads.index', __('Leads'))->addClass(route_is(['leads.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->add(Link::toRoute('follow-ups.index', __('Follow-ups'))->addClass(route_is(['follow-ups.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-budgetCategories', Link::toRoute('campaigns.index', __('Campaigns'))->addClass(route_is(['campaigns.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->add(Link::toRoute('crm-reports.index', __('Report'))->addClass(route_is(['crm-reports.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
             );
         }
 
@@ -241,10 +244,10 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : ''))
-                    ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : ''))
-                    ->addIfCan('view-estimates', Link::toRoute('purchase.bulk_import', __('Bulk Purchase'))->addClass(route_is(['purchase.bulk_import']) ? 'active' : ''))
-                    ->addIfCan('view-invoices', Link::toRoute('purchase-return.index', __('Purchase Returns'))->addClass(route_is(['purchase-return.*']) ? 'active' : ''),)
+                    ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-estimates', Link::toRoute('purchase.bulk_import', __('Bulk Purchase'))->addClass(route_is(['purchase.bulk_import']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-invoices', Link::toRoute('purchase-return.index', __('Purchase Returns'))->addClass(route_is(['purchase-return.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                     ->addParentClass('submenu')
             );
         }
@@ -255,20 +258,20 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-cart"></i><span>' . __("Sales") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('view-taxes', Link::toRoute('sales.index', __('List Sales'))->addClass(request()->get('status') != 'order' && route_is(['sales.index']) ? 'active' : ''))
-                    ->addIfCan('view-estimates', Link::toRoute('sales.create', __('Add Sales'))->addClass(route_is(['sales.create']) ? 'active' : ''))
-                    ->addIfCan('view-estimates', Link::toRoute('sales.pos.create', __('POS'))->addClass(route_is(['sales.pos.create']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales.pos.index', __('List POS'))->addClass(route_is(['sales.pos.index']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales.subscriptions.index', __('Subscriptions'))->addClass(route_is(['sales.subscriptions.index']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales.draft.index', __('List Draft'))->addClass(route_is(['sales.draft.index']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales.quotation.index', __('List Quotation'))->addClass(route_is(['sales.quotation.index']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::to(route('sales.index', ['status' => 'order']), __('Sales Order'))->addClass(request()->get('status') == 'order' && route_is('sales.index') ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales.over_limit_sales', __('Over Limit Sales'))->addClass(route_is(['sales.over_limit_sales']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('sales-return.index', __('Sales Returns'))->addClass(route_is(['sales-return.*']) ? 'active' : ''))
-                    ->addIfCan('view-taxes', Link::toRoute('taxes.index', __('Taxes'))->addClass(route_is(['taxes.*']) ? 'active' : ''))
-                    ->addIfCan('view-expenses', Link::toRoute('expenses.index', __('Expenses'))->addClass(route_is(['expenses.*']) ? 'active' : ''))
-                    ->addIfCan('view-estimates', Link::toRoute('estimates.index', __('Estimates'))->addClass(route_is(['estimates.*']) ? 'active' : ''))
-                    ->addIfCan('view-invoices', Link::toRoute('invoices.index', __('Invoices'))->addClass(route_is(['invoices.*']) ? 'active' : ''))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.index', __('List Sales'))->addClass(request()->get('status') != 'order' && route_is(['sales.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-estimates', Link::toRoute('sales.create', __('Add Sales'))->addClass(route_is(['sales.create']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-estimates', Link::toRoute('sales.pos.create', __('POS'))->addClass(route_is(['sales.pos.create']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.pos.index', __('List POS'))->addClass(route_is(['sales.pos.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.subscriptions.index', __('Subscriptions'))->addClass(route_is(['sales.subscriptions.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.draft.index', __('List Draft'))->addClass(route_is(['sales.draft.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.quotation.index', __('List Quotation'))->addClass(route_is(['sales.quotation.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::to(route('sales.index', ['status' => 'order']), __('Sales Order'))->addClass(request()->get('status') == 'order' && route_is('sales.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales.over_limit_sales', __('Over Limit Sales'))->addClass(route_is(['sales.over_limit_sales']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('sales-return.index', __('Sales Returns'))->addClass(route_is(['sales-return.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-taxes', Link::toRoute('taxes.index', __('Taxes'))->addClass(route_is(['taxes.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-expenses', Link::toRoute('expenses.index', __('Expenses'))->addClass(route_is(['expenses.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-estimates', Link::toRoute('estimates.index', __('Estimates'))->addClass(route_is(['estimates.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('view-invoices', Link::toRoute('invoices.index', __('Invoices'))->addClass(route_is(['invoices.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                     ->addParentClass('submenu')
             );
         }
@@ -279,6 +282,7 @@ class AppMenuListener
             $menu->add(
                 Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('Deposits') . '</span>')
                     ->addClass(route_is(['deposits.*']) ? 'active' : '')
+                    ->setAttributes(['wire:navigate' => 'true'])
             );
         }
 
@@ -288,9 +292,9 @@ class AppMenuListener
             $menu->submenu(
                 Html::raw('<a href="#" class="' . ($stockTransferActive ? 'active' : '') . '"><i class="la la-exchange"></i><span>' . __("Stock Transfers") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
-                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers.index', __('All Stock Transfers'))->addClass(route_is(['stock-transfers.index']) ? 'active' : ''))
-                    ->addIfCan('purchase.create', Link::toRoute('stock-transfers.create', __('Add Stock Transfer'))->addClass(route_is(['stock-transfers.create']) ? 'active' : ''))
-                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers-request.index', __('Stock Transfer Requests'))->addClass(route_is(['stock-transfers-request.index']) ? 'active' : ''))
+                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers.index', __('All Stock Transfers'))->addClass(route_is(['stock-transfers.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('purchase.create', Link::toRoute('stock-transfers.create', __('Add Stock Transfer'))->addClass(route_is(['stock-transfers.create']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                    ->addIfCan('purchase.view', Link::toRoute('stock-transfers-request.index', __('Stock Transfer Requests'))->addClass(route_is(['stock-transfers-request.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                     ->addParentClass('submenu')
             );
         }

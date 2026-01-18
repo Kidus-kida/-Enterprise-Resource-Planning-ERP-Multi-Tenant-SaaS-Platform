@@ -22,18 +22,22 @@ class AppSuperadminMenuListener
     /**
      * Handle the event.
      */
-    public function handle(AppSuperadminMenuEvent $event): void
+    public function handle(\App\Events\AppSuperadminMenuEvent $event): void
     {
         $menu = $event->menu;
         
         // Back to Dashboard link
         $menu->add(
-            Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __("Back to Dashboard") . '</span>')->setActive(route_is('dashboard'))
+            Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __("Back to Dashboard") . '</span>')
+                ->setActive(route_is('dashboard'))
+                ->setAttributes(['wire:navigate' => 'true'])
         );
         
         // Superadmin Dashboard
         $menu->add(
-            Link::toRoute('superadmin.dashboard', '<i class="la la-tachometer"></i> <span>' . __("Superadmin Dashboard") . '</span>')->setActive(route_is('superadmin.dashboard'))
+            Link::toRoute('superadmin.dashboard', '<i class="la la-tachometer"></i> <span>' . __("Superadmin Dashboard") . '</span>')
+                ->setActive(route_is('superadmin.dashboard'))
+                ->setAttributes(['wire:navigate' => 'true'])
         );
 
         // Business Management Submenu
@@ -44,14 +48,17 @@ class AppSuperadminMenuListener
                 ->add(
                     Link::toRoute('superadmin.businesses.index', __('All Businesses'))
                         ->addClass(route_is(['superadmin.businesses.*']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->add(
                     Link::toRoute('superadmin.businesses.create', __('Add Business'))
                         ->addClass(route_is(['superadmin.businesses.create']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->add(
                     Link::toRoute('superadmin.tenant-management.index', __('Tenant Management'))
                         ->addClass(route_is(['superadmin.tenant-management.*']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->addParentClass('submenu')
         );
@@ -64,14 +71,17 @@ class AppSuperadminMenuListener
                 ->add(
                     Link::toRoute('superadmin.modules.index', __('All Modules'))
                         ->addClass(route_is(['superadmin.modules.*']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->add(
                     Link::toRoute('superadmin.packages.index', __('All Packages'))
                         ->addClass(route_is(['superadmin.packages.index', 'superadmin.packages.show']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->add(
                     Link::toRoute('superadmin.packages.create', __('Create Package'))
                         ->addClass(route_is(['superadmin.packages.create']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->addParentClass('submenu')
         );
@@ -84,10 +94,12 @@ class AppSuperadminMenuListener
                 ->add(
                     Link::toRoute('superadmin.subscriptions.index', __('All Subscriptions'))
                         ->addClass(route_is(['superadmin.subscriptions.index', 'superadmin.subscriptions.show']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->add(
                     Link::toRoute('superadmin.subscriptions.create', __('Create Subscription'))
                         ->addClass(route_is(['superadmin.subscriptions.create']) ? 'active' : '')
+                        ->setAttributes(['wire:navigate' => 'true'])
                 )
                 ->addParentClass('submenu')
         );
@@ -98,12 +110,14 @@ class AppSuperadminMenuListener
         $menu->add(
             Link::toRoute('superadmin.manual-payments.index', '<i class="la la-money"></i> <span>' . __('Manual Payments') . '</span>' . $badgeHtml)
                 ->setActive(route_is(['superadmin.manual-payments.*']))
+                ->setAttributes(['wire:navigate' => 'true'])
         );
         
         // Superadmin Settings
         $menu->add(
             Link::toRoute('superadmin.settings.index', '<i class="la la-cog"></i> <span>' . __('Superadmin Settings') . '</span>')
                 ->setActive(route_is(['superadmin.settings.*']))
+                ->setAttributes(['wire:navigate' => 'true'])
         );
     }
 }
