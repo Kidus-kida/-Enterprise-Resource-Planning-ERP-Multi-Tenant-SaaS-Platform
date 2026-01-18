@@ -12,13 +12,53 @@
 
 <!-- All jQuery-dependent scripts must load AFTER Vite completes -->
 <script>
-// Function to remove any direct listeners (which cause double-toggles)
-function cleanupDirectListeners() {
-    $('#sidebar-menu a').off('click');
-}
+// Unified Sidebar Initializer
+function initSidebar() {
+    // 1. Re-initialize Slimscroll (Styling/Scrolling)
+    var $slimScrolls = $('.slimscroll');
+    if ($slimScrolls.length > 0) {
+        $slimScrolls.slimScroll({
+            height: 'auto',
+            width: '100%',
+            position: 'right',
+            size: '7px',
+            color: '#ccc',
+            wheelStep: 10,
+            touchScrollStep: 100
+        });
+        var wHeight = $(window).height() - 60;
+        $slimScrolls.height(wHeight);
+        $('.sidebar .slimScrollDiv').height(wHeight);
+        $(window).resize(function () {
+            var rHeight = $(window).height() - 60;
+            $slimScrolls.height(rHeight);
+            $('.sidebar .slimScrollDiv').height(rHeight);
+        });
+    }
 
-// Function to manually expand active menu (without triggering clicks)
-function expandActiveMenu() {
+    // 2. Handle Event Listeners (Logic)
+    var $sidebarMenu = $('#sidebar-menu a');
+    
+    // Unbind EVERYTHING to start fresh (fixes double-toggle if persisted)
+    $sidebarMenu.off('click');
+    
+    // Bind the toggle logic (fixes paused if swapped)
+    $sidebarMenu.on('click', function (e) {
+        if ($(this).parent().hasClass('submenu')) {
+            e.preventDefault();
+        }
+        if (!$(this).hasClass('subdrop')) {
+            $('ul', $(this).parents('ul:first')).slideUp(350);
+            $('a', $(this).parents('ul:first')).removeClass('subdrop');
+            $(this).next('ul').slideDown(350);
+            $(this).addClass('subdrop');
+        } else if ($(this).hasClass('subdrop')) {
+            $(this).removeClass('subdrop');
+            $(this).next('ul').slideUp(350);
+        }
+    });
+
+    // 3. Set Active State
     var $activeLink = $('#sidebar-menu ul li.submenu a.active');
     if ($activeLink.length > 0) {
         var $parentLi = $activeLink.parents('li:last');
@@ -33,11 +73,8 @@ function expandActiveMenu() {
 window.addEventListener('load', function() {
     // ... existing load logic ...
     
-    // Cleanup direct listeners that app.js attached
-    setTimeout(function() {
-        cleanupDirectListeners();
-        expandActiveMenu();
-    }, 100);
+    // Override app.js default behavior with our unified logic
+    setTimeout(initSidebar, 100);
 
     // Trigger same initialization for first load if needed or keep existing logic
     // Keeping existing dynamic script loader below
@@ -87,10 +124,10 @@ window.addEventListener('load', function() {
 
 // 2. Livewire Navigation
 document.addEventListener('livewire:navigated', () => {
-    // 1. Sidebar Cleanup & Restore
-    // We strictly remove direct listeners to force usage of our delegated listener below
-    cleanupDirectListeners();
-    expandActiveMenu();
+    console.log('🚀 Livewire SPA Navigation verified!');
+    
+    // 1. Run Unified Sidebar Init
+    initSidebar();
 
     // 2. Datepickers
     if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
@@ -134,30 +171,6 @@ document.addEventListener('livewire:navigated', () => {
         $('.mobile_btn').trigger('click');
     }
 });
-
-// SINGLETON DELEGATED EVENT LISTENER
-// This runs once and handles clicks forever (even after DOM swap)
-if (!window.sidebarDelegated) {
-    $(document).on('click', '#sidebar-menu a', function (e) {
-        // Prevent default if it's a submenu toggle
-        if ($(this).parent().hasClass('submenu')) {
-            e.preventDefault();
-        }
-        
-        if (!$(this).hasClass('subdrop')) {
-            // Opening: Hide others, show this
-            $('ul', $(this).parents('ul:first')).slideUp(350);
-            $('a', $(this).parents('ul:first')).removeClass('subdrop');
-            $(this).next('ul').slideDown(350);
-            $(this).addClass('subdrop');
-        } else if ($(this).hasClass('subdrop')) {
-            // Closing: Just hide this
-            $(this).removeClass('subdrop');
-            $(this).next('ul').slideUp(350);
-        }
-    });
-    window.sidebarDelegated = true;
-}
 
 // Remove global checks - simpler is better
 // if (!window.sidebarInitialized) ... REMOVED
