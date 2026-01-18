@@ -111,6 +111,15 @@ class AppMenuListener
             Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __('Dashboard') . '</span>')->setActive(route_is('dashboard'))
         );
 
+        // ==================== SUPERADMIN ====================
+        // Show as a single link that takes you to Superadmin mode (like Settings)
+        if (auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+            $menu->add(
+                Link::toRoute('superadmin.dashboard', '<i class="la la-user-shield"></i> <span>' . __('Superadmin') . '</span>')
+                    ->setActive(route_is('superadmin.*'))
+            );
+        }
+
         // ==================== HR MANAGEMENT ====================
         if (
             $isModuleEnabled('hr') &&

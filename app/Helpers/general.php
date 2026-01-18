@@ -143,7 +143,15 @@ if (!function_exists('renderAppMenu')) {
     function renderAppMenu()
     {
         $appMenu = new AppMenu();
-        event(new AppMenuEvent($appMenu));
+        
+        // Check if we are in Superadmin mode (superadmin routes)
+        if (route_is('superadmin.*')) {
+            event(new \App\Events\AppSuperadminMenuEvent($appMenu));
+        } else {
+            // Normal mode
+            event(new AppMenuEvent($appMenu));
+        }
+        
         return $appMenu->menu->render();
     }
 }
