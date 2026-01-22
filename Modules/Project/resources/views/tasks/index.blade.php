@@ -219,6 +219,20 @@
             <!-- Center: Search Bar -->
             <div class="d-flex justify-content-center flex-grow-1">
                 <div style="width: 100%; max-width: 500px;">
+                    @php
+                        $taskFilterOptions = [
+                            ['label' => 'My Tasks', 'value' => 'my_tasks', 'key' => 'preset'],
+                            ['label' => 'Unassigned', 'value' => 'unassigned', 'key' => 'preset'],
+                            ['label' => 'Open', 'value' => 'open', 'key' => 'preset'],
+                            ['label' => 'Closed', 'value' => 'closed', 'key' => 'preset'],
+                        ];
+                        $taskGroupByOptions = [
+                            ['label' => 'Assignees', 'value' => 'assignees'],
+                            ['label' => 'Stage', 'value' => 'stage'],
+                            ['label' => 'Project', 'value' => 'project'],
+                            ['label' => 'Priority', 'value' => 'priority'],
+                        ];
+                    @endphp
                     <x-odoo-search-bar 
                         :action="route('project.taskboard', ['id' => \Crypt::encrypt($project->id)])"
                         :fields="[
@@ -227,6 +241,8 @@
                             ['key' => 'endDate', 'label' => 'End Date'],
                             ['key' => 'search', 'label' => 'Text']
                         ]"
+                        :filterOptions="$taskFilterOptions"
+                        :groupByOptions="$taskGroupByOptions"
                     />
                 </div>
             </div>
