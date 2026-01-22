@@ -140,7 +140,7 @@ class BusinessSeeder extends Seeder
             'type' => 'customer',
             'name' => 'Walk-in Customer',
             'email' => null,
-            'mobile' => null,
+            'mobile' => '0000000000',
             'contact_id' => 'CO0001',
             'contact_status' => 'active',
             'is_default' => 1,
