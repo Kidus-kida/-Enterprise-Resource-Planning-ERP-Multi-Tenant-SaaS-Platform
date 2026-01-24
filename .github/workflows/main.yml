@@ -65,4 +65,3 @@ jobs:
           **/storage/**
           .env
           .env.*
-          
