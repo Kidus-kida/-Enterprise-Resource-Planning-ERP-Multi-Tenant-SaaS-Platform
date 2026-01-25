@@ -8,9 +8,12 @@ window.Alpine = Alpine
 Alpine.plugin(sort)
 
 // Register odooSearch Alpine component BEFORE Livewire starts
-Alpine.data('odooSearch', (action, fields, initialParams) => ({
+Alpine.data('odooSearch', (action, fields, initialParams, filterOptions = [], groupByOptions = [], targetSelector = '.kanban-cont') => ({
     action: action,
     fields: fields,
+    filterOptions: filterOptions,
+    groupByOptions: groupByOptions,
+    targetSelector: targetSelector,
     searchQuery: '',
     showDropdown: false,
     showFilters: false,
@@ -40,7 +43,7 @@ Alpine.data('odooSearch', (action, fields, initialParams) => ({
     toggleMobileSearch() {
         this.mobileSearchOpen = !this.mobileSearchOpen;
         // Target the specific content container (Kanban or Main Content)
-        const content = document.querySelector('.kanban-cont') || document.querySelector('.content-body') || document.querySelector('.page-wrapper > .content');
+        const content = document.querySelector(this.targetSelector) || document.querySelector('.content-body') || document.querySelector('.page-wrapper > .content');
         
         if (this.mobileSearchOpen) {
              // Push content down
@@ -106,8 +109,9 @@ Alpine.data('odooSearch', (action, fields, initialParams) => ({
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            const newBoard = doc.querySelector('.kanban-cont');
-            const currentBoard = document.querySelector('.kanban-cont');
+            console.log('Searching for selector:', this.targetSelector);
+            const newBoard = doc.querySelector(this.targetSelector);
+            const currentBoard = document.querySelector(this.targetSelector);
             
             console.log('New board found:', !!newBoard);
             console.log('Current board found:', !!currentBoard);

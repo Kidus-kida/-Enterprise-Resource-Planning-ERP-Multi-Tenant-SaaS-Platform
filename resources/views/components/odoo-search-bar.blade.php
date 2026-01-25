@@ -1,6 +1,6 @@
-@props(['fields' => [], 'action' => ''])
+@props(['fields' => [], 'action' => '', 'filterOptions' => [], 'groupByOptions' => [], 'targetSelector' => '.kanban-cont'])
 
-<div x-data="odooSearch('{{ $action }}', {{ json_encode($fields) }}, {{ json_encode(request()->all()) }})"
+<div x-data="odooSearch('{{ $action }}', {{ json_encode($fields) }}, {{ json_encode(request()->all()) }}, {{ json_encode($filterOptions) }}, {{ json_encode($groupByOptions) }}, '{{ $targetSelector }}')"
     class="odoo-search-component position-relative"
     @click.away="showFilters = false; showDropdown = false; if(mobileSearchOpen) toggleMobileSearch()">
 
@@ -16,7 +16,7 @@
     <!-- Search Bar Container -->
     <div class="align-items-center border rounded bg-white py-0 px-1"
         :class="mobileSearchOpen ? 'd-flex position-fixed p-2 shadow' : 'd-none d-md-flex'"
-        :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 93%; z-index: 9999; max-width: 600px;' : 'min-height: 42px;'">
+        :style="mobileSearchOpen ? 'left: 50%; transform: translateX(-50%); width: 93%; z-index: 9999; max-width: 600px;' : 'min-height: 40px;'">
 
         <!-- Mobile Close Button -->
         <button class="btn btn-link text-secondary p-0 me-2 d-md-none" x-show="mobileSearchOpen"
@@ -64,7 +64,7 @@
 
             <!-- Odoo Mega Menu (Filters / Group By / Favorites) -->
             <div x-show="showFilters" @click.stop
-                class="dropdown-menu show position-absolute top-100 end-0 mt-1 shadow-sm border rounded-0 p-3 odoo-mega-menu"
+                class="dropdown-menu show position-absolute top-100 end-0 mt-2 shadow-sm border rounded-0 p-3 odoo-mega-menu"
                 style="z-index: 1050; display: none;" :style="showFilters ? 'display: block;' : 'display: none;'">
 
                 <div class="row g-0">
@@ -74,32 +74,19 @@
                             <i class="fa fa-filter me-2 text-muted"></i> Filters
                         </h6>
                         <ul class="list-unstyled mb-0 font-small">
-                            <li><a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
-                                    @click.prevent="addFilter('preset', 'My Tasks', 'my_tasks'); showFilters = false">My
-                                    Tasks</a></li>
-                            <li><a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
-                                    @click.prevent="addFilter('preset', 'Unassigned', 'unassigned'); showFilters = false">Unassigned</a>
-                            </li>
-                            <li class="dropdown-divider my-2"></li>
-                            <li>
-                                <a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light d-flex justify-content-between align-items-center">
-                                    Creation Date <i class="fa fa-caret-right text-muted"></i>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light d-flex justify-content-between align-items-center">
-                                    Deadline <i class="fa fa-caret-right text-muted"></i>
-                                </a>
-                            </li>
-                            <li class="dropdown-divider my-2"></li>
-                            <li><a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
-                                    @click.prevent="addFilter('preset', 'Open', 'open'); showFilters = false">Open</a>
-                            </li>
-                            <li><a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
-                                    @click.prevent="addFilter('preset', 'Closed', 'closed'); showFilters = false">Closed</a>
-                            </li>
+                            <!-- Helper method to render filters -->
+                            <template x-for="option in filterOptions" :key="option.value">
+                                <li>
+                                    <a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
+                                       @click.prevent="addFilter(option.key || 'filter', option.label, option.value); showFilters = false">
+                                        <span x-text="option.label"></span>
+                                    </a>
+                                </li>
+                            </template>
+                            <template x-if="filterOptions.length === 0">
+                                <li class="text-muted ps-2 py-1 italic">No filters available</li>
+                            </template>
+                           
                             <li class="dropdown-divider my-2"></li>
                             <li><a href="#"
                                     class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Custom
@@ -113,27 +100,20 @@
                             <i class="fa fa-layer-group me-2 text-muted"></i> Group By
                         </h6>
                         <ul class="list-unstyled mb-0 font-small">
-                            <li><a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Assignees</a>
-                            </li>
-                            <li><a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Stage</a>
-                            </li>
-                            <li><a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Project</a>
-                            </li>
-                            <li><a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Priority</a>
-                            </li>
+                            <template x-for="option in groupByOptions" :key="option.value">
+                                <li>
+                                    <a href="#" class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light"
+                                       @click.prevent="addFilter(option.key || 'group_by', option.label, option.value); showFilters = false">
+                                        <span x-text="option.label"></span>
+                                    </a>
+                                </li>
+                            </template>
+                             <template x-if="groupByOptions.length === 0">
+                                <li class="text-muted ps-2 py-1 italic">No grouping options</li>
+                            </template>
+
                             <li class="dropdown-divider my-2"></li>
-                            <li>
-                                <a href="#"
-                                    class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light d-flex justify-content-between align-items-center">
-                                    Creation Date <i class="fa fa-caret-right text-muted"></i>
-                                </a>
-                            </li>
-                            <li class="dropdown-divider my-2"></li>
-                            <li><a href="#"
+                             <li><a href="#"
                                     class="text-decoration-none text-dark d-block py-1 ps-2 hover-bg-light">Custom
                                     Group...</a></li>
                         </ul>
