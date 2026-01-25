@@ -45,6 +45,26 @@ class TenantPermissionSeeder extends Seeder
             }
         }
 
+        // Add core business permissions that aren't module-specific
+        $corePermissions = [
+            'business_settings.access',
+            'view-settings',
+            'edit-settings'
+        ];
+        
+        foreach ($corePermissions as $permName) {
+            Permission::updateOrCreate(
+                [
+                    'name' => $permName,
+                    'guard_name' => 'web',
+                ],
+                [
+                    'module' => 'core'
+                ]
+            );
+            $allPermissions[] = $permName;
+        }
+
         // 2. Create 'Tenant Admin' Role
         $role = Role::firstOrCreate([
             'name' => 'Tenant Admin', // Distinct from 'Super Admin'

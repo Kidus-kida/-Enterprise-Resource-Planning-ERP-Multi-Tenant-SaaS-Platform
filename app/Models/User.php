@@ -13,6 +13,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
     use \Spatie\Permission\Traits\HasRoles;
+    use \App\Traits\HasCompany;
 
     /**
      * Get the database connection for the model.
@@ -35,6 +36,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'business_id',
+        'company_id',
         'firstname',
         'middlename',
         'lastname',
@@ -219,5 +221,45 @@ public static function forDropdown($business_id, $prepend_none = true, $include_
         }
 
         return false;
+    }
+
+    /**
+     * Check if user is a system owner (has access to Superadmin module)
+     *
+     * @return boolean
+     */
+    public function isSystemOwner()
+    {
+        return $this->type === UserType::SUPERADMIN;
+    }
+
+    /**
+     * Check if user is the tenant/business owner
+     *
+     * @return boolean
+     */
+    public function isTenantOwner()
+    {
+        if (!$this->business_id) {
+            return false;
+        }
+        
+        try {
+            $business = \App\Business::on('mysql')->find($this->business_id);
+            return $business && $business->owner_id === $this->id;
+        } catch (\Exception $e) {
+            \Log::warning('isTenantOwner check failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if user is assigned to a specific company
+     *
+     * @return boolean
+     */
+    public function isCompanyUser()
+    {
+        return !empty($this->company_id);
     }
 }

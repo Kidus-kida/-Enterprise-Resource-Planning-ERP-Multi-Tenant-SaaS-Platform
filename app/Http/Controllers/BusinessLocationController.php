@@ -96,7 +96,7 @@ class BusinessLocationController extends Controller
      */
     public function create()
     {
-        $business_id = 1; // Default
+        $business_id = request()->session()->get('user.business_id');
         
         // Mocking models if they don't exist fully yet or returning empty collections to avoid errors
         $invoice_layouts = class_exists(InvoiceLayout::class) ? InvoiceLayout::where('business_id', $business_id)->pluck('name', 'id') : [];
@@ -104,13 +104,15 @@ class BusinessLocationController extends Controller
         $price_groups = SellingPriceGroup::forDropdown($business_id);
         
         $payment_types = $this->commonUtil->payment_types();
+        $companies = \App\Company::where('business_id', $business_id)->pluck('name', 'id');
 
         return view('settings.location.create')
             ->with(compact(
                 'invoice_layouts',
                 'invoice_schemes',
                 'price_groups',
-                'payment_types'
+                'payment_types',
+                'companies'
             ));
     }
 
@@ -123,11 +125,36 @@ class BusinessLocationController extends Controller
     public function store(Request $request)
     {
         try {
-            $business_id = 1; // Default
+            $business_id = request()->session()->get('user.business_id');
+            
+            // Check Package Limit for Locations
+            $subscription = \Modules\Superadmin\Models\Subscription::active_subscription($business_id);
+            if (!empty($subscription)) {
+                $package_details = $subscription->package_details;
+                $company_count = $package_details['company_count'] ?? 1;
+                $enable_multi_company = $package_details['enable_multi_company'] ?? false;
+                
+                // Rule: If multi-company is allowed, unlimited locations.
+                $is_multi_company = $company_count > 1 || $enable_multi_company;
+                
+                if (!$is_multi_company) {
+                    $limit = $package_details['location_count'] ?? 0;
+                    if ($limit > 0) {
+                        $count = BusinessLocation::where('business_id', $business_id)->count();
+                        if ($count >= $limit) {
+                            $output = [
+                                'success' => false,
+                                'msg' => __("superadmin::lang.location_limit_reached") 
+                            ];
+                            return $output;
+                        }
+                    }
+                }
+            }
 
             $input = $request->only([
                 'name', 'landmark', 'city', 'state', 'country', 'zip_code', 'invoice_scheme_id',
-                'invoice_layout_id', 'mobile', 'alternate_number', 'email', 'website', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'location_id', 'selling_price_group_id'
+                'invoice_layout_id', 'mobile', 'alternate_number', 'email', 'website', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'location_id', 'selling_price_group_id', 'company_id'
             ]);
 
             $input['business_id'] = $business_id;
@@ -175,6 +202,7 @@ class BusinessLocationController extends Controller
         $invoice_schemes = class_exists(InvoiceScheme::class) ? InvoiceScheme::where('business_id', $business_id)->pluck('name', 'id') : [];
         $price_groups = SellingPriceGroup::forDropdown($business_id);
         $payment_types = $this->commonUtil->payment_types();
+        $companies = \App\Company::where('business_id', $business_id)->pluck('name', 'id');
 
         return view('settings.location.edit')
             ->with(compact(
@@ -182,7 +210,8 @@ class BusinessLocationController extends Controller
                 'invoice_layouts',
                 'invoice_schemes',
                 'price_groups',
-                'payment_types'
+                'payment_types',
+                'companies'
             ));
     }
 

@@ -35,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => \Modules\Superadmin\Http\Middleware\SuperadminMiddleware::class,
             'subscription.check' => \Modules\Superadmin\Http\Middleware\CheckSubscription::class,
             'module.access' => \Modules\Superadmin\Http\Middleware\CheckModuleAccess::class,
+            
+            // Database error handling
+            'db.errors' => \App\Http\Middleware\HandleDatabaseErrors::class,
         ]);
         
         $middleware->web(append: [
@@ -70,5 +73,41 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle general exceptions with better logging
+        $exceptions->render(function (\Exception $e, $request) {
+            // Skip handling for specific routes
+            if ($request->is('diagnostic*') || $request->is('test-*')) {
+                return null; // Let Laravel handle it normally
+            }
+
+            $logger = new \App\Utils\DiagnosticLogger();
+            
+            // Log the error with context
+            \Log::error('Application Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'url' => $request->url(),
+                'method' => $request->method(),
+                'user_id' => auth()->id() ?? 'guest',
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+
+            // For development, show detailed errors
+            if (config('app.debug')) {
+                return null; // Let Laravel show the detailed error
+            }
+
+            // For production, show user-friendly error
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'An error occurred',
+                    'message' => 'Please try again later',
+                ], 500);
+            }
+
+            return response()->view('errors.500', [
+                'message' => 'Something went wrong. Please try again.',
+            ], 500);
+        });
     })->create();

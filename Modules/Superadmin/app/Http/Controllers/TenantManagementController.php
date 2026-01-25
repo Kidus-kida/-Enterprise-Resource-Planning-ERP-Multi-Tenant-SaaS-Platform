@@ -32,11 +32,23 @@ class TenantManagementController extends Controller
 
     public function setupWizard($businessId)
     {
-        $business = \App\Business::with(['tenant', 'subscription.package'])->findOrFail($businessId);
+        $business = \App\Business::with(['tenant', 'subscription.package', 'package'])->findOrFail($businessId);
         
-        if (!$business->subscription || $business->subscription->status !== 'approved') {
+        \Log::info('SetupWizard Debug:', [
+            'business_id' => $business->id,
+            'has_subscription' => !is_null($business->subscription),
+            'subscription_status' => $business->subscription->status ?? 'N/A',
+            'has_package' => !is_null($business->package_id),
+            'approved?' => $business->subscription && $business->subscription->status === 'approved'
+        ]);
+        
+        // Allow tenant creation if business has an approved subscription OR has a package assigned
+        $hasApprovedSubscription = $business->subscription && $business->subscription->status === 'approved';
+        $hasPackage = !is_null($business->package_id);
+        
+        if (!$hasApprovedSubscription && !$hasPackage) {
             return redirect()->route('superadmin.businesses.show', $businessId)
-                ->with('error', 'Business must have an approved subscription first!');
+                ->with('error', 'Business must have an approved subscription or assigned package first!');
         }
         
         $tenant = $business->tenant;
@@ -191,6 +203,28 @@ class TenantManagementController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
                  // Add other necessary fields default or from main business if structure matches
+            ]);
+
+            // Create Default Company (Self)
+            \DB::connection('tenant')->table('companies')->insert([
+                'business_id' => $tenantBusinessId,
+                'name' => $tenant->business->name, // Treat itself as a company
+                'email' => $tenant->business->email,
+                'is_default' => 1,
+                'is_active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Create Default Company (Self)
+            \DB::connection('tenant')->table('companies')->insert([
+                'business_id' => $tenantBusinessId,
+                'name' => $tenant->business->name, // Treat itself as a company
+                'email' => $tenant->business->email,
+                'is_default' => 1,
+                'is_active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             // Create Admin User in Tenant DB

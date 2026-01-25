@@ -33,7 +33,8 @@ class SubscriptionService
             'base_price' => $calculatedPrice,
             'total_price' => $calculatedPrice, // Will be updated if add-ons are added
             'status' => $additionalData['status'] ?? 'waiting',
-            'created_id' => $additionalData['created_by'] ?? auth()->id()
+            'created_id' => $additionalData['created_by'] ?? auth()->id(),
+            'company_count' => $package->company_count
         ]);
 
         return $subscription;
@@ -107,7 +108,8 @@ class SubscriptionService
             'package_details' => $package->toArray(),
             'module_activation_details' => $package->custom_permissions ?? [],
             'status' => 'waiting',
-            'created_id' => auth()->id()
+            'created_id' => auth()->id(),
+            'company_count' => $package->company_count
         ]);
 
         return $newSubscription;

@@ -16,6 +16,8 @@ class BusinessLocation extends Model
 
     protected static $logName = 'Business Location';
 
+    protected $fillable = ['business_id', 'company_id', 'location_id', 'name', 'landmark', 'country', 'state', 'city', 'zip_code', 'mobile', 'alternate_number', 'email', 'website', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'receipt_printer_type', 'printer_id', 'invoice_scheme_id', 'invoice_layout_id', 'selling_price_group_id', 'print_receipt_on_invoice', 'sale_invoice_layout_id', 'default_payment_accounts', 'featured_products', 'is_active', 'sale_invoice_layout_id', 'packing_slip_layout_id'];
+
     /**
      * The attributes that aren't mass assignable.
      *
@@ -24,15 +26,25 @@ class BusinessLocation extends Model
     protected $guarded = ['id'];
 
     /**
+     * The company that owns the location.
+     */
+    public function company()
+    {
+        return $this->belongsTo(\App\Company::class);
+    }
+
+    /**
      * Return list of locations for a business
      *
      * @param int $business_id
      * @param boolean $show_all = false
      * @param array $receipt_printer_type_attribute =
+     * @param boolean $append_id = true
+     * @param boolean $check_permission = true
      *
      * @return \Illuminate\Support\Collection|array
      */
-    public static function forDropdown($business_id, $show_all = false, $receipt_printer_type_attribute = false, $append_id = true)
+    public static function forDropdown($business_id, $show_all = false, $receipt_printer_type_attribute = false, $append_id = true, $check_permission = true)
     {
         $query = BusinessLocation::where('business_id', $business_id)->Active();
 

@@ -12,6 +12,7 @@ class Transaction extends Model
 {
     // use LogsActivity;
     use SoftDeletes;
+    use \App\Traits\HasCompany;
 
     // protected static $logAttributes = ['*'];
 

@@ -17,6 +17,16 @@
            </div>
            <div class="col-md-6">
                 <div class="input-block mb-3">
+                    <x-form.label>{{ __('Company') }}</x-form.label>
+                     <select name="company_id" class="form-control select">
+                        @foreach($companies as $key => $value)
+                            <option value="{{ $key }}" {{ $contact->company_id == $key ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                     </select>
+                </div>
+           </div>
+           <div class="col-md-6">
+                <div class="input-block mb-3">
                     <x-form.label>{{ __('Type') }} <span class="text-danger">*</span></x-form.label>
                      <select name="type" class="form-control select">
                         @foreach($types as $key => $value)

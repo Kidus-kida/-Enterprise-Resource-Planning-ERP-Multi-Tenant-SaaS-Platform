@@ -17,6 +17,11 @@ class IdentifyTenantBySubdomain
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip for Superadmin and Diagnostic routes
+        if ($request->is('superadmin*') || $request->is('diagnostic*')) {
+            return $next($request);
+        }
+
         try {
             // Get the full host (e.g., tenant.tewostechsolutions.com)
             $host = $request->getHost();

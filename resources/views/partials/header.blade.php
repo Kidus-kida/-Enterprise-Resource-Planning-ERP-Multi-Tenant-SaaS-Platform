@@ -25,12 +25,113 @@
     <!-- Header Menu -->
     <ul class="nav user-menu" style="height: 45px !important;">
 
+        <!-- Company Switcher -->
+        @if(auth()->check() && (auth()->user()->business_id || request()->session()->has('user.business_id')))
+            @php
+                // Simplified: Show company switcher for tenant owners OR users with business settings access
+                // No need to check subscription limits here - if they can access tenant, they can manage companies
+                $hasCompanyAccess = auth()->user()->isTenantOwner() || auth()->user()->can('business_settings.access');
+                
+                // In tenant DB, we trust isolation. Get all companies.
+                $my_companies = \App\Company::where('is_active', 1)->get();
+                $active_company_id = request()->session()->get('user.company_id');
+                $active_company_ids = request()->session()->get('user.active_company_ids', []);
+                
+                // If not set, default to first or is_default
+                if(!$active_company_id && $my_companies->count() > 0){
+                    $default = $my_companies->where('is_default', 1)->first() ?? $my_companies->first();
+                    $active_company_id = $default->id;
+                    request()->session()->put('user.company_id', $active_company_id);
+                    if (empty($active_company_ids)) {
+                        $active_company_ids = [$active_company_id];
+                        request()->session()->put('user.active_company_ids', $active_company_ids);
+                    }
+                }
+                
+                $active_company = $my_companies->where('id', $active_company_id)->first();
+                
+                // Display logic: show count if multiple selected, company name if single, or encourage creation
+                if (count($active_company_ids) > 1) {
+                    $display_name = count($active_company_ids) . ' Selected';
+                } elseif ($active_company) {
+                    $display_name = $active_company->name;
+                } elseif ($my_companies->count() > 0) {
+                    $display_name = 'Select Company';
+                } else {
+                    $display_name = 'Create Company';
+                }
+            @endphp
+            
+            @if($hasCompanyAccess)
+                 <li class="nav-item dropdown has-arrow main-drop">
+                    <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
+                        <span><i class="fa fa-building"></i> {{ $display_name }}</span>
+                    </a>
+                    <div class="dropdown-menu" style="min-width: 250px; padding: 0;">
+                        @if($my_companies->count() > 0)
+                            <form action="{{ route('multi-companies.switch-multiple') }}" method="POST" id="company-switch-form">
+                                @csrf
+                                <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="text-muted" style="font-size: 12px;">Select Companies</span>
+                                    <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+                                </div>
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    @foreach($my_companies as $comp)
+                                        <div class="dropdown-item" onclick="event.stopPropagation();">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="company_ids[]" value="{{ $comp->id }}" id="comp_{{ $comp->id }}"
+                                                    {{ in_array($comp->id, $active_company_ids) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="comp_{{ $comp->id }}" style="cursor: pointer; width: 100%;">
+                                                    {{ $comp->name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </form>
+                        @else
+                            {{-- No companies exist yet - show create option --}}
+                            <div style="padding: 15px; text-align: center;">
+                                <div style="margin-bottom: 10px;">
+                                    <i class="fa fa-building" style="font-size: 24px; color: #ccc;"></i>
+                                </div>
+                                <p class="text-muted" style="margin-bottom: 10px; font-size: 14px;">No companies created yet</p>
+                                <a href="{{ route('multi-companies.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa fa-plus"></i> Create First Company
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </li>
+            @elseif($hasCompanyAccess)
+                 {{-- Fallback for non-tenant owners who have company access --}}
+                <li class="nav-item dropdown has-arrow main-drop">
+                    <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
+                        <span><i class="fa fa-building"></i> {{ $display_name }}</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        @if($my_companies->count() > 0)
+                            @foreach($my_companies as $comp)
+                                <a class="dropdown-item" href="{{ route('multi-companies.switch', [$comp->id]) }}">{{ $comp->name }}</a>
+                            @endforeach
+                        @else
+                            <div style="padding: 15px; text-align: center;">
+                                <p class="text-muted" style="margin-bottom: 10px;">No companies created yet</p>
+                                <a href="{{ route('multi-companies.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa fa-plus"></i> Create Company
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </li>
+            @endif
+        @endif
+
 
         <li class="nav-item dropdown has-arrow main-drop">
             <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
                 <span class="user-img"><img src="{{ !empty(auth()->user()->avatar) ? uploadedAsset(auth()->user()->avatar,'users'): asset('images/user.jpg') }}" alt="User Image">
                     <span class="status online"></span></span>
-                <span>{{ auth()->user()->fullname }}</span>
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="{{ route('profile') }}">{{ __('My Profile') }}</a>

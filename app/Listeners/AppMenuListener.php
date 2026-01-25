@@ -72,12 +72,17 @@ class AppMenuListener
         // If the user's business_id doesn't match the tenant's business_id, prefer the tenant's ID
         // This fixes the case where seeding set user->business_id = 1, but the tenant is actually business_id = 6
         if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
-             $business = \App\Business::on('mysql')->find($tenantBusinessId);
+             $business = \App\Business::on('mysql')->with('subscription')->find($tenantBusinessId);
+        } elseif ($business && !$business->relationLoaded('subscription')) {
+             // If business exists but subscription not loaded, load it explicitly
+             $business->load('subscription');
         }
         
         // Ensure connection is correct if we found a business
         if ($business && $business->getConnectionName() !== 'mysql') {
             $business->setConnection('mysql');
+            // Reload subscription after connection change
+            $business->load('subscription');
         }
 
         // DEBUG: Write final state to log
@@ -90,6 +95,8 @@ class AppMenuListener
             'final_business_id' => $business ? $business->id : 'NULL',
             'subscription_loaded' => $business && $business->subscription ? 'YES' : 'NO',
             'sub_id' => $business && $business->subscription ? $business->subscription->id : 'N/A',
+            'company_count' => $business && $business->subscription ? ($business->subscription->company_count ?? 'NULL') : 'N/A',
+            'has_biz_settings_perm' => auth()->user()->can('business_settings.access') ? 'YES' : 'NO',
             'module_details' => $business && $business->subscription ? $business->subscription->module_activation_details : 'N/A'
         ];
         file_put_contents($logPath, print_r($debugData, true), FILE_APPEND);
@@ -114,8 +121,8 @@ class AppMenuListener
         );
 
         // ==================== SUPERADMIN ====================
-        // Show as a single link that takes you to Superadmin mode (like Settings)
-        if (auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+        // Show only for system owners (not tenant owners)
+        if (auth()->user()->isSystemOwner()) {
             $menu->add(
                 Link::toRoute('superadmin.dashboard', '<i class="la la-user-shield"></i> <span>' . __('Superadmin') . '</span>')
                     ->setActive(route_is('superadmin.*'))
@@ -455,7 +462,28 @@ class AppMenuListener
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-cog"></i> <span>' . __('System') . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addParentClass('submenu')
-                    ->addIfCan('view-settings', Link::toRoute('settings.index', __('Settings'))->addClass(route_is('settings.*') ? 'active' : ''))
+                    ->addIfCan('view-settings', Link::toRoute('settings.index', __('Settings'))->addClass(route_is('settings.index') ? 'active' : ''))
+                    ->addIf(function () use ($business) {
+                        // Show Companies menu for tenant owners with company subscription access
+                        if (!auth()->user()->can('business_settings.access')) {
+                            return false;
+                        }
+                        // Show for Tenant Owners OR users with business settings access (e.g., Tenant Admins)
+                        if (!auth()->user()->isTenantOwner() && !auth()->user()->can('business_settings.access')) {
+                            return false;
+                        }
+                        if (!$business || !$business->subscription) {
+                            return false;
+                        }
+                        
+                        // Check if subscription allows companies (company_count > 0 or unlimited)
+                        $company_limit = $business->subscription->company_count ?? 0;
+                        if ($company_limit === null || $company_limit > 0) {
+                            return true; // Has company access (unlimited or limited)
+                        }
+                        
+                        return false; // No company access
+                    }, Link::toRoute('multi-companies.index', __('Companies'))->addClass(route_is('multi-companies.*') ? 'active' : ''))
                     ->addIfCan('view-backups', Link::toRoute('backups.index', __('Backups'))->addClass(route_is('backups.*') ? 'active' : ''))
             );
         }

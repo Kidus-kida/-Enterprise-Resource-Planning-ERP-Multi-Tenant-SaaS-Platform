@@ -135,6 +135,14 @@ class Business extends Model
     }
 
     /**
+     * Get the companies for the business.
+     */
+    public function companies()
+    {
+        return $this->hasMany(\App\Company::class);
+    }
+
+    /**
      * Get the package associated with this business.
      */
     public function package()

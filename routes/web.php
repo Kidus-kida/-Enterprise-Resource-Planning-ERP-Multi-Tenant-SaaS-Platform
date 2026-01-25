@@ -36,6 +36,7 @@ use App\Http\Controllers\DepositsController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StockTransferRequestController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 // Public landing routes
@@ -47,9 +48,368 @@ Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
 
+// Database diagnostic routes (accessible without authentication)
+Route::get('/test-db-connection', function () {
+    try {
+        DB::connection()->getPdo();
+        $tables = DB::select("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ?", [env('DB_DATABASE')]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database connection successful',
+            'database' => env('DB_DATABASE'),
+            'tables' => $tables[0]->count ?? 0,
+            'config' => [
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT'),
+                'username' => env('DB_USERNAME'),
+                'password_set' => !empty(env('DB_PASSWORD'))
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'config' => [
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT'),
+                'username' => env('DB_USERNAME'),
+                'password_set' => !empty(env('DB_PASSWORD'))
+            ]
+        ], 500);
+    }
+});
+Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
+Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
+Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
+Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
+
+// Simple test route to bypass middleware
+Route::get('/test-route', function() {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Route is working!',
+        'timestamp' => now(),
+        'database_status' => 'checking...'
+    ]);
+})->name('test.route');
+
+// Test dashboard without authentication
+Route::get('/test-dashboard', function() {
+    try {
+        // Test basic database queries
+        $userCount = \App\Models\User::count();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard test successful!',
+            'user_count' => $userCount,
+            'database_connection' => 'working',
+            'timestamp' => now(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Dashboard test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard');
+
+// Test login page (should redirect to login if not authenticated)
+Route::get('/test-auth', function() {
+    try {
+        if (auth()->check()) {
+            return response()->json([
+                'status' => 'authenticated',
+                'user' => auth()->user()->email ?? 'no email',
+                'message' => 'User is logged in',
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'not_authenticated',
+                'message' => 'User is not logged in',
+                'login_url' => route('login'),
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Auth test failed: ' . $e->getMessage(),
+        ], 500);
+    }
+})->name('test.auth');
+
+// Test database tables
+Route::get('/test-tables', function() {
+    try {
+        $results = [];
+        
+        // Test basic database connection
+        $results['database_connection'] = 'OK';
+        
+        // Test if users table exists
+        try {
+            $userCount = DB::table('users')->count();
+            $results['users_table'] = "OK (count: $userCount)";
+        } catch (\Exception $e) {
+            $results['users_table'] = "ERROR: " . $e->getMessage();
+        }
+        
+        // Test if migrations table exists
+        try {
+            $migrationCount = DB::table('migrations')->count();
+            $results['migrations_table'] = "OK (count: $migrationCount)";
+        } catch (\Exception $e) {
+            $results['migrations_table'] = "ERROR: " . $e->getMessage();
+        }
+        
+        // Test User model
+        try {
+            $userModelCount = \App\Models\User::count();
+            $results['user_model'] = "OK (count: $userModelCount)";
+        } catch (\Exception $e) {
+            $results['user_model'] = "ERROR: " . $e->getMessage();
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Table test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.tables');
+
+// Test login page access
+Route::get('/test-login-page', function() {
+    try {
+        // Just try to load the login view without going through middleware
+        return view('auth.login', ['pageTitle' => 'Test Login']);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Login page test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.login.page');
+
+// Test middleware stack step by step
+Route::get('/test-middleware', function() {
+    try {
+        $results = [];
+        
+        // Test 1: Basic request info
+        $results['request'] = [
+            'url' => request()->url(),
+            'method' => request()->method(),
+            'ip' => request()->ip(),
+        ];
+        
+        // Test 2: Session
+        $results['session'] = [
+            'started' => session()->isStarted(),
+            'id' => session()->getId(),
+            'tenant_id' => session('current_tenant_id', 'not set'),
+        ];
+        
+        // Test 3: Auth system
+        $results['auth'] = [
+            'guard' => config('auth.defaults.guard'),
+            'provider' => config('auth.defaults.provider'),
+            'user_model' => config('auth.providers.users.model'),
+            'check_works' => 'testing...',
+        ];
+        
+        try {
+            $results['auth']['check_works'] = auth()->check() ? 'yes' : 'no';
+            $results['auth']['user_id'] = auth()->id() ?? 'not logged in';
+        } catch (\Exception $e) {
+            $results['auth']['check_works'] = 'error: ' . $e->getMessage();
+        }
+        
+        // Test 4: Database connections
+        $results['database'] = [
+            'default_connection' => config('database.default'),
+            'tenant_connection_configured' => !empty(config('database.connections.tenant')),
+        ];
+        
+        // Test 5: Modules
+        $results['modules'] = [
+            'function_exists' => function_exists('module'),
+        ];
+        
+        if (function_exists('module')) {
+            try {
+                $results['modules']['project_enabled'] = module('Project') ? module('Project')->isEnabled() : 'not found';
+                $results['modules']['sales_enabled'] = module('Sales') ? module('Sales')->isEnabled() : 'not found';
+            } catch (\Exception $e) {
+                $results['modules']['error'] = $e->getMessage();
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Middleware test failed: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.middleware');
+
+// Test dashboard controller directly (bypass auth middleware)
+Route::get('/test-dashboard-direct', function() {
+    try {
+        // Create a fake authenticated user for testing
+        $user = \App\Models\User::first();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No users found in database',
+            ], 500);
+        }
+        
+        // Temporarily log in the user
+        auth()->login($user);
+        
+        // Try to instantiate the dashboard controller
+        $controller = new \App\Http\Controllers\DashboardController();
+        
+        // Try to call the index method
+        $response = $controller->index();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard controller works!',
+            'response_type' => get_class($response),
+            'user_id' => auth()->id(),
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Dashboard controller test failed: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => explode("\n", $e->getTraceAsString()),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard.direct');
+
+// Test step-by-step dashboard components
+Route::get('/test-dashboard-parts', function() {
+    try {
+        $results = [];
+        
+        // Step 1: Test user authentication
+        $user = \App\Models\User::first();
+        if (!$user) {
+            return response()->json(['error' => 'No users found'], 500);
+        }
+        auth()->login($user);
+        $results['auth'] = 'OK - User logged in: ' . $user->email;
+        
+        // Step 2: Test UserType enum
+        $results['user_type'] = 'User type: ' . $user->type->value;
+        
+        // Step 3: Test module function
+        $results['module_function'] = function_exists('module') ? 'OK' : 'Missing';
+        
+        // Step 4: Test specific modules
+        if (function_exists('module')) {
+            $results['project_module'] = module('Project') ? 'Found' : 'Not found';
+            $results['sales_module'] = module('Sales') ? 'Found' : 'Not found';
+            $results['accounting_module'] = module('Accounting') ? 'Found' : 'Not found';
+        }
+        
+        // Step 5: Test basic database queries
+        $results['user_count'] = \App\Models\User::count();
+        
+        // Step 6: Test if Ticket model exists
+        try {
+            $results['ticket_model'] = class_exists('App\Models\Ticket') ? 'Exists' : 'Missing';
+            if (class_exists('App\Models\Ticket')) {
+                $results['ticket_count'] = \App\Models\Ticket::count();
+            }
+        } catch (\Exception $e) {
+            $results['ticket_error'] = $e->getMessage();
+        }
+        
+        // Step 7: Test view existence
+        $results['dashboard_view'] = view()->exists('pages.dashboard') ? 'Exists' : 'Missing';
+        $results['employee_dashboard_view'] = view()->exists('pages.employees.dashboard') ? 'Exists' : 'Missing';
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard.parts');
+
 include __DIR__ . '/auth.php';
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
+    // Add a test route within the authenticated group to isolate the issue
+    Route::get('test-auth-middleware', function() {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Auth middleware works!',
+            'user' => auth()->user() ? auth()->user()->email : 'not logged in',
+            'timestamp' => now(),
+        ]);
+    })->name('test.auth.middleware');
+    
+    // Simplified dashboard route for testing
+    Route::get('dashboard-simple', function() {
+        try {
+            if (!auth()->check()) {
+                return redirect()->route('login');
+            }
+            
+            $user = auth()->user();
+            $data = [
+                'pageTitle' => 'Dashboard',
+                'user' => $user,
+                'userCount' => \App\Models\User::count(),
+            ];
+            
+            // Try to return a simple view first
+            return view('pages.dashboard-simple', $data);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Dashboard error: ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    })->name('dashboard.simple');
+    
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('home', [DashboardController::class, 'index'])->name('home');
     
@@ -165,6 +525,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::prefix('settings')->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('company', [SettingsController::class, 'updateCompany'])->name('settings.company.update');
+
+        Route::resource('multi-companies', \App\Http\Controllers\CompanyController::class);
+        Route::get('multi-companies/switch/{id}', [\App\Http\Controllers\CompanyController::class, 'switch'])->name('multi-companies.switch');
+        Route::post('multi-companies/switch-multiple', [\App\Http\Controllers\CompanyController::class, 'switchMultiple'])->name('multi-companies.switch-multiple');
 
         Route::get('business', [\App\Http\Controllers\BusinessSettingsController::class, 'index'])->name('settings.business.index');
         Route::post('business', [\App\Http\Controllers\BusinessSettingsController::class, 'update'])->name('settings.business.update');
@@ -308,39 +672,55 @@ Route::group(['middleware' => ['auth', 'module.access:products']], function () {
     Route::match(['put', 'post'], 'update-shipping/{id}', [StockTransferRequestController::class, 'updateShipping'])->name('stock-transfers-request.updateShipping');
     Route::delete('destroy-shipping/{id}', [StockTransferRequestController::class, 'destroyShipping'])->name('stock-transfers-request.destroyShipping');
     Route::get('shippment-list', [StockTransferRequestController::class, 'shippment_list'])->name('stock-transfers-request.shippment_list');
+
 });
 
-// Test route for debugging task search
-Route::get('/test-task-search', function() {
-    // Test 1: Check if tasks have followers
-    $tasks = \Modules\Project\Models\Task::with('followers.user')->get();
-    dump('Total tasks: ' . $tasks->count());
+
+// Emergency DB Fix Route - FULL SCAN
+Route::get('/emergency-db-fix', function() {
+    $results = [];
+    $dbName = \DB::connection()->getDatabaseName();
+    $results[] = "Connected to Database: " . $dbName;
     
-    foreach ($tasks as $task) {
-        dump('Task: ' . $task->name);
-        dump('Followers count: ' . $task->followers->count());
-        foreach ($task->followers as $follower) {
-            dump('  - Follower user_id: ' . $follower->user_id);
-            if ($follower->user) {
-                dump('  - User: ' . $follower->user->firstname . ' ' . $follower->user->lastname);
-            } else {
-                dump('  - User not found!');
+    // Get ALL tables dynamically
+    $tables = [];
+    try {
+        $tables = \Illuminate\Support\Facades\Schema::getTableListing();
+    } catch (\Exception $e) {
+        // Fallback for older Laravel
+        $tables = \DB::connection()->getDoctrineSchemaManager()->listTableNames();
+    }
+
+    $results[] = "Scanning " . count($tables) . " tables...";
+    
+    foreach ($tables as $table) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            $columns = \Illuminate\Support\Facades\Schema::getColumnListing($table);
+            
+            // Skip tables that shouldn't have company_id
+            if (in_array($table, ['migrations', 'password_resets', 'failed_jobs', 'jobs', 'sessions', 'cache', 'activity_log', 'notifications'])) {
+                continue;
+            }
+
+            if (!in_array('company_id', $columns)) {
+                $results[] = "MISSING company_id in: $table";
+                
+                // Check if 'id' column exists to determine placement
+                $placement = in_array('id', $columns) ? 'AFTER id' : '';
+                
+                try {
+                    \DB::statement("ALTER TABLE $table ADD COLUMN company_id BIGINT UNSIGNED NULL $placement, ADD INDEX(company_id)");
+                    $results[] = "SUCCESS: Added company_id to $table";
+                } catch (\Exception $e) {
+                    $results[] = "ERROR adding to $table: " . $e->getMessage();
+                }
             }
         }
     }
     
-    // Test 2: Try the filter
-    $searchTerm = request('term', 'test');
-    dump('Searching for: ' . $searchTerm);
-    
-    $query = \Modules\Project\Models\Task::query();
-    $filter = new \Modules\Project\Services\ProjectTaskFilter($query, ['person' => $searchTerm]);
-    $results = $filter->apply()->get();
-    
-    dump('Results count: ' . $results->count());
-    foreach ($results as $result) {
-        dump('Found task: ' . $result->name);
+    if (empty($results)) {
+        $results[] = "All tables look good!";
     }
     
-    return 'Check the output above';
+    return response()->json($results);
 });
