@@ -49,6 +49,8 @@ Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
 
 // Database diagnostic routes (accessible without authentication)
+Route::get('/tenant-login/{id}', [AuthController::class, 'tenantLogin']);
+
 Route::get('/test-db-connection', function () {
     try {
         DB::connection()->getPdo();
@@ -724,3 +726,4 @@ Route::get('/emergency-db-fix', function() {
     
     return response()->json($results);
 });
+// End of file

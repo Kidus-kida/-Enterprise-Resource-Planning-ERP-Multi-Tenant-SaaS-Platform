@@ -26,7 +26,7 @@
     <ul class="nav user-menu" style="height: 45px !important;">
 
         <!-- Company Switcher -->
-        @if(auth()->check() && (auth()->user()->business_id || request()->session()->has('user.business_id')))
+        @if(auth()->check() && (auth()->user()->business_id || request()->session()->has('user.business_id')) && !auth()->user()->isSystemOwner())
             @php
                 // Simplified: Show company switcher for tenant owners OR users with business settings access
                 // No need to check subscription limits here - if they can access tenant, they can manage companies
@@ -103,14 +103,24 @@
                         @endif
                     </div>
                 </li>
-            @elseif($hasCompanyAccess)
-                 {{-- Fallback for non-tenant owners who have company access --}}
-                <li class="nav-item dropdown has-arrow main-drop">
+            @endif
+        @elseif(auth()->check() && (auth()->user()->isTenantOwner() || auth()->user()->can('business_settings.access')) && !auth()->user()->isSystemOwner())
+             {{-- Fallback for logic where business_id might not be set in session but user has access (edge case) --}}
+             {{-- AND explicitly hide from System Owner here too --}}
+             @php
+                 // If we are here, likely business_id missing in session. 
+                 // We can try to display simple switcher if companies exist.
+                 // But since we rely on business_id mainly, this might be redundant.
+                 // Let's keep it safe.
+                 $display_name = 'Companies'; 
+                 $my_companies = \App\Company::where('is_active', 1)->get();
+             @endphp
+             <li class="nav-item dropdown has-arrow main-drop">
                     <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
                         <span><i class="fa fa-building"></i> {{ $display_name }}</span>
                     </a>
                     <div class="dropdown-menu">
-                        @if($my_companies->count() > 0)
+                         @if($my_companies->count() > 0)
                             @foreach($my_companies as $comp)
                                 <a class="dropdown-item" href="{{ route('multi-companies.switch', [$comp->id]) }}">{{ $comp->name }}</a>
                             @endforeach
@@ -123,8 +133,7 @@
                             </div>
                         @endif
                     </div>
-                </li>
-            @endif
+             </li>
         @endif
 
 

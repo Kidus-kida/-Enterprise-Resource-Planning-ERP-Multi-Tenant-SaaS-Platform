@@ -134,9 +134,13 @@ class SwitchTenantDatabase
             } catch (\Exception $e) {
                 \Log::error("SwitchTenantDatabase: Failed to connect to tenant database: " . $e->getMessage());
                 
-                // Fall back to default connection
-                Config::set('database.default', 'mysql');
+                // Fall back to default connection AND clear the tenant config
+                // This is critical because User::getConnectionName() checks if this config exists
+                Config::set('database.connections.tenant', []); // Empty array effectively disables it
                 session()->forget('current_tenant_id');
+                
+                // Also purge to be safe
+                DB::purge('tenant');
             }
             
         } catch (\Exception $e) {
