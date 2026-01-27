@@ -216,16 +216,6 @@ class TenantManagementController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Create Default Company (Self)
-            \DB::connection('tenant')->table('companies')->insert([
-                'business_id' => $tenantBusinessId,
-                'name' => $tenant->business->name, // Treat itself as a company
-                'email' => $tenant->business->email,
-                'is_default' => 1,
-                'is_active' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
 
             // Create Admin User in Tenant DB
             // Create Admin User in Tenant DB
