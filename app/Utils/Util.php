@@ -59,18 +59,19 @@ class Util
     public function getDays()
     {
         return [
-            'sunday' => __('Sunday'),
-            'monday' => __('Monday'),
-            'tuesday' => __('Tuesday'),
-            'wednesday' => __('Wednesday'),
-            'thursday' => __('Thursday'),
-            'friday' => __('Friday'),
-            'saturday' => __('Saturday'),
+            'sunday' => __('lang_v1.sunday'),
+            'monday' => __('lang_v1.monday'),
+            'tuesday' => __('lang_v1.tuesday'),
+            'wednesday' => __('lang_v1.wednesday'),
+            'thursday' => __('lang_v1.thursday'),
+            'friday' => __('lang_v1.friday'),
+            'saturday' => __('lang_v1.saturday'),
         ];
     }
-    
-    public function checkCheques($cheque_no, $bank_name){
-        $business_id = auth()->user()->business_id ?? 1;
+
+    public function checkCheques($cheque_no, $bank_name)
+    {
+        $business_id = request()->session()->get('user.business_id');
         $cheque = DB::table('transaction_payments')
             ->where('business_id', '=', $business_id)
             ->where('cheque_number', $cheque_no)
@@ -86,7 +87,7 @@ class Util
 
 
         if (empty($business_id)) {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id');
         }
 
         if ($is_petro) {
@@ -111,7 +112,7 @@ class Util
         }
 
         if (empty($business_id)) {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id');
         }
 
         if ($is_petro) {
@@ -145,17 +146,17 @@ class Util
     {
 
         // if (auth()->user()->can('bypass.review')) { return []; }
-        
-        
-        $business_id = auth()->user()->business_id ?? 1;
+
+        return [];
+        $business_id = request()->session()->get('user.business_id');
         $subscription = Subscription::current_subscription($business_id);
-    	$pacakge_details = $subscription->package_details;
-    	
-    	
-    	if(!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1){
-    	    if(date('Y-m-d',strtotime($date)) > date('Y-m-d')){
-                $business_id = auth()->user()->business_id ?? 1;
-            
+        $pacakge_details = $subscription->package_details;
+
+
+        if (!empty($pacakge_details['daily_review']) && $pacakge_details['daily_review'] == 1) {
+            if (date('Y-m-d', strtotime($date)) > date('Y-m-d')) {
+                $business_id = request()->session()->get('user.business_id');
+
                 $reviewed = DB::table('daily_report_review_status')
                     ->join('users', 'daily_report_review_status.reviewed_by', '=', 'users.id')
                     ->select('daily_report_review_status.*', 'users.first_name')
@@ -176,10 +177,11 @@ class Util
             return [];
         }
     }
-    
-    public function reviewChange($date,$data){
-        
-        $business_id = auth()->user()->business_id ?? 1;
+
+    public function reviewChange($date, $data)
+    {
+
+        $business_id = request()->session()->get('user.business_id');
         $subscription = Subscription::current_subscription($business_id);
         $pacakge_details = $subscription->package_details;
 
@@ -326,18 +328,17 @@ class Util
      */
     public function payment_types($location = null, $merge_cash_group_accounts = false, $add_credit_purchase = false, $add_credit_expense = false, $add_credit_sale = false, $is_company = false, $action = null)
     {
-        $business_id = auth()->user()->business_id ?? 1;
-        
-        
-        if(!empty($location) && $location != 'null'){
+        $business_id = request()->session()->get('user.business_id');
+
+
+        if (!empty($location) && $location != 'null') {
             $location = is_object($location) ? $location : BusinessLocation::find($location);
         } else {
             $location = BusinessLocation::where('business_id', $business_id)->first();
         }
 
         $payment_types = [];
-        $payments = (!empty($location) && !empty($location->default_payment_accounts)) ? json_decode($location->default_payment_accounts, true) : [];
-        $payments = is_array($payments) ? $payments : [];
+        $payments = !empty($location) ? json_decode($location->default_payment_accounts, true) : [];
         foreach ($payments as $key => $value) {
             if (!empty($value['is_enabled']) && $value['is_enabled'] == 1) {
 
@@ -349,36 +350,12 @@ class Util
                 } else {
                     $payment_types[$key] = ucfirst(str_replace("_", " ", $key));
                 }
+
+
             }
         }
 
-        // Fix: If no payment methods are found (e.g. new location or unconfigured), return defaults.
-        if (empty($payment_types)) {
-            $payment_types = [
-                'cash' => 'Cash',
-                'card' => 'Card',
-                'cheque' => 'Cheque',
-                'bank_transfer' => 'Bank Transfer',
-                'custom_pay_1' => 'Custom Pay 1',
-                'custom_pay_2' => 'Custom Pay 2',
-                'custom_pay_3' => 'Custom Pay 3',
-                'other' => 'Other'
-            ];
-        }
 
-        // Apply custom labels from business settings
-        $business = \App\Business::find($business_id);
-        if ($business && !empty($business->custom_labels) && isset($business->custom_labels['payments'])) {
-            $custom_labels = $business->custom_labels['payments'];
-            
-            // Replace default custom payment names with configured labels
-            for ($i = 1; $i <= 7; $i++) {
-                $key = "custom_pay_$i";
-                if (isset($payment_types[$key]) && !empty($custom_labels[$key])) {
-                    $payment_types[$key] = $custom_labels[$key];
-                }
-            }
-        }
 
         if ($add_credit_sale) {
             $payment_types['credit_sale'] = __('Credit Sale');
@@ -397,9 +374,9 @@ class Util
 
     public function one_payment_type($type, $location = null)
     {
-        $business_id = auth()->user()->business_id ?? 1;
-        
-        if(!empty($location)){
+        $business_id = request()->session()->get('user.business_id');
+
+        if (!empty($location)) {
             $location = is_object($location) ? $location : BusinessLocation::find($location);
         } else {
             $location = BusinessLocation::where('business_id', $business_id)->first();
@@ -570,7 +547,7 @@ class Util
     public function setAndGetReferenceCount($type, $business_id = null)
     {
         if (empty($business_id)) {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id');
         }
 
         $ref = ReferenceCount::where('ref_type', $type)
@@ -606,7 +583,7 @@ class Util
     public function onlyGetReferenceCount($type, $business_id = null, $increment_only)
     {
         if (empty($business_id)) {
-            $business_id = auth()->user()->business_id ?? 1;
+            $business_id = request()->session()->get('user.business_id');
         }
 
         $ref = ReferenceCount::where('ref_type', $type)
@@ -1140,36 +1117,34 @@ class Util
         }
 
         $uploaded_file_name = null;
-        if ($request->hasFile($file_name)) {
-            $file = $request->file($file_name);
-            if ($file->isValid()) {
-                \Log::info("File $file_name is valid. Size: " . $file->getSize());
-                $dir_path = public_path('uploads/' . $dir_name);
-                if (!file_exists($dir_path)) {
-                    mkdir($dir_path, 0777, true);
-                }
+        if ($request->hasFile($file_name) && $request->file($file_name)->isValid()) {
 
-                // Check if mime type is image
-                $mime_type = $file->getMimeType();
-                \Log::info("File Mime Type: " . $mime_type);
-                if ($file_type == 'image' && strpos($mime_type, 'image/') === false) {
-                    \Log::error("Invalid image mime type: " . $mime_type);
-                    throw new \Exception("Invalid image file");
-                }
-
-                if ($file->getSize() <= config('constants.document_size_limit')) {
-                    $new_file_name = time() . '_' . $file->getClientOriginalName();
-                    \Log::info("Moving file to: $dir_path/$new_file_name");
-                    $file->move($dir_path, $new_file_name);
-                    $uploaded_file_name = $new_file_name;
-                } else {
-                    \Log::error("File size too large: " . $file->getSize());
-                }
-            } else {
-                \Log::error("File $file_name is NOT valid. Error: " . $file->getErrorMessage());
+            if (!file_exists('./public/uploads/' . $dir_name)) {
+                mkdir('./public/uploads/' . $dir_name, 0777, true);
             }
-        } else {
-            \Log::warning("No file found in request for: $file_name");
+
+            // Check if mime type is image
+            if ($file_type == 'image' && strpos($request->$file_name->getClientMimeType(), 'image/') === false) {
+                throw new \Exception("Invalid image file");
+            }
+
+            if ($request->$file_name->getSize() <= config('constants.document_size_limit')) {
+                $new_file_name = time() . '_' . $request->$file_name->getClientOriginalName();
+
+                $uploaded_file_path = 'public/uploads/' . $dir_name . '/' . $new_file_name;
+
+                if (strpos($request->$file_name->getClientMimeType(), 'image/') === true) {
+                    // Convert the image to AVIF format
+                    $img = Image::make($request->$file_name->getRealPath())->save($uploaded_file_path, null, function ($constraint) {
+                        $constraint->format('avif');
+                    });
+                } else {
+                    // Save the uploaded file without modification
+                    $request->$file_name->move(public_path('uploads/' . $dir_name), $new_file_name);
+                }
+
+                $uploaded_file_name = $new_file_name;
+            }
         }
 
         return $uploaded_file_name;
@@ -1573,11 +1548,11 @@ class Util
     public function shipping_statuses()
     {
         $statuses = [
-            'ordered' => __('Ordered'),
-            'packed' => __('Packed'),
-            'shipped' => __('Shipped'),
-            'delivered' => __('Delivered'),
-            'cancelled' => __('Cancelled')
+            'ordered' => __('lang_v1.ordered'),
+            'packed' => __('lang_v1.packed'),
+            'shipped' => __('lang_v1.shipped'),
+            'delivered' => __('lang_v1.delivered'),
+            'cancelled' => __('restaurant.cancelled')
         ];
 
         return $statuses;
