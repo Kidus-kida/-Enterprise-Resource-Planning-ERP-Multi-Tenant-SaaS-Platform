@@ -738,6 +738,10 @@ Route::get('/debug-permissions', function () {
     // Force reload of relations
     $user->load('roles', 'permissions');
     
+    // Clear Permission Cache
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    echo "<b>Cache Cleared!</b><br>";
+    
     echo "<h1>Debug Info</h1>";
     echo "<b>Current DB Connection:</b> " . \DB::connection()->getDatabaseName() . "<br>";
     echo "<b>User ID:</b> " . $user->id . "<br>";
