@@ -885,17 +885,21 @@ Route::get('/create-subscription/{businessId}', function ($businessId) {
     ]);
 });
 
-// Run tenant migrations via web route
-Route::get('/run-tenant-migrations/{tenantId}', function ($tenantId) {
+// Run tenant migrations via web route (use business_id)
+Route::get('/run-tenant-migrations-for-business/{businessId}', function ($businessId) {
     try {
-        // Find tenant - try by id first, then by subdomain
-        $tenant = \Modules\Superadmin\Models\Tenant::where('id', $tenantId)
-            ->orWhere('subdomain', $tenantId)
-            ->first();
+        // Get business and its tenant
+        $business = \App\Business::on('mysql')->with('tenant')->find($businessId);
         
-        if (!$tenant) {
-            return response()->json(['error' => 'Tenant not found'], 404);
+        if (!$business) {
+            return response()->json(['error' => 'Business not found'], 404);
         }
+
+        if (!$business->tenant) {
+            return response()->json(['error' => 'No tenant configured for this business'], 404);
+        }
+
+        $tenant = $business->tenant;
 
         // Get database credentials
         $credentials = $tenant->data;
@@ -929,7 +933,8 @@ Route::get('/run-tenant-migrations/{tenantId}', function ($tenantId) {
 
         return response()->json([
             'success' => true,
-            'tenant_id' => $tenantId,
+            'business_id' => $businessId,
+            'tenant_id' => $tenant->id,
             'database' => $credentials['db_name'],
             'output' => $output
         ]);
