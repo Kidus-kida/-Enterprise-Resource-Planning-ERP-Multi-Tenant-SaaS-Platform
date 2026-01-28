@@ -111,13 +111,24 @@ class SubscriptionService
         $startDate = Carbon::now();
         $endDate = $this->calculateExpiryDate($startDate, $package);
 
+        // If package has custom_permissions defined, use them. Otherwise, grant access to all active modules.
+        $moduleActivation = $package->custom_permissions ?? [];
+        
+        if (empty($moduleActivation)) {
+            // Auto-populate with all active modules
+            $activeModules = \Modules\Superadmin\Models\Module::where('is_active', 1)->get();
+            foreach ($activeModules as $module) {
+                $moduleActivation[$module->key] = true;
+            }
+        }
+
         $newSubscription = Subscription::create([
             'business_id' => $subscription->business_id,
             'package_id' => $package->id,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'package_details' => $package->toArray(),
-            'module_activation_details' => $package->custom_permissions ?? [],
+            'module_activation_details' => $moduleActivation,
             'status' => 'waiting',
             'created_id' => auth()->id(),
             'company_count' => $package->company_count

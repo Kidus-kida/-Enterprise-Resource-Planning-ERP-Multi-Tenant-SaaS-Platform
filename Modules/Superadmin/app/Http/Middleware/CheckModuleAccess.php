@@ -55,31 +55,7 @@ class CheckModuleAccess
         // Check if business has access to this module
         $hasAccess = $this->subscriptionService->checkModuleAccess($business, $moduleName);
 
-        // DEBUG: Log the check
-        \Log::info('Module Access Check', [
-            'module' => $moduleName,
-            'business_id' => $business->id,
-            'has_access' => $hasAccess,
-            'user_id' => $user->id
-        ]);
-
         if (!$hasAccess) {
-            // DEBUG: Get subscription details before aborting
-            $subscription = $business->subscriptions()
-                ->where('status', 'approved')
-                ->where('end_date', '>=', \Carbon\Carbon::now())
-                ->latest()
-                ->first();
-            
-            \Log::error('Module Access Denied', [
-                'module_requested' => $moduleName,
-                'business_id' => $business->id,
-                'subscription_id' => $subscription->id ?? null,
-                'subscription_status' => $subscription->status ?? null,
-                'module_activation_details' => $subscription->module_activation_details ?? null,
-                'all_modules' => $subscription ? array_keys($subscription->module_activation_details ?? []) : []
-            ]);
-            
             abort(403, 'Your subscription plan does not include access to the ' . $moduleName . ' module.');
         }
 
