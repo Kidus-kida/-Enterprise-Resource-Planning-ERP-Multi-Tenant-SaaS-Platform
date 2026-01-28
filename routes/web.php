@@ -92,6 +92,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     // HR Module Routes
     Route::group(['middleware' => ['module.access:hr']], function () {
         Route::resource('employees', EmployeesController::class);
+        Route::post('job-positions', [\App\Http\Controllers\Admin\JobPositionsController::class, 'store'])->name('job-positions.store');
         Route::get('employees-list', [EmployeesController::class, 'list'])->name('employees.list');
         
         Route::resource('departments', DepartmentsController::class)->except(['show']);
