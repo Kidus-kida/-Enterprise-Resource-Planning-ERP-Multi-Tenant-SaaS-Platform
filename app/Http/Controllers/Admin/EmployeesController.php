@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
-use App\Models\Company;
+use App\Company;
 use App\Models\JobPosition;
 
 class EmployeesController extends Controller
