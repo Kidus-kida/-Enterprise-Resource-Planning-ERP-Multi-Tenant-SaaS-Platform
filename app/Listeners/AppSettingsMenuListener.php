@@ -56,6 +56,9 @@ class AppSettingsMenuListener
                     ->setAttributes(['wire:navigate' => 'true'])
             )
             ->add(
+                Link::toRoute('admin.attendance-settings.index', '<i class="la la-user-clock"></i> <span>' . ("Attendance Settings") . '</span>')->setActive(route_is('admin.attendance-settings.index'))
+            )
+            ->add(
                 Link::toRoute('settings.salary', '<i class="la la-money"></i> <span>' . ("Salary Settings") . '</span>')
                     ->setActive(route_is('settings.salary'))
                     ->setAttributes(['wire:navigate' => 'true'])
