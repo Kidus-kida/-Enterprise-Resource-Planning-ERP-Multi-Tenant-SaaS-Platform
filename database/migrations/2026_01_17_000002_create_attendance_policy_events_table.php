@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignId('evaluated_by')->nullable()->constrained('users');
             $table->timestamps();
 
-            $table->index(['attendance_timestamp_id', 'policy_type']);
+            $table->index(['attendance_timestamp_id', 'policy_type'], 'att_policy_ev_ts_type_idx');
             $table->index(['user_id', 'created_at']);
             $table->index(['policy_type', 'status']);
         });
