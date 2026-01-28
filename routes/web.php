@@ -742,20 +742,25 @@ Route::get('/fix-subscription-modules', function () {
         $moduleActivation[$module->key] = true;
     }
 
-    // Get all subscriptions with empty module_activation_details
+    // Get ALL approved subscriptions (not just empty ones)
     $subscriptions = \Modules\Superadmin\Models\Subscription::on('mysql')
-        ->whereRaw('(module_activation_details IS NULL OR module_activation_details = "[]" OR module_activation_details = "{}")')
+        ->where('status', 'approved')
         ->get();
 
     foreach ($subscriptions as $subscription) {
         try {
-            $subscription->module_activation_details = $moduleActivation;
+            // Merge existing modules with all active modules (existing take priority if already set)
+            $existing = $subscription->module_activation_details ?? [];
+            $updated = array_merge($moduleActivation, $existing); // This ensures all modules are present
+            
+            $subscription->module_activation_details = $updated;
             $subscription->save();
             $fixed[] = [
                 'id' => $subscription->id,
                 'business_id' => $subscription->business_id,
                 'package_id' => $subscription->package_id,
-                'modules_granted' => count($moduleActivation)
+                'modules_before' => count($existing),
+                'modules_after' => count($updated)
             ];
         } catch (\Exception $e) {
             $skipped[] = [
@@ -777,5 +782,32 @@ Route::get('/fix-subscription-modules', function () {
         ]
     ]);
 })->name('fix.subscription.modules');
+
+// Debug: View subscription details
+Route::get('/debug-subscription/{businessId}', function ($businessId) {
+    $business = \App\Business::on('mysql')->with('subscription')->find($businessId);
+    
+    if (!$business) {
+        return response()->json(['error' => 'Business not found']);
+    }
+
+    $subscription = $business->subscription;
+    
+    return response()->json([
+        'business' => [
+            'id' => $business->id,
+            'name' => $business->name,
+            'package_id' => $business->package_id
+        ],
+        'subscription' => $subscription ? [
+            'id' => $subscription->id,
+            'status' => $subscription->status,
+            'start_date' => $subscription->start_date,
+            'end_date' => $subscription->end_date,
+            'module_activation_details' => $subscription->module_activation_details,
+            'module_count' => is_array($subscription->module_activation_details) ? count($subscription->module_activation_details) : 0
+        ] : null
+    ]);
+});
 
 // End of file
