@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('business_id');
             $table->string('name');
+            $table->string('email')->nullable();
             $table->string('tax_number')->nullable();
             $table->string('logo')->nullable();
             $table->boolean('is_default')->default(0);
