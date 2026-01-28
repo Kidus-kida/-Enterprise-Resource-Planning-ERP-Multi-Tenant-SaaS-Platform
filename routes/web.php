@@ -838,4 +838,51 @@ Route::get('/view-log', function () {
     ]);
 });
 
+// Fix: Create missing subscription for a business
+Route::get('/create-subscription/{businessId}', function ($businessId) {
+    $business = \App\Business::on('mysql')->find($businessId);
+    
+    if (!$business) {
+        return response()->json(['error' => 'Business not found'], 404);
+    }
+
+    // Check if subscription already exists
+    $existingSubscription = \Modules\Superadmin\Models\Subscription::on('mysql')
+        ->where('business_id', $businessId)
+        ->first();
+
+    if ($existingSubscription) {
+        return response()->json([
+            'message' => 'Subscription already exists',
+            'subscription' => $existingSubscription
+        ]);
+    }
+
+    // Get all active modules
+    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
+    $moduleActivation = [];
+    foreach ($activeModules as $module) {
+        $moduleActivation[$module->key] = true;
+    }
+
+    // Create subscription
+    $subscription = \Modules\Superadmin\Models\Subscription::on('mysql')->create([
+        'business_id' => $businessId,
+        'package_id' => $business->package_id ?? 1,
+        'start_date' => now(),
+        'end_date' => now()->addYear(),
+        'status' => 'approved',
+        'module_activation_details' => $moduleActivation,
+        'base_price' => 0,
+        'total_price' => 0
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Subscription created successfully',
+        'subscription' => $subscription,
+        'modules_granted' => count($moduleActivation)
+    ]);
+});
+
 // End of file
