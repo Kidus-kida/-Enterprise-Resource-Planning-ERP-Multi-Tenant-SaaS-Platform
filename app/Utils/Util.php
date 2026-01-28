@@ -336,7 +336,8 @@ class Util
         }
 
         $payment_types = [];
-        $payments = !empty($location) ? json_decode($location->default_payment_accounts, true) : [];
+        $payments = (!empty($location) && !empty($location->default_payment_accounts)) ? json_decode($location->default_payment_accounts, true) : [];
+        $payments = is_array($payments) ? $payments : [];
         foreach ($payments as $key => $value) {
             if (!empty($value['is_enabled']) && $value['is_enabled'] == 1) {
 
@@ -348,12 +349,36 @@ class Util
                 } else {
                     $payment_types[$key] = ucfirst(str_replace("_", " ", $key));
                 }
-
-
             }
         }
 
+        // Fix: If no payment methods are found (e.g. new location or unconfigured), return defaults.
+        if (empty($payment_types)) {
+            $payment_types = [
+                'cash' => 'Cash',
+                'card' => 'Card',
+                'cheque' => 'Cheque',
+                'bank_transfer' => 'Bank Transfer',
+                'custom_pay_1' => 'Custom Pay 1',
+                'custom_pay_2' => 'Custom Pay 2',
+                'custom_pay_3' => 'Custom Pay 3',
+                'other' => 'Other'
+            ];
+        }
 
+        // Apply custom labels from business settings
+        $business = \App\Business::find($business_id);
+        if ($business && !empty($business->custom_labels) && isset($business->custom_labels['payments'])) {
+            $custom_labels = $business->custom_labels['payments'];
+            
+            // Replace default custom payment names with configured labels
+            for ($i = 1; $i <= 7; $i++) {
+                $key = "custom_pay_$i";
+                if (isset($payment_types[$key]) && !empty($custom_labels[$key])) {
+                    $payment_types[$key] = $custom_labels[$key];
+                }
+            }
+        }
 
         if ($add_credit_sale) {
             $payment_types['credit_sale'] = __('Credit Sale');
@@ -1115,34 +1140,36 @@ class Util
         }
 
         $uploaded_file_name = null;
-        if ($request->hasFile($file_name) && $request->file($file_name)->isValid()) {
-
-            if (!file_exists('./public/uploads/' . $dir_name)) {
-                mkdir('./public/uploads/' . $dir_name, 0777, true);
-            }
-
-            // Check if mime type is image
-            if ($file_type == 'image' && strpos($request->$file_name->getClientMimeType(), 'image/') === false) {
-                throw new \Exception("Invalid image file");
-            }
-
-            if ($request->$file_name->getSize() <= config('constants.document_size_limit')) {
-                $new_file_name = time() . '_' . $request->$file_name->getClientOriginalName();
-
-                $uploaded_file_path = 'public/uploads/' . $dir_name . '/' . $new_file_name;
-
-                if (strpos($request->$file_name->getClientMimeType(), 'image/') === true) {
-                    // Convert the image to AVIF format
-                    $img = Image::make($request->$file_name->getRealPath())->save($uploaded_file_path, null, function ($constraint) {
-                        $constraint->format('avif');
-                    });
-                } else {
-                    // Save the uploaded file without modification
-                    $request->$file_name->move(public_path('uploads/' . $dir_name), $new_file_name);
+        if ($request->hasFile($file_name)) {
+            $file = $request->file($file_name);
+            if ($file->isValid()) {
+                \Log::info("File $file_name is valid. Size: " . $file->getSize());
+                $dir_path = public_path('uploads/' . $dir_name);
+                if (!file_exists($dir_path)) {
+                    mkdir($dir_path, 0777, true);
                 }
 
-                $uploaded_file_name = $new_file_name;
+                // Check if mime type is image
+                $mime_type = $file->getMimeType();
+                \Log::info("File Mime Type: " . $mime_type);
+                if ($file_type == 'image' && strpos($mime_type, 'image/') === false) {
+                    \Log::error("Invalid image mime type: " . $mime_type);
+                    throw new \Exception("Invalid image file");
+                }
+
+                if ($file->getSize() <= config('constants.document_size_limit')) {
+                    $new_file_name = time() . '_' . $file->getClientOriginalName();
+                    \Log::info("Moving file to: $dir_path/$new_file_name");
+                    $file->move($dir_path, $new_file_name);
+                    $uploaded_file_name = $new_file_name;
+                } else {
+                    \Log::error("File size too large: " . $file->getSize());
+                }
+            } else {
+                \Log::error("File $file_name is NOT valid. Error: " . $file->getErrorMessage());
             }
+        } else {
+            \Log::warning("No file found in request for: $file_name");
         }
 
         return $uploaded_file_name;

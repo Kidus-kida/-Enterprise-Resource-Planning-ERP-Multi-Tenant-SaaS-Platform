@@ -68,6 +68,11 @@
             <label class="form-label">Upload Logo</label>
             <input type="file" name="business_logo" class="form-control" accept="image/*">
             <small class="text-muted">Previous logo (if exists) will be replaced</small>
+            @if(!empty($business->logo))
+                <div class="mt-2">
+                    <p class="text-success small">Current Logo: <strong>{{ $business->logo }}</strong></p>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -149,15 +154,27 @@
     <div class="col-md-4">
         <div class="form-group mb-3">
             <label class="form-label">Font Style</label>
-            <input type="text" name="font_style" class="form-control" value="{{ $business->font_style ?? '' }}"
-                placeholder="Enter font style if any">
+            <select name="font_style" class="form-control select">
+                <option value="">Default Font</option>
+                @foreach($font_styles as $f)
+                    <option value="{{ $f }}" {{ ($business->font_style ?? '') == $f ? 'selected' : '' }}>
+                        {{ $f }}
+                    </option>
+                @endforeach
+            </select>
         </div>
     </div>
     <div class="col-md-4">
         <div class="form-group mb-3">
             <label class="form-label">Font Size</label>
-            <input type="text" name="font_size" class="form-control" value="{{ $business->font_size ?? '' }}"
-                placeholder="Enter font size (e.g., 14px)">
+            <select name="font_size" class="form-control select">
+                <option value="">Default Size</option>
+                @foreach($font_sizes as $id => $val)
+                    <option value="{{ $id }}" {{ ($business->font_size ?? '') == $id ? 'selected' : '' }}>
+                        {{ $val }}
+                    </option>
+                @endforeach
+            </select>
         </div>
     </div>
     <div class="col-md-4">

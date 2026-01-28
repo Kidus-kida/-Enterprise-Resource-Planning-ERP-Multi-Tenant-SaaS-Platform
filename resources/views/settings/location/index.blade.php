@@ -62,31 +62,31 @@
                 ajax: '{{ action([\App\Http\Controllers\BusinessLocationController::class, 'index']) }}',
                 columns: [{
                         data: 'name',
-                        name: 'name'
+                        name: 'business_locations.name'
                     },
                     {
                         data: 'location_id',
-                        name: 'location_id'
+                        name: 'business_locations.location_id'
                     },
                     {
                         data: 'landmark',
-                        name: 'landmark'
+                        name: 'business_locations.landmark'
                     },
                     {
                         data: 'city',
-                        name: 'city'
+                        name: 'business_locations.city'
                     },
                     {
                         data: 'zip_code',
-                        name: 'zip_code'
+                        name: 'business_locations.zip_code'
                     },
                     {
                         data: 'state',
-                        name: 'state'
+                        name: 'business_locations.state'
                     },
                     {
                         data: 'country',
-                        name: 'country'
+                        name: 'business_locations.country'
                     },
                     {
                         data: 'price_group',

@@ -12,7 +12,7 @@ class AttendanceTimestamp extends Model
 
     protected $fillable = [
         'user_id','attendance_id','project_id','startTime','endTime','location','co_location',
-        'billable','ip','note'
+        'billable','ip','note','latitude','longitude','co_latitude','co_longitude'
     ];
 
     protected $casts = [

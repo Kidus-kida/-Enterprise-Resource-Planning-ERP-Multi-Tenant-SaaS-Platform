@@ -42,6 +42,9 @@ class AppSettingsMenuListener
                 Link::toRoute('settings.invoice', '<i class="la la-pencil-square"></i> <span>' . ("Invoice Settings") . '</span>')->setActive(route_is('settings.invoice'))
             )
             ->add(
+                Link::toRoute('admin.attendance-settings.index', '<i class="la la-user-clock"></i> <span>' . ("Attendance Settings") . '</span>')->setActive(route_is('admin.attendance-settings.index'))
+            )
+            ->add(
                 Link::toRoute('settings.salary', '<i class="la la-money"></i> <span>' . ("Salary Settings") . '</span>')->setActive(route_is('settings.salary'))
             )
             ->add(
@@ -52,6 +55,9 @@ class AppSettingsMenuListener
             )
             ->add(
                 Link::toRoute('app.logs', '<i class="la la-warning"></i> <span>' . ("App Logs") . '</span>')->setActive(route_is('app.logs'))
+            )
+            ->add(
+                Link::toRoute('admin.audit-logs.index', '<i class="la la-clipboard-list"></i> <span>' . ("Audit Logs") . '</span>')->setActive(route_is('admin.audit-logs.*'))
             )
             ->add(
                 Link::toRoute('payroll.tax.index', '<i class="la la-money"></i> <span>' . ("Tax  Range") . '</span>')->setActive(route_is('payroll.tax.index'))

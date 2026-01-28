@@ -6,19 +6,20 @@
         </div>
 
         @foreach ($modules as $k => $v)
-            @if (isset($enabled_moudle_by_subscription) && $enabled_moudle_by_subscription[$k] == 1)
+            @if (!isset($enabled_modules_by_subscription) || (isset($enabled_modules_by_subscription[$k]) && $enabled_modules_by_subscription[$k] == 1))
                 <div class="col-md-4">
                     <div class="form-group mb-3">
-                        <div class="form-check form-switch px-0">
-                            <label class="form-check-label ms-5">
+                        <div class="form-check form-switch card-title">
+                            <input class="form-check-input" type="checkbox" name="enabled_modules[]"
+                                value="{{ $k }}" id="module_{{ $k }}"
+                                {{ in_array($k, $enabled_modules) ? 'checked' : '' }}>
+                            <label class="form-check-label ps-2" for="module_{{ $k }}">
                                 {{ $v['name'] }}
-                                @if (!empty($help_explanations[$k]))
+                                @if (!empty($v['tooltip']))
                                     <i class="fa fa-info-circle text-info" data-bs-toggle="tooltip"
-                                        title="{{ $help_explanations[$k] }}"></i>
+                                        title="{{ $v['tooltip'] }}"></i>
                                 @endif
                             </label>
-                            <input class="form-check-input ms-0" type="checkbox" name="enabled_modules[]"
-                                value="{{ $k }}" {{ in_array($k, $enabled_modules) ? 'checked' : '' }}>
                         </div>
                     </div>
                 </div>

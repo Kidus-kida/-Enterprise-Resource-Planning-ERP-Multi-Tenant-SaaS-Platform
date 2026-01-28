@@ -124,7 +124,7 @@ class ModuleUtil extends Util
         $is_available = Module::has('Superadmin');
 
         if ($is_available) {
-            $package = \Modules\Superadmin\Entities\Subscription::current_subscription($business_id);
+            $package = \Modules\Superadmin\Models\Subscription::current_subscription($business_id);
 
             if (empty($package)) {
                 return false;
@@ -154,7 +154,7 @@ class ModuleUtil extends Util
         }
 
         if ($is_available) {
-            $package = \Modules\Superadmin\Entities\Subscription::current_subscription($business_id);
+            $package = \Modules\Superadmin\Models\Subscription::current_subscription($business_id);
 
             if (empty($package)) {
                 return false;
@@ -235,7 +235,7 @@ class ModuleUtil extends Util
         $is_available = Module::has('Superadmin');
 
         if ($is_available) {
-            $package = \Modules\Superadmin\Entities\Subscription::current_subscription($business_id);
+            $package = \Modules\Superadmin\Models\Subscription::current_subscription($business_id);
 
             if (empty($package)) {
                 return false;

@@ -96,7 +96,7 @@ class AppMenuListener
                         ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : ''))
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : ''))
                         ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : ''))
-                );
+             );
             }
 
             // Leave Management Submenu
@@ -173,7 +173,7 @@ class AppMenuListener
                     ->add(Link::toRoute('leads.index', __('Leads'))->addClass(route_is(['leads.*']) ? 'active' : ''))
                     ->add(Link::toRoute('follow-ups.index', __('Follow-ups'))->addClass(route_is(['follow-ups.*']) ? 'active' : ''))
                     ->addIfCan('view-budgetCategories', Link::toRoute('campaigns.index', __('Campaigns'))->addClass(route_is(['campaigns.*']) ? 'active' : ''))
-                    ->add(Link::toRoute('crm-reports.index', __('Report'))->addClass(route_is(['crm-reports.*']) ? 'active' : ''))
+                    ->add(Link::toRoute('crm-reports.index', __('report.reports'))->addClass(route_is(['crm-reports.*']) ? 'active' : ''))
             );
         }
 
@@ -181,7 +181,7 @@ class AppMenuListener
         if($isModuleEnabled('purchases') && auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
             $activeClass = route_is(["taxes.*","expenses.*","estimates.*","invoices.*"]) ? "active" : "";
             $menu->submenu(
-                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
+                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("purchase.purchase") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : ''))
                     ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : ''))
@@ -219,7 +219,7 @@ class AppMenuListener
         // Deposits
         if ($isModuleEnabled('deposits') && auth()->user()->can('deposits_module')) {
             $menu->add(
-                Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('Deposits') . '</span>')
+                Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('deposits.deposits') . '</span>')
                     ->addClass(route_is(['deposits.*']) ? 'active' : '')
             );
         }
