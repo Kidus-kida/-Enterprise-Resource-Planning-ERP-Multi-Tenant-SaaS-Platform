@@ -15,6 +15,7 @@ class EmployeeDetail extends Model
         'emp_id', 'user_id', 'department_id', 'designation_id',
         'passport_no', 'passport_expiry_date', 'passport_tel', 'nationality', 'religion', 'ethnicity',
         'marital_status', 'spouse_occupation', 'no_of_children', 'emergency_contacts', 'date_joined', 'dob',
+        'manager_id', 'company_id', 'job_position_id', 'job_title',
     ];
 
     protected $casts = [
@@ -41,6 +42,21 @@ class EmployeeDetail extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function jobPosition()
+    {
+        return $this->belongsTo(JobPosition::class);
     }
 
     public function salaryDetails()
