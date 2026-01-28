@@ -23,11 +23,11 @@ class IdentifyTenantBySubdomain
         }
 
         try {
-            // Get the full host (e.g., tenant.tewostechsolutions.com)
+            // Get the full host (e.g., tenant.ettech.et)
             $host = $request->getHost();
             
             // Check if we have a subdomain
-            $centralDomain = config('tenancy.central_domain', 'tewostechsolutions.com');
+            $centralDomain = config('tenancy.central_domain', 'ettech.et');
             
             \Log::info("IdentifyTenantBySubdomain: Host = $host, Central = $centralDomain");
             

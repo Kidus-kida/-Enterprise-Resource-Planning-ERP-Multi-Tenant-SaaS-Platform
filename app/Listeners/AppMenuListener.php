@@ -463,27 +463,7 @@ class AppMenuListener
                 Menu::new()
                     ->addParentClass('submenu')
                     ->addIfCan('view-settings', Link::toRoute('settings.index', __('Settings'))->addClass(route_is('settings.index') ? 'active' : ''))
-                    ->addIf(function () use ($business) {
-                        // Show Companies menu for tenant owners with company subscription access
-                        if (!auth()->user()->can('business_settings.access')) {
-                            return false;
-                        }
-                        // Show for Tenant Owners OR users with business settings access (e.g., Tenant Admins)
-                        if (!auth()->user()->isTenantOwner() && !auth()->user()->can('business_settings.access')) {
-                            return false;
-                        }
-                        if (!$business || !$business->subscription) {
-                            return false;
-                        }
-                        
-                        // Check if subscription allows companies (company_count > 0 or unlimited)
-                        $company_limit = $business->subscription->company_count ?? 0;
-                        if ($company_limit === null || $company_limit > 0) {
-                            return true; // Has company access (unlimited or limited)
-                        }
-                        
-                        return false; // No company access
-                    }, Link::toRoute('multi-companies.index', __('Companies'))->addClass(route_is('multi-companies.*') ? 'active' : ''))
+                    ->addIfCan('business_settings.access', Link::toRoute('multi-companies.index', __('Companies'))->addClass(route_is('multi-companies.*') ? 'active' : ''))
                     ->addIfCan('view-backups', Link::toRoute('backups.index', __('Backups'))->addClass(route_is('backups.*') ? 'active' : ''))
             );
         }

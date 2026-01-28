@@ -257,6 +257,9 @@ class TenantManagementController extends Controller
                 $debugLog .= "Error assigning role: " . $e->getMessage() . "\n";
             }
 
+            // Clear permission cache to ensure the new role assignment is recognized immediately
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
             // SEED DEFAULT SETTINGS (Theme & Localization)
             $now = now();
             $settings = [

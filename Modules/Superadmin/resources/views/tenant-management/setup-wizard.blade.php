@@ -61,7 +61,7 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <strong>Subdomain:</strong><br>
-                                <code class="text-white">{{ $business->subdomain }}.{{ config('tenancy.central_domains.0', 'tewostechsolutions.com') }}</code>
+                                <code class="text-white">{{ $business->subdomain }}.{{ config('tenancy.central_domains.0', 'ettech.et') }}</code>
                             </div>
                             <div class="col-md-3">
                                 <strong>Package:</strong><br>
@@ -338,7 +338,7 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.tewostechsolutions.com</code>), configure the following in cPanel:</p>
+                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.ettech.et</code>), configure the following in cPanel:</p>
                         
                         <h5>Instructions:</h5>
                         <ol>
@@ -355,8 +355,8 @@
                         <div class="alert alert-info">
                             <h6>Access URLs:</h6>
                             <ul class="mb-0">
-                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.tewostechsolutions.com</code></li>
-                                <li><strong>Without Subdomain:</strong> <code>https://tewostechsolutions.com?tenant={{ $tenant->id }}</code></li>
+                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.ettech.et</code></li>
+                                <li><strong>Without Subdomain:</strong> <code>https://ettech.et?tenant={{ $tenant->id }}</code></li>
                             </ul>
                         </div>
                     </div>
