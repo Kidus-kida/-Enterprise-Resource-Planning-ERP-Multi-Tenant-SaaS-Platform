@@ -198,10 +198,10 @@
                 </div>
             </div>
 
-            @if (!empty($business->captch_site_key))
+            @if (!empty($business_settings->captch_site_key))
                 <div class="col-md-12">
                     <div class="form-group mt-3">
-                        <div class="g-recaptcha" data-sitekey="{{ $business->captch_site_key }}"></div>
+                        <div class="g-recaptcha" data-sitekey="{{ $business_settings->captch_site_key }}"></div>
                     </div>
                 </div>
             @endif
