@@ -885,4 +885,59 @@ Route::get('/create-subscription/{businessId}', function ($businessId) {
     ]);
 });
 
+// Run tenant migrations via web route
+Route::get('/run-tenant-migrations/{tenantId}', function ($tenantId) {
+    try {
+        // Find tenant
+        $tenant = \Modules\Superadmin\Models\Tenant::where('tenant_id', $tenantId)->first();
+        
+        if (!$tenant) {
+            return response()->json(['error' => 'Tenant not found'], 404);
+        }
+
+        // Get database credentials
+        $credentials = $tenant->data;
+        if (!is_array($credentials)) {
+            $credentials = json_decode($tenant->data, true);
+        }
+
+        // Configure tenant connection
+        config(['database.connections.tenant' => [
+            'driver' => 'mysql',
+            'host' => $credentials['db_host'],
+            'port' => $credentials['db_port'] ?? 3306,
+            'database' => $credentials['db_name'],
+            'username' => $credentials['db_username'],
+            'password' => decrypt($credentials['db_password']),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ]]);
+
+        \DB::purge('tenant');
+        \DB::reconnect('tenant');
+
+        // Run migrations
+        \Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => 'database/migrations/tenant',
+            '--force' => true
+        ]);
+
+        $output = \Artisan::output();
+
+        return response()->json([
+            'success' => true,
+            'tenant_id' => $tenantId,
+            'database' => $credentials['db_name'],
+            'output' => $output
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // End of file
