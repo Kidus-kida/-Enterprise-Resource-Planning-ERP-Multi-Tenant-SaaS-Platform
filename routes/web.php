@@ -743,7 +743,7 @@ Route::get('/debug-permissions', function () {
     echo "<b>User ID:</b> " . $user->id . "<br>";
     echo "<b>Name:</b> " . $user->name . "<br>";
     echo "<b>Email:</b> " . $user->email . "<br>";
-    echo "<b>Type:</b> " . $user->type . "<br>";
+    echo "<b>Type:</b> " . ($user->type instanceof \BackedEnum ? $user->type->value : $user->type) . "<br>";
     echo "<b>Business ID:</b> " . $user->business_id . "<br>";
     
     echo "<h3>Roles:</h3>";
