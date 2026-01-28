@@ -810,4 +810,32 @@ Route::get('/debug-subscription/{businessId}', function ($businessId) {
     ]);
 });
 
+// View Laravel Log (last 100 lines)
+Route::get('/view-log', function () {
+    $logPath = storage_path('logs/laravel.log');
+    
+    if (!file_exists($logPath)) {
+        return response()->json(['error' => 'Log file not found']);
+    }
+    
+    $lines = file($logPath);
+    $lastLines = array_slice($lines, -100); // Last 100 lines
+    
+    // Search for module access related logs
+    $relevantLogs = [];
+    foreach ($lastLines as $line) {
+        if (strpos($line, 'Module Access') !== false || 
+            strpos($line, 'module_activation_details') !== false ||
+            strpos($line, 'CheckModuleAccess') !== false) {
+            $relevantLogs[] = $line;
+        }
+    }
+    
+    return response()->json([
+        'total_lines' => count($lastLines),
+        'relevant_logs' => $relevantLogs,
+        'all_last_100_lines' => implode('', $lastLines)
+    ]);
+});
+
 // End of file
