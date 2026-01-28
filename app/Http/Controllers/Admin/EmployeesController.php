@@ -14,18 +14,119 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
+use App\Company;
+use App\Models\JobPosition;
+
 class EmployeesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $pageTitle = __("Employees");
-        $employees = User::where('type', UserType::EMPLOYEE)->get();
+        $query = User::where('type', UserType::EMPLOYEE)
+            ->with(['employeeDetail.department', 'employeeDetail.designation']); // Eager load for grouping/display
+        
+        // Filtering
+        if ($request->has('filter')) {
+            switch ($request->filter) {
+                case 'archived':
+                     $query->where('is_active', false);
+                     break;
+                case 'my_department':
+                    $query->whereHas('employeeDetail', function($q) {
+                        $q->where('department_id', auth()->user()->employeeDetail->department_id ?? null);
+                    })->where('is_active', true);
+                    break;
+                case 'newly_hired':
+                    $query->whereHas('employeeDetail', function($q) {
+                        $q->where('date_joined', '>=', now()->subDays(30)); 
+                    })->where('is_active', true);
+                    break;
+                default:
+                    $query->where('is_active', true);
+                    break;
+            }
+        } else {
+             $query->where('is_active', true);
+        }
+
+        // Search
+        if ($request->has('search')) {
+            $term = $request->search;
+            $query->where(function($q) use ($term) {
+                $q->where('firstname', 'like', "%{$term}%")
+                  ->orWhere('lastname', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%")
+                  ->orWhere('phone', 'like', "%{$term}%");
+            });
+        }
+        
+        if ($request->has('name')) {
+            $term = $request->name;
+            $query->where(function($q) use ($term) {
+                $q->where('firstname', 'like', "%{$term}%")
+                  ->orWhere('lastname', 'like', "%{$term}%");
+            });
+        }
+        
+        if ($request->has('email')) {
+             $query->where('email', 'like', "%{$request->email}%");
+        }
+
+        if ($request->has('phone')) {
+             $query->where('phone', 'like', "%{$request->phone}%");
+        }
+        
+        // Existing department filter
+        if ($request->has('department_id')) {
+            $query->whereHas('employeeDetail', function($q) use ($request) {
+                $q->where('department_id', $request->department_id);
+            });
+        }
+        
+        $employees = $query->get();
+        $isGrouped = false;
+
+        // Grouping
+        if ($request->has('group_by')) {
+            $isGrouped = true;
+            $groupBy = $request->group_by;
+            
+            if ($groupBy == 'department') {
+                $employees = $employees->groupBy(function($item) {
+                    return $item->employeeDetail && $item->employeeDetail->department 
+                        ? $item->employeeDetail->department->name 
+                        : 'No Department';
+                });
+            } elseif ($groupBy == 'designation') {
+                $employees = $employees->groupBy(function($item) {
+                    return $item->employeeDetail && $item->employeeDetail->designation 
+                        ? $item->employeeDetail->designation->name 
+                        : 'No Designation';
+                });
+            } else {
+                $isGrouped = false;
+            }
+        }
+        
+        // Data for Add Employee Modal
+        $departments = cache()->remember('departments.all', 3600, fn() => Department::all());
+        $designations = cache()->remember('designations.all', 3600, fn() => Designation::all());
+        $companies = cache()->remember('companies.all', 3600, fn() => Company::all());
+        $jobPositions = JobPosition::all();
+        $managers = User::where('type', UserType::EMPLOYEE)->where('is_active', true)->get();
+
         return view('pages.employees.index', compact(
             'pageTitle',
-            'employees'
+            'employees',
+            'isGrouped',
+            'departments',
+            'designations',
+            'companies',
+            'jobPositions',
+            'managers'
         ));
     }
 
@@ -48,9 +149,16 @@ class EmployeesController extends Controller
         // Cache departments and designations as they rarely change
         $departments = cache()->remember('departments.all', 3600, fn() => Department::all());
         $designations = cache()->remember('designations.all', 3600, fn() => Designation::all());
+        $companies = cache()->remember('companies.all', 3600, fn() => Company::all());
+        $jobPositions = JobPosition::all(); // Don't cache as we might add new ones frequently
+        $managers = User::where('type', UserType::EMPLOYEE)->where('is_active', true)->get();
+        
         return view('pages.employees.create', compact(
             'departments',
-            'designations'
+            'designations',
+            'companies',
+            'jobPositions',
+            'managers'
         ));
     }
 
@@ -66,6 +174,10 @@ class EmployeesController extends Controller
             'email' => 'required|email|unique:users,email,except,id',
             'password' => 'required|string|confirmed',
             'status' => 'required',
+            'company' => 'nullable|exists:companies,id',
+            'manager' => 'nullable|exists:users,id',
+            'job_position' => 'nullable|exists:job_positions,id',
+            'job_title' => 'nullable|string|max:255',
         ]);
         $imageName = null;
         if ($request->hasFile('avatar')) {
@@ -98,6 +210,10 @@ class EmployeesController extends Controller
                 'user_id' => $user->id,
                 'department_id' => $request->department,
                 'designation_id' => $request->designation,
+                'company_id' => $request->company,
+                'manager_id' => $request->manager,
+                'job_position_id' => $request->job_position,
+                'job_title' => $request->job_title,
             ]);
         }
         $notification = notify(__('Employee has been added'));

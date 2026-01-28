@@ -21,7 +21,6 @@ php_errors.log
 *.log
 
 # Environment Files
-.env
 .env.backup
 .env.production
 .env.local
@@ -115,4 +114,7 @@ temp_log.txt
 
 # Large binary files (uncomment if needed)
 # hr3
+
+/public/debug_menu_log.txt
+
 

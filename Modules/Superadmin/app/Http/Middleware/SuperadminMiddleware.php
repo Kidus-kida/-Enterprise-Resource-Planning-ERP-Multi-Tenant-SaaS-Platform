@@ -14,18 +14,13 @@ class SuperadminMiddleware
             return redirect()->route('login')->with('error', 'Please login to access this area.');
         }
 
-        // Allow access for user with ID = 1 (Superadmin)
+        // SECURITY: Only allow access for users with UserType::SUPERADMIN
+        // Do NOT use role-based checks here as tenants can create roles named 'superadmin'
         if (auth()->user()->type === UserType::SUPERADMIN) {  
             return $next($request);
         }
 
-        // Check if user has superadmin role (if using spatie/laravel-permission)
-        $user = auth()->user();
-        if (method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
-            return $next($request);
-        }
-
-        // If neither condition is met, deny access
-        abort(403, 'Unauthorized. Superadmin access required.');
+        // If condition is not met, deny access
+        abort(403, 'Unauthorized. System Owner access required.');
     }
 }

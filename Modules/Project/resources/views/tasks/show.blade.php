@@ -215,98 +215,100 @@
         form.submit();
     }
 
-    $(document).ready(function() {
-        $('#assigned_to_select').select2({
-            placeholder: 'Select followers',
-            width: '100%'
-        });
-        $('#assigned_to_select').on('change', function (e) {
-            $(this).closest('form').submit();
-        });
-
-        $('#labels_select').select2({
-            placeholder: 'Select labels',
-            width: '100%',
-            tags: true
-        });
-        $('#labels_select').on('change', function (e) {
-            $(this).closest('form').submit();
-        });
-
-        const toolbarOptions = [
-            ['bold', 'italic', 'underline', 'strike'], ['blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'color': [] }, { 'background': [] }],
-            ['link', 'image'], ['clean']
-        ];
-
-        function quillImageHandler() {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
-            input.click();
-
-            input.onchange = () => {
-                const file = input.files[0];
-                if (/^image\//.test(file.type)) {
-                    const formData = new FormData();
-                    formData.append('upload', file);
-
-                    fetch('{{ route("tasks.upload-image") }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.url) {
-                            const range = this.quill.getSelection(true);
-                            this.quill.insertEmbed(range.index, 'image', result.url);
-                        } else if (result.error) {
-                            alert(result.error.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Image upload failed.');
-                    });
-                } else {
-                    alert('You can only upload images.');
-                }
-            };
-        }
-
-        let descQuill, commentQuill;
-
-        if (document.querySelector('#description-editor-container')) {
-            descQuill = new Quill('#description-editor-container', {
-                modules: { toolbar: toolbarOptions },
-                theme: 'snow'
+    window.addEventListener('load', function() {
+        $(document).ready(function() {
+            $('#assigned_to_select').select2({
+                placeholder: 'Select followers',
+                width: '100%'
             });
-            descQuill.getModule('toolbar').addHandler('image', quillImageHandler);
-        }
-
-        if (document.querySelector('#comment-editor-container')) {
-            commentQuill = new Quill('#comment-editor-container', {
-                modules: { toolbar: toolbarOptions },
-                theme: 'snow',
-                placeholder: 'Add a comment...'
+            $('#assigned_to_select').on('change', function (e) {
+                $(this).closest('form').submit();
             });
-            commentQuill.getModule('toolbar').addHandler('image', quillImageHandler);
-        }
 
-        $('#task-update-form').on('submit', function() {
-            if (descQuill) {
-                $('#description-editor-input').val(descQuill.root.innerHTML);
+            $('#labels_select').select2({
+                placeholder: 'Select labels',
+                width: '100%',
+                tags: true
+            });
+            $('#labels_select').on('change', function (e) {
+                $(this).closest('form').submit();
+            });
+
+            const toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'], ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],
+                ['link', 'image'], ['clean']
+            ];
+
+            function quillImageHandler() {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.click();
+
+                input.onchange = () => {
+                    const file = input.files[0];
+                    if (/^image\//.test(file.type)) {
+                        const formData = new FormData();
+                        formData.append('upload', file);
+
+                        fetch('{{ route("tasks.upload-image") }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.url) {
+                                const range = this.quill.getSelection(true);
+                                this.quill.insertEmbed(range.index, 'image', result.url);
+                            } else if (result.error) {
+                                alert(result.error.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Image upload failed.');
+                        });
+                    } else {
+                        alert('You can only upload images.');
+                    }
+                };
             }
-            if (commentQuill) {
-                // Only set comment value if it's not empty to avoid submitting empty comments
-                const commentContent = commentQuill.root.innerHTML;
-                if (commentQuill.getLength() > 1) { // Quill length is 1 for an empty editor
-                    $('#comment-editor-input').val(commentContent);
+
+            let descQuill, commentQuill;
+
+            if (document.querySelector('#description-editor-container')) {
+                descQuill = new Quill('#description-editor-container', {
+                    modules: { toolbar: toolbarOptions },
+                    theme: 'snow'
+                });
+                descQuill.getModule('toolbar').addHandler('image', quillImageHandler);
+            }
+
+            if (document.querySelector('#comment-editor-container')) {
+                commentQuill = new Quill('#comment-editor-container', {
+                    modules: { toolbar: toolbarOptions },
+                    theme: 'snow',
+                    placeholder: 'Add a comment...'
+                });
+                commentQuill.getModule('toolbar').addHandler('image', quillImageHandler);
+            }
+
+            $('#task-update-form').on('submit', function() {
+                if (descQuill) {
+                    $('#description-editor-input').val(descQuill.root.innerHTML);
                 }
-            }
+                if (commentQuill) {
+                    // Only set comment value if it's not empty to avoid submitting empty comments
+                    const commentContent = commentQuill.root.innerHTML;
+                    if (commentQuill.getLength() > 1) { // Quill length is 1 for an empty editor
+                        $('#comment-editor-input').val(commentContent);
+                    }
+                }
+            });
         });
     });
 </script>

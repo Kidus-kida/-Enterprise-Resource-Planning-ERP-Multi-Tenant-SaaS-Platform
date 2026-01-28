@@ -1,3 +1,8 @@
+<style>
+    .select2-container {
+        z-index: 9999 !important;
+    }
+</style>
 <div class="modal-body">
     <form action="{{ route('users.update', $user->id) }}" method="post" enctype="multipart/form-data">
         @csrf
@@ -60,9 +65,19 @@
                     <div class="col-sm-6">
                         <x-form.input-block>
                             <x-form.label>{{ __('Role') }}</x-form.label>
-                            <select name="role" id="role" class="form-control select">
+                            <select name="role" class="form-control select">
                                 @foreach ($roles as $role)
-                                    <option {{ $user->hasAnyRole($role->name) ? 'selected':'' }}>{{ $role->name }}</option>
+                                    <option {{ in_array($role->name, $userRoles) ? 'selected':'' }}>{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-form.input-block>
+                    </div>
+                    <div class="col-sm-6">
+                        <x-form.input-block>
+                            <x-form.label>Company</x-form.label>
+                             <select name="company_id" class="form-control select">
+                                @foreach ($companies as $key => $value)
+                                    <option value="{{ $key }}" {{ $user->company_id == $key ? 'selected' : '' }}>{{ $value }}</option>
                                 @endforeach
                             </select>
                         </x-form.input-block>
@@ -101,3 +116,8 @@
         </div>
     </form>
 </div>
+<script>
+    $(document).ready(function() {
+        $('.select').select2();
+    });
+</script>

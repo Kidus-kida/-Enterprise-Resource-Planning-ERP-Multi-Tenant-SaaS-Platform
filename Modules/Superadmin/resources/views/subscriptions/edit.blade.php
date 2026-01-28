@@ -40,6 +40,31 @@
                                     <div class="form-group">
                                         <label>Package</label>
                                         <input type="text" class="form-control" value="{{ $subscription->package->name ?? 'N/A' }}" disabled>
+                                        
+                                        <div class="mt-3">
+                                            <label>Company Limit</label>
+                                            <input type="number" name="company_count" class="form-control @error('company_count') is-invalid @enderror" 
+                                                value="{{ old('company_count', $subscription->company_count ?? 1) }}" min="0">
+                                            <small class="form-text text-muted">Enter '0' for Unlimited companies.</small>
+                                            @error('company_count')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        
+                                        @if($subscription->package->is_per_user_pricing)
+                                            <div class="mt-3" id="user_count_wrapper">
+                                                <label>Number of Users</label>
+                                                <input type="number" name="subscribed_user_count" id="user_count_input" 
+                                                    class="form-control" 
+                                                    value="{{ old('subscribed_user_count', $subscription->subscribed_user_count ?? 1) }}" 
+                                                    min="1">
+                                                <small class="form-text text-muted">
+                                                    Base price includes {{ $subscription->package->min_users }} users. 
+                                                    Additional users charged at {{ number_format($subscription->package->price_per_user, 2) }} ETB/user.
+                                                </small>
+                                            </div>
+                                        @endif
+
                                         <div class="form-check mt-2">
                                             <input type="checkbox" name="sync_package" value="1" class="form-check-input" id="sync_package">
                                             <label class="form-check-label" for="sync_package">
@@ -141,6 +166,10 @@
                                             <span>Base Package:</span>
                                             <strong id="base-price-display">{{ number_format($subscription->package->price ?? 0, 0) }} ETB</strong>
                                         </div>
+                                        <div class="d-flex justify-content-between mb-1 text-muted small" id="user-price-breakdown" style="display: none;">
+                                            <span>User Pricing:</span>
+                                            <span id="user-price-details"></span>
+                                        </div>
                                         <div class="d-flex justify-content-between mb-1">
                                             <span>Add-ons:</span>
                                             <strong id="addons-price-display">0 ETB</strong>
@@ -169,14 +198,44 @@
 </div>
 @push('scripts')
 <script>
-let basePrice = {{ $subscription->package->price ?? 0 }};
+// Package & Pricing Configuration
+const packageConfig = {
+    basePrice: {{ $subscription->package->price ?? 0 }},
+    isPerUserPricing: {{ $subscription->package->is_per_user_pricing ? 'true' : 'false' }},
+    pricePerUser: {{ $subscription->package->price_per_user ?? 0 }},
+    minUsers: {{ $subscription->package->min_users ?? 1 }}
+};
 
 // Addon checkbox handler
 document.querySelectorAll('.addon-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', updatePriceSummary);
 });
 
+// User count input handler
+const userCountInput = document.getElementById('user_count_input');
+if (userCountInput) {
+    userCountInput.addEventListener('input', updatePriceSummary);
+}
+
 function updatePriceSummary() {
+    let calculatedBasePrice = packageConfig.basePrice;
+    let userBreakdown = '';
+    let showBreakdown = false;
+
+    // Calculate dynamic base price
+    if (packageConfig.isPerUserPricing && userCountInput) {
+        const userCount = parseInt(userCountInput.value) || 1;
+        
+        if (userCount > packageConfig.minUsers) {
+            const additionalUsers = userCount - packageConfig.minUsers;
+            const extraCost = additionalUsers * packageConfig.pricePerUser;
+            calculatedBasePrice += extraCost;
+            
+            userBreakdown = `(+${additionalUsers} users × ${packageConfig.pricePerUser} ETB)`;
+            showBreakdown = true;
+        }
+    }
+
     let addonsPrice = 0;
     
     // Calculate total addons price
@@ -186,12 +245,20 @@ function updatePriceSummary() {
         addonsPrice += price;
     });
     
-    const totalPrice = basePrice + addonsPrice;
+    const totalPrice = calculatedBasePrice + addonsPrice;
     
     // Update display
-    document.getElementById('base-price-display').textContent = basePrice.toLocaleString() + ' ETB';
+    document.getElementById('base-price-display').textContent = calculatedBasePrice.toLocaleString() + ' ETB';
     document.getElementById('addons-price-display').textContent = addonsPrice.toLocaleString() + ' ETB';
     document.getElementById('total-price-display').textContent = totalPrice.toLocaleString() + ' ETB';
+
+    const breakdownEl = document.getElementById('user-price-breakdown');
+    if (showBreakdown) {
+        breakdownEl.style.display = 'flex';
+        document.getElementById('user-price-details').textContent = userBreakdown;
+    } else {
+        breakdownEl.style.display = 'none';
+    }
 }
 
 // Initialize on page load

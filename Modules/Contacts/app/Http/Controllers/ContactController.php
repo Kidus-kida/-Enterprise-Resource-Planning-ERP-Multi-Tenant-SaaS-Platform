@@ -148,9 +148,10 @@ return $dataTable->render('pages.contacts.index', compact('type', 'reward_enable
         }
         
         $customers = Contact::customersDropdown($business_id, false);
+        $companies = \App\Company::forDropdown($business_id, true);
 
         return view('pages.contacts.create')
-            ->with(compact('notifications','types','customers', 'customer_groups', 'supplier_groups', 'contact_id', 'type','user_groups', 'mode'));
+            ->with(compact('notifications','types','customers', 'customer_groups', 'supplier_groups', 'contact_id', 'type','user_groups', 'mode', 'companies'));
     }
     /**
      * Store a newly created resource in storage.
@@ -390,7 +391,7 @@ public function store(Request $request)
         $input = $request->only([
             'name', 'email', 'mobile', 'landline', 'alternate_mobile',
             'city', 'state', 'country', 'address', 'landmark',
-            'supplier_group_id', 'customer_group_id', 'nic_number'
+            'supplier_group_id', 'customer_group_id', 'nic_number', 'company_id'
         ]);
 
         $input['type'] = $request->contact_type;
@@ -580,8 +581,9 @@ public function store(Request $request)
                 $business_id = auth()->user()->business_id;
             }
             $contact_id = $this->businessUtil->check_customer_code($business_id);
+            $companies = \App\Company::forDropdown($business_id, true);
             return view('pages.contacts.edit')
-                ->with(compact('notifications','contact','customers', 'types', 'customer_groups', 'supplier_groups', 'opening_balance', 'ob_transaction','user_groups', 'contact_id'));
+                ->with(compact('notifications','contact','customers', 'types', 'customer_groups', 'supplier_groups', 'opening_balance', 'ob_transaction','user_groups', 'contact_id', 'companies'));
         }
 
         return redirect()->back();
@@ -607,7 +609,7 @@ public function store(Request $request)
                 'alternate_number', 'city', 'state', 'country', 
                 'landmark', 'customer_group_id', 'supplier_group_id', 
                 'custom_field1', 'custom_field2', 'custom_field3', 
-                'custom_field4', 'email'
+                'custom_field4', 'email', 'company_id'
             ]);
             $input['contact_transaction_date'] = $this->transactionUtil->uf_date($input['transaction_date']);
             unset($input['transaction_date']);

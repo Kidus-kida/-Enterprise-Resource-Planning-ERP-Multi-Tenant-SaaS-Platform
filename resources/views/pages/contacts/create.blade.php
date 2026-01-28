@@ -15,6 +15,18 @@
                 </div>
             </div>
 
+            {{-- Company --}}
+            <div class="col-md-3">
+                <div class="input-block mb-3">
+                    <label>Company</label>
+                    <select name="company_id" class="form-control select2">
+                        @foreach($companies as $key => $value)
+                            <option value="{{ $key }}">{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
             {{-- Name --}}
             <div class="col-md-3">
                 <div class="input-block mb-3">

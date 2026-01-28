@@ -48,6 +48,7 @@
                         </div>
                         <small class="text-muted">{{ $stats['active_packages'] }} Active</small>
                     </div>
+                    
                 </div>
             </div>
 
@@ -55,7 +56,7 @@
             <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
                 <div class="card dash-widget">
                     <div class="card-body">
-                        <span class="dash-widget-icon"><i class="fa fa-calendar-check-o"></i></span>
+                        <span class="dash-widget-icon"><i class="fa-solid fa-calendar-check"></i></span>
                         <div class="dash-widget-info">
                             <h3>{{ $stats['active_subscriptions'] }}</h3>
                             <span>Active Subscriptions</span>

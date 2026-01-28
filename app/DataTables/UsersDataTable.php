@@ -71,7 +71,11 @@ class UsersDataTable extends DataTable
     {
         return $model->select('id', 'firstname', 'middlename', 'lastname', 'email', 'username', 'phone', 'dial_code', 'avatar', 'created_at')
             ->with('roles:id,name')
-            ->where('type', UserType::SUPERADMIN)
+            ->with('roles:id,name')
+            ->where(function($q) {
+                $q->where('business_id', auth()->user()->business_id)
+                  ->orWhereNull('business_id');
+            })
             ->newQuery();
     }
 

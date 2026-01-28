@@ -36,6 +36,7 @@ use App\Http\Controllers\DepositsController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StockTransferRequestController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 // Public landing routes
@@ -45,10 +46,372 @@ Route::view('/pricing', 'landing.pricing')->name('landing.pricing');
 Route::view('/industries', 'landing.industries')->name('landing.industries');
 Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
+Route::view('/test-alpine', 'test-alpine');
+
+// Database diagnostic routes (accessible without authentication)
+Route::get('/tenant-login/{id}', [AuthController::class, 'tenantLogin']);
+
+Route::get('/test-db-connection', function () {
+    try {
+        DB::connection()->getPdo();
+        $tables = DB::select("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ?", [env('DB_DATABASE')]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database connection successful',
+            'database' => env('DB_DATABASE'),
+            'tables' => $tables[0]->count ?? 0,
+            'config' => [
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT'),
+                'username' => env('DB_USERNAME'),
+                'password_set' => !empty(env('DB_PASSWORD'))
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'config' => [
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT'),
+                'username' => env('DB_USERNAME'),
+                'password_set' => !empty(env('DB_PASSWORD'))
+            ]
+        ], 500);
+    }
+});
+Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
+Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
+Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
+Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
+
+// Simple test route to bypass middleware
+Route::get('/test-route', function() {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Route is working!',
+        'timestamp' => now(),
+        'database_status' => 'checking...'
+    ]);
+})->name('test.route');
+
+// Test dashboard without authentication
+Route::get('/test-dashboard', function() {
+    try {
+        // Test basic database queries
+        $userCount = \App\Models\User::count();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard test successful!',
+            'user_count' => $userCount,
+            'database_connection' => 'working',
+            'timestamp' => now(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Dashboard test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard');
+
+// Test login page (should redirect to login if not authenticated)
+Route::get('/test-auth', function() {
+    try {
+        if (auth()->check()) {
+            return response()->json([
+                'status' => 'authenticated',
+                'user' => auth()->user()->email ?? 'no email',
+                'message' => 'User is logged in',
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'not_authenticated',
+                'message' => 'User is not logged in',
+                'login_url' => route('login'),
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Auth test failed: ' . $e->getMessage(),
+        ], 500);
+    }
+})->name('test.auth');
+
+// Test database tables
+Route::get('/test-tables', function() {
+    try {
+        $results = [];
+        
+        // Test basic database connection
+        $results['database_connection'] = 'OK';
+        
+        // Test if users table exists
+        try {
+            $userCount = DB::table('users')->count();
+            $results['users_table'] = "OK (count: $userCount)";
+        } catch (\Exception $e) {
+            $results['users_table'] = "ERROR: " . $e->getMessage();
+        }
+        
+        // Test if migrations table exists
+        try {
+            $migrationCount = DB::table('migrations')->count();
+            $results['migrations_table'] = "OK (count: $migrationCount)";
+        } catch (\Exception $e) {
+            $results['migrations_table'] = "ERROR: " . $e->getMessage();
+        }
+        
+        // Test User model
+        try {
+            $userModelCount = \App\Models\User::count();
+            $results['user_model'] = "OK (count: $userModelCount)";
+        } catch (\Exception $e) {
+            $results['user_model'] = "ERROR: " . $e->getMessage();
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Table test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.tables');
+
+// Test login page access
+Route::get('/test-login-page', function() {
+    try {
+        // Just try to load the login view without going through middleware
+        return view('auth.login', ['pageTitle' => 'Test Login']);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Login page test failed: ' . $e->getMessage(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.login.page');
+
+// Test middleware stack step by step
+Route::get('/test-middleware', function() {
+    try {
+        $results = [];
+        
+        // Test 1: Basic request info
+        $results['request'] = [
+            'url' => request()->url(),
+            'method' => request()->method(),
+            'ip' => request()->ip(),
+        ];
+        
+        // Test 2: Session
+        $results['session'] = [
+            'started' => session()->isStarted(),
+            'id' => session()->getId(),
+            'tenant_id' => session('current_tenant_id', 'not set'),
+        ];
+        
+        // Test 3: Auth system
+        $results['auth'] = [
+            'guard' => config('auth.defaults.guard'),
+            'provider' => config('auth.defaults.provider'),
+            'user_model' => config('auth.providers.users.model'),
+            'check_works' => 'testing...',
+        ];
+        
+        try {
+            $results['auth']['check_works'] = auth()->check() ? 'yes' : 'no';
+            $results['auth']['user_id'] = auth()->id() ?? 'not logged in';
+        } catch (\Exception $e) {
+            $results['auth']['check_works'] = 'error: ' . $e->getMessage();
+        }
+        
+        // Test 4: Database connections
+        $results['database'] = [
+            'default_connection' => config('database.default'),
+            'tenant_connection_configured' => !empty(config('database.connections.tenant')),
+        ];
+        
+        // Test 5: Modules
+        $results['modules'] = [
+            'function_exists' => function_exists('module'),
+        ];
+        
+        if (function_exists('module')) {
+            try {
+                $results['modules']['project_enabled'] = module('Project') ? module('Project')->isEnabled() : 'not found';
+                $results['modules']['sales_enabled'] = module('Sales') ? module('Sales')->isEnabled() : 'not found';
+            } catch (\Exception $e) {
+                $results['modules']['error'] = $e->getMessage();
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Middleware test failed: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.middleware');
+
+// Test dashboard controller directly (bypass auth middleware)
+Route::get('/test-dashboard-direct', function() {
+    try {
+        // Create a fake authenticated user for testing
+        $user = \App\Models\User::first();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No users found in database',
+            ], 500);
+        }
+        
+        // Temporarily log in the user
+        auth()->login($user);
+        
+        // Try to instantiate the dashboard controller
+        $controller = new \App\Http\Controllers\DashboardController();
+        
+        // Try to call the index method
+        $response = $controller->index();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard controller works!',
+            'response_type' => get_class($response),
+            'user_id' => auth()->id(),
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Dashboard controller test failed: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => explode("\n", $e->getTraceAsString()),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard.direct');
+
+// Test step-by-step dashboard components
+Route::get('/test-dashboard-parts', function() {
+    try {
+        $results = [];
+        
+        // Step 1: Test user authentication
+        $user = \App\Models\User::first();
+        if (!$user) {
+            return response()->json(['error' => 'No users found'], 500);
+        }
+        auth()->login($user);
+        $results['auth'] = 'OK - User logged in: ' . $user->email;
+        
+        // Step 2: Test UserType enum
+        $results['user_type'] = 'User type: ' . $user->type->value;
+        
+        // Step 3: Test module function
+        $results['module_function'] = function_exists('module') ? 'OK' : 'Missing';
+        
+        // Step 4: Test specific modules
+        if (function_exists('module')) {
+            $results['project_module'] = module('Project') ? 'Found' : 'Not found';
+            $results['sales_module'] = module('Sales') ? 'Found' : 'Not found';
+            $results['accounting_module'] = module('Accounting') ? 'Found' : 'Not found';
+        }
+        
+        // Step 5: Test basic database queries
+        $results['user_count'] = \App\Models\User::count();
+        
+        // Step 6: Test if Ticket model exists
+        try {
+            $results['ticket_model'] = class_exists('App\Models\Ticket') ? 'Exists' : 'Missing';
+            if (class_exists('App\Models\Ticket')) {
+                $results['ticket_count'] = \App\Models\Ticket::count();
+            }
+        } catch (\Exception $e) {
+            $results['ticket_error'] = $e->getMessage();
+        }
+        
+        // Step 7: Test view existence
+        $results['dashboard_view'] = view()->exists('pages.dashboard') ? 'Exists' : 'Missing';
+        $results['employee_dashboard_view'] = view()->exists('pages.employees.dashboard') ? 'Exists' : 'Missing';
+        
+        return response()->json([
+            'status' => 'success',
+            'results' => $results,
+            'timestamp' => now(),
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'timestamp' => now(),
+        ], 500);
+    }
+})->name('test.dashboard.parts');
 
 include __DIR__ . '/auth.php';
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
+    // Add a test route within the authenticated group to isolate the issue
+    Route::get('test-auth-middleware', function() {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Auth middleware works!',
+            'user' => auth()->user() ? auth()->user()->email : 'not logged in',
+            'timestamp' => now(),
+        ]);
+    })->name('test.auth.middleware');
+    
+    // Simplified dashboard route for testing
+    Route::get('dashboard-simple', function() {
+        try {
+            if (!auth()->check()) {
+                return redirect()->route('login');
+            }
+            
+            $user = auth()->user();
+            $data = [
+                'pageTitle' => 'Dashboard',
+                'user' => $user,
+                'userCount' => \App\Models\User::count(),
+            ];
+            
+            // Try to return a simple view first
+            return view('pages.dashboard-simple', $data);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Dashboard error: ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    })->name('dashboard.simple');
+    
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('home', [DashboardController::class, 'index'])->name('home');
     
@@ -80,7 +443,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::delete('delete-chat/{receiver}', [ChatAppController::class, 'destroy'])->name('chat.delete-conversation');
     });
 
-    Route::resource('roles', \App\Http\Controllers\TenantRoleController::class);
+    //Route::resource('roles', \App\Http\Controllers\TenantRoleController::class);
     Route::resource('users', UsersController::class);
     // Contacts/Clients Module Routes
     Route::group(['middleware' => ['module.access:contacts']], function () {
@@ -91,6 +454,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     // HR Module Routes
     Route::group(['middleware' => ['module.access:hr']], function () {
         Route::resource('employees', EmployeesController::class);
+        Route::post('job-positions', [\App\Http\Controllers\Admin\JobPositionsController::class, 'store'])->name('job-positions.store');
         Route::get('employees-list', [EmployeesController::class, 'list'])->name('employees.list');
         
         Route::resource('departments', DepartmentsController::class)->except(['show']);
@@ -164,6 +528,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::prefix('settings')->group(function () {
         Route::get('company', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('company', [SettingsController::class, 'updateCompany'])->name('settings.company.update');
+
+        Route::resource('multi-companies', \App\Http\Controllers\CompanyController::class);
+        Route::get('multi-companies/switch/{id}', [\App\Http\Controllers\CompanyController::class, 'switch'])->name('multi-companies.switch');
+        Route::post('multi-companies/switch-multiple', [\App\Http\Controllers\CompanyController::class, 'switchMultiple'])->name('multi-companies.switch-multiple');
 
         Route::get('business', [\App\Http\Controllers\BusinessSettingsController::class, 'index'])->name('settings.business.index');
         Route::post('business', [\App\Http\Controllers\BusinessSettingsController::class, 'update'])->name('settings.business.update');
@@ -342,4 +710,276 @@ Route::group(['middleware' => ['auth', 'module.access:products']], function () {
     Route::match(['put', 'post'], 'update-shipping/{id}', [StockTransferRequestController::class, 'updateShipping'])->name('stock-transfers-request.updateShipping');
     Route::delete('destroy-shipping/{id}', [StockTransferRequestController::class, 'destroyShipping'])->name('stock-transfers-request.destroyShipping');
     Route::get('shippment-list', [StockTransferRequestController::class, 'shippment_list'])->name('stock-transfers-request.shippment_list');
+
 });
+
+
+// Emergency DB Fix Route - FULL SCAN
+Route::get('/emergency-db-fix', function() {
+    $results = [];
+    $dbName = \DB::connection()->getDatabaseName();
+    $results[] = "Connected to Database: " . $dbName;
+    
+    // Get ALL tables dynamically
+    $tables = [];
+    try {
+        $tables = \Illuminate\Support\Facades\Schema::getTableListing();
+    } catch (\Exception $e) {
+        // Fallback for older Laravel
+        $tables = \DB::connection()->getDoctrineSchemaManager()->listTableNames();
+    }
+
+    $results[] = "Scanning " . count($tables) . " tables...";
+    
+    foreach ($tables as $table) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            $columns = \Illuminate\Support\Facades\Schema::getColumnListing($table);
+            
+            // Skip tables that shouldn't have company_id
+            if (in_array($table, ['migrations', 'password_resets', 'failed_jobs', 'jobs', 'sessions', 'cache', 'activity_log', 'notifications'])) {
+                continue;
+            }
+
+            if (!in_array('company_id', $columns)) {
+                $results[] = "MISSING company_id in: $table";
+                
+                // Check if 'id' column exists to determine placement
+                $placement = in_array('id', $columns) ? 'AFTER id' : '';
+                
+                try {
+                    \DB::statement("ALTER TABLE $table ADD COLUMN company_id BIGINT UNSIGNED NULL $placement, ADD INDEX(company_id)");
+                    $results[] = "SUCCESS: Added company_id to $table";
+                } catch (\Exception $e) {
+                    $results[] = "ERROR adding to $table: " . $e->getMessage();
+                }
+            }
+        }
+    }
+    
+    if (empty($results)) {
+        $results[] = "All tables look good!";
+    }
+    
+    return response()->json($results);
+});
+
+// One-time fix for subscriptions missing module_activation_details
+Route::get('/fix-subscription-modules', function () {
+    // Note: Auth check removed for immediate access. Delete this route after use.
+
+    $fixed = [];
+    $skipped = [];
+
+    // Get all active modules from master DB
+    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
+    $moduleActivation = [];
+    foreach ($activeModules as $module) {
+        $moduleActivation[$module->key] = true;
+    }
+
+    // Get ALL approved subscriptions (not just empty ones)
+    $subscriptions = \Modules\Superadmin\Models\Subscription::on('mysql')
+        ->where('status', 'approved')
+        ->get();
+
+    foreach ($subscriptions as $subscription) {
+        try {
+            // Merge existing modules with all active modules (existing take priority if already set)
+            $existing = $subscription->module_activation_details ?? [];
+            $updated = array_merge($moduleActivation, $existing); // This ensures all modules are present
+            
+            $subscription->module_activation_details = $updated;
+            $subscription->save();
+            $fixed[] = [
+                'id' => $subscription->id,
+                'business_id' => $subscription->business_id,
+                'package_id' => $subscription->package_id,
+                'modules_before' => count($existing),
+                'modules_after' => count($updated)
+            ];
+        } catch (\Exception $e) {
+            $skipped[] = [
+                'id' => $subscription->id,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Subscription module access updated successfully',
+        'modules_granted' => array_keys($moduleActivation),
+        'subscriptions_fixed' => count($fixed),
+        'subscriptions_skipped' => count($skipped),
+        'details' => [
+            'fixed' => $fixed,
+            'skipped' => $skipped
+        ]
+    ]);
+})->name('fix.subscription.modules');
+
+// Debug: View subscription details
+Route::get('/debug-subscription/{businessId}', function ($businessId) {
+    $business = \App\Business::on('mysql')->with('subscription')->find($businessId);
+    
+    if (!$business) {
+        return response()->json(['error' => 'Business not found']);
+    }
+
+    $subscription = $business->subscription;
+    
+    return response()->json([
+        'business' => [
+            'id' => $business->id,
+            'name' => $business->name,
+            'package_id' => $business->package_id
+        ],
+        'subscription' => $subscription ? [
+            'id' => $subscription->id,
+            'status' => $subscription->status,
+            'start_date' => $subscription->start_date,
+            'end_date' => $subscription->end_date,
+            'module_activation_details' => $subscription->module_activation_details,
+            'module_count' => is_array($subscription->module_activation_details) ? count($subscription->module_activation_details) : 0
+        ] : null
+    ]);
+});
+
+// View Laravel Log (last 100 lines)
+Route::get('/view-log', function () {
+    $logPath = storage_path('logs/laravel.log');
+    
+    if (!file_exists($logPath)) {
+        return response()->json(['error' => 'Log file not found']);
+    }
+    
+    $lines = file($logPath);
+    $lastLines = array_slice($lines, -100); // Last 100 lines
+    
+    // Search for module access related logs
+    $relevantLogs = [];
+    foreach ($lastLines as $line) {
+        if (strpos($line, 'Module Access') !== false || 
+            strpos($line, 'module_activation_details') !== false ||
+            strpos($line, 'CheckModuleAccess') !== false) {
+            $relevantLogs[] = $line;
+        }
+    }
+    
+    return response()->json([
+        'total_lines' => count($lastLines),
+        'relevant_logs' => $relevantLogs,
+        'all_last_100_lines' => implode('', $lastLines)
+    ]);
+});
+
+// Fix: Create missing subscription for a business
+Route::get('/create-subscription/{businessId}', function ($businessId) {
+    $business = \App\Business::on('mysql')->find($businessId);
+    
+    if (!$business) {
+        return response()->json(['error' => 'Business not found'], 404);
+    }
+
+    // Check if subscription already exists
+    $existingSubscription = \Modules\Superadmin\Models\Subscription::on('mysql')
+        ->where('business_id', $businessId)
+        ->first();
+
+    if ($existingSubscription) {
+        return response()->json([
+            'message' => 'Subscription already exists',
+            'subscription' => $existingSubscription
+        ]);
+    }
+
+    // Get all active modules
+    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
+    $moduleActivation = [];
+    foreach ($activeModules as $module) {
+        $moduleActivation[$module->key] = true;
+    }
+
+    // Create subscription
+    $subscription = \Modules\Superadmin\Models\Subscription::on('mysql')->create([
+        'business_id' => $businessId,
+        'package_id' => $business->package_id ?? 1,
+        'start_date' => now(),
+        'end_date' => now()->addYear(),
+        'status' => 'approved',
+        'module_activation_details' => $moduleActivation,
+        'base_price' => 0,
+        'total_price' => 0
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Subscription created successfully',
+        'subscription' => $subscription,
+        'modules_granted' => count($moduleActivation)
+    ]);
+});
+
+// Run tenant migrations via web route (use business_id)
+Route::get('/run-tenant-migrations-for-business/{businessId}', function ($businessId) {
+    try {
+        // Get business and its tenant
+        $business = \App\Business::on('mysql')->with('tenant')->find($businessId);
+        
+        if (!$business) {
+            return response()->json(['error' => 'Business not found'], 404);
+        }
+
+        if (!$business->tenant) {
+            return response()->json(['error' => 'No tenant configured for this business'], 404);
+        }
+
+        $tenant = $business->tenant;
+
+        // Get database credentials
+        $credentials = $tenant->data;
+        if (!is_array($credentials)) {
+            $credentials = json_decode($tenant->data, true);
+        }
+
+        // Configure tenant connection
+        config(['database.connections.tenant' => [
+            'driver' => 'mysql',
+            'host' => $credentials['db_host'],
+            'port' => $credentials['db_port'] ?? 3306,
+            'database' => $credentials['db_name'],
+            'username' => $credentials['db_username'],
+            'password' => decrypt($credentials['db_password']),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ]]);
+
+        \DB::purge('tenant');
+        \DB::reconnect('tenant');
+
+        // Run migrations
+        \Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => 'database/migrations/tenant',
+            '--force' => true
+        ]);
+
+        $output = \Artisan::output();
+
+        return response()->json([
+            'success' => true,
+            'business_id' => $businessId,
+            'tenant_id' => $tenant->id,
+            'database' => $credentials['db_name'],
+            'output' => $output
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// End of file

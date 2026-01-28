@@ -7,10 +7,11 @@ use Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Sales\Database\Factories\EstimateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasCompany;
 
 class Estimate extends Model
 {
-    use HasFactory;
+    use HasFactory, HasCompany;
 
     /**
      * The attributes that are mass assignable.
@@ -18,7 +19,8 @@ class Estimate extends Model
     protected $fillable = [
         'est_id','client_id','project_id',
         'taxe_id','client_address','billing_address','startDate',
-        'expiryDate','tax_amount','discount','note','grand_total','subtotal','status'
+        'expiryDate','tax_amount','discount','note','grand_total','subtotal','status',
+        'company_id'
     ];
 
     public function client(){

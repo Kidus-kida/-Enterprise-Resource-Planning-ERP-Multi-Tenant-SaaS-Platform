@@ -31,6 +31,17 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group mb-3">
+                                        <label class="form-label">Company <span class="text-danger">*</span></label>
+                                        <select name="company_id" class="form-control select" required>
+                                            <option value="">Select Company</option>
+                                            @foreach ($companies as $id => $name)
+                                                <option value="{{ $id }}">{{ $name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
                                         <label class="form-label">Name <span class="text-danger">*</span></label>
                                         <input type="text" name="name" class="form-control" required
                                             placeholder="Location Name">

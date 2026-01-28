@@ -12,35 +12,80 @@
 
 <!-- All jQuery-dependent scripts must load AFTER Vite completes -->
 <script>
-// Wait for Vite module to load jQuery
+// Unified Sidebar Initializer
+function initSidebar() {
+    // 1. Re-initialize Slimscroll (Styling/Scrolling)
+    var $slimScrolls = $('.slimscroll');
+    if ($slimScrolls.length > 0) {
+        $slimScrolls.slimScroll({
+            height: 'auto',
+            width: '100%',
+            position: 'right',
+            size: '7px',
+            color: '#ccc',
+            wheelStep: 10,
+            touchScrollStep: 100
+        });
+        var wHeight = $(window).height() - 60;
+        $slimScrolls.height(wHeight);
+        $('.sidebar .slimScrollDiv').height(wHeight);
+        $(window).resize(function () {
+            var rHeight = $(window).height() - 60;
+            $slimScrolls.height(rHeight);
+            $('.sidebar .slimScrollDiv').height(rHeight);
+        });
+    }
+
+    // 2. Handle Event Listeners (Logic)
+    var $sidebarMenu = $('#sidebar-menu a');
+    
+    // Unbind EVERYTHING to start fresh (fixes double-toggle if persisted)
+    $sidebarMenu.off('click');
+    
+    // Bind the toggle logic (fixes paused if swapped)
+    $sidebarMenu.on('click', function (e) {
+        if ($(this).parent().hasClass('submenu')) {
+            e.preventDefault();
+        }
+        if (!$(this).hasClass('subdrop')) {
+            $('ul', $(this).parents('ul:first')).slideUp(350);
+            $('a', $(this).parents('ul:first')).removeClass('subdrop');
+            $(this).next('ul').slideDown(350);
+            $(this).addClass('subdrop');
+        } else if ($(this).hasClass('subdrop')) {
+            $(this).removeClass('subdrop');
+            $(this).next('ul').slideUp(350);
+        }
+    });
+
+    // 3. Set Active State
+    var $activeLink = $('#sidebar-menu ul li.submenu a.active');
+    if ($activeLink.length > 0) {
+        var $parentLi = $activeLink.parents('li:last');
+        var $parentLink = $parentLi.children('a:first');
+        
+        $parentLink.addClass('active subdrop');
+        $parentLink.next('ul').show();
+    }
+}
+
+// 1. Initial Load
 window.addEventListener('load', function() {
-    // Load CSS for bootstrap-fileinput
+    // ... existing load logic ...
+    
+    // Override app.js default behavior with our unified logic
+    setTimeout(initSidebar, 100);
+
+    // Trigger same initialization for first load if needed or keep existing logic
+    // Keeping existing dynamic script loader below
+    
     var fileinputCSS = document.createElement('link');
     fileinputCSS.rel = 'stylesheet';
     fileinputCSS.href = '{{ asset("js/plugins/bootstrap-fileinput/fileinput.min.css") }}';
     document.head.appendChild(fileinputCSS);
     
-    // Load scripts that depend on jQuery
+    // Load local legacy scripts (libraries are now in app.js bundle)
     var scripts = [
-        // DataTables and dependencies
-        { src: 'https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js', id: 'datatables-js' },
-        { src: 'https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js', id: 'datatables-bs5-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js', id: 'datatables-buttons-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js', id: 'datatables-buttons-bs5-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', id: 'jszip-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', id: 'pdfmake-js' },
-        { src: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', id: 'pdfmake-fonts-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js', id: 'datatables-html5-js' },
-        { src: 'https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js', id: 'datatables-print-js' },
-        
-        // Select2
-        { src: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', id: 'select2-js' },
-        
-        // DateRangePicker (requires moment.js)
-        { src: 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', id: 'moment-js' },
-        { src: 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', id: 'daterangepicker-js' },
-        
-        // App scripts
         { src: '{{ asset("js/accounting.min.js") }}', id: 'accounting-js' },
         { src: '{{ asset("js/helpers.js") }}', id: 'helpers-js' },
         { src: '{{ asset("js/jquery.validate.min.js") }}', id: 'validate-js' },
@@ -54,13 +99,85 @@ window.addEventListener('load', function() {
             var script = document.createElement('script');
             script.id = scriptInfo.id;
             script.src = scriptInfo.src;
+            script.onload = function() {
+                // Initialize datetimepicker if present and script loaded
+                if (scriptInfo.id === 'datetimepicker-js') {
+                    if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
+                        $(".datetimepicker").each(function () {
+                            $(this).datetimepicker({
+                                format: "YYYY-MM-DD H:i",
+                                icons: {
+                                    up: "fa fa-angle-up",
+                                    down: "fa fa-angle-down",
+                                    next: "fa fa-angle-right",
+                                    previous: "fa fa-angle-left",
+                                },
+                            });
+                        });
+                    }
+                }
+            };
             document.body.appendChild(script);
         }
     });
 });
+
+// 2. Livewire Navigation
+document.addEventListener('livewire:navigated', () => {
+    console.log('🚀 Livewire SPA Navigation verified!');
+    
+    // 1. Run Unified Sidebar Init
+    initSidebar();
+
+    // 2. Datepickers
+    if ($(".datetimepicker").length > 0 && $.fn.datetimepicker) {
+        $(".datetimepicker").each(function () {
+            $(this).datetimepicker({
+                format: "YYYY-MM-DD H:i",
+                icons: {
+                    up: "fa fa-angle-up",
+                    down: "fa fa-angle-down",
+                    next: "fa fa-angle-right",
+                    previous: "fa fa-angle-left",
+                },
+            });
+        });
+    }
+
+    // 3. Select2 (if present)
+    if ($('.select').length > 0 && $.fn.select2) {
+        $('.select').select2({
+            minimumResultsForSearch: -1,
+            width: '100%'
+        });
+    }
+
+    // 4. Tooltips
+    if($('[data-toggle="tooltip"]').length > 0) {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    // 5. Popovers
+    if($('[data-toggle="popover"]').length > 0) {
+        $('[data-toggle="popover"]').popover();
+    }
+    
+    // 6. Hide Loader
+    $('#loader-wrapper').delay(100).fadeOut('slow');
+    $('#loader-wrapper .loader-ellips').delay(100).fadeOut();
+    
+    // 7. Mobile Sidebar Close
+    if ($(window).width() <= 991 && $('body').hasClass('slide-nav')) {
+        $('.mobile_btn').trigger('click');
+    }
+});
+
+// Remove global checks - simpler is better
+// if (!window.sidebarInitialized) ... REMOVED
 </script>
 
 @stack('page-scripts')
+@stack('page-script')
 <script type="module">
     @if(count($errors) > 0)
         @foreach($errors->all() as $error)

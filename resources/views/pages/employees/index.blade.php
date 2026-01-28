@@ -1,72 +1,221 @@
 @extends('layouts.app')
 
-@push('page-style')
-    
-@endpush
+    <style>
+        /* Viewport Layout fixes */
+        .content {
+            height: calc(100vh - 60px); 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            padding-bottom: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        .odoo-task-header {
+            min-height: 50px;
+            border-bottom: 1px solid #e3e6f0;
+            background: #fff;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        
+         .kanban-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: none;
+            box-shadow: none;
+            margin-bottom: 0 !important;
+            background: transparent;
+        }
+
+        .kanban-board .card-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            padding: 0;
+        }
+        
+        .odoo-card {
+            border-color: #e0e0e0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .odoo-card:hover {
+            border-color: #b0b0b0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        }
+        
+        .odoo-employee-card {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .odoo-employee-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            border-color: #b0b0b0 !important;
+        }
+        .min-width-0 {
+            min-width: 0;
+        }
+    </style>
 
 @section('page-content')
     <div class="content container-fluid">
 
-        <!-- Page Header -->
-        <x-breadcrumb class="col">
-            <x-slot name="title">{{ __('Employees') }}</x-slot>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
-                </li>
-                <li class="breadcrumb-item active">
-                    {{ __('Employees') }}
-                </li>
-            </ul>
-            <x-slot name="right">
-                <div class="col-auto float-end ms-auto">
-                    <a href="javascript:void(0)" data-url="{{ route('employees.create') }}" class="btn add-btn"
-                        data-ajax-modal="true" data-size="lg" data-title="Add Employee">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Employee') }}
-                    </a>
-                    <div class="view-icons">
-                        <a href="{{ route('employees.index') }}" class="grid-view btn btn-link active"><i class="fa fa-th"></i></a>
-                        <a href="{{ route('employees.list') }}" class="list-view btn btn-link"><i class="fa-solid fa-bars"></i></a>
-                    </div>
+        <!-- Odoo-style Compact Header -->
+        <div class="odoo-task-header d-flex align-items-center mb-2 px-1 gap-2">
+            <!-- Left: Title & New Button -->
+            <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                <h4 class="mb-0 fw-bold">{{ __('Employees') }}</h4>
+                <a href="#" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#add_employee">
+                    <i class="fa fa-plus-circle me-1"></i> {{ __('New') }}
+                </a>
+            </div>
+
+            <!-- Center: Search Bar -->
+            <div class="d-flex justify-content-center flex-grow-1">
+                 <div style="width: 100%; max-width: 500px;">
+                    @php
+                        $filterOptions = [
+                            ['label' => 'My Department', 'value' => 'my_department'],
+                            ['label' => 'Newly Hired', 'value' => 'newly_hired'],
+                            ['label' => 'Archived', 'value' => 'archived'],
+                        ];
+                        $groupByOptions = [
+                            ['label' => 'Department', 'value' => 'department'],
+                            ['label' => 'Designation', 'value' => 'designation'],
+                            ['label' => 'Location', 'value' => 'location'],
+                        ];
+                    @endphp
+                     <x-odoo-search-bar 
+                         action="{{ route('employees.index') }}" 
+                         :fields="[
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'phone', 'label' => 'Phone'],
+                         ]"
+                         :filterOptions="$filterOptions"
+                         :groupByOptions="$groupByOptions"
+                         targetSelector=".employee-grid-container"
+                     />
+                 </div>
+            </div>
+
+            <!-- Right: Action Menu -->
+            <div class="flex-shrink-0">
+                 <div class="view-icons d-flex align-items-center gap-1">
+                    <a href="{{ route('employees.index') }}" class="grid-view btn btn-sm btn-light active"><i class="fa fa-th"></i></a>
+                    <a href="{{ route('employees.list') }}" class="list-view btn btn-sm btn-light"><i class="fa-solid fa-bars"></i></a>
                 </div>
-            </x-slot>
-        </x-breadcrumb>
-        <!-- /Page Header -->
+            </div>
+        </div>
 
-
-        <div class="row staff-grid-row">
-            @if (!empty($employees))
-                @foreach ($employees as $employee)
-                <div class="col-md-4 col-sm-6 col-12 col-lg-4 col-xl-3">
-                    <div class="profile-widget">
-                        <div class="profile-img">
-                            <a href="{{ route('employees.show', ['employee' => \Crypt::encrypt($employee->id)]) }}" class="avatar"><img src="{{ !empty($employee->avatar) ? uploadedAsset($employee->avatar,'users'): asset('images/user.jpg') }}" alt="User Image"></a>
-                        </div>
-                        <div class="dropdown profile-action">
-                            <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="javascript:void(0)" data-url="{{ route('employees.edit', ['employee' => \Crypt::encrypt($employee->id)]) }}" data-ajax-modal="true"
-                                    data-title="Edit Employee" data-size="lg">
-                                    <i class="fa-solid fa-pencil m-r-5"></i>
-                                    {{ __('Edit') }}
-                                </a>
-                                <a class="dropdown-item deleteBtn" data-route="{{ route('employees.destroy', $employee->id) }}" data-title="Delete Employee"
-                                    data-question="Are you sure you want to delete?" href="javascript:void(0)">
-                                    <i class="fa-regular fa-trash-can m-r-5"></i>
-                                    {{ __('Delete') }}
-                                </a>
+        <div class="kanban-board card mb-0">
+            <div class="card-body">
+                <div class="employee-grid-container" style="flex: 1; overflow-y: auto; padding: 15px;">
+                    @if(isset($isGrouped) && $isGrouped)
+                        @foreach($employees as $groupKey => $groupItems)
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-dark border-bottom pb-2">
+                                        <i class="fa fa-layer-group me-2 text-secondary"></i> {{ $groupKey }}
+                                        <span class="badge bg-light text-dark border ms-2 rounded-pill">{{ count($groupItems) }}</span>
+                                    </h5>
+                                </div>
                             </div>
+                            <div class="row px-1">
+                                @foreach($groupItems as $employee)
+                                     @include('pages.employees.partials.card', ['employee' => $employee])
+                                @endforeach
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="row px-1">
+                            @if (!empty($employees) && $employees->count() > 0)
+                                @foreach ($employees as $employee)
+                                    @include('pages.employees.partials.card', ['employee' => $employee])
+                                @endforeach
+                            @else
+                                <div class="col-12 text-center py-5">
+                                    <p class="text-muted">{{ __('No employees found') }}</p>
+                                </div>
+                            @endif
                         </div>
-                        <h4 class="user-name m-t-10 mb-0 text-ellipsis"><a href="{{ route('employees.show', ['employee' => \Crypt::encrypt($employee->id)]) }}">{{ $employee->fullname }}</a></h4>
-                        @if (!empty($employee->employeeDetail) && !empty($employee->employeeDetail->designation))
-                        <div class="small text-muted">{{ $employee->employeeDetail->designation->name }}</div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
-                @endforeach
-            @endif
+            </div>
         </div>
     </div>
 @endsection
+
+@section('modals')
+    @include('pages.employees.modals.add_employee')
+    @include('pages.employees.modals.create-job-position')
+@endsection
+
+@push('page-script')
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 specifically for these modals (double check to ensure they render correctly)
+        $('#add_employee .select').select2({
+            width: '100%',
+            dropdownParent: $('#add_employee .modal-content') // Aattach to modal content
+        });
+
+         $('#add_job_position_modal .select').select2({
+            width: '100%',
+            dropdownParent: $('#add_job_position_modal .modal-content')
+        });
+
+        // Job Position "Add New" Logic (moved from create.blade.php)
+        $('#job_position').on('change', function() {
+            if ($(this).val() === 'add_new') {
+                $(this).val('').trigger('change');
+                $('#add_job_position_modal').modal('show');
+            }
+        });
+
+        $('#add_job_position_form').on('submit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            var btn = form.find('.submit-btn');
+            btn.prop('disabled', true);
+            
+            $.ajax({
+                url: "{{ route('job-positions.store') }}",
+                method: "POST",
+                data: form.serialize(),
+                success: function(response) {
+                    btn.prop('disabled', false);
+                    if(response.success) {
+                        $('#add_job_position_modal').modal('hide');
+                        // Add new option
+                        var newOption = new Option(response.job_position.name, response.job_position.id, true, true);
+                        // Append before the last option (Add New)
+                        var addNewOption = $('#job_position option[value="add_new"]');
+                        if(addNewOption.length > 0) {
+                            addNewOption.before(newOption);
+                        } else {
+                            $('#job_position').append(newOption);
+                        }
+                        $('#job_position').val(response.job_position.id).trigger('change');
+                        
+                        // Reset form
+                        form[0].reset();
+                        form.find('select').val('').trigger('change');
+                        
+                         // Re-open first modal if it was closed or hidden (optional, but bootstrap usually handles stacking)
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+@endpush
 
 

@@ -59,7 +59,7 @@
                                 <span class="input-group-text">
                                     <i class="fa fa-calendar"></i>
                                 </span>
-                                <input type="text" name="transaction_date" id="transaction_date" class="form-control" value="{{ $transaction_date }}" required readonly>
+                                <input type="text" name="transaction_date" id="transaction_date" class="form-control" value="{{ $transaction_date }}" required >
                             </div>
                         </div>
                     </div>

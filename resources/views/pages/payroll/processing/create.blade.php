@@ -94,8 +94,15 @@
 
 @push('page-scripts')
 <script>
-$(document).ready(function() {
-    $('input[name="selection_method"]').change(function() {
+
+function initPayrollProcessing() {
+    // Ensure jQuery is available before running
+    if (typeof $ === 'undefined') {
+        setTimeout(initPayrollProcessing, 50);
+        return;
+    }
+    
+    $('input[name="selection_method"]').off('change').on('change', function() {
         if ($(this).val() === 'individual') {
             $('#individual_selection').show();
             $('#department_selection').hide();
@@ -104,6 +111,10 @@ $(document).ready(function() {
             $('#department_selection').show();
         }
     });
-});
+}
+
+// Run on initial load and Livewire navigation
+document.addEventListener('livewire:navigated', initPayrollProcessing);
+window.addEventListener('load', initPayrollProcessing);
 </script>
 @endpush

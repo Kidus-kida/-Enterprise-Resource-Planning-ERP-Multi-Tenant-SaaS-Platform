@@ -163,6 +163,10 @@
                                         <td>{{ ($packageDetails['user_count'] ?? 0) == 0 ? 'Unlimited' : $packageDetails['user_count'] }}</td>
                                     </tr>
                                     <tr>
+                                        <th>Companies:</th>
+                                        <td>{{ ($subscription->company_count ?? $packageDetails['company_count'] ?? 0) == 0 ? 'Unlimited' : ($subscription->company_count ?? $packageDetails['company_count']) }}</td>
+                                    </tr>
+                                    <tr>
                                         <th>Products:</th>
                                         <td>{{ ($packageDetails['product_count'] ?? 0) == 0 ? 'Unlimited' : $packageDetails['product_count'] }}</td>
                                     </tr>

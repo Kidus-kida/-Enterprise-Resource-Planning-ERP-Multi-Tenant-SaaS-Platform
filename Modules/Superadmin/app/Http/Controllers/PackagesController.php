@@ -35,11 +35,16 @@ class PackagesController extends Controller
             'name' => 'required|string|max:255|unique:packages,name',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
+            'price_per_user' => 'nullable|numeric|min:0',
             'interval' => 'required|in:days,months,years',
             'interval_count' => 'required|integer|min:1',
             'trial_days' => 'nullable|integer|min:0',
+            'trial_days' => 'nullable|integer|min:0',
+            'company_count' => 'required|integer|min:0',
             'location_count' => 'required|integer|min:0',
             'user_count' => 'required|integer|min:0',
+            'min_users' => 'nullable|integer|min:1',
+            'is_per_user_pricing' => 'nullable|boolean',
             'product_count' => 'required|integer|min:0',
             'invoice_count' => 'required|integer|min:0',
             'custom_permissions' => 'nullable|array',
@@ -50,6 +55,7 @@ class PackagesController extends Controller
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
         $validated['is_private'] = $request->has('is_private') ? 1 : 0;
+        $validated['is_per_user_pricing'] = $request->has('is_per_user_pricing') ? 1 : 0;
 
         $this->packageService->createPackage($validated);
 
@@ -76,11 +82,16 @@ class PackagesController extends Controller
             'name' => 'required|string|max:255|unique:packages,name,' . $package->id,
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
+            'price_per_user' => 'nullable|numeric|min:0',
             'interval' => 'required|in:days,months,years',
             'interval_count' => 'required|integer|min:1',
             'trial_days' => 'nullable|integer|min:0',
+            'trial_days' => 'nullable|integer|min:0',
+            'company_count' => 'required|integer|min:0',
             'location_count' => 'required|integer|min:0',
             'user_count' => 'required|integer|min:0',
+            'min_users' => 'nullable|integer|min:1',
+            'is_per_user_pricing' => 'nullable|boolean',
             'product_count' => 'required|integer|min:0',
             'invoice_count' => 'required|integer|min:0',
             'custom_permissions' => 'nullable|array',
@@ -91,8 +102,37 @@ class PackagesController extends Controller
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
         $validated['is_private'] = $request->has('is_private') ? 1 : 0;
+        $validated['is_per_user_pricing'] = $request->has('is_per_user_pricing') ? 1 : 0;
 
         $this->packageService->updatePackage($package, $validated);
+
+        // Mass Sync Feature: Update all active subscriptions if requested
+        if ($request->has('update_subscriptions')) {
+            \Illuminate\Support\Facades\Log::info('Mass Sync Triggered for Package: ' . $package->name);
+            
+            $count = 0;
+            // Get all active subscriptions for this package
+            $subscriptions = \Modules\Superadmin\Models\Subscription::where('package_id', $package->id)
+                ->where('status', 'approved')
+                ->get();
+
+            \Illuminate\Support\Facades\Log::info('Found active subscriptions: ' . $subscriptions->count());
+
+            foreach ($subscriptions as $sub) {
+                $sub->update([
+                    'package_details' => $package->refresh()->toArray(), // Refresh to ensure latest data
+                    'module_activation_details' => $validated['custom_permissions'] ?? [],
+                ]);
+                $count++;
+            }
+            
+            \Illuminate\Support\Facades\Log::info("Synced {$count} subscriptions. IDs: " . $subscriptions->pluck('id')->implode(', '));
+            
+            return redirect()->route('superadmin.packages.index')
+                ->with('success', "Package updated and synced to {$count} subscriptions!");
+        } else {
+             \Illuminate\Support\Facades\Log::info('Mass Sync NOT triggered (Checkbox missing or unchecked). Input: ' . json_encode($request->all()));
+        }
 
         return redirect()->route('superadmin.packages.index')
             ->with('success', 'Package updated successfully!');

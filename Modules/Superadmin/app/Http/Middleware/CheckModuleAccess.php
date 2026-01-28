@@ -23,11 +23,29 @@ class CheckModuleAccess
             return redirect()->route('login');
         }
 
+        // Super Admin bypass
+        if ($user->type === \App\Enums\UserType::SUPERADMIN) {
+            return $next($request);
+        }
+
         $business = $user->business ?? null;
 
-        // EMERGENCY FIX: Force Business link if it's missing or wrong
-        if ((!$business || $business->id != 4) && $user->id == 1) {
-             $business = \App\Business::on('mysql')->find(4);
+        // Dynamic Tenant Resolution: identify which business owns the current DB
+        $currentDb = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+        $tenantBusinessId = null;
+        
+        $tenantRecord = \Illuminate\Support\Facades\DB::connection('mysql')
+            ->table('tenants')
+            ->where('database_name', $currentDb)
+            ->first();
+            
+        if ($tenantRecord) {
+             $tenantBusinessId = $tenantRecord->business_id;
+        }
+
+        // Prefer tenant's business ID if mismatch
+        if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
+             $business = \App\Business::on('mysql')->find($tenantBusinessId);
         }
 
         if (!$business) {
@@ -37,7 +55,31 @@ class CheckModuleAccess
         // Check if business has access to this module
         $hasAccess = $this->subscriptionService->checkModuleAccess($business, $moduleName);
 
+        // DEBUG: Log the check
+        \Log::info('Module Access Check', [
+            'module' => $moduleName,
+            'business_id' => $business->id,
+            'has_access' => $hasAccess,
+            'user_id' => $user->id
+        ]);
+
         if (!$hasAccess) {
+            // DEBUG: Get subscription details before aborting
+            $subscription = $business->subscriptions()
+                ->where('status', 'approved')
+                ->where('end_date', '>=', \Carbon\Carbon::now())
+                ->latest()
+                ->first();
+            
+            \Log::error('Module Access Denied', [
+                'module_requested' => $moduleName,
+                'business_id' => $business->id,
+                'subscription_id' => $subscription->id ?? null,
+                'subscription_status' => $subscription->status ?? null,
+                'module_activation_details' => $subscription->module_activation_details ?? null,
+                'all_modules' => $subscription ? array_keys($subscription->module_activation_details ?? []) : []
+            ]);
+            
             abort(403, 'Your subscription plan does not include access to the ' . $moduleName . ' module.');
         }
 
