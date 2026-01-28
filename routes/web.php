@@ -727,4 +727,57 @@ Route::get('/emergency-db-fix', function() {
     
     return response()->json($results);
 });
+
+// One-time fix for subscriptions missing module_activation_details
+Route::get('/fix-subscription-modules', function () {
+    if (!auth()->check() || auth()->user()->type !== \App\Enums\UserType::SUPERADMIN) {
+        abort(403, 'Only system owners can run this fix.');
+    }
+
+    $fixed = [];
+    $skipped = [];
+
+    // Get all active modules from master DB
+    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
+    $moduleActivation = [];
+    foreach ($activeModules as $module) {
+        $moduleActivation[$module->key] = true;
+    }
+
+    // Get all subscriptions with empty module_activation_details
+    $subscriptions = \Modules\Superadmin\Models\Subscription::on('mysql')
+        ->whereRaw('(module_activation_details IS NULL OR module_activation_details = "[]" OR module_activation_details = "{}")')
+        ->get();
+
+    foreach ($subscriptions as $subscription) {
+        try {
+            $subscription->module_activation_details = $moduleActivation;
+            $subscription->save();
+            $fixed[] = [
+                'id' => $subscription->id,
+                'business_id' => $subscription->business_id,
+                'package_id' => $subscription->package_id,
+                'modules_granted' => count($moduleActivation)
+            ];
+        } catch (\Exception $e) {
+            $skipped[] = [
+                'id' => $subscription->id,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Subscription module access updated successfully',
+        'modules_granted' => array_keys($moduleActivation),
+        'subscriptions_fixed' => count($fixed),
+        'subscriptions_skipped' => count($skipped),
+        'details' => [
+            'fixed' => $fixed,
+            'skipped' => $skipped
+        ]
+    ]);
+})->name('fix.subscription.modules');
+
 // End of file
