@@ -249,7 +249,7 @@ class AppMenuListener
         if($isModuleEnabled('purchases') && auth()->user()->canAny(['view-taxes','view-expenses','view-estimates','view-invoices'])){
             $activeClass = route_is(["taxes.*","expenses.*","estimates.*","invoices.*"]) ? "active" : "";
             $menu->submenu(
-                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("purchase.purchase") . '</span><span class="menu-arrow"></span></a>'),
+                Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shopping-bag"></i><span>' . __("Purchase") . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addIfCan('view-taxes', Link::toRoute('purchase.index', __('List Purchases'))->addClass(route_is(['purchase.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                     ->addIfCan('view-expenses', Link::toRoute('purchase.create', __('Add Purchase'))->addClass(route_is(['purchase.create']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
@@ -287,7 +287,7 @@ class AppMenuListener
         // Deposits
         if ($isModuleEnabled('deposits') && auth()->user()->can('deposits_module')) {
             $menu->add(
-                Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('deposits.deposits') . '</span>')
+                Link::toRoute('deposits.index', '<i class="la la-money"></i> <span>' . __('Deposits') . '</span>')
                     ->addClass(route_is(['deposits.*']) ? 'active' : '')
                     ->setAttributes(['wire:navigate' => 'true'])
             );
