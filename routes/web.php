@@ -888,8 +888,10 @@ Route::get('/create-subscription/{businessId}', function ($businessId) {
 // Run tenant migrations via web route
 Route::get('/run-tenant-migrations/{tenantId}', function ($tenantId) {
     try {
-        // Find tenant
-        $tenant = \Modules\Superadmin\Models\Tenant::where('tenant_id', $tenantId)->first();
+        // Find tenant - try by id first, then by subdomain
+        $tenant = \Modules\Superadmin\Models\Tenant::where('id', $tenantId)
+            ->orWhere('subdomain', $tenantId)
+            ->first();
         
         if (!$tenant) {
             return response()->json(['error' => 'Tenant not found'], 404);
