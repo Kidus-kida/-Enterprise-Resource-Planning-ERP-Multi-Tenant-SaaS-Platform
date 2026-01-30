@@ -319,12 +319,12 @@
                             {{-- Quick Permission Cache Clear Button --}}
                             <form action="{{ route('superadmin.tenant-management.clear-permission-cache', $tenant->id) }}" method="POST" class="d-inline-block">
                                 @csrf
-                                <button type="submit" class="btn btn-info btn-lg mt-3 ml-2" title="Use this if Companies menu or permissions are not showing after migration/seed">
-                                    <i class="fa fa-refresh"></i> Clear Permission Cache
+                                <button type="submit" class="btn btn-info btn-lg mt-3 ml-2" title="Clears all caches to fix permission issues">
+                                    <i class="fa fa-refresh"></i> Clear All Caches
                                 </button>
                             </form>
                             <small class="d-block text-muted mt-2">
-                                <i class="fa fa-info-circle"></i> Use "Clear Permission Cache" if the Companies menu disappears after running migrations. It's much faster than re-running migrations.
+                                <i class="fa fa-info-circle"></i> Click this after migrations to fix missing menus. The tenant user should refresh their browser or log out/in after this.
                             </small>
                         @endif
 

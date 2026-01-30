@@ -48,6 +48,25 @@ Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
 
+// Clear permission cache - access from TENANT subdomain to fix missing menus
+Route::get('/clear-permission-cache', function () {
+    try {
+        // Clear Spatie permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission cache cleared! Please refresh the page.',
+            'database' => \DB::connection()->getDatabaseName()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 // Database diagnostic routes (accessible without authentication)
 Route::get('/tenant-login/{id}', [AuthController::class, 'tenantLogin']);
 

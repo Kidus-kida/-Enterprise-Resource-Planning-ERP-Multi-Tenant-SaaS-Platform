@@ -356,10 +356,24 @@ class TenantManagementController extends Controller
             \DB::purge('tenant');
             \DB::reconnect('tenant');
 
-            // Clear Spatie permission cache
+            // Clear ALL caches to ensure permission cache is reset
+            // 1. Clear Spatie permission cache
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            
+            // 2. Clear application cache (where permissions are stored)
+            \Cache::flush();
+            
+            // 3. Run the Artisan command for good measure
+            \Artisan::call('cache:clear');
+            
+            // 4. Also clear config cache if it exists
+            try {
+                \Artisan::call('config:clear');
+            } catch (\Exception $e) {
+                // Ignore if config is not cached
+            }
 
-            return redirect()->back()->with('success', 'Permission cache cleared successfully! The Companies menu should now be visible.');
+            return redirect()->back()->with('success', 'All caches cleared successfully! The tenant user should log out and log back in, or refresh their browser.');
                 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to clear cache: ' . $e->getMessage());
