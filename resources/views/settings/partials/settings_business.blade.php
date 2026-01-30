@@ -226,3 +226,32 @@
         </div>
     </div>
 </div>
+
+{{-- Subtle Cache Clear Link for Tenant Admins --}}
+@if(auth()->user() && auth()->user()->type !== \App\Enums\UserType::SUPERADMIN)
+<div class="row mt-2">
+    <div class="col-12 text-end">
+        <a href="javascript:void(0)" onclick="clearPermissionCache()" class="text-muted small" style="font-size: 10px; text-decoration: none; opacity: 0.7;">
+            <i class="fa fa-refresh"></i> Clear Cache
+        </a>
+    </div>
+</div>
+<script>
+function clearPermissionCache() {
+    if (!confirm('Clear system cache?')) return;
+    
+    fetch('/clear-permission-cache')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+        });
+}
+</script>
+@endif

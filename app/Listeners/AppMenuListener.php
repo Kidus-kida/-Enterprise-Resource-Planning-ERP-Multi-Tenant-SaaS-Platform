@@ -463,7 +463,6 @@ class AppMenuListener
                 Menu::new()
                     ->addParentClass('submenu')
                     ->addIfCan('view-settings', Link::toRoute('settings.index', __('Settings'))->addClass(route_is('settings.index') ? 'active' : ''))
-                    ->addIfCan('business_settings.access', Link::toRoute('multi-companies.index', __('Companies'))->addClass(route_is('multi-companies.*') ? 'active' : ''))
                     ->addIfCan('view-backups', Link::toRoute('backups.index', __('Backups'))->addClass(route_is('backups.*') ? 'active' : ''))
             );
         }
