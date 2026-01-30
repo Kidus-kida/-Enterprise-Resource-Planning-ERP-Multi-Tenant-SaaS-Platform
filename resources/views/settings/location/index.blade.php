@@ -1,24 +1,21 @@
-@extends('layouts.app')
+@extends('pages.settings.index')
 
-@section('page-content')
-    <div class="content container-fluid">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h3 class="page-title">Business Locations</h3>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Settings</li>
-                    </ul>
-                </div>
-                <div class="col-auto float-end ms-auto">
-                    <a href="{{ action([\App\Http\Controllers\BusinessLocationController::class, 'create']) }}"
-                        class="btn add-btn"><i class="fa fa-plus"></i> Add Location</a>
-                </div>
+@section('title', __('business.business_locations'))
+
+@section('page-header-section')
+    <x-breadcrumb> 
+        <x-slot name="title">@lang('business.business_locations') </x-slot> 
+        <x-slot name="right">
+            <div class="col-auto float-end ms-auto">
+                <a href="{{ action([\App\Http\Controllers\BusinessLocationController::class, 'create']) }}"
+                    class="btn add-btn"><i class="fa fa-plus"></i> Add Location</a>
             </div>
-        </div>
-        <!-- /Page Header -->
+        </x-slot>
+    </x-breadcrumb>
+@endsection
+
+@section('page-section')
+
 
         <div class="row">
             <div class="col-md-12">
@@ -50,7 +47,6 @@
                 </div>
             </div>
         </div>
-    </div>
 @endsection
 
 @push('page-script')
