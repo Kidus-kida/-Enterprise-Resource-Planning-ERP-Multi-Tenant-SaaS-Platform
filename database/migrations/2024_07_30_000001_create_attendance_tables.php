@@ -13,28 +13,29 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->date('date');
-            $table->string('status');
-            $table->text('remarks')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->date('startDate')->nullable()->default('2025-05-20');
+            $table->date('endDate')->nullable()->default('2025-05-20');
             $table->timestamps();
-
-            $table->index(['user_id', 'date']);
         });
 
         Schema::create('attendance_timestamps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_id')->constrained('attendances')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->timestamp('clock_in')->nullable();
-            $table->timestamp('clock_out')->nullable();
-            $table->string('clock_in_location')->nullable();
-            $table->string('clock_out_location')->nullable();
-            $table->integer('total_hours')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('attendance_id')->nullable()->constrained('attendances')->onDelete('cascade');
+            $table->integer('project_id')->nullable();
+            $table->time('startTime')->nullable();
+            $table->time('endTime')->nullable();
+            $table->string('location')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->string('co_location')->nullable();
+            $table->decimal('co_latitude', 10, 8)->nullable();
+            $table->decimal('co_longitudedecimal', 11, 8)->nullable();
+            $table->tinyInteger('billable')->nullable()->default(0);
+            $table->string('ip')->nullable();
+            $table->longText('note')->nullable();
             $table->timestamps();
-
-            $table->index('attendance_id');
-            $table->index('user_id');
         });
     }
 
