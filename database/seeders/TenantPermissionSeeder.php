@@ -77,6 +77,10 @@ class TenantPermissionSeeder extends Seeder
         // BETTER: Give ALL. The middleware restricts the *modules*. If they upgrade, they instantly have access.
         $role->syncPermissions($allPermissions);
         
+        // CRITICAL: Clear permission cache so changes take effect immediately
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        
         $this->command->info("Seeded " . count($allPermissions) . " permissions and created 'Tenant Admin' role.");
+        $this->command->info("Permission cache cleared.");
     }
 }
