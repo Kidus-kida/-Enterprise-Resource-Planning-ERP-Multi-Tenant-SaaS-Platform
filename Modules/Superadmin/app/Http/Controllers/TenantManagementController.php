@@ -326,4 +326,43 @@ class TenantManagementController extends Controller
             return redirect()->back()->with('error', 'Failed to delete tenant: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Clear permission cache for a tenant (quick fix without running migrations)
+     */
+    public function clearPermissionCache($tenantId)
+    {
+        try {
+            $tenant = \Modules\Superadmin\Models\Tenant::with('business')->findOrFail($tenantId);
+            
+            // Get database credentials
+            $credentials = $tenant->data;
+            if (!is_array($credentials)) {
+                $credentials = json_decode($tenant->data, true);
+            }
+
+            // Configure tenant connection
+            config(['database.connections.tenant' => [
+                'driver' => 'mysql',
+                'host' => $credentials['db_host'],
+                'port' => $credentials['db_port'] ?? 3306,
+                'database' => $credentials['db_name'],
+                'username' => $credentials['db_username'],
+                'password' => decrypt($credentials['db_password']),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+            ]]);
+            
+            \DB::purge('tenant');
+            \DB::reconnect('tenant');
+
+            // Clear Spatie permission cache
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return redirect()->back()->with('success', 'Permission cache cleared successfully! The Companies menu should now be visible.');
+                
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to clear cache: ' . $e->getMessage());
+        }
+    }
 }
