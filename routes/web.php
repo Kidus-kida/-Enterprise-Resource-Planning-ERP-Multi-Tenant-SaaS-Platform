@@ -550,9 +550,18 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::post('payroll', [SettingsController::class, 'updatePayrollSettings'])->name('settings.payroll.update');
         Route::post('payroll/tax-brackets', [SettingsController::class, 'updateTaxBrackets'])->name('settings.payroll.tax-brackets.update');
 
+        // Attendance Settings
+        Route::get('attendance', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'index'])->name('admin.attendance-settings.index');
+        Route::put('attendance', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'update'])->name('admin.attendance-settings.update');
+        Route::post('attendance/reset', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'reset'])->name('admin.attendance-settings.reset');
+        Route::post('attendance/clear-cache', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'clearCache'])->name('admin.attendance-settings.clear-cache');
+
         // Business Locations
         Route::get('location/{location}/activate-deactivate', [\App\Http\Controllers\BusinessLocationController::class, 'activateDeactivateLocation'])->name('settings.location.activate-deactivate');
         Route::resource('location', \App\Http\Controllers\BusinessLocationController::class)->names('settings.location');
+        
+        // Stores
+        Route::resource('stores', \App\Http\Controllers\StoreController::class)->names('settings.stores');
         
         // Invoice Settings
         Route::get('invoice-schemes/{id}/set-default', [\App\Http\Controllers\InvoiceSchemeController::class, 'setDefault'])->name('settings.invoice-schemes.set-default');
@@ -566,6 +575,32 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::resource('tax', TaxCalculationController::class)
             ->names('payroll.tax');
 
+    });
+
+    // Shift Management
+    Route::prefix('shifts')->middleware('auth')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ShiftsController::class, 'index'])->name('shifts.index');
+        Route::get('/create', [\App\Http\Controllers\ShiftsController::class, 'create'])->name('shifts.create');
+        Route::post('/', [\App\Http\Controllers\ShiftsController::class, 'store'])->name('shifts.store');
+        Route::get('/{shift}/edit', [\App\Http\Controllers\ShiftsController::class, 'edit'])->name('shifts.edit');
+        Route::put('/{shift}', [\App\Http\Controllers\ShiftsController::class, 'update'])->name('shifts.update');
+        Route::delete('/{shift}', [\App\Http\Controllers\ShiftsController::class, 'destroy'])->name('shifts.destroy');
+        
+        // Assignment
+        Route::get('/assign', [\App\Http\Controllers\ShiftsController::class, 'assign'])->name('shifts.assign');
+        Route::post('/assign', [\App\Http\Controllers\ShiftsController::class, 'storeAssignment'])->name('shifts.assign.store');
+        Route::post('/remove-assignment', [\App\Http\Controllers\ShiftsController::class, 'removeAssignment'])->name('shifts.assign.remove');
+
+        // Night Shift Configuration
+        Route::get('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'nightShift'])->name('admin.attendance-settings.night-shift');
+        Route::post('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateNightShift'])->name('admin.attendance-settings.night-shift.update');
+    });
+
+    // Audit Logs
+    Route::prefix('admin/audit-logs')->middleware('auth')->name('admin.audit-logs.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AuditLogsController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\AuditLogsController::class, 'export'])->name('export');
+        Route::get('/{log}', [\App\Http\Controllers\Admin\AuditLogsController::class, 'show'])->name('show');
     });
 
 

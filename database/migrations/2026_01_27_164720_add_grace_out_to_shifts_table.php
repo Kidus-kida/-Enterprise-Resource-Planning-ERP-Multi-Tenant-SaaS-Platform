@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('companies', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('shifts', function (Blueprint $table) {
+            $table->integer('grace_out_minutes')->nullable()->after('grace_period_minutes');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('companies');
+        Schema::table('shifts', function (Blueprint $table) {
+            $table->dropColumn('grace_out_minutes');
+        });
     }
 };
