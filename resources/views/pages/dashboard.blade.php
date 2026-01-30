@@ -20,40 +20,6 @@
         </x-breadcrumb>
         <!-- /Page Header -->
 
-        {{-- Cache Clear Button for Tenant Admins (helps fix permission issues after migrations) --}}
-        @if(auth()->user() && auth()->user()->type !== \App\Enums\UserType::SUPERADMIN && auth()->user()->hasRole('Tenant Admin'))
-            <div class="alert alert-info alert-dismissible fade show d-flex justify-content-between align-items-center" role="alert" id="cache-clear-alert">
-                <div>
-                    <i class="fa fa-info-circle"></i> 
-                    <strong>Missing menus?</strong> If you don't see expected menu items, click the button to refresh permissions.
-                </div>
-                <button type="button" class="btn btn-sm btn-primary ml-3" onclick="clearPermissionCache()">
-                    <i class="fa fa-refresh"></i> Fix Permissions
-                </button>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <script>
-            function clearPermissionCache() {
-                fetch('/clear-permission-cache')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Cache cleared! The page will now reload.');
-                            window.location.reload();
-                        } else {
-                            alert('Error: ' + (data.error || 'Unknown error'));
-                        }
-                    })
-                    .catch(err => {
-                        alert('Error clearing cache: ' + err.message);
-                    });
-            }
-            </script>
-        @endif
-
-
         @superadmin
 
         <div class="row">
