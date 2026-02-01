@@ -24,9 +24,12 @@ trait HasCompany
                 // Auto-assign company_id when creating
                 static::creating(function ($model) {
                     if (!array_key_exists('company_id', $model->getAttributes())) {
-                        $company_id = request()->session()->get('user.company_id');
-                        if (!empty($company_id)) {
-                            $model->company_id = $company_id;
+                        // Only auto-assign if we have a session (not during seeding/console)
+                        if (request()->hasSession()) {
+                            $company_id = request()->session()->get('user.company_id');
+                            if (!empty($company_id)) {
+                                $model->company_id = $company_id;
+                            }
                         }
                     }
                 });

@@ -22,6 +22,11 @@ class CompanyScope implements Scope
             return;
         }
 
+        // Skip scope if there's no session (e.g., during seeding, console commands)
+        if (!request()->hasSession()) {
+            return;
+        }
+
         // Prevent infinite recursion: Check session directly
         if (request()->session()->has('user.company_id') || request()->session()->has('user.active_company_ids')) {
             
