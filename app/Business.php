@@ -63,6 +63,8 @@ class Business extends Model
         'sms_settings' => 'array',
         'common_settings' => 'array',
         'contact_fields' => 'array',
+        'owner_invite_sent_at' => 'datetime',
+        'owner_activated_at' => 'datetime',
     ];
 
     /**

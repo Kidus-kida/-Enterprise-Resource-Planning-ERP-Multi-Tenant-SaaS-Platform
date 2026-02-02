@@ -37,33 +37,6 @@
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
-
-                                    <div class="form-group">
-                                        <label>Email</label>
-                                        <input type="email" name="email" id="business_email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" readonly>
-                                        @error('email')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                        <small class="form-text text-muted">Auto-populated from Business Owner</small>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Phone</label>
-                                        <input type="text" name="phone" id="business_phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" readonly>
-                                        @error('phone')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                        <small class="form-text text-muted">Auto-populated from Business Owner</small>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Address</label>
-                                        <textarea name="address" id="business_address" class="form-control @error('address') is-invalid @enderror" rows="3" readonly>{{ old('address') }}</textarea>
-                                        @error('address')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                        <small class="form-text text-muted">Auto-populated from Business Owner</small>
-                                    </div>
                                 </div>
 
                                 <!-- Right Column -->
@@ -71,23 +44,36 @@
                                     <h4 class="card-title">Owner & Package</h4>
                                     
                                     <div class="form-group">
-                                        <label>Business Owner <span class="text-danger">*</span></label>
-                                        <select name="owner_id" id="owner_select" class="form-control @error('owner_id') is-invalid @enderror" required>
-                                            <option value="">Select Owner</option>
-                                            @foreach(\App\Models\User::orderBy('firstname')->get() as $user)
-                                                <option value="{{ $user->id }}" 
-                                                    data-email="{{ $user->email }}"
-                                                    data-phone="{{ $user->phone }}"
-                                                    data-address="{{ $user->address }}"
-                                                    {{ old('owner_id') == $user->id ? 'selected' : '' }}>
-                                                    {{ $user->name }} ({{ $user->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('owner_id')
+                                        <label>Owner First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="owner_firstname" class="form-control @error('owner_firstname') is-invalid @enderror" value="{{ old('owner_firstname') }}" required>
+                                        @error('owner_firstname')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                        <small class="form-text text-muted">Select the user who will own this business</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Owner Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="owner_lastname" class="form-control @error('owner_lastname') is-invalid @enderror" value="{{ old('owner_lastname') }}" required>
+                                        @error('owner_lastname')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Owner Email <span class="text-danger">*</span></label>
+                                        <input type="email" name="owner_email" class="form-control @error('owner_email') is-invalid @enderror" value="{{ old('owner_email') }}" required>
+                                        @error('owner_email')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                        <small class="form-text text-muted">Owner will receive setup instructions at this email after tenant creation</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Owner Phone</label>
+                                        <input type="text" name="owner_phone" class="form-control @error('owner_phone') is-invalid @enderror" value="{{ old('owner_phone') }}">
+                                        @error('owner_phone')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
                                     </div>
 
                                     <div class="form-group">
@@ -200,24 +186,6 @@
 
 
 <script>
-// Auto-populate business contact fields from selected owner
-document.getElementById('owner_select').addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    const emailField = document.getElementById('business_email');
-    const phoneField = document.getElementById('business_phone');
-    const addressField = document.getElementById('business_address');
-    
-    if (this.value) {
-        emailField.value = selected.dataset.email || '';
-        phoneField.value = selected.dataset.phone || '';
-        addressField.value = selected.dataset.address || '';
-    } else {
-        emailField.value = '';
-        phoneField.value = '';
-        addressField.value = '';
-    }
-});
-
 // Package details display and dynamic pricing
 document.getElementById('package_select').addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
@@ -284,14 +252,6 @@ function calculateDynamicPrice() {
     displayEl.style.display = 'block';
     priceEl.textContent = finalPrice.toLocaleString();
 }
-
-// Trigger owner change on page load if there's an old value
-window.addEventListener('DOMContentLoaded', function() {
-    const ownerSelect = document.getElementById('owner_select');
-    if (ownerSelect.value) {
-        ownerSelect.dispatchEvent(new Event('change'));
-    }
-});
 </script>
 
 @endsection
