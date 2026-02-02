@@ -38,6 +38,50 @@ use App\Http\Controllers\StockTransferRequestController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+Route::middleware(['auth'])->group(function () {
+
+
+    // remove this code after production 
+    
+    // Migration and Seeder routes
+    Route::get('/run-migrations', function() {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $output = Artisan::output();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Migrations completed successfully',
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    })->name('run.migrations');
+
+    Route::get('/run-seeders', function() {
+        try {
+            Artisan::call('db:seed', ['--force' => true]);
+            $output = Artisan::output();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Seeders completed successfully',
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    })->name('run.seeders');
+
+});
+
 
 // Public landing routes
 Route::view('/', 'landing.home')->name('landing.home');
