@@ -84,8 +84,30 @@
         $wfh = $getValue('policies', 'wfh_enabled', false);
         $compOff = $getValue('policies', 'comp_off_enabled', true);
 
+        // --- Late Arrival Config (Direct Access) ---
+        $lateArrivalGrace = \App\Models\AttendanceSetting::get('late_arrival_grace_period', 15);
+        $lateArrivalPenalty = \App\Models\AttendanceSetting::get('late_arrival_penalty_type', 'none');
+        $lateArrivalDeductionAmount = \App\Models\AttendanceSetting::get('late_arrival_deduction_amount', 0);
+        $lateArrivalDeductionType = \App\Models\AttendanceSetting::get('late_arrival_deduction_type', 'fixed');
+
+        // --- Early Checkout Config (Direct Access) ---
+        $earlyCheckoutGrace = \App\Models\AttendanceSetting::get('early_checkout_grace_period', 15);
+        $earlyCheckoutPenalty = \App\Models\AttendanceSetting::get('early_checkout_penalty_type', 'none');
+        $earlyCheckoutDeductionAmount = \App\Models\AttendanceSetting::get('early_checkout_deduction_amount', 0);
+        $earlyCheckoutDeductionType = \App\Models\AttendanceSetting::get('early_checkout_deduction_type', 'fixed');
+
+        // --- Overtime Config (Direct Access) ---
+        $overtimeMinMinutes = \App\Models\AttendanceSetting::get('overtime_min_minutes', 60);
+        $overtimeRateNormal = \App\Models\AttendanceSetting::get('overtime_rate_normal', 1.25);
+        $overtimeRateNight = \App\Models\AttendanceSetting::get('overtime_rate_night', 1.5);
+        $overtimeRateDayOff = \App\Models\AttendanceSetting::get('overtime_rate_dayoff', 2.0);
+        $overtimeRateHoliday = \App\Models\AttendanceSetting::get('overtime_rate_holiday', 2.5);
+
         // --- Approvals ---
         $missedPunchApproval = $getValue('approvals', 'missed_punch_approval_enabled', true);
+
+
+
         $correctionApproval = $getValue('approvals', 'correction_approval_enabled', true);
         $overtimeApproval = $getValue('approvals', 'overtime_approval_enabled', true);
         $autoApproval = $getValue('approvals', 'auto_approval_enabled', false);
@@ -294,21 +316,21 @@
                     <x-settings.header icon="la la-file-text" title="{{ __('Attendance Policies') }}" description="{{ __('Rules for attendance calculation') }}" />
 
                     <x-settings.row label="{{ __('Late Arrival Rules') }}" description="{{ __('Penalties for coming late') }}"
-                                    id="late_arrival" configureLink="/policies/attendance#late" :showConfigure="$lateArrival">
+                                    id="late_arrival" configureLink="#" :showConfigure="$lateArrival">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_enabled" value="true" {{ $lateArrival ? 'checked' : '' }} onchange="toggleConfigLink('late_arrival', this); autoSaveSettings()">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Early Checkout Rules') }}" description="{{ __('Penalties for leaving early') }}"
-                                    id="early_checkout" configureLink="/policies/attendance#early" :showConfigure="$earlyCheckout">
+                                    id="early_checkout" configureLink="#" :showConfigure="$earlyCheckout">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="early_checkout_enabled" value="true" {{ $earlyCheckout ? 'checked' : '' }} onchange="toggleConfigLink('early_checkout', this); autoSaveSettings()">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime') }}" description="{{ __('Track and compensate extra hours') }}"
-                                    id="overtime" configureLink="/policies/overtime" :showConfigure="$overtime">
+                                    id="overtime" configureLink="#" :showConfigure="$overtime">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="overtime_enabled" value="true" {{ $overtime ? 'checked' : '' }} onchange="toggleConfigLink('overtime', this); autoSaveSettings()">
                         </div>
@@ -774,6 +796,439 @@
     // Init
     document.addEventListener('DOMContentLoaded', function() {
         toggleMethodSelectionMode();
+    });
+</script>
+@endpush
+
+    <!-- Late Arrival Configuration Modal -->
+    <div class="modal fade" id="lateArrivalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Late Arrival Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.late-arrival.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="la la-info-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('These settings apply globally. You can override them in Shift Templates if needed.') }}
+                            </div>
+                        </div>
+
+                        <!-- Grace Period -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Grace Period') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Allow employees to arrive late by this many minutes before marking as late.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="late_arrival_grace_period" class="form-control" value="{{ $lateArrivalGrace }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Penalty Configuration -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Penalty Action') }}</label>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_none" value="none" 
+                                           {{ $lateArrivalPenalty === 'none' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_none">
+                                        <div class="fw-bold">{{ __('No Penalty') }}</div>
+                                        <div class="text-muted small">{{ __('Just mark as "Late" in reports without further action.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_warning" value="warning" 
+                                           {{ $lateArrivalPenalty === 'warning' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_warning">
+                                        <div class="fw-bold">{{ __('Send Warning') }}</div>
+                                        <div class="text-muted small">{{ __('Mark as "Late" and trigger a warning notification to the employee.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_deduction" value="deduction" 
+                                           {{ $lateArrivalPenalty === 'deduction' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_deduction">
+                                        <div class="fw-bold">{{ __('Apply Deduction') }}</div>
+                                        <div class="text-muted small">{{ __('Deduct salary or leave balance based on rules.') }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deduction Settings (Conditional) -->
+                        <div id="deduction_config" class="bg-light p-3 rounded border {{ $lateArrivalPenalty === 'deduction' ? '' : 'd-none' }}">
+                            <h6 class="fw-bold mb-3">{{ __('Deduction Rules') }}</h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Deduction Type') }}</label>
+                                    <select name="late_arrival_deduction_type" class="form-select" onchange="toggleAmountField()">
+                                        <option value="fixed" {{ $lateArrivalDeductionType === 'fixed' ? 'selected' : '' }}>{{ __('Fixed Amount') }}</option>
+                                        <option value="per_minute" {{ $lateArrivalDeductionType === 'per_minute' ? 'selected' : '' }}>{{ __('Per Minute Amount') }}</option>
+                                        <option value="percentage" {{ $lateArrivalDeductionType === 'percentage' ? 'selected' : '' }}>{{ __('Percentage of Daily Salary') }}</option>
+                                        <option value="half_day" {{ $lateArrivalDeductionType === 'half_day' ? 'selected' : '' }}>{{ __('Mark as Half Day') }}</option>
+                                        <option value="full_day" {{ $lateArrivalDeductionType === 'full_day' ? 'selected' : '' }}>{{ __('Mark as Absent (Full Day)') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" id="deduction_amount_wrapper">
+                                    <label class="form-label" id="amount_label">{{ __('Amount') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="currency_symbol">$</span>
+                                        <input type="number" name="late_arrival_deduction_amount" class="form-control" value="{{ $lateArrivalDeductionAmount }}" step="0.01" min="0">
+                                        <span class="input-group-text d-none" id="percentage_symbol">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Early Checkout Configuration Modal -->
+    <div class="modal fade" id="earlyCheckoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Early Checkout Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.early-checkout.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="la la-info-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('These settings apply globally. You can override them in Shift Templates if needed.') }}
+                            </div>
+                        </div>
+
+                        <!-- Grace Period -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Grace Period') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Allow employees to leave early by this many minutes before marking as early checkout.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="early_checkout_grace_period" class="form-control" value="{{ $earlyCheckoutGrace }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Penalty Configuration -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Penalty Action') }}</label>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_none" value="none" 
+                                           {{ $earlyCheckoutPenalty === 'none' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_none">
+                                        <div class="fw-bold">{{ __('No Penalty') }}</div>
+                                        <div class="text-muted small">{{ __('Just mark as "Early Checkout" in reports without further action.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_warning" value="warning" 
+                                           {{ $earlyCheckoutPenalty === 'warning' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_warning">
+                                        <div class="fw-bold">{{ __('Send Warning') }}</div>
+                                        <div class="text-muted small">{{ __('Mark and trigger a warning notification to the employee.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_deduction" value="deduction" 
+                                           {{ $earlyCheckoutPenalty === 'deduction' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_deduction">
+                                        <div class="fw-bold">{{ __('Apply Deduction') }}</div>
+                                        <div class="text-muted small">{{ __('Deduct salary or leave balance based on rules.') }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deduction Settings (Conditional) -->
+                        <div id="early_deduction_config" class="bg-light p-3 rounded border {{ $earlyCheckoutPenalty === 'deduction' ? '' : 'd-none' }}">
+                            <h6 class="fw-bold mb-3">{{ __('Deduction Rules') }}</h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Deduction Type') }}</label>
+                                    <select name="early_checkout_deduction_type" class="form-select" onchange="toggleEarlyAmountField()">
+                                        <option value="fixed" {{ $earlyCheckoutDeductionType === 'fixed' ? 'selected' : '' }}>{{ __('Fixed Amount') }}</option>
+                                        <option value="per_minute" {{ $earlyCheckoutDeductionType === 'per_minute' ? 'selected' : '' }}>{{ __('Per Minute Amount') }}</option>
+                                        <option value="percentage" {{ $earlyCheckoutDeductionType === 'percentage' ? 'selected' : '' }}>{{ __('Percentage of Daily Salary') }}</option>
+                                        <option value="half_day" {{ $earlyCheckoutDeductionType === 'half_day' ? 'selected' : '' }}>{{ __('Mark as Half Day') }}</option>
+                                        <option value="full_day" {{ $earlyCheckoutDeductionType === 'full_day' ? 'selected' : '' }}>{{ __('Mark as Absent (Full Day)') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" id="early_deduction_amount_wrapper">
+                                    <label class="form-label" id="early_amount_label">{{ __('Amount') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="early_currency_symbol">$</span>
+                                        <input type="number" name="early_checkout_deduction_amount" class="form-control" value="{{ $earlyCheckoutDeductionAmount }}" step="0.01" min="0">
+                                        <span class="input-group-text d-none" id="early_percentage_symbol">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Overtime Configuration Modal -->
+    <div class="modal fade" id="overtimeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Overtime Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.overtime.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-success d-flex align-items-center mb-4">
+                            <i class="la la-check-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('Overtime is calculated based on daily work hours exceeding the shift duration.') }}
+                            </div>
+                        </div>
+
+                        <!-- Minimum Minutes -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Minimum Duration') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Minimum extra minutes required to count as Overtime.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="overtime_min_minutes" class="form-control" value="{{ $overtimeMinMinutes }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Rate Multipliers -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Overtime Rate Multipliers') }}</label>
+                            <p class="text-muted small mb-3">{{ __('Different scenarios have different pay rates. Set the multiplier for each type.') }}</p>
+                            
+                            <div class="row g-3">
+                                <!-- Normal OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Normal OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_normal" class="form-control" value="{{ $overtimeRateNormal }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Weekday overtime (e.g., 1.25)') }}</div>
+                                </div>
+
+                                <!-- Night OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Night OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_night" class="form-control" value="{{ $overtimeRateNight }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Night shift overtime (e.g., 1.5)') }}</div>
+                                </div>
+
+                                <!-- Day Off OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Day Off OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_dayoff" class="form-control" value="{{ $overtimeRateDayOff }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Weekend/day off overtime (e.g., 2.0)') }}</div>
+                                </div>
+
+                                <!-- Holiday OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Holiday OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_holiday" class="form-control" value="{{ $overtimeRateHoliday }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Public holiday overtime (e.g., 2.5)') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+@push('page-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Safe selector helper
+        const getCheckedValue = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        };
+
+        const safeToggleClass = (id, className, condition) => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (condition) {
+                    el.classList.remove(className);
+                } else {
+                    el.classList.add(className);
+                }
+            }
+        };
+
+        // --- LATE ARRIVAL LOGIC ---
+        window.toggleDeductionFields = function() {
+            const type = getCheckedValue('late_arrival_penalty_type');
+            safeToggleClass('deduction_config', 'd-none', type === 'deduction');
+        };
+
+        window.toggleAmountField = function() {
+            const typeEl = document.querySelector('select[name="late_arrival_deduction_type"]');
+            if (!typeEl) return;
+            
+            const type = typeEl.value;
+            const wrapper = document.getElementById('deduction_amount_wrapper');
+            const currency = document.getElementById('currency_symbol');
+            const percentage = document.getElementById('percentage_symbol');
+            
+            if (!wrapper || !currency || !percentage) return;
+            
+            if (type === 'half_day' || type === 'full_day') {
+                wrapper.classList.add('d-none');
+            } else {
+                wrapper.classList.remove('d-none');
+                if (type === 'percentage') {
+                    currency.classList.add('d-none');
+                    percentage.classList.remove('d-none');
+                } else {
+                    currency.classList.remove('d-none');
+                    percentage.classList.add('d-none');
+                }
+            }
+        };
+
+        // --- EARLY CHECKOUT LOGIC ---
+        window.toggleEarlyDeductionFields = function() {
+            const type = getCheckedValue('early_checkout_penalty_type');
+            safeToggleClass('early_deduction_config', 'd-none', type === 'deduction');
+        };
+
+        window.toggleEarlyAmountField = function() {
+            const typeEl = document.querySelector('select[name="early_checkout_deduction_type"]');
+            if (!typeEl) return;
+            
+            const type = typeEl.value;
+            const wrapper = document.getElementById('early_deduction_amount_wrapper');
+            const currency = document.getElementById('early_currency_symbol');
+            const percentage = document.getElementById('early_percentage_symbol');
+            
+            if (!wrapper || !currency || !percentage) return;
+            
+            if (type === 'half_day' || type === 'full_day') {
+                wrapper.classList.add('d-none');
+            } else {
+                wrapper.classList.remove('d-none');
+                if (type === 'percentage') {
+                    currency.classList.add('d-none');
+                    percentage.classList.remove('d-none');
+                } else {
+                    currency.classList.remove('d-none');
+                    percentage.classList.add('d-none');
+                }
+            }
+        };
+
+
+        // --- BINDINGS ---
+        
+        // Helper to open modal safely
+        const openModal = (modalId, callback) => {
+            const modalEl = document.getElementById(modalId);
+            if (!modalEl) {
+                console.error(`Modal element ${modalId} not found`);
+                return;
+            }
+
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap 5 is not loaded or not available globally');
+                if (typeof $ !== 'undefined' && $.fn.modal) {
+                    $(modalEl).modal('show');
+                    if(callback) callback();
+                }
+                return;
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            if(callback) callback();
+            modal.show();
+        };
+
+        // Late Arrival Binding
+        const lateArrivalLink = document.getElementById('config_link_late_arrival');
+        if (lateArrivalLink) {
+            lateArrivalLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('lateArrivalModal', () => {
+                    toggleDeductionFields();
+                    toggleAmountField();
+                });
+            });
+        }
+
+        // Early Checkout Binding
+        const earlyCheckoutLink = document.getElementById('config_link_early_checkout');
+        if (earlyCheckoutLink) {
+            earlyCheckoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('earlyCheckoutModal', () => {
+                    toggleEarlyDeductionFields();
+                    toggleEarlyAmountField();
+                });
+            });
+        }
+
+        // Overtime Binding
+        const overtimeLink = document.getElementById('config_link_overtime');
+        if (overtimeLink) {
+            overtimeLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('overtimeModal');
+            });
+        }
     });
 </script>
 @endpush

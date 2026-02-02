@@ -50,7 +50,7 @@ class LeaveRequestDataTable extends DataTable
     {
         $query = LeaveRequest::select('id', 'employee_id', 'leave_type_id', 'leave_start_date', 'leave_end_date', 'request_reason', 'status', 'created_at')
             ->with([
-                'employee:id,name',
+                'employee:id,firstname,lastname,middlename',
                 'leaveType:id,type_name'
             ]);
 
@@ -68,7 +68,7 @@ class LeaveRequestDataTable extends DataTable
     public function html(): HtmlBuilder
     {
         return $this->builder()
-            ->setTableId('leavetype-table')
+            ->setTableId('leaverequest-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(1)
