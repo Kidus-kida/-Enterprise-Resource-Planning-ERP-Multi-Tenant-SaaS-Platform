@@ -68,10 +68,8 @@
             <!-- Left: Title & New Button -->
             <div class="d-flex align-items-center gap-3 flex-shrink-0">
                 <h4 class="mb-0 fw-bold">{{ __('Employees') }}</h4>
-                <a href="javascript:void(0)" class="btn btn-primary btn-sm"
-                   data-url="{{ route('employees.create') }}" data-ajax-modal="true"
-                   data-size="lg" data-title="{{ __('Add Employee') }}">
-                    {{ __('New') }}
+                <a href="#" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#add_employee">
+                    <i class="fa fa-plus-circle me-1"></i> {{ __('New') }}
                 </a>
             </div>
 
@@ -150,5 +148,74 @@
         </div>
     </div>
 @endsection
+
+@section('modals')
+    @include('pages.employees.modals.add_employee')
+    @include('pages.employees.modals.create-job-position')
+@endsection
+
+@push('page-script')
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 specifically for these modals (double check to ensure they render correctly)
+        $('#add_employee .select').select2({
+            width: '100%',
+            dropdownParent: $('#add_employee .modal-content') // Aattach to modal content
+        });
+
+         $('#add_job_position_modal .select').select2({
+            width: '100%',
+            dropdownParent: $('#add_job_position_modal .modal-content')
+        });
+
+        // Job Position "Add New" Logic (moved from create.blade.php)
+        $('#job_position').on('change', function() {
+            if ($(this).val() === 'add_new') {
+                $(this).val('').trigger('change');
+                $('#add_job_position_modal').modal('show');
+            }
+        });
+
+        $('#add_job_position_form').on('submit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            var btn = form.find('.submit-btn');
+            btn.prop('disabled', true);
+            
+            $.ajax({
+                url: "{{ route('job-positions.store') }}",
+                method: "POST",
+                data: form.serialize(),
+                success: function(response) {
+                    btn.prop('disabled', false);
+                    if(response.success) {
+                        $('#add_job_position_modal').modal('hide');
+                        // Add new option
+                        var newOption = new Option(response.job_position.name, response.job_position.id, true, true);
+                        // Append before the last option (Add New)
+                        var addNewOption = $('#job_position option[value="add_new"]');
+                        if(addNewOption.length > 0) {
+                            addNewOption.before(newOption);
+                        } else {
+                            $('#job_position').append(newOption);
+                        }
+                        $('#job_position').val(response.job_position.id).trigger('change');
+                        
+                        // Reset form
+                        form[0].reset();
+                        form.find('select').val('').trigger('change');
+                        
+                         // Re-open first modal if it was closed or hidden (optional, but bootstrap usually handles stacking)
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+@endpush
 
 

@@ -19,6 +19,11 @@ class SwitchTenantDatabase
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip for Superadmin and Diagnostic routes to prevent Session Pollution/Connection Errors
+        if ($request->is('superadmin*') || $request->is('diagnostic*')) {
+            return $next($request);
+        }
+
         try {
             $tenantId = $request->query('tenant');
             
@@ -38,6 +43,33 @@ class SwitchTenantDatabase
             \Log::error("SwitchTenantDatabase Error: " . $e->getMessage());
         }
 
+        // Auto-set active company for company users & Tenant Owners
+        if (auth()->check()) {
+            if (auth()->user()->company_id) {
+                // For assigned company users, lock them to their company
+                session(['user.company_id' => auth()->user()->company_id]);
+                session(['user.active_company_ids' => [auth()->user()->company_id]]);
+            } elseif (auth()->user()->isTenantOwner()) {
+                // For Tenant Owners, if no active company set, try to set default
+                if (!session()->has('user.active_company_ids') || !session()->has('user.company_id')) {
+                    try {
+                        // Connection should be switched by now
+                        $default = \App\Company::where('is_default', 1)->first() ?? \App\Company::first();
+                        if ($default) {
+                            if (!session()->has('user.company_id')) {
+                                session(['user.company_id' => $default->id]);
+                            }
+                            if (!session()->has('user.active_company_ids')) {
+                                session(['user.active_company_ids' => [$default->id]]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore if table doesn't exist yet
+                    }
+                }
+            }
+        }
+
         return $next($request);
     }
 
@@ -46,48 +78,74 @@ class SwitchTenantDatabase
      */
     private function switchToTenant(string $tenantId): void
     {
-        // Find tenant from central database
-        $tenant = Tenant::on('mysql')->find($tenantId);
+        try {
+            // Find tenant from central database
+            $tenant = Tenant::on('mysql')->find($tenantId);
 
-        if (!$tenant || empty($tenant->data) || !isset($tenant->data['db_host'])) {
-            session()->forget('current_tenant_id');
-            return;
-        }
-
-        $credentials = $tenant->data;
-
-        // Validate required credentials
-        if (!isset($credentials['db_name'], $credentials['db_username'])) {
-            session()->forget('current_tenant_id');
-            return;
-        }
-
-        // Handle password (may be encrypted or empty)
-        $password = '';
-        if (isset($credentials['db_password']) && !empty($credentials['db_password'])) {
-            try {
-                $password = decrypt($credentials['db_password']);
-            } catch (\Exception $e) {
-                $password = $credentials['db_password'];
+            if (!$tenant || empty($tenant->data) || !isset($tenant->data['db_host'])) {
+                \Log::warning("SwitchTenantDatabase: Invalid tenant data for ID: $tenantId");
+                session()->forget('current_tenant_id');
+                return;
             }
+
+            $credentials = $tenant->data;
+
+            // Validate required credentials
+            if (!isset($credentials['db_name'], $credentials['db_username'])) {
+                \Log::warning("SwitchTenantDatabase: Missing required credentials for tenant: $tenantId");
+                session()->forget('current_tenant_id');
+                return;
+            }
+
+            // Handle password (may be encrypted or empty)
+            $password = '';
+            if (isset($credentials['db_password']) && !empty($credentials['db_password'])) {
+                try {
+                    $password = decrypt($credentials['db_password']);
+                } catch (\Exception $e) {
+                    $password = $credentials['db_password'];
+                }
+            }
+
+            // Configure tenant connection
+            Config::set('database.connections.tenant', [
+                'driver' => 'mysql',
+                'host' => $credentials['db_host'],
+                'port' => $credentials['db_port'] ?? 3306,
+                'database' => $credentials['db_name'],
+                'username' => $credentials['db_username'],
+                'password' => $password,
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => false,
+            ]);
+
+            // Test the connection before switching
+            try {
+                DB::purge('tenant');
+                DB::reconnect('tenant');
+                
+                // Test with a simple query
+                DB::connection('tenant')->select('SELECT 1');
+                
+                \Log::info("SwitchTenantDatabase: Successfully switched to tenant database: {$credentials['db_name']}");
+                
+            } catch (\Exception $e) {
+                \Log::error("SwitchTenantDatabase: Failed to connect to tenant database: " . $e->getMessage());
+                
+                // Fall back to default connection AND clear the tenant config
+                // This is critical because User::getConnectionName() checks if this config exists
+                Config::set('database.connections.tenant', []); // Empty array effectively disables it
+                session()->forget('current_tenant_id');
+                
+                // Also purge to be safe
+                DB::purge('tenant');
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error("SwitchTenantDatabase: Error finding tenant: " . $e->getMessage());
+            session()->forget('current_tenant_id');
         }
-
-        // Configure tenant connection
-        Config::set('database.connections.tenant', [
-            'driver' => 'mysql',
-            'host' => $credentials['db_host'],
-            'port' => $credentials['db_port'] ?? 3306,
-            'database' => $credentials['db_name'],
-            'username' => $credentials['db_username'],
-            'password' => $password,
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'strict' => false,
-        ]);
-
-        // Reconnect to tenant database
-        DB::purge('tenant');
-        DB::reconnect('tenant');
     }
 }

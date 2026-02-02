@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Department extends Model
 {
     use HasFactory;
+    use \App\Traits\HasCompany;
 
     protected $fillable = [
         'name', 'location','description', 'manager_id', 'color', 'company_name', 'parent_id', 'is_active'

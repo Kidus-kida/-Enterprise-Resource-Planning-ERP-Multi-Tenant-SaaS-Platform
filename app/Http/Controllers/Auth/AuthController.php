@@ -16,11 +16,21 @@ class AuthController extends BaseController
 
     public function login()
     {
+        // Check query param first, then sticky session
+        $tenantId = request()->query('tenant') ?? session('sticky_tenant_id');
+        
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
         $this->data['pageTitle'] = __('Login');
+        $this->data['tenant_id'] = $tenantId;
         return view('auth.login', $this->data);
+    }
+    
+    public function tenantLogin($tenantId)
+    {
+        session(['sticky_tenant_id' => $tenantId]);
+        return redirect()->route('login');
     }
 
     public function loginAuth(Request $request)

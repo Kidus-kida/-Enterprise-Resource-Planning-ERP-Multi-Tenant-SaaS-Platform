@@ -29,13 +29,16 @@ class Subscription extends Model
         'created_id',
         'base_price',
         'addons_price',
-        'total_price'
+        'total_price',
+        'company_count'
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'package_details' => 'array',
+        'company_count' => 'integer',
+        'created_at' => 'datetime',
         'module_activation_details' => 'array',
         'subscribed_user_count' => 'integer',
         'base_price' => 'decimal:4',

@@ -8,19 +8,21 @@ use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasCompany;
 use Modules\Project\Database\Factories\ProjectFactory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Project extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasCompany;
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
         'name','client_id','short_desc','startDate','endDate','rate','rateType','priority','leader_id','description',
-        'created_by'
+        'created_by',
+        'company_id'
     ];
 
 

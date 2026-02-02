@@ -1,3 +1,8 @@
+<style>
+    .select2-container {
+        z-index: 9999 !important;
+    }
+</style>
 <div class="modal-body">
     <form action="{{ route('users.store') }}" method="post" enctype="multipart/form-data">
         @csrf
@@ -67,6 +72,16 @@
                         </x-form.input-block>
                     </div>
                     <div class="col-sm-6">
+                        <x-form.input-block>
+                            <x-form.label>Company</x-form.label>
+                             <select name="company_id" class="form-control select">
+                                @foreach ($companies as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </x-form.input-block>
+                    </div>
+                    <div class="col-sm-6">
                         <div class="input-block mb-3">
                             <x-form.label>
                                 {{ __('Avatar') }}
@@ -99,3 +114,8 @@
         </div>
     </form>
 </div>
+<script>
+    $(document).ready(function() {
+        $('.select').select2();
+    });
+</script>

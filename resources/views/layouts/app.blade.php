@@ -26,8 +26,6 @@
         <!-- Page Content -->
         @yield('page-content')
         <!-- /Page Content -->
-
-        @stack('page-script')
     </div>
     <!-- /Page Wrapper -->
     <!-- Delete Modal -->

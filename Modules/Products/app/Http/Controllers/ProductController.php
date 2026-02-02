@@ -901,7 +901,7 @@ class ProductController extends Controller
         $pos_module_data = $this->moduleUtil->getModuleData('get_product_screen_top_view');
 
         return view('products::product.create')
-            ->with(compact('categories', 'accounts', 'brands', 'units', 'taxes', 'barcode_types', 'default_profit_percent', 'tax_attributes', 'barcode_default', 'business_locations', 'duplicate_product', 'sub_categories', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types', 'common_settings', 'warranties', 'pos_module_data'));
+            ->with(compact('categories', 'accounts', 'brands', 'units', 'taxes', 'barcode_types', 'default_profit_percent', 'tax_attributes', 'barcode_default', 'business_locations', 'duplicate_product', 'sub_categories', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types', 'common_settings', 'warranties', 'pos_module_data', 'companies'));
     }
 
     private function product_types()
@@ -982,6 +982,14 @@ class ProductController extends Controller
             $common_settings = session()->get('business.common_settings');
 
             $product_details['warranty_id'] = !empty($request->input('warranty_id')) ? $request->input('warranty_id') : null;
+            
+            // Assign company_id if selected (or null if shared)
+            // If empty, it means 'Shared' because we use value='' for shared in dropdown
+            // BUT: if not present in request at all, HasCompany trait defaults to Active Company.
+            // We want to differentiate between "Not in form" and "Selected Shared".
+            if ($request->has('company_id')) {
+                $product_details['company_id'] = !empty($request->input('company_id')) ? $request->input('company_id') : null;
+            }
 
             DB::beginTransaction();
 
@@ -1200,7 +1208,7 @@ class ProductController extends Controller
         $alert_quantity = !is_null($product->alert_quantity) ? $this->productUtil->num_f($product->alert_quantity, false, null, true) : null;
 
         return view('products::product.edit')
-            ->with(compact('categories', 'accounts', 'brands', 'units', 'sub_units', 'taxes', 'tax_attributes', 'barcode_types', 'product', 'sub_categories', 'default_profit_percent', 'business_locations', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types', 'common_settings', 'warranties', 'pos_module_data', 'alert_quantity'));
+            ->with(compact('categories', 'accounts', 'brands', 'units', 'sub_units', 'taxes', 'tax_attributes', 'barcode_types', 'product', 'sub_categories', 'default_profit_percent', 'business_locations', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types', 'common_settings', 'warranties', 'pos_module_data', 'alert_quantity', 'companies'));
     }
 
     /**
@@ -1363,6 +1371,12 @@ class ProductController extends Controller
                 }
             }
 
+
+            
+            if ($request->has('company_id')) {
+                 $product->company_id = !empty($request->input('company_id')) ? $request->input('company_id') : null;
+            }
+
             $product->save();
             $product->touch();
 
@@ -1414,7 +1428,9 @@ class ProductController extends Controller
                 'expiry_period_type',
                 'expiry_period',
                 'enable_sr_no',
-                'image'
+                'enable_sr_no',
+                'image',
+                'company_id'
             ];
 
             // Function to compare only relevant fields

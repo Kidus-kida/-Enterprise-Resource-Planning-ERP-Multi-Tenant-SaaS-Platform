@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Modules\Superadmin\Models\Subscription;
 use Modules\Superadmin\Models\Package;
 use Modules\Superadmin\Services\SubscriptionService;
+use Modules\Superadmin\Services\PackageService;
 use App\Business;
 
 class SubscriptionsController extends Controller
@@ -106,6 +107,7 @@ class SubscriptionsController extends Controller
             'subscribed_user_count' => 'nullable|integer|min:1',
             'addons' => 'nullable|array',
             'addons.*' => 'exists:package_addons,id',
+            'company_count' => 'nullable|integer|min:0',
         ]);
 
         // Calculate new base price if user count changed or if manual sync
@@ -121,6 +123,7 @@ class SubscriptionsController extends Controller
             'status' => $validated['status'],
             'subscribed_user_count' => $userCount,
             'base_price' => $newBasePrice,
+            'company_count' => $validated['company_count'],
             // total_price will be updated by syncAddons logic below or we need to update it here
         ]);
 
@@ -136,6 +139,7 @@ class SubscriptionsController extends Controller
             $subscription->update([
                 'package_details' => $package->toArray(),
                 'module_activation_details' => $package->custom_permissions ?? [],
+                'company_count' => $package->company_count, // Also sync company limit
             ]);
         }
 

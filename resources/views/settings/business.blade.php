@@ -1,4 +1,6 @@
-@extends('layouts.app')
+@extends('pages.settings.index')
+
+@section('title', __('business.business_settings'))
 
 @push('page-styles')
     <style>
@@ -61,22 +63,7 @@
     </style>
 @endpush
 
-@section('page-content')
-    <div class="content container-fluid">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h3 class="page-title">Business Settings</h3>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Settings</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- /Page Header -->
-
+@section('page-section')
         <div class="row">
             <div class="col-md-12">
                 <div class="card shadow-sm">
@@ -184,7 +171,6 @@
                 </div>
             </div>
         </div>
-    </div>
 @endsection
 
 @push('page-scripts')

@@ -22,6 +22,17 @@ class SubscriptionService
         $packageService = new PackageService();
         $calculatedPrice = $packageService->calculateDynamicPrice($package, $userCount);
 
+        // If package has custom_permissions defined, use them. Otherwise, grant access to all active modules.
+        $moduleActivation = $package->custom_permissions ?? [];
+        
+        if (empty($moduleActivation)) {
+            // Auto-populate with all active modules
+            $activeModules = \Modules\Superadmin\Models\Module::where('is_active', 1)->get();
+            foreach ($activeModules as $module) {
+                $moduleActivation[$module->key] = true; // Grant access to all modules
+            }
+        }
+
         $subscription = Subscription::create([
             'business_id' => $business->id,
             'package_id' => $package->id,
@@ -29,11 +40,12 @@ class SubscriptionService
             'start_date' => $startDate,
             'end_date' => $endDate,
             'package_details' => $package->toArray(),
-            'module_activation_details' => $package->custom_permissions ?? [],
+            'module_activation_details' => $moduleActivation,
             'base_price' => $calculatedPrice,
             'total_price' => $calculatedPrice, // Will be updated if add-ons are added
             'status' => $additionalData['status'] ?? 'waiting',
-            'created_id' => $additionalData['created_by'] ?? auth()->id()
+            'created_id' => $additionalData['created_by'] ?? auth()->id(),
+            'company_count' => $package->company_count
         ]);
 
         return $subscription;
@@ -99,15 +111,27 @@ class SubscriptionService
         $startDate = Carbon::now();
         $endDate = $this->calculateExpiryDate($startDate, $package);
 
+        // If package has custom_permissions defined, use them. Otherwise, grant access to all active modules.
+        $moduleActivation = $package->custom_permissions ?? [];
+        
+        if (empty($moduleActivation)) {
+            // Auto-populate with all active modules
+            $activeModules = \Modules\Superadmin\Models\Module::where('is_active', 1)->get();
+            foreach ($activeModules as $module) {
+                $moduleActivation[$module->key] = true;
+            }
+        }
+
         $newSubscription = Subscription::create([
             'business_id' => $subscription->business_id,
             'package_id' => $package->id,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'package_details' => $package->toArray(),
-            'module_activation_details' => $package->custom_permissions ?? [],
+            'module_activation_details' => $moduleActivation,
             'status' => 'waiting',
-            'created_id' => auth()->id()
+            'created_id' => auth()->id(),
+            'company_count' => $package->company_count
         ]);
 
         return $newSubscription;

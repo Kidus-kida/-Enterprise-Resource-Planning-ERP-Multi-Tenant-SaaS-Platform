@@ -41,6 +41,16 @@
                                         <label>Package</label>
                                         <input type="text" class="form-control" value="{{ $subscription->package->name ?? 'N/A' }}" disabled>
                                         
+                                        <div class="mt-3">
+                                            <label>Company Limit</label>
+                                            <input type="number" name="company_count" class="form-control @error('company_count') is-invalid @enderror" 
+                                                value="{{ old('company_count', $subscription->company_count ?? 1) }}" min="0">
+                                            <small class="form-text text-muted">Enter '0' for Unlimited companies.</small>
+                                            @error('company_count')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        
                                         @if($subscription->package->is_per_user_pricing)
                                             <div class="mt-3" id="user_count_wrapper">
                                                 <label>Number of Users</label>

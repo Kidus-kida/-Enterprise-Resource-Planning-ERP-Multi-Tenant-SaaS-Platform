@@ -51,6 +51,9 @@
                                 </div>
                             </div>
 
+                            {{-- Company Selection --}}
+                            @include('partials.company_select')
+
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label" for="sku">SKU</label>

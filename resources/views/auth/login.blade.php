@@ -3,10 +3,15 @@
 @section('form')
     <h3 class="account-title">{{ __('Login') }}</h3>
     <p class="account-subtitle">{{ __('Access to our dashboard') }}</p>
-
+    
     <!-- Account Form -->
-    <form action="{{ route('login', request()->query()) }}" method="POST">
+    <form action="{{ route('login') }}" method="POST">
         @csrf
+        @if(isset($tenant_id) && $tenant_id)
+            {{-- Hidden input to persist tenant context --}}
+            <input type="hidden" name="tenant" value="{{ $tenant_id }}">
+        @endif
+        
         <x-form.input-block>
             <x-form.label>{{ __('Email Address') }}</x-form.label>
             <x-form.input type="email" name="email" tabindex="1" value="{{ old('email') }}"

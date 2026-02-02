@@ -13,6 +13,7 @@ use App\Interfaces\CommonConstants;
 
 class Contact extends Model implements CommonConstants
 {
+    use \App\Traits\HasCompany;
 
     protected static $logAttributes = ['*'];
 

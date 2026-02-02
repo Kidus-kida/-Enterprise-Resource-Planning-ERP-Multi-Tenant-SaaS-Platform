@@ -17,18 +17,24 @@ class IdentifyTenantBySubdomain
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip for Superadmin and Diagnostic routes
+        if ($request->is('superadmin*') || $request->is('diagnostic*')) {
+            return $next($request);
+        }
+
         try {
-            // Get the full host (e.g., tenant.tewostechsolutions.com)
+            // Get the full host (e.g., tenant.ettech.et)
             $host = $request->getHost();
             
             // Check if we have a subdomain
-            $centralDomain = config('tenancy.central_domain', 'tewostechsolutions.com');
+            $centralDomain = config('tenancy.central_domain', 'ettech.et');
             
             \Log::info("IdentifyTenantBySubdomain: Host = $host, Central = $centralDomain");
             
             // If accessing the central domain directly, skip tenant identification
             if ($host === $centralDomain || $host === 'www.' . $centralDomain) {
                 \Log::info("IdentifyTenantBySubdomain: Accessing central domain, skipping tenant resolution");
+                session()->forget('current_tenant_id'); // Ensure we are on central DB
                 return $next($request);
             }
             
@@ -50,8 +56,18 @@ class IdentifyTenantBySubdomain
                     
                     \Log::info("IdentifyTenantBySubdomain: Found tenant ID = {$domain->tenant_id}");
                 } else {
-                    \Log::warning("IdentifyTenantBySubdomain: No tenant found for domain $host");
+                    // IMPORTANT: If we are on a subdomain/domain but it doesn't match a tenant,
+                    // we MUST clear any previous tenant session. Otherwise, we might stay connected 
+                    // to the wrong DB from a previous visit.
+                    session()->forget('current_tenant_id');
+                    \Log::warning("IdentifyTenantBySubdomain: No tenant found for domain $host - Session cleared");
                 }
+            } else {
+                // No subdomain (e.g. localhost, IP address)
+                // In local dev, we might be using stick/query param sessions.
+                // Do NOT clear session here, or we break the persistent login loop.
+                // If user wants to switch to Main, they can Logout.
+                \Log::info("IdentifyTenantBySubdomain: No subdomain detected ($host) - Preserving existing session if any.");
             }
         } catch (\Exception $e) {
             \Log::error("IdentifyTenantBySubdomain Error: " . $e->getMessage());

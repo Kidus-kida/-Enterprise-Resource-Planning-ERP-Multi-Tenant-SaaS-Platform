@@ -102,6 +102,14 @@
                                     <h4 class="card-title">Limits (0 = Unlimited)</h4>
                                     
                                     <div class="form-group">
+                                        <label>Company Count <span class="text-danger">*</span></label>
+                                        <input type="number" name="company_count" class="form-control @error('company_count') is-invalid @enderror" value="{{ old('company_count', $package->company_count) }}" required>
+                                        @error('company_count')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
                                         <label>Location Count <span class="text-danger">*</span></label>
                                         <input type="number" name="location_count" class="form-control @error('location_count') is-invalid @enderror" value="{{ old('location_count', $package->location_count) }}" required>
                                         @error('location_count')

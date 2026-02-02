@@ -5,20 +5,22 @@ namespace Modules\Accounting\Models;
 use Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\HasCompany;
 use Modules\Accounting\Database\Factories\BudgetFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Budget extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasCompany;
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
         'title','type','startDate','endDate','total_revenue','total_expense',
-        'profit','budget_category_id','project_id','taxes','amount','note'
+        'profit','budget_category_id','project_id','taxes','amount','note',
+        'company_id'
     ];
 
     public function category()

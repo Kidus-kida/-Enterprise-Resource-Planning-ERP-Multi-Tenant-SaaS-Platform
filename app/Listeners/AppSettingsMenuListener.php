@@ -28,6 +28,10 @@ class AppSettingsMenuListener
                 Link::toRoute('dashboard', '<i class="la la-dashboard"></i> <span>' . __("Back to Dashboard") . '</span>')
                     ->setActive(route_is('dashboard'))
                     ->setAttributes(['wire:navigate' => 'true'])
+            )->add( // Companies
+                Link::toRoute('multi-companies.index', '<i class="la la-building-o"></i> <span>' . ("Companies") . '</span>')
+                    ->setActive(route_is('multi-companies.*'))
+                    ->setAttributes(['wire:navigate' => 'true'])
             )->add(
                 Link::toRoute('settings.index', '<i class="la la-building"></i> <span>' . ("Company Settings") . '</span>')
                     ->setActive(route_is('settings.index'))
@@ -54,6 +58,9 @@ class AppSettingsMenuListener
                 Link::toRoute('settings.invoice', '<i class="la la-pencil-square"></i> <span>' . ("Invoice Settings") . '</span>')
                     ->setActive(route_is('settings.invoice'))
                     ->setAttributes(['wire:navigate' => 'true'])
+            )
+            ->add(
+                Link::toRoute('admin.attendance-settings.index', '<i class="la la-user-clock"></i> <span>' . ("Attendance Settings") . '</span>')->setActive(route_is('admin.attendance-settings.index'))
             )
             ->add(
                 Link::toRoute('settings.salary', '<i class="la la-money"></i> <span>' . ("Salary Settings") . '</span>')

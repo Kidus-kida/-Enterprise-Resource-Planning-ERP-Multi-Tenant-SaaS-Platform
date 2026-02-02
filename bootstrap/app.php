@@ -35,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => \Modules\Superadmin\Http\Middleware\SuperadminMiddleware::class,
             'subscription.check' => \Modules\Superadmin\Http\Middleware\CheckSubscription::class,
             'module.access' => \Modules\Superadmin\Http\Middleware\CheckModuleAccess::class,
+            
+            // Database error handling
+            'db.errors' => \App\Http\Middleware\HandleDatabaseErrors::class,
         ]);
         
         $middleware->web(append: [
@@ -55,7 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
          * Order:
          * 1. StartSession - Session must be available to read/store tenant ID
          * 2. ShareErrorsFromSession - For validation error display
-         * 3. IdentifyTenantBySubdomain - Extracts tenant from subdomain (e.g., tenant.tewostechsolutions.com)
+         * 3. IdentifyTenantBySubdomain - Extracts tenant from subdomain (e.g., tenant.ettech.et)
          * 4. SwitchTenantDatabase - Configures tenant database connection from session
          * 5. Authenticate - Now correctly validates user against tenant database
          * 

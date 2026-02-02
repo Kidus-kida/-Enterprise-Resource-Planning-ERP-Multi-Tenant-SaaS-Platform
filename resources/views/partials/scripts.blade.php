@@ -177,6 +177,7 @@ document.addEventListener('livewire:navigated', () => {
 </script>
 
 @stack('page-scripts')
+@stack('page-script')
 <script type="module">
     @if(count($errors) > 0)
         @foreach($errors->all() as $error)

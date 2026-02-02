@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Modules\Superadmin\Models\Module;
 
@@ -39,6 +39,27 @@ class TenantRoleController extends Controller
     }
 
     /**
+     * Reserved role names that tenants cannot use.
+     */
+    private function getReservedRoleNames(): array
+    {
+        return [
+            'superadmin', 'super admin', 'super-admin', 'system owner',
+            'system-owner', 'systemowner', 'root', 'administrator',
+            'tenant admin', 'tenant-admin', // Allow 'Tenant Admin' itself but block variations
+        ];
+    }
+
+    /**
+     * Check if a role name is reserved.
+     */
+    private function isReservedRoleName(string $name): bool
+    {
+        $normalized = strtolower(trim($name));
+        return in_array($normalized, $this->getReservedRoleNames());
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -47,6 +68,11 @@ class TenantRoleController extends Controller
             'name' => 'required|unique:roles,name',
             'permissions' => 'required|array'
         ]);
+
+        // SECURITY: Block reserved role names
+        if ($this->isReservedRoleName($request->name)) {
+            return back()->with('error', 'This role name is reserved and cannot be used.');
+        }
 
         // Security Check: Ensure user isn't trying to assign permissions they don't own
         $allowedPermissionIds = $this->getAllowedPermissions()->pluck('id')->toArray();
@@ -104,6 +130,11 @@ class TenantRoleController extends Controller
             'name' => 'required|unique:roles,name,' . $role->id,
             'permissions' => 'required|array'
         ]);
+
+        // SECURITY: Block reserved role names
+        if ($this->isReservedRoleName($request->name)) {
+            return back()->with('error', 'This role name is reserved and cannot be used.');
+        }
 
         $allowedPermissionIds = $this->getAllowedPermissions()->pluck('id')->toArray();
         $requestedPermissions = is_array($request->permissions) ? $request->permissions : [];

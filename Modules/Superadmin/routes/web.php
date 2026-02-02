@@ -51,6 +51,7 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']],
         Route::get('/setup-wizard/{businessId}', [TenantManagementController::class, 'setupWizard'])->name('setup-wizard');
         Route::post('/verify-connection/{tenantId}', [TenantManagementController::class, 'verifyConnection'])->name('verify-connection');
         Route::post('/run-migrations/{tenantId}', [TenantManagementController::class, 'runMigrations'])->name('run-migrations');
+        Route::post('/clear-permission-cache/{tenantId}', [TenantManagementController::class, 'clearPermissionCache'])->name('clear-permission-cache');
         Route::delete('/{tenantId}', [TenantManagementController::class, 'destroy'])->name('destroy');
     });
 

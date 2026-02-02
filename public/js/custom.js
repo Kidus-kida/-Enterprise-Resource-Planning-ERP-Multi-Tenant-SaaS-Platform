@@ -114,3 +114,29 @@ $(document).on('click', '.view_modal', function (e) {
         }
     });
 });
+
+$(document).on('click', '.btn-modal', function (e) {
+    e.preventDefault();
+    var container = $(this).data('container');
+
+    // Ensure container exists
+    if (!$(container).length) {
+        // If container is a class selector like .companies_modal, try to append it
+        if (container && container.startsWith('.')) {
+            var className = container.substring(1);
+            $('body').append('<div class="modal fade ' + className + '" tabindex="-1" role="dialog"></div>');
+        } else {
+            // Fallback default
+            $('body').append('<div class="modal fade companies_modal" tabindex="-1" role="dialog"></div>');
+            container = '.companies_modal';
+        }
+    }
+
+    $.ajax({
+        url: $(this).data('href'),
+        dataType: 'html',
+        success: function (result) {
+            $(container).html(result).modal('show');
+        }
+    });
+});

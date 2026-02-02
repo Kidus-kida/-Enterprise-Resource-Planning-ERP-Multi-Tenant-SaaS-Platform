@@ -29,7 +29,7 @@
 
     @component('components.widget', ['class' => 'box-primary'])
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-4">
               <div class="form-group">
                 {!! Form::label('name', __('product.product_name') . ':*') !!}
                   {!! Form::text('name', $product->name, ['class' => 'form-control', 'required',
@@ -37,7 +37,10 @@
               </div>
             </div>
 
-            <div class="col-sm-3">
+            {{-- Company Selection --}}
+            @include('partials.company_select', ['selected_company_id' => $product->company_id])
+
+            <div class="col-sm-4">
               <div class="form-group">
                 {!! Form::label('sku', __('product.sku')  . ':*') !!} @show_tooltip(__('tooltip.sku'))
                 {!! Form::text('sku', $product->sku, ['class' => 'form-control',

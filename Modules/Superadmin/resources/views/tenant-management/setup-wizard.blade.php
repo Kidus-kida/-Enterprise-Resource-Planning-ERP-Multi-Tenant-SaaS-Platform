@@ -61,7 +61,7 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <strong>Subdomain:</strong><br>
-                                <code class="text-white">{{ $business->subdomain }}.{{ config('tenancy.central_domains.0', 'tewostechsolutions.com') }}</code>
+                                <code class="text-white">{{ $business->subdomain }}.{{ config('tenancy.central_domains.0', 'ettech.et') }}</code>
                             </div>
                             <div class="col-md-3">
                                 <strong>Package:</strong><br>
@@ -315,6 +315,17 @@
                                     <i class="fa fa-cogs"></i> {{ $business->is_active ? 'Re-Run Migrations & Seed' : 'Run Migrations & Setup Tenant' }}
                                 </button>
                             </form>
+
+                            {{-- Quick Permission Cache Clear Button --}}
+                            <form action="{{ route('superadmin.tenant-management.clear-permission-cache', $tenant->id) }}" method="POST" class="d-inline-block">
+                                @csrf
+                                <button type="submit" class="btn btn-info btn-lg mt-3 ml-2" title="Clears all caches to fix permission issues">
+                                    <i class="fa fa-refresh"></i> Clear All Caches
+                                </button>
+                            </form>
+                            <small class="d-block text-muted mt-2">
+                                <i class="fa fa-info-circle"></i> Click this after migrations to fix missing menus. The tenant user should refresh their browser or log out/in after this.
+                            </small>
                         @endif
 
                         @if(session('migration_output'))
@@ -338,7 +349,7 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.tewostechsolutions.com</code>), configure the following in cPanel:</p>
+                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.ettech.et</code>), configure the following in cPanel:</p>
                         
                         <h5>Instructions:</h5>
                         <ol>
@@ -355,8 +366,8 @@
                         <div class="alert alert-info">
                             <h6>Access URLs:</h6>
                             <ul class="mb-0">
-                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.tewostechsolutions.com</code></li>
-                                <li><strong>Without Subdomain:</strong> <code>https://tewostechsolutions.com?tenant={{ $tenant->id }}</code></li>
+                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.ettech.et</code></li>
+                                <li><strong>Without Subdomain:</strong> <code>https://ettech.et?tenant={{ $tenant->id }}</code></li>
                             </ul>
                         </div>
                     </div>
