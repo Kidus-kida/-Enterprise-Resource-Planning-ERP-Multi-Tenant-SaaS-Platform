@@ -26,6 +26,7 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']],
     Route::resource('businesses', BusinessController::class)->names('superadmin.businesses');
     Route::post('businesses/{business}/activate', [BusinessController::class, 'activate'])->name('superadmin.businesses.activate');
     Route::post('businesses/{business}/deactivate', [BusinessController::class, 'deactivate'])->name('superadmin.businesses.deactivate');
+    Route::post('businesses/{id}/resend-invite', [BusinessController::class, 'resendInvite'])->name('superadmin.businesses.resend-invite');
 
     // Module Management
     Route::resource('modules', ModuleController::class)->names('superadmin.modules');

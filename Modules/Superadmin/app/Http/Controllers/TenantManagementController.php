@@ -116,14 +116,13 @@ class TenantManagementController extends Controller
             return redirect()->back()->with('error', 'Database credentials not configured!');
         }
 
-        // Validate Admin User Input
-        $request->validate([
-            'admin_firstname' => 'required|string',
-            'admin_lastname' => 'required|string',
-            'admin_email' => 'required|email',
-            'admin_password' => 'required|min:8',
-            'admin_username' => 'required|string',
-        ]);
+        // Validate Admin User Input - CHANGED: No longer need detailed admin input as we use owner info
+        // We only check if owner info exists
+        if (!$tenant->business->owner_email) {
+             return redirect()->back()->with('error', 'Business owner information missing. Cannot create admin user.');
+        }
+        
+        // Removed request validation for admin_* fields as they are pre-filled/fixed
         
         try {
             $credentials = isset($tenant->data['db_host']) ? $tenant->data : json_decode($tenant->data, true);
@@ -147,6 +146,9 @@ class TenantManagementController extends Controller
             \DB::purge('tenant');
             \DB::reconnect('tenant');
             
+            // Start Transaction for Provisioning
+            \DB::beginTransaction();
+
             // LOGGING START
             $debugLog = "--- DEBUG INFO ---\n";
             $debugLog .= "Host: " . config('database.connections.tenant.host') . "\n";
@@ -197,19 +199,24 @@ class TenantManagementController extends Controller
             $output = $debugLog;
 
             // SEEDING LOGIC
-            // Create Business in Tenant DB
-            $tenantBusinessId = \DB::connection('tenant')->table('businesses')->insertGetId([
+            
+            // 1. Create Business in Tenant DB to satisfy Foreign Key constraints
+            // We use the same ID as the master business to keep them linked/synced
+            // We do NOT use insertGetId because we want to force the ID
+            \DB::connection('tenant')->table('businesses')->insert([
+                'id' => $tenant->business_id,
                 'name' => $tenant->business->name,
                 'created_at' => now(),
                 'updated_at' => now(),
-                 // Add other necessary fields default or from main business if structure matches
+                // owner_id is nullable due to our migration, so we skip it or set to null
             ]);
 
-            // Create Default Company (Self)
+            // 2. Create Default Company
             \DB::connection('tenant')->table('companies')->insert([
-                'business_id' => $tenantBusinessId,
-                'name' => $tenant->business->name, // Treat itself as a company
-                'email' => $tenant->business->email,
+                'business_id' => $tenant->business_id, // Link to the record we just created
+                'name' => $tenant->business->name, 
+                'email' => $tenant->business->owner_email,
+                // 'phone' => $tenant->business->owner_phone, // Removed: Column does not exist in companies table
                 'is_default' => 1,
                 'is_active' => 1,
                 'created_at' => now(),
@@ -217,19 +224,30 @@ class TenantManagementController extends Controller
             ]);
 
 
-            // Create Admin User in Tenant DB
-            // Create Admin User in Tenant DB
+            // Create Admin User in Tenant DB using Owner Info
+            $tenantUserUuid = \Illuminate\Support\Str::uuid(); // Generate UUID explicitly
+            
             $tenantUserId = \DB::connection('tenant')->table('users')->insertGetId([
-                'firstname' => $request->admin_firstname,
-                'lastname' => $request->admin_lastname,
-                'email' => $request->admin_email,
-                'username' => $request->admin_username,
-                'password' => \Hash::make($request->admin_password),
-                'type' => 'admin', // Changed from Super Admin to restricted admin
+                'firstname' => $tenant->business->owner_firstname,
+                'lastname' => $tenant->business->owner_lastname,
+                'email' => $tenant->business->owner_email,
+                'username' => explode('@', $tenant->business->owner_email)[0],
+                'password' => \Hash::make(\Illuminate\Support\Str::random(32)), // Random password, set via email
+                'type' => 'admin', 
                 'is_active' => 1,
-                'business_id' => $tenantBusinessId,
+                'business_id' => $tenant->business_id, // Link to central business ID
+                'uuid' => $tenantUserUuid, // Insert the UUID
                 'created_at' => now(),
                 'updated_at' => now(),
+            ]);
+
+            // UUID is already known, no need to query it properly
+            // $tenantUserUuid = ... (removed)
+            
+            // Link owner in Master DB
+            $tenant->business->update([
+                'owner_user_uuid' => $tenantUserUuid,
+                'owner_id' => null, // Ensure this is null as per new flow
             ]);
 
             // RUN TENANT PERMISSION SEEDER
@@ -297,16 +315,54 @@ class TenantManagementController extends Controller
             }
             
             $tenant->business->update(['is_active' => 1]);
+
+            \DB::commit();
+
+            // Send Setup Email (After Commit)
+            $this->sendOwnerSetupEmail($tenant->business);
             
             return redirect()->route('superadmin.tenant-management.setup-wizard', $tenant->business_id)
-                ->with('success', 'Migrations completed and Admin User created successfully! You can now login.')
+                ->with('success', 'Migrations completed! An email has been sent to the owner to set up their password.')
                 ->with('migration_output', $output);
             
         } catch (\Exception $e) {
+            \DB::rollBack();
             $output = \Artisan::output() ?? 'No output captured.';
             return redirect()->back()
                 ->with('error', 'Migration/Seeding failed: ' . $e->getMessage())
                 ->with('migration_output', $output);
+        }
+    }
+
+    protected function sendOwnerSetupEmail($business)
+    {
+        try {
+            // Check if email already sent recently? Maybe not needed here as it's fresh setup.
+            
+            // Use Laravel Password Broker
+            // We need a class that implements CanResetPassword contract
+            $dummyUser = new \App\Models\User();
+            $dummyUser->email = $business->owner_email;
+            
+            $token = \Password::broker('users')->createToken($dummyUser);
+            
+            \Mail::to($business->owner_email)->send(
+                new \App\Mail\BusinessOwnerSetup($business, $token)
+            );
+            
+            // Track successful send
+            $business->update(['owner_invite_sent_at' => now()]);
+            
+            \Log::info("Owner setup email sent", ['business_id' => $business->id]);
+            
+        } catch (\Exception $e) {
+            // Log but don't fail the request since provisioning succeeded
+            \Log::error("Failed to send owner setup email", [
+                'business_id' => $business->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            session()->flash('warning', 'Tenant created successfully, but email failed to send. Please use "Resend Invite" button.');
         }
     }
 
