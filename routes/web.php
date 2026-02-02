@@ -418,7 +418,9 @@ Route::get('/test-dashboard-parts', function() {
     }
 })->name('test.dashboard.parts');
 
-include __DIR__ . '/auth.php';
+Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class])->group(function () {
+    include __DIR__ . '/auth.php';
+});
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
     // Add a test route within the authenticated group to isolate the issue

@@ -22,10 +22,10 @@ return new class extends Migration
             $table->integer('min_days_notice')->default(0)->after('requires_attachment'); // Days notice required
             $table->integer('max_consecutive_days')->nullable()->after('min_days_notice'); // Max days in one request
             $table->boolean('allow_half_day')->default(true)->after('max_consecutive_days');
-            $table->boolean('is_paid')->default(true)->after('allow_half_day'); // Add is_paid field
+            //$table->boolean('is_paid')->default(true)->after('allow_half_day'); // Add is_paid field
             
             // Approval Settings
-            $table->boolean('requires_approval')->default(true)->after('is_paid');
+            $table->boolean('requires_approval')->default(true)->after('allow_half_day');
             $table->integer('approval_levels')->default(1)->after('requires_approval'); // Number of approval levels
             $table->boolean('auto_approve_if_balance')->default(false)->after('approval_levels');
             
@@ -53,7 +53,6 @@ return new class extends Migration
                 'min_days_notice',
                 'max_consecutive_days',
                 'allow_half_day',
-                'is_paid',
                 'requires_approval',
                 'approval_levels',
                 'auto_approve_if_balance',

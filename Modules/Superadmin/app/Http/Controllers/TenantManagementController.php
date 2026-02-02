@@ -339,12 +339,17 @@ class TenantManagementController extends Controller
         try {
             // Check if email already sent recently? Maybe not needed here as it's fresh setup.
             
-            // Use Laravel Password Broker
-            // We need a class that implements CanResetPassword contract
-            $dummyUser = new \App\Models\User();
-            $dummyUser->email = $business->owner_email;
+            // Manually generate and store token in TENANT DB > password_reset_tokens
+            // This is required because PasswordBroker via Superadmin writes to Main DB,
+            // but Tenant App looks in Tenant DB.
             
-            $token = \Password::broker('users')->createToken($dummyUser);
+            $token = \Illuminate\Support\Str::random(60);
+            $hashedToken = \Illuminate\Support\Facades\Hash::make($token);
+            
+            \DB::connection('tenant')->table('password_reset_tokens')->updateOrInsert(
+                ['email' => $business->owner_email],
+                ['token' => $hashedToken, 'created_at' => now()]
+            );
             
             \Mail::to($business->owner_email)->send(
                 new \App\Mail\BusinessOwnerSetup($business, $token)

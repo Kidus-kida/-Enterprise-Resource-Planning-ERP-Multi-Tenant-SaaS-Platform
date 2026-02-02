@@ -34,6 +34,31 @@ class SwitchTenantDatabase
                 $tenantId = session('current_tenant_id');
             }
 
+            // If no tenant ID found, try to detect via Subdomain
+            if (!$tenantId) {
+                $host = $request->getHost();
+                
+                // 1. Try exact domain match
+                $domainRecord = \Modules\Superadmin\Models\Domain::where('domain', $host)->first();
+                if ($domainRecord) {
+                    $tenantId = $domainRecord->tenant_id;
+                    session(['current_tenant_id' => $tenantId]);
+                } else {
+                    // 2. Try subdomain match against Business
+                    $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et'); 
+                    
+                    if (\Illuminate\Support\Str::endsWith($host, '.' . $centralDomain)) {
+                        $subdomain = substr($host, 0, -strlen('.' . $centralDomain));
+                        
+                        $business = \App\Business::where('subdomain', $subdomain)->first();
+                        if ($business && $business->tenant_id) {
+                            $tenantId = $business->tenant_id;
+                            session(['current_tenant_id' => $tenantId]);
+                        }
+                    }
+                }
+            }
+
             // Switch to tenant database if we have a tenant ID
             if ($tenantId) {
                 $this->switchToTenant($tenantId);

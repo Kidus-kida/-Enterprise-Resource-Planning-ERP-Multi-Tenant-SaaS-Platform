@@ -165,7 +165,7 @@ class BusinessController extends Controller
 
     public function resendInvite($id)
     {
-        $business = Business::findOrFail($id);
+        $business = Business::with('tenant')->findOrFail($id);
         
         // Check if owner has already activated
         if ($business->owner_activated_at) {
@@ -179,13 +179,52 @@ class BusinessController extends Controller
                 ->with('error', 'This business was created with the old flow. No invite email available.');
         }
         
+        // Check if tenant is configured
+        if (!$business->tenant || !isset($business->tenant->data['db_host'])) {
+             return redirect()->back()->with('error', 'Tenant database not configured yet. Cannot create password token.');
+        }
+        
         try {
-            // Use Laravel Password Broker
-            $dummyUser = new \App\Models\User();
-            $dummyUser->email = $business->owner_email;
+            // Configure Tenant Connection on the fly to insert token
+            $credentials = $business->tenant->data;
+            if (!is_array($credentials)) {
+                 $credentials = json_decode($business->tenant->data, true);
+            }
             
-            $token = \Password::broker('users')->createToken($dummyUser);
+            // Handle password decryption
+            $password = '';
+            if (isset($credentials['db_password']) && !empty($credentials['db_password'])) {
+                try {
+                    $password = decrypt($credentials['db_password']);
+                } catch (\Exception $e) {
+                    $password = $credentials['db_password'];
+                }
+            }
             
+            // Setup temporary connection
+            config(['database.connections.tenant_invite_temp' => [
+                'driver' => 'mysql',
+                'host' => $credentials['db_host'],
+                'port' => $credentials['db_port'] ?? 3306,
+                'database' => $credentials['db_name'],
+                'username' => $credentials['db_username'],
+                'password' => $password,
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+            ]]);
+            
+            \DB::purge('tenant_invite_temp');
+            
+            // Generate & Store Token in Tenant DB
+            $token = \Illuminate\Support\Str::random(60);
+            $hashedToken = \Illuminate\Support\Facades\Hash::make($token);
+            
+            \DB::connection('tenant_invite_temp')->table('password_reset_tokens')->updateOrInsert(
+                ['email' => $business->owner_email],
+                ['token' => $hashedToken, 'created_at' => now()]
+            );
+            
+            // Send Email
             \Mail::to($business->owner_email)->send(
                 new \App\Mail\BusinessOwnerSetup($business, $token)
             );

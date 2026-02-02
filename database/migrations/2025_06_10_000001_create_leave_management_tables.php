@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,41 +12,40 @@ return new class extends Migration
     {
         Schema::create('leave_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->integer('max_leave_days');
-            $table->boolean('is_paid')->default(true);
-            $table->text('description')->nullable();
+            $table->string('type_name');
+            $table->integer('max_date_allowed');
+            $table->string('leave_allowed_interval')->nullable();
+            $table->string('description')->nullable();
+            $table->string('status')->default('allowed');
             $table->timestamps();
         });
 
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('leave_type_id')->constrained('leave_types')->onDelete('cascade');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->integer('total_days');
-            $table->text('reason');
+            $table->integer('employee_id');
+            $table->integer('leave_type_id');
+            $table->date('leave_start_date')->nullable();
+            $table->date('leave_end_date')->nullable();
+            $table->string('request_reason')->nullable();
+            $table->longText('attachements')->nullable();
+            $table->string('half_day')->nullable();
+            $table->integer('multiple_day')->default(0);
+            $table->string('reject_reason')->nullable();
+            $table->integer('attended_by')->nullable();
             $table->string('status')->default('pending');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->text('rejection_reason')->nullable();
             $table->timestamps();
-
-            $table->index('user_id');
-            $table->index('leave_type_id');
-            $table->index('status');
         });
 
         Schema::create('anunal_leaves', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->integer('year');
-            $table->integer('total_days')->default(0);
-            $table->integer('used_days')->default(0);
-            $table->integer('remaining_days')->default(0);
+            $table->integer('employee_id');
+            $table->decimal('current_year', 8, 2)->default(0.00);
+            $table->decimal('previous_year', 8, 2)->default(0.00);
+            $table->string('year_bpy')->default('2025');
+            $table->decimal('per_month', 8, 2)->default(0.00);
+            $table->integer('per_year')->default(0);
+            $table->integer('total_anunal_leave')->default(0);
             $table->timestamps();
-
-            $table->index(['user_id', 'year']);
         });
     }
 
