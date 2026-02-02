@@ -594,6 +594,24 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         // Night Shift Configuration
         Route::get('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'nightShift'])->name('admin.attendance-settings.night-shift');
         Route::post('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateNightShift'])->name('admin.attendance-settings.night-shift.update');
+
+        // Rotational Shifts
+        Route::prefix('rotation')->name('shifts.rotation.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ShiftRotationsController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\ShiftRotationsController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\ShiftRotationsController::class, 'store'])->name('store');
+            Route::get('/{rotation}/edit', [\App\Http\Controllers\ShiftRotationsController::class, 'edit'])->name('edit');
+            Route::put('/{rotation}', [\App\Http\Controllers\ShiftRotationsController::class, 'update'])->name('update');
+            Route::delete('/{rotation}', [\App\Http\Controllers\ShiftRotationsController::class, 'destroy'])->name('destroy');
+
+            // Forecast
+            Route::get('/forecast', [\App\Http\Controllers\ShiftRotationsController::class, 'forecast'])->name('forecast');
+            Route::get('/forecast/data', [\App\Http\Controllers\ShiftRotationsController::class, 'getForecastData'])->name('forecast.data');
+        });
+
+        // Flexible Hours Configuration
+        Route::get('/flexible', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'flexible'])->name('admin.attendance-settings.flexible');
+        Route::post('/flexible', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateFlexible'])->name('admin.attendance-settings.flexible.update');
     });
 
     // Audit Logs

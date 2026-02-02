@@ -27,7 +27,6 @@ class AppMenuListener
     {
         $menu = $event->menu;
         $user = auth()->user();
-        $user = auth()->user();
         $business = $user->business;
 
         // Dynamic Tenant Resolution: identify which business owns the current context
@@ -70,9 +69,12 @@ class AppMenuListener
         }
 
         // If the user's business_id doesn't match the tenant's business_id, prefer the tenant's ID
-        // This fixes the case where seeding set user->business_id = 1, but the tenant is actually business_id = 6
         if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
-             $business = \App\Business::on('mysql')->with('subscription')->find($tenantBusinessId);
+             // Cache the business lookup to avoid repeated DB calls on every request
+             $cacheKey = "business_resolution_u{$user->id}_t" . ($tenantId ?? 'none');
+             $business = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($tenantBusinessId) {
+                 return \App\Business::on('mysql')->with('subscription')->find($tenantBusinessId);
+             });
         } elseif ($business && !$business->relationLoaded('subscription')) {
              // If business exists but subscription not loaded, load it explicitly
              $business->load('subscription');
@@ -81,25 +83,9 @@ class AppMenuListener
         // Ensure connection is correct if we found a business
         if ($business && $business->getConnectionName() !== 'mysql') {
             $business->setConnection('mysql');
-            // Reload subscription after connection change
+            // Reload subscription after connection change if not cached (simple load here for safety)
             $business->load('subscription');
         }
-
-        // DEBUG: Write final state to log
-        $logPath = public_path('debug_menu_log.txt');
-        $debugData = [
-            'timestamp' => now()->toDateTimeString(),
-            'user_id' => $user->id,
-            'session_tenant_id' => $tenantId,
-            'tenant_business_id_found' => $tenantBusinessId,
-            'final_business_id' => $business ? $business->id : 'NULL',
-            'subscription_loaded' => $business && $business->subscription ? 'YES' : 'NO',
-            'sub_id' => $business && $business->subscription ? $business->subscription->id : 'N/A',
-            'company_count' => $business && $business->subscription ? ($business->subscription->company_count ?? 'NULL') : 'N/A',
-            'has_biz_settings_perm' => auth()->user()->can('business_settings.access') ? 'YES' : 'NO',
-            'module_details' => $business && $business->subscription ? $business->subscription->module_activation_details : 'N/A'
-        ];
-        file_put_contents($logPath, print_r($debugData, true), FILE_APPEND);
 
         // Helper to check if module is enabled in subscription
         $isModuleEnabled = function($moduleKey) use ($user, $business) {

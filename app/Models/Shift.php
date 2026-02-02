@@ -15,6 +15,7 @@ class Shift extends Model
         'grace_period_minutes',
         'grace_out_minutes',
         'is_active',
+        'deactivated_by_system',
         'description',
         'work_days',
     ];
@@ -25,6 +26,7 @@ class Shift extends Model
         'grace_period_minutes' => 'integer',
         'grace_out_minutes' => 'integer',
         'is_active' => 'boolean',
+        'deactivated_by_system' => 'boolean',
         'work_days' => 'array', // JSON array of day numbers (1=Monday, 7=Sunday)
     ];
 
@@ -50,9 +52,9 @@ class Shift extends Model
      * @param int $dayOfWeek Day number (1=Monday, 7=Sunday, 0=Sunday)
      * @return bool
      */
-    public function isWorkDay(int $dayOfWeek): bool
+    public function isWorkDay($dayOfWeek): bool
     {
-        // If no work_days specified, all days are work days
+        // If no work days are set, assume all days are work days
         if (empty($this->work_days)) {
             return true;
         }
@@ -62,7 +64,17 @@ class Shift extends Model
             $dayOfWeek = 7;
         }
 
-        return in_array($dayOfWeek, $this->work_days);
+        // Ensure work_days is an array (in case the cast fails)
+        $workDays = $this->work_days;
+        if (is_string($workDays)) {
+            $workDays = json_decode($workDays, true) ?? [];
+        }
+        
+        if (!is_array($workDays)) {
+            $workDays = [];
+        }
+
+        return in_array($dayOfWeek, $workDays);
     }
 
     /**
@@ -97,5 +109,42 @@ class Shift extends Model
     public function isNightShift(): bool
     {
         return $this->end_time < $this->start_time;
+    }
+
+    /**
+     * Check if this shift overlaps with the restricted night time range
+     * or is a cross-midnight shift.
+     * 
+     * @return bool
+     */
+    public function isRestrictedNightShift(): bool
+    {
+        // Case 1: Crosses midnight
+        if ($this->isNightShift()) {
+            return true;
+        }
+
+        $nightStart = AttendanceSetting::get('night_time_start', '22:00');
+        $nightEnd = AttendanceSetting::get('night_time_end', '06:00');
+        $startTime = $this->start_time->format('H:i');
+        $endTime = $this->end_time->format('H:i');
+
+        // Case 2: Restricted range crosses midnight (e.g. 22:00 - 06:00)
+        if ($nightEnd < $nightStart) {
+            $overlapsSegment1 = ($startTime < '23:59' && $endTime > $nightStart);
+            $overlapsSegment2 = ($startTime < $nightEnd && $endTime > '00:00');
+            return $overlapsSegment1 || $overlapsSegment2;
+        } 
+        
+        // Case 3: Restricted range is within same day
+        return ($startTime < $nightEnd && $endTime > $nightStart);
+    }
+
+    /**
+     * Get rotation steps this shift is part of
+     */
+    public function rotationSteps(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ShiftRotationStep::class);
     }
 }
