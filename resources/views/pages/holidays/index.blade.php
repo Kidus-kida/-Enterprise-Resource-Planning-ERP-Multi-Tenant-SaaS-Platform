@@ -3,6 +3,7 @@
 
 @section('page-content')
     <div class="content container-fluid">
+        @include('leave.partials.nav')
 
         <!-- Page Header -->
         <x-breadcrumb class="col">
@@ -17,13 +18,13 @@
             </ul>
             <x-slot name="right">
                 <div class="col-auto float-end ms-auto">
-                    <a data-url="{{ route('holidays.create') }}" href="javascript:void(0)" class="btn add-btn"
+                    <a data-url="{{ route('leave.config.public-holidays.create') }}" href="javascript:void(0)" class="btn add-btn"
                         data-ajax-modal="true" data-size="lg" data-title="Add Holiday">
                         <i class="fa-solid fa-plus"></i> {{ __('Add Holiday') }}
                     </a>
                     <div class="view-icons">
-                        <a href="{{ route('holidays.index') }}" data-bs-toggle="tooltip" data-bs-title="{{ __("Holidays List") }}" class="list-view btn btn-link active"><i class="fa-solid fa-bars"></i></a>
-                        <a href="{{ route('holidays.calendar') }}" data-bs-toggle="tooltip" data-bs-title="{{ __("Holidays Calendar") }}" class="grid-view btn btn-link"><i class="fa fa-calendar"></i></a>
+                        <a href="{{ route('leave.config.public-holidays.index') }}" data-bs-toggle="tooltip" data-bs-title="{{ __("Holidays List") }}" class="list-view btn btn-link active"><i class="fa-solid fa-bars"></i></a>
+                        <a href="{{ route('leave.config.public-holidays.calendar') }}" data-bs-toggle="tooltip" data-bs-title="{{ __("Holidays Calendar") }}" class="grid-view btn btn-link"><i class="fa fa-calendar"></i></a>
                     </div>
                 </div>
             </x-slot>
@@ -50,4 +51,3 @@
 ])
 {!! $dataTable->scripts(attributes: ['type' => 'module']) !!}
 @endpush
-

@@ -51,15 +51,23 @@
         <div class="row">
             <!-- Leave Type -->
             <div class="col-md-12">
-                @if ($balance)
+                @if(isset($allocations) && count($allocations) > 0)
+                    <div class="mb-3">
+                        <h6 class="text-muted fw-bold mb-2">{{ __('Your Available Balances:') }}</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($allocations as $type => $days)
+                                <div class="badge bg-light text-dark border p-2 d-flex align-items-center">
+                                    <span class="me-2">{{ $type }}:</span>
+                                    <strong class="text-primary fs-6">{{ $days + 0 }}</strong> 
+                                    <span class="ms-1 text-muted">{{ __('days') }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @elseif($balance)
                     <div class="mb-2">
                         <strong>{{ __('Remaining  Previous year Leave:') }}</strong>
                         <span style="color: rgb(255, 3, 158)"> {{ $balance->previous_year }}</span>
-                        {{ __('day(s)') }}
-                    </div>
-                    <div class="mb-2">
-                        <strong>{{ __('Remaining Current year Leave:') }}</strong>
-                        <span style="color: rgb(255, 3, 158)">{{ $balance->current_year }}</span>
                         {{ __('day(s)') }}
                     </div>
                     <div class="mb-2">
@@ -68,8 +76,9 @@
                         {{ __('day(s)') }}
                     </div>
                 @else
-                    <div class="mb-2 text-danger">
-                        {{ __('No leave‑balance record found for your account.') }}
+                    <div class="alert alert-warning py-2 small">
+                        <i class="fa fa-info-circle me-1"></i>
+                        {{ __('No leave balance found. You may need to request an allocation.') }} 
                     </div>
                 @endif
             </div>

@@ -1,0 +1,245 @@
+/* Leave Management Module - Odoo Style Theme */
+
+.leave-management-wrapper {
+    margin: -20px;
+    background: #f8f9fa;
+}
+
+/* Navigation Container */
+.leave-nav-container {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 12px 30px;
+    position: sticky;
+    top: 60px;
+    z-index: 100;
+}
+
+/* Dropdown Navigation Button */
+.leave-nav-container .dropdown-toggle {
+    min-width: 200px;
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.leave-nav-container .dropdown-toggle:hover {
+    background: #f8f9fa;
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.leave-nav-container .dropdown-toggle i {
+    font-size: 16px;
+}
+
+.leave-nav-container .dropdown-menu {
+    min-width: 250px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    margin-top: 8px;
+}
+
+.leave-nav-container .dropdown-item {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.leave-nav-container .dropdown-item i {
+    width: 20px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.leave-nav-container .dropdown-item:hover {
+    background: #f8f9fa;
+    color: #0d6efd;
+}
+
+.leave-nav-container .dropdown-item:hover i {
+    color: #0d6efd;
+}
+
+.leave-nav-container .dropdown-item.active {
+    background: #e7f1ff;
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.leave-nav-container .dropdown-item.active i {
+    color: #0d6efd;
+}
+
+/* Configuration Gear Icon */
+.config-quick-access {
+    margin-left: 20px;
+}
+
+.config-quick-access .btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.config-quick-access .btn-icon:hover {
+    background: #f8f9fa;
+    color: #0d6efd;
+    border-color: #0d6efd;
+    transform: rotate(90deg);
+}
+
+.config-quick-access .dropdown-menu {
+    min-width: 250px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+}
+
+.config-quick-access .dropdown-header {
+    font-weight: 600;
+    color: #212529;
+    padding: 10px 20px;
+}
+
+.config-quick-access .dropdown-item {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.config-quick-access .dropdown-item i {
+    width: 20px;
+    color: #6c757d;
+}
+
+.config-quick-access .dropdown-item:hover {
+    background: #f8f9fa;
+    color: #0d6efd;
+}
+
+.config-quick-access .dropdown-item:hover i {
+    color: #0d6efd;
+}
+
+/* Content Area */
+.leave-content-area {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 200px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .leave-nav-container {
+        padding: 10px 15px;
+    }
+
+    .leave-nav-container .dropdown-toggle {
+        min-width: 150px;
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    .leave-nav-container .dropdown-toggle span {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .config-quick-access {
+        margin-left: 10px;
+    }
+
+    .config-quick-access .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .leave-content-area {
+        padding: 15px;
+    }
+}
+
+/* Cards */
+.leave-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.leave-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.leave-card-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state h5 {
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #adb5bd;
+}

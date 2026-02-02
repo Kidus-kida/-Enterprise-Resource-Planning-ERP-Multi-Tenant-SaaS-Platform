@@ -162,11 +162,14 @@ class AppMenuListener
 
             // Leave Management Submenu
             if (auth()->user()->canAny(['view-request', 'edit-request', 'create-annual-leave', 'create-leave-type'])) {
-                $activeClass = route_is(['leaverequests.index', 'leaverequests.myleaverequests', 'leavetypes.index', 'annual_leaves.index']) ? "active" : "";
+                $activeClass = route_is(['leave.*', 'leaverequests.index', 'leaverequests.myleaverequests', 'leavetypes.index', 'annual_leaves.index']) ? "active" : "";
                 $menu->submenu(
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calendar-check-o"></i> <span>' . __('Leave Management') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
+                        // New Odoo-style Leave Management (Priority)
+                        ->add(Link::toRoute('leave.my-time', __('Time Off'))->addClass(route_is(['leave.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // Legacy leave system (temporary, will be removed later)
                         ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
@@ -436,13 +439,12 @@ class AppMenuListener
         }
 
         // Administration
-        if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles'])) {
-            $activeClass = route_is(['holidays.*', 'users.*', 'roles.*']) ? "active" : "";
+        if (auth()->user()->canAny(['view-users', 'view-roles'])) {
+            $activeClass = route_is(['users.*', 'roles.*']) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shield"></i> <span>' . __('Administration') . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addParentClass('submenu')
-                    ->addIfCan('view-holidays', Link::toRoute('holidays.index', __('Holidays'))->addClass(route_is('holidays.*') ? 'active' : ''))
                     ->addIfCan('view-users', Link::toRoute('users.index', __('User Management'))->addClass(route_is('users.*') ? 'active' : ''))
                     ->addIfCan('view-roles', Link::toRoute('roles.index', __('Roles & Permissions'))->addClass(route_is('roles.*') ? 'active' : ''))
             );

@@ -87,6 +87,35 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::group(['middleware' => ['module.access:contacts']], function () {
         Route::resource('clients', ClientsController::class);
         Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
+    })
+
+;
+
+    // Leave Management Module Routes
+    Route::prefix('leave-management')->name('leave.')->middleware(['module.access:hr'])->group(function () {
+        // Main navigation tabs
+        Route::get('/', [App\Http\Controllers\Leave\LeaveManagementController::class, 'index'])->name('index');
+        Route::get('/my-time', [App\Http\Controllers\Leave\LeaveManagementController::class, 'myTime'])->name('my-time');
+        Route::get('/overview', [App\Http\Controllers\Leave\LeaveManagementController::class, 'overview'])->name('overview');
+        Route::get('/management', [App\Http\Controllers\Leave\LeaveManagementController::class, 'management'])->name('management');
+        Route::get('/reporting', [App\Http\Controllers\Leave\LeaveManagementController::class, 'reporting'])->name('reporting');
+        Route::get('/configuration', [App\Http\Controllers\Leave\LeaveManagementController::class, 'configuration'])->name('configuration');
+        
+        // Management Routes
+        Route::resource('allocations', App\Http\Controllers\Leave\LeaveAllocationController::class)->names('management.allocations');
+        
+        // Configuration routes
+        Route::prefix('configuration')->name('config.')->group(function () {
+            // Public Holidays (moved from HR module)
+            // Configuration Resource Routes
+            Route::resource('time-off-types', App\Http\Controllers\Leave\TimeOffTypeController::class);
+            Route::resource('accrual-plans', App\Http\Controllers\Leave\AccrualPlanController::class);
+            Route::resource('mandatory-days', App\Http\Controllers\Leave\MandatoryDayController::class);
+            
+            // Public Holidays (Resource already defined as HolidaysController, let's keep it or alias it if needed)
+            Route::resource('public-holidays', HolidaysController::class);
+            Route::get('public-holidays-calendar', [HolidaysController::class, 'calendar'])->name('public-holidays.calendar');
+        });
     });
 
     // HR Module Routes
@@ -96,8 +125,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         
         Route::resource('departments', DepartmentsController::class)->except(['show']);
         Route::resource('designations', DesignationsController::class)->except(['show']);
-        Route::resource('holidays', HolidaysController::class);
-        Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
+        // Holidays moved to Leave Management > Configuration > Public Holidays
         Route::resource('family-information', FamilyInfoController::class);
 
         
