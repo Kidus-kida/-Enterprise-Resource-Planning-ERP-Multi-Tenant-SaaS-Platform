@@ -27,7 +27,8 @@ class BusinessOwnerSetup extends Mailable
         $centralDomain = env('CENTRAL_DOMAIN', config('tenancy.central_domains.0', 'ettech.et'));
         
         $domain = $subdomain . '.' . $centralDomain;
-        $this->resetUrl = "https://{$domain}/password/reset/{$token}?email=" . urlencode($business->owner_email);
+        // Corrected route path to match auth.php: 'reset-password/{token}'
+        $this->resetUrl = "https://{$domain}/reset-password/{$token}?email=" . urlencode($business->owner_email);
     }
 
     /**
