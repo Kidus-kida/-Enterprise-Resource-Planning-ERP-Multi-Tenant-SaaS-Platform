@@ -23,7 +23,10 @@ class BusinessOwnerSetup extends Mailable
         
         // Generate password reset URL for tenant subdomain
         $subdomain = $business->subdomain ?: \Illuminate\Support\Str::slug($business->name);
-        $domain = $subdomain . '.' . config('tenancy.central_domains.0', 'ettech.et');
+        // Use env variable directly as config might be missing/defaulting
+        $centralDomain = env('CENTRAL_DOMAIN', config('tenancy.central_domains.0', 'ettech.et'));
+        
+        $domain = $subdomain . '.' . $centralDomain;
         $this->resetUrl = "https://{$domain}/password/reset/{$token}?email=" . urlencode($business->owner_email);
     }
 
