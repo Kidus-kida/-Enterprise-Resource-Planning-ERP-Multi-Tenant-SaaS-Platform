@@ -613,6 +613,15 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         // Night Shift Configuration
         Route::get('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'nightShift'])->name('admin.attendance-settings.night-shift');
         Route::post('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateNightShift'])->name('admin.attendance-settings.night-shift.update');
+
+        // Late Arrival Configuration (Modal)
+        Route::post('/late-arrival', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateLateArrival'])->name('admin.attendance-settings.late-arrival.update');
+        
+        // Early Checkout Configuration (Modal)
+        Route::post('/early-checkout', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateEarlyCheckout'])->name('admin.attendance-settings.early-checkout.update');
+
+        // Overtime Configuration (Modal)
+        Route::post('/overtime', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertime'])->name('admin.attendance-settings.overtime.update');
     });
 
     // Audit Logs
