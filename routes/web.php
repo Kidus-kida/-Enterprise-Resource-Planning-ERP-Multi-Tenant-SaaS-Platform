@@ -62,24 +62,6 @@ Route::middleware(['auth'])->group(function () {
         }
     })->name('run.migrations');
 
-    Route::get('/run-seeders', function() {
-        try {
-            Artisan::call('db:seed', ['--force' => true]);
-            $output = Artisan::output();
-            
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Seeders completed successfully',
-                'output' => $output
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    })->name('run.seeders');
-
 });
 
 
