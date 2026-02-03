@@ -151,6 +151,9 @@ class SwitchTenantDatabase
                 DB::purge('tenant');
                 DB::reconnect('tenant');
                 
+                // IMPORTANT: Tell PasswordBroker to use the tenant connection for verification!
+                Config::set('auth.passwords.users.connection', 'tenant');
+                
                 // Test with a simple query
                 DB::connection('tenant')->select('SELECT 1');
                 
