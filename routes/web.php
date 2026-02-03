@@ -420,6 +420,8 @@ Route::get('/test-dashboard-parts', function() {
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class])->group(function () {
     include __DIR__ . '/auth.php';
+
+
 });
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
