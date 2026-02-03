@@ -34,16 +34,17 @@ class SwitchTenantDatabase
                 $tenantId = session('current_tenant_id');
             }
 
-            // If no tenant ID found, try to detect via Subdomain
+            // If no tenant ID found, try to detect via Subdomain (Cached)
             if (!$tenantId) {
                 $host = $request->getHost();
                 
-                // 1. Try exact domain match
-                $domainRecord = \Modules\Superadmin\Models\Domain::where('domain', $host)->first();
-                if ($domainRecord) {
-                    $tenantId = $domainRecord->tenant_id;
-                    session(['current_tenant_id' => $tenantId]);
-                } else {
+                $tenantId = \Illuminate\Support\Facades\Cache::remember("tenant_id_for_{$host}", now()->addHours(12), function() use ($host) {
+                    // 1. Try exact domain match
+                    $domainRecord = \Modules\Superadmin\Models\Domain::where('domain', $host)->first();
+                    if ($domainRecord) {
+                        return $domainRecord->tenant_id;
+                    }
+                    
                     // 2. Try subdomain match against Business
                     $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et'); 
                     
@@ -52,10 +53,14 @@ class SwitchTenantDatabase
                         
                         $business = \App\Business::where('subdomain', $subdomain)->first();
                         if ($business && $business->tenant_id) {
-                            $tenantId = $business->tenant_id;
-                            session(['current_tenant_id' => $tenantId]);
+                            return $business->tenant_id;
                         }
                     }
+                    return null;
+                });
+
+                if ($tenantId) {
+                    session(['current_tenant_id' => $tenantId]);
                 }
             }
 
@@ -104,8 +109,10 @@ class SwitchTenantDatabase
     private function switchToTenant(string $tenantId): void
     {
         try {
-            // Find tenant from central database
-            $tenant = Tenant::on('mysql')->find($tenantId);
+            // Find tenant from central database (Cached)
+            $tenant = \Illuminate\Support\Facades\Cache::remember("tenant_data_{$tenantId}", now()->addHours(12), function() use ($tenantId) {
+                return Tenant::on('mysql')->find($tenantId);
+            });
 
             if (!$tenant || empty($tenant->data) || !isset($tenant->data['db_host'])) {
                 \Log::warning("SwitchTenantDatabase: Invalid tenant data for ID: $tenantId");

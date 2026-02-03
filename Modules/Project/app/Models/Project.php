@@ -12,7 +12,7 @@ use App\Traits\HasCompany;
 use Modules\Project\Database\Factories\ProjectFactory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Project extends Model implements HasMedia
+class Project extends \App\Models\TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia, HasCompany;
 

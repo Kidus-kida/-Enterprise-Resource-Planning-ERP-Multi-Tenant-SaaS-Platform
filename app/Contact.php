@@ -11,7 +11,7 @@ use Spatie\Activitylog\LogOptions;
 use Modules\Loan\Entities\Loan;
 use App\Interfaces\CommonConstants;
 
-class Contact extends Model implements CommonConstants
+class Contact extends \App\Models\TenantModel implements CommonConstants
 {
     use \App\Traits\HasCompany;
 

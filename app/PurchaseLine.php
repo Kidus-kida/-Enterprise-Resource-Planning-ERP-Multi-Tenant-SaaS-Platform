@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PurchaseLine extends Model
+class PurchaseLine extends \App\Models\TenantModel
 {
     use SoftDeletes;
 

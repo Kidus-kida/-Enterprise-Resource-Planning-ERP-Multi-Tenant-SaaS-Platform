@@ -8,7 +8,7 @@ use Modules\Sales\Database\Factories\ExpenseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasCompany;
 
-class Expense extends Model
+class Expense extends \App\Models\TenantModel
 {
     use HasFactory, HasCompany;
 
