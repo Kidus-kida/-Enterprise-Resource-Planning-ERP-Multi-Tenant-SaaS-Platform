@@ -343,13 +343,23 @@ class TenantManagementController extends Controller
             // This is required because PasswordBroker via Superadmin writes to Main DB,
             // but Tenant App looks in Tenant DB.
             
-            $token = \Illuminate\Support\Str::random(60);
-            $hashedToken = \Illuminate\Support\Facades\Hash::make($token);
-            
-            \DB::connection('tenant')->table('password_reset_tokens')->updateOrInsert(
-                ['email' => $business->owner_email],
-                ['token' => $hashedToken, 'created_at' => now()]
+            // Use DatabaseTokenRepository to generate and store token in TENANT DB
+            // This ensures exact compatibility with Laravel's PasswordBroker
+            $connection = \DB::connection('tenant');
+            $hasher = app('hash');
+            $key = config('app.key');
+            $table = config('auth.passwords.users.table', 'password_reset_tokens');
+            $expire = config('auth.passwords.users.expire', 60);
+
+            $tokenRepository = new \Illuminate\Auth\Passwords\DatabaseTokenRepository(
+                $connection, $hasher, $table, $key, $expire
             );
+
+            $dummyUser = new \App\Models\User();
+            $dummyUser->email = $business->owner_email;
+            
+            // This creates the token, hashes it, and inserts into the table using the connection
+            $token = $tokenRepository->create($dummyUser);
             
             \Mail::to($business->owner_email)->send(
                 new \App\Mail\BusinessOwnerSetup($business, $token)

@@ -215,14 +215,21 @@ class BusinessController extends Controller
             
             \DB::purge('tenant_invite_temp');
             
-            // Generate & Store Token in Tenant DB
-            $token = \Illuminate\Support\Str::random(60);
-            $hashedToken = \Illuminate\Support\Facades\Hash::make($token);
-            
-            \DB::connection('tenant_invite_temp')->table('password_reset_tokens')->updateOrInsert(
-                ['email' => $business->owner_email],
-                ['token' => $hashedToken, 'created_at' => now()]
+            // Generate & Store Token in Tenant DB using Repository for exact compatibility
+            $connection = \DB::connection('tenant_invite_temp');
+            $hasher = app('hash');
+            $key = config('app.key');
+            $table = config('auth.passwords.users.table', 'password_reset_tokens');
+            $expire = config('auth.passwords.users.expire', 60);
+
+            $tokenRepository = new \Illuminate\Auth\Passwords\DatabaseTokenRepository(
+                $connection, $hasher, $table, $key, $expire
             );
+
+            $dummyUser = new \App\Models\User();
+            $dummyUser->email = $business->owner_email;
+            
+            $token = $tokenRepository->create($dummyUser);
             
             // Send Email
             \Mail::to($business->owner_email)->send(
