@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Project\Database\Factories\ProjectTaskBoardFactory;
 
-class ProjectTaskBoard extends Model
+class ProjectTaskBoard extends \App\Models\TenantModel
 {
     use HasFactory;
 

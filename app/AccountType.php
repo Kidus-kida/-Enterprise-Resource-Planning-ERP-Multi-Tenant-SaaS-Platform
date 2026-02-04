@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class AccountType extends Model
+class AccountType extends \App\Models\TenantModel
 {
     // use LogsActivity;
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TransportTrip extends Model
+class TransportTrip extends \App\Models\TenantModel
 {
     use HasFactory, SoftDeletes;
 

@@ -11,7 +11,7 @@ use App\AccountType;
 use App\AccountGroup;
 
 
-class Account extends Model
+class Account extends \App\Models\TenantModel
 {
     use SoftDeletes;
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class InvoiceLayout extends Model
+class InvoiceLayout extends \App\Models\TenantModel
 {
     use LogsActivity;
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use App\Models\User;
 
-class Store extends Model
+class Store extends \App\Models\TenantModel
 {
     
     protected static $logAttributes = ['*'];

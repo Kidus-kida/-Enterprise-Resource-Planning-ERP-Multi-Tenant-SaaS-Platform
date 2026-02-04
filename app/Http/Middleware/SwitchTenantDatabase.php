@@ -19,9 +19,16 @@ class SwitchTenantDatabase
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip for Superadmin and Diagnostic routes to prevent Session Pollution/Connection Errors
-        if ($request->is('superadmin*') || $request->is('diagnostic*')) {
+        // Skip for Superadmin, Diagnostic, and Logout routes to prevent Session Pollution/Connection Errors
+        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout')) {
             return $next($request);
+        }
+
+        // Defense in depth: Block superadmins from accessing tenant routes explicitly
+        // This prevents URL guessing, regressions, and "it worked before" bugs
+        // Note: We check UserType, not roles, as tenants can create roles named 'superadmin'
+        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+            abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
         }
 
         try {
@@ -32,6 +39,36 @@ class SwitchTenantDatabase
                 session(['current_tenant_id' => $tenantId]);
             } elseif (session()->has('current_tenant_id')) {
                 $tenantId = session('current_tenant_id');
+            }
+
+            // If no tenant ID found, try to detect via Subdomain (Cached)
+            if (!$tenantId) {
+                $host = $request->getHost();
+                
+                $tenantId = \Illuminate\Support\Facades\Cache::remember("tenant_id_for_{$host}", now()->addHours(12), function() use ($host) {
+                    // 1. Try exact domain match
+                    $domainRecord = \Modules\Superadmin\Models\Domain::where('domain', $host)->first();
+                    if ($domainRecord) {
+                        return $domainRecord->tenant_id;
+                    }
+                    
+                    // 2. Try subdomain match against Business
+                    $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et'); 
+                    
+                    if (\Illuminate\Support\Str::endsWith($host, '.' . $centralDomain)) {
+                        $subdomain = substr($host, 0, -strlen('.' . $centralDomain));
+                        
+                        $business = \App\Business::where('subdomain', $subdomain)->first();
+                        if ($business && $business->tenant_id) {
+                            return $business->tenant_id;
+                        }
+                    }
+                    return null;
+                });
+
+                if ($tenantId) {
+                    session(['current_tenant_id' => $tenantId]);
+                }
             }
 
             // Switch to tenant database if we have a tenant ID
@@ -79,8 +116,10 @@ class SwitchTenantDatabase
     private function switchToTenant(string $tenantId): void
     {
         try {
-            // Find tenant from central database
-            $tenant = Tenant::on('mysql')->find($tenantId);
+            // Find tenant from central database (Cached)
+            $tenant = \Illuminate\Support\Facades\Cache::remember("tenant_data_{$tenantId}", now()->addHours(12), function() use ($tenantId) {
+                return Tenant::on('mysql')->find($tenantId);
+            });
 
             if (!$tenant || empty($tenant->data) || !isset($tenant->data['db_host'])) {
                 \Log::warning("SwitchTenantDatabase: Invalid tenant data for ID: $tenantId");
@@ -125,6 +164,9 @@ class SwitchTenantDatabase
             try {
                 DB::purge('tenant');
                 DB::reconnect('tenant');
+                
+                // IMPORTANT: Tell PasswordBroker to use the tenant connection for verification!
+                Config::set('auth.passwords.users.connection', 'tenant');
                 
                 // Test with a simple query
                 DB::connection('tenant')->select('SELECT 1');

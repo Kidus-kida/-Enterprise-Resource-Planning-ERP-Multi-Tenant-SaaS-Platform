@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\Session;
 trait HasCompany
 {
     /**
+     * Get the database connection for the model.
+     * Dynamically uses 'tenant' connection when configured, otherwise uses default.
+     *
+     * @return string
+     */
+    public function getConnectionName()
+    {
+        if (!empty(config('database.connections.tenant'))) {
+            return 'tenant';
+        }
+        return config('database.default');
+    }
+
+    /**
      * Boot the HasCompany trait for a model.
      *
      * @return void
@@ -18,7 +32,9 @@ trait HasCompany
         try {
             $model = new static;
             $tableName = $model->getTable();
-            if (\Illuminate\Support\Facades\Schema::hasColumn($tableName, 'company_id')) {
+            
+            // Use the model's connection to check for column
+            if ($model->getConnection()->getSchemaBuilder()->hasColumn($tableName, 'company_id')) {
                 static::addGlobalScope(new CompanyScope);
                 
                 // Auto-assign company_id when creating

@@ -9,7 +9,7 @@ use Modules\Sales\Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasCompany;
 
-class Invoice extends Model
+class Invoice extends \App\Models\TenantModel
 {
     use HasFactory, HasCompany;
 

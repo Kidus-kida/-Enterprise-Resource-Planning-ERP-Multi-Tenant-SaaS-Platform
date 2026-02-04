@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TransactionPayment extends Model
+class TransactionPayment extends \App\Models\TenantModel
 {
     use SoftDeletes;
     // use LogsActivity;
