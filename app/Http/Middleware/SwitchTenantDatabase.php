@@ -19,9 +19,16 @@ class SwitchTenantDatabase
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip for Superadmin and Diagnostic routes to prevent Session Pollution/Connection Errors
-        if ($request->is('superadmin*') || $request->is('diagnostic*')) {
+        // Skip for Superadmin, Diagnostic, and Logout routes to prevent Session Pollution/Connection Errors
+        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout')) {
             return $next($request);
+        }
+
+        // Defense in depth: Block superadmins from accessing tenant routes explicitly
+        // This prevents URL guessing, regressions, and "it worked before" bugs
+        // Note: We check UserType, not roles, as tenants can create roles named 'superadmin'
+        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+            abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
         }
 
         try {
