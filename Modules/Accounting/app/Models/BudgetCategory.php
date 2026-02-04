@@ -2,11 +2,13 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Accounting\Database\Factories\BudgetCategoryFactory;
 
-class BudgetCategory extends Model
+class BudgetCategory extends TenantModel
 {
     use HasFactory;
 
@@ -20,3 +22,4 @@ class BudgetCategory extends Model
         return BudgetCategoryFactory::new();
     }
 }
+

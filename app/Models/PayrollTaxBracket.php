@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PayrollTaxBracket extends Model
+class PayrollTaxBracket extends TenantModel
 {
     use HasFactory;
 
@@ -54,3 +54,4 @@ class PayrollTaxBracket extends Model
         return round($totalTax, 2);
     }
 }
+

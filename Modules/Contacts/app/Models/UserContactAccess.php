@@ -2,11 +2,13 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\Traits\LogsActivity;
 // use Spatie\Activitylog\LogOptions;
 
-class UserContactAccess extends Model
+class UserContactAccess extends TenantModel
 {
     // use LogsActivity;
 
@@ -28,3 +30,4 @@ class UserContactAccess extends Model
 
     //
 }
+

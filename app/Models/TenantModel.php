@@ -12,4 +12,15 @@ abstract class TenantModel extends Model
      * @var string|null
      */
     protected $connection = 'tenant';
+
+    /**
+     * Get the database connection for the model.
+     * Overrides Model::getConnectionName to ensure strict strict tenant usage.
+     *
+     * @return string
+     */
+    public function getConnectionName()
+    {
+        return 'tenant';
+    }
 }

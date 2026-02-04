@@ -2,11 +2,13 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Journal extends Model
+class Journal extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -63,3 +65,4 @@ class Journal extends Model
         return $query->where('type', $type);
     }
 }
+

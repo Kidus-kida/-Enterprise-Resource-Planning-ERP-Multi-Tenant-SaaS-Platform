@@ -27,7 +27,7 @@ class IdentifyTenantBySubdomain
             $host = $request->getHost();
             
             // Check if we have a subdomain
-            $centralDomain = config('tenancy.central_domain', 'ettech.et');
+            $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
             
             \Log::info("IdentifyTenantBySubdomain: Host = $host, Central = $centralDomain");
             
@@ -44,23 +44,30 @@ class IdentifyTenantBySubdomain
             if ($subdomain && $subdomain !== 'www') {
                 \Log::info("IdentifyTenantBySubdomain: Extracted subdomain = $subdomain");
                 
-                // Look up tenant by domain
+                // Look up tenant by domain (custom domain)
                 $domain = Domain::where('domain', $host)->first();
                 
                 if ($domain && $domain->tenant_id) {
-                    // Store tenant ID in session
+                    // Found by Custom Domain
                     session(['current_tenant_id' => $domain->tenant_id]);
-                    
-                    // Also add to request for immediate use
                     $request->merge(['tenant' => $domain->tenant_id]);
-                    
-                    \Log::info("IdentifyTenantBySubdomain: Found tenant ID = {$domain->tenant_id}");
+                    \Log::info("IdentifyTenantBySubdomain: Found tenant ID (Custom Domain) = {$domain->tenant_id}");
                 } else {
-                    // IMPORTANT: If we are on a subdomain/domain but it doesn't match a tenant,
-                    // we MUST clear any previous tenant session. Otherwise, we might stay connected 
-                    // to the wrong DB from a previous visit.
-                    session()->forget('current_tenant_id');
-                    \Log::warning("IdentifyTenantBySubdomain: No tenant found for domain $host - Session cleared");
+                    // Fallback: Look up by Subdomain in Businesses table
+                    $business = \App\Business::where('subdomain', $subdomain)->first();
+                    
+                    if ($business && $business->tenant_id) {
+                        // Found by Subdomain
+                        session(['current_tenant_id' => $business->tenant_id]);
+                        $request->merge(['tenant' => $business->tenant_id]);
+                        \Log::info("IdentifyTenantBySubdomain: Found tenant ID (Subdomain) = {$business->tenant_id}");
+                    } else {
+                        // Not found in either
+                        // IMPORTANT: If we are on a subdomain/domain but it doesn't match a tenant,
+                        // we MUST clear any previous tenant session.
+                        session()->forget('current_tenant_id');
+                        \Log::warning("IdentifyTenantBySubdomain: No tenant found for domain $host (Sub: $subdomain) - Session cleared");
+                    }
                 }
             } else {
                 // No subdomain (e.g. localhost, IP address)

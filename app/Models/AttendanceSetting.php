@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-class AttendanceSetting extends Model
+class AttendanceSetting extends TenantModel
 {
     use HasFactory;
 
@@ -246,3 +246,4 @@ class AttendanceSetting extends Model
         return $errors;
     }
 }
+

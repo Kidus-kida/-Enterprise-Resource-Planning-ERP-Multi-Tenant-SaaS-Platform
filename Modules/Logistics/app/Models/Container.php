@@ -2,11 +2,13 @@
 
 namespace Modules\Logistics\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Container extends Model
+class Container extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -40,3 +42,4 @@ class Container extends Model
         return $this->hasMany(TransportTrip::class);
     }
 }
+

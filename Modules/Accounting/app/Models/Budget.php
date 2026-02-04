@@ -2,6 +2,8 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +12,7 @@ use Modules\Accounting\Database\Factories\BudgetFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Budget extends Model implements HasMedia
+class Budget extends TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia, HasCompany;
 
@@ -47,3 +49,4 @@ class Budget extends Model implements HasMedia
         return BudgetFactory::new();
     }
 }
+

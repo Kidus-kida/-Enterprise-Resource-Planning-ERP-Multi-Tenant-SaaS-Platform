@@ -2,12 +2,14 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
-class Contact extends Model
+class Contact extends TenantModel
 {
     use Notifiable;
     use SoftDeletes;
@@ -156,3 +158,4 @@ class Contact extends Model
         return $types;
     }
 }
+

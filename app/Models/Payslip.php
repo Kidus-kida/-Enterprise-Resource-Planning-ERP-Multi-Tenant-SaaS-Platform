@@ -6,7 +6,7 @@ use App\Enums\Payroll\SalaryType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Payslip extends Model
+class Payslip extends TenantModel
 {
     use HasFactory;
 
@@ -50,3 +50,4 @@ class Payslip extends Model
         return $this->belongsTo(EmployeeDetail::class, 'employee_detail_id');
     }
 }
+

@@ -2,11 +2,13 @@
 
 namespace Modules\Logistics\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DryPort extends Model
+class DryPort extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -21,3 +23,4 @@ class DryPort extends Model
         'is_active' => 'boolean',
     ];
 }
+

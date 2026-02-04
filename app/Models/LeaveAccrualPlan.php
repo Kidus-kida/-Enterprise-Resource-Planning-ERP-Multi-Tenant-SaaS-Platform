@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LeaveAccrualPlan extends Model
+class LeaveAccrualPlan extends TenantModel
 {
     use SoftDeletes;
 
@@ -91,3 +91,4 @@ class LeaveAccrualPlan extends Model
         return $this->max_carryover_days;
     }
 }
+

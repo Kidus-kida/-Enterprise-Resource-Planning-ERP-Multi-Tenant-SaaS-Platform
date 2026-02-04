@@ -2,11 +2,13 @@
 
 namespace Modules\Logistics\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CustomsDeclaration extends Model
+class CustomsDeclaration extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -60,3 +62,4 @@ class CustomsDeclaration extends Model
         return $this->belongsTo(HSCode::class);
     }
 }
+

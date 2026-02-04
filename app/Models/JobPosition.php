@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class JobPosition extends Model
+class JobPosition extends TenantModel
 {
     protected $fillable = [
         'name',
@@ -22,3 +22,4 @@ class JobPosition extends Model
         return $this->belongsTo(Department::class);
     }
 }
+

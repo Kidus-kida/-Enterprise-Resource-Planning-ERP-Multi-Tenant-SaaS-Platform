@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TaxCalculation extends Model
+class TaxCalculation extends TenantModel
 {
     //
      protected $fillable = [
@@ -14,3 +14,4 @@ class TaxCalculation extends Model
         'deducted_amount',
     ];
 }
+

@@ -2,12 +2,14 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class FixedAsset extends Model implements HasMedia
+class FixedAsset extends TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
@@ -33,3 +35,4 @@ class FixedAsset extends Model implements HasMedia
         return $this->belongsTo(\App\Models\User::class, 'created_by');
     }
 }
+

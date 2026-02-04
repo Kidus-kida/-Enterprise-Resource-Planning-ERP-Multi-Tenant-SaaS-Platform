@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeEducation extends Model
+class EmployeeEducation extends TenantModel
 {
     use HasFactory;
 
@@ -19,3 +19,4 @@ class EmployeeEducation extends Model
         return $this->belongsTo(EmployeeDetail::class,);
     }
 }
+

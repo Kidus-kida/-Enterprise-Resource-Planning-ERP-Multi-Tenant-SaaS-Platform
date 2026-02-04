@@ -2,11 +2,13 @@
 
 namespace Modules\Crm\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Crm\Models\Lead;
 
-class FollowUp extends Model
+class FollowUp extends TenantModel
 {
     use HasFactory;
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
-class ContactLedger extends Model
+class ContactLedger extends TenantModel
 {
     // use LogsActivity;
     use SoftDeletes;
@@ -60,3 +60,4 @@ class ContactLedger extends Model
         return $contact_ledger;
     }
 }
+

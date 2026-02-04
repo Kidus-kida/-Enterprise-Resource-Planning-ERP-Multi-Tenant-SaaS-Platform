@@ -24,12 +24,7 @@ class SwitchTenantDatabase
             return $next($request);
         }
 
-        // Defense in depth: Block superadmins from accessing tenant routes explicitly
-        // This prevents URL guessing, regressions, and "it worked before" bugs
-        // Note: We check UserType, not roles, as tenants can create roles named 'superadmin'
-        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
-            abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
-        }
+
 
         try {
             $tenantId = $request->query('tenant');
@@ -37,8 +32,14 @@ class SwitchTenantDatabase
             // Store tenant ID in session if provided via query
             if ($tenantId) {
                 session(['current_tenant_id' => $tenantId]);
-            } elseif (session()->has('current_tenant_id')) {
-                $tenantId = session('current_tenant_id');
+            } else {
+                // If on Central Domain and NO query param, ignore sticky session to prevent "Stuck in Tenant" mode
+                $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
+                if ($request->getHost() === $centralDomain) {
+                    session()->forget('current_tenant_id');
+                } elseif (session()->has('current_tenant_id')) {
+                    $tenantId = session('current_tenant_id');
+                }
             }
 
             // If no tenant ID found, try to detect via Subdomain (Cached)
@@ -105,6 +106,22 @@ class SwitchTenantDatabase
                     }
                 }
             }
+        }
+
+        // Defense in depth check (MOVED AFTER SWITCH):
+        // Now verifying against the TARGET database context.
+        // If we switched to tenant DB, we are checking the Tenant User.
+        // If we failed to switch (still Main DB), we are checking the Main User.
+        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+            abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
+        }
+
+
+        // Runtime Assertion: Security Check
+        // If accessing dashboard but no tenant set, ABORT.
+        if (!session()->has('current_tenant_id') && $request->is('dashboard*') && !$request->is('superadmin*')) {
+             \Log::critical('Security Assertion Failed: Accessing dashboard without tenant context. Host: ' . $request->getHost());
+             abort(500, 'Tenant context missing - Security Abort');
         }
 
         return $next($request);

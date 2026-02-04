@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PayslipItem extends Model
+class PayslipItem extends TenantModel
 {
     use HasFactory;
 
@@ -34,3 +34,4 @@ class PayslipItem extends Model
 
 
 }
+

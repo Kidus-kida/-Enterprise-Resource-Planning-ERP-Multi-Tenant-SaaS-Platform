@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MandatoryDay extends Model
+class MandatoryDay extends TenantModel
 {
     use SoftDeletes;
 
@@ -121,3 +121,4 @@ class MandatoryDay extends Model
         return $this->restriction_type === 'no_leave';
     }
 }
+

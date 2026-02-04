@@ -2,12 +2,14 @@
 
 namespace Modules\Project\Models;
 
+use App\Models\TenantModel;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Project\Database\Factories\ProjectTeamFactory;
 
-class ProjectTeam extends Model
+class ProjectTeam extends TenantModel
 {
     use HasFactory;
 
@@ -27,3 +29,4 @@ class ProjectTeam extends Model
     }
 
 }
+

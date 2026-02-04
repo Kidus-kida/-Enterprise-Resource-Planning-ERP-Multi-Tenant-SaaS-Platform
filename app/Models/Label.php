@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Project\Models\Task;
 
-class Label extends Model
+class Label extends TenantModel
 {
     use HasFactory;
 

@@ -2,6 +2,8 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use App\Utils\TransactionUtil;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use App\Account;
 
-class AccountTransaction extends Model
+class AccountTransaction extends TenantModel
 {
     use SoftDeletes;
 
@@ -201,3 +203,4 @@ class AccountTransaction extends Model
         return $this->belongsTo(\App\Account::class, 'account_id');
     }
 }
+

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Variation extends Model
+class Variation extends TenantModel
 {
     use SoftDeletes;
 
@@ -36,3 +36,4 @@ class Variation extends Model
         return $this->belongsTo(\App\ProductVariation::class);
     }
 }
+

@@ -2,11 +2,13 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\Traits\LogsActivity;
 // use Spatie\Activitylog\LogOptions;
 
-class ContactLinkedAccount extends Model
+class ContactLinkedAccount extends TenantModel
 {
     // use LogsActivity;
 
@@ -37,3 +39,4 @@ class ContactLinkedAccount extends Model
     protected $guarded = ['id'];
 
 }
+

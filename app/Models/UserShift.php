@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
-class UserShift extends Model
+class UserShift extends TenantModel
 {
     protected $fillable = [
         'user_id',
@@ -96,3 +96,4 @@ class UserShift extends Model
         return $assignment?->shift;
     }
 }
+

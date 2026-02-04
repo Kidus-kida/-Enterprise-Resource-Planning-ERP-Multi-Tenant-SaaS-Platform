@@ -2,10 +2,12 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class AccountGroup extends Model
+class AccountGroup extends TenantModel
 {
     use HasFactory;
 
@@ -69,3 +71,4 @@ class AccountGroup extends Model
         return self::pluck('name', 'id');
     }
 }
+

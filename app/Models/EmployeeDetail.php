@@ -6,7 +6,7 @@ use App\Enums\MaritalStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeDetail extends Model
+class EmployeeDetail extends TenantModel
 {
     use HasFactory;
 
@@ -79,3 +79,4 @@ class EmployeeDetail extends Model
         return $this->hasMany(EmployeeDeduction::class);
     }
 }
+

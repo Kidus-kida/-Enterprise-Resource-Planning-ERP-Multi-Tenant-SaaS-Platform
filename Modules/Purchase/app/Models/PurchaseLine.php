@@ -2,13 +2,15 @@
 
 namespace Modules\Purchase\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Contacts\Models\Transaction;
 use App\Models\Product;
 use App\Models\Variation;
 
-class PurchaseLine extends Model
+class PurchaseLine extends TenantModel
 {
     use SoftDeletes;
 
@@ -56,3 +58,4 @@ class PurchaseLine extends Model
         return (float)($this->quantity - $this->quantity_used);
     }
 }
+

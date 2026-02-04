@@ -2,9 +2,11 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 
-class NotificationTemplate extends Model
+class NotificationTemplate extends TenantModel
 {
     /**
      * The attributes that aren't mass assignable.
@@ -368,3 +370,4 @@ class NotificationTemplate extends Model
         return $notification_template_data;
     }
 }
+

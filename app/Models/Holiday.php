@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 
-class Holiday extends Model
+class Holiday extends TenantModel
 {
     use HasFactory;
 
@@ -140,3 +140,4 @@ class Holiday extends Model
         return false;
     }
 }
+

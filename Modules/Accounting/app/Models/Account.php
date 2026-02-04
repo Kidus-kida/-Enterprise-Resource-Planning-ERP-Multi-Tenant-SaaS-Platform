@@ -2,12 +2,14 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
 
-class Account extends Model
+class Account extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -283,3 +285,4 @@ class Account extends Model
         return $account;
     }
 }
+

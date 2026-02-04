@@ -2,12 +2,14 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use DB;
 use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\Traits\LogsActivity;
 // use Spatie\Activitylog\LogOptions;
 
-class BusinessLocation extends Model
+class BusinessLocation extends TenantModel
 {
     // use LogsActivity;
 
@@ -174,3 +176,4 @@ class BusinessLocation extends Model
 
 
 }
+

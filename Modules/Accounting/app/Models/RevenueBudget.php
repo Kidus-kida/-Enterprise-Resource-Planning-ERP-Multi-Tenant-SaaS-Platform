@@ -2,6 +2,8 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Modules\Accounting\Models\Budget;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Accounting\Models\BudgetCategory;
@@ -10,7 +12,7 @@ use Modules\Accounting\Database\Factories\RevenueBudgetFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class RevenueBudget extends Model implements HasMedia
+class RevenueBudget extends TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
@@ -34,3 +36,4 @@ class RevenueBudget extends Model implements HasMedia
         return RevenueBudgetFactory::new();
     }
 }
+

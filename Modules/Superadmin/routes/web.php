@@ -17,7 +17,7 @@ use Modules\Superadmin\Http\Controllers\AddonController;
 |--------------------------------------------------------------------------
 */
 
-Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']], function () {
+Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin', 'central_domain']], function () {
     
     // Dashboard
     Route::get('/', [SuperadminController::class, 'index'])->name('superadmin.dashboard');

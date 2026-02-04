@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeDeduction extends Model
+class EmployeeDeduction extends TenantModel
 {
     use HasFactory;
 
@@ -18,3 +18,4 @@ class EmployeeDeduction extends Model
         return $this->belongsTo(EmployeeDetail::class, 'employee_detail_id');
     }
 }
+

@@ -2,6 +2,8 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BusinessLocation;
 use Modules\Products\Models\Unit; // Assuming Unit might be in Products or App\Models, defaulting to App\Models if unsure. Actually, mostly App\Models in original.
@@ -10,7 +12,7 @@ use App\Models\TaxRate;
 use App\Models\Category;
 use App\Models\Warranty;
 
-class Product extends Model
+class Product extends TenantModel
 {
     /**
      * The attributes that aren't mass assignable.
@@ -241,3 +243,4 @@ class Product extends Model
         return $this->hasMany(\App\Models\ProductRack::class);
     }
 }
+
