@@ -487,6 +487,25 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
         Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
         
+        // Manual Entry Routes
+        Route::get('attendance/my', [AttendancesController::class, 'myAttendance'])->name('attendance.my');
+    // Draft Management
+    Route::post('/attendance/my/draft', [AttendancesController::class, 'saveDraft'])->name('attendance.my.draft.save');
+    Route::put('/attendance/my/draft/{draft}', [AttendancesController::class, 'updateDraft'])->name('attendance.my.draft.update');
+    Route::delete('/attendance/my/draft/{draft}', [AttendancesController::class, 'deleteDraft'])->name('attendance.my.draft.delete');
+    Route::post('/attendance/my/submit', [AttendancesController::class, 'submitDrafts'])->name('attendance.my.submit');
+    
+    // Approval Actions
+    Route::post('/attendance/approve/{draft}', [AttendancesController::class, 'approveDraft'])->name('attendance.approvals.approve');
+    Route::post('/attendance/reject/{draft}', [AttendancesController::class, 'rejectDraft'])->name('attendance.approvals.reject');
+    Route::post('/attendance/approve-batch', [AttendancesController::class, 'approveBatch'])->name('attendance.approvals.approve_batch');
+    Route::post('/attendance/reject-batch', [AttendancesController::class, 'rejectBatch'])->name('attendance.approvals.reject_batch');
+        
+        Route::get('attendance/enter', [AttendancesController::class, 'enterAttendance'])->name('attendance.enter');
+        Route::post('attendance/enter', [AttendancesController::class, 'storeManualAttendance'])->name('attendance.storeManual');
+        Route::post('attendance/submit-manual', [AttendancesController::class, 'submitManualDrafts'])->name('attendance.submitManual');
+        Route::get('attendance/approvals', [AttendancesController::class, 'attendanceApprovals'])->name('attendance.approvals');
+        
 
         Route::resource('leavetypes', LeaveTypeController::class);
         Route::resource('leaverequests', LeaveRequestController::class);
@@ -622,6 +641,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
 
         // Overtime Configuration (Modal)
         Route::post('/overtime', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertime'])->name('admin.attendance-settings.overtime.update');
+
+        // Web Portal Configuration (Modal)
+        Route::post('/web-portal', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateWebPortal'])->name('admin.attendance-settings.web-portal.update');
+        Route::post('/manual-entry', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateManualEntry'])->name('admin.attendance-settings.manual-entry.update');
     });
 
     // Audit Logs

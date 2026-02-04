@@ -210,6 +210,14 @@ class AttendanceSetting extends Model
                 continue;
             }
 
+            // Decode JSON strings for json type settings (e.g., when frontend sends '[]' for empty arrays)
+            if ($setting->type === 'json' && is_string($value) && in_array($value[0] ?? '', ['[', '{'])) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $value = $decoded;
+                }
+            }
+
             // Convert array to JSON string for json type settings
             if ($setting->type === 'json' && is_array($value)) {
                 $value = json_encode($value);
