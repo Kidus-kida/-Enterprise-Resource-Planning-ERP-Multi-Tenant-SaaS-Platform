@@ -28,6 +28,7 @@
     </div>
     <!-- /Main Wrapper -->
     @include('partials.scripts')
+    @stack('page-scripts')
     @yield('modals')
 </body>
 

@@ -155,7 +155,73 @@ class AppMenuListener
 
             // Employees Submenu
             if (auth()->user()->canAny(['view-employees', 'view-attendances', 'view-departments', 'view-designations'])) {
-                $activeClass = route_is(['employees.index', 'employees.list', 'departments.index', 'designations.index', 'attendances.index']) ? "active" : "";
+                $activeClass = route_is(['employees.index', 'employees.list', 'departments.index', 'designations.index', 'attendances.index', 'attendance.my', 'attendance.enter', 'attendance.approvals']) ? "active" : "";
+                
+                // Check manual entry configuration
+                $manualEntryEnabled = false;
+                $showSelfService = false;
+                $showRoleEntry = false;
+                $showApprovals = false;
+                
+                try {
+                    $captureMethods = \App\Models\AttendanceSetting::get('allowed_methods', []);
+                    $manualEntryEnabled = in_array('manual', $captureMethods);
+                    
+                    if ($manualEntryEnabled) {
+                        $permissionMode = \App\Models\AttendanceSetting::get('manual_entry_permission_mode', 'roles');
+                        $allowedRoles = \App\Models\AttendanceSetting::get('manual_entry_allowed_roles', []);
+                        $userRoleIds = $user->roles->pluck('id')->toArray();
+                        
+                        // Self Service: Everyone can add for themselves
+                        if ($permissionMode === 'everyone') {
+                            $showSelfService = true;
+                        }
+                        
+                        // Role Entry: Specific roles can add for self AND others
+                        if ($permissionMode === 'roles' && !empty($allowedRoles)) {
+                            $hasRole = !empty(array_intersect($userRoleIds, $allowedRoles));
+                            if ($hasRole) {
+                                $showRoleEntry = true;
+                            }
+                        }
+                        
+                        // Approvals: Check if user is an approver
+                        $approvalPolicy = \App\Models\AttendanceSetting::get('manual_entry_approval_policy', 'auto_approve');
+                        if ($approvalPolicy === 'manual_approval') {
+                            $approverEntity = \App\Models\AttendanceSetting::get('manual_entry_approver_entity', 'role');
+                            $approvalStructure = \App\Models\AttendanceSetting::get('manual_entry_approval_structure', 'single');
+                            
+                            $isApprover = false;
+                            
+                            if ($approvalStructure === 'single') {
+                                // Single approver check
+                                if ($approverEntity === 'role') {
+                                    $approverRoleId = \App\Models\AttendanceSetting::get('manual_entry_approver_role_id');
+                                    $isApprover = in_array($approverRoleId, $userRoleIds);
+                                } else {
+                                    $approverUserId = \App\Models\AttendanceSetting::get('manual_entry_approver_user_id');
+                                    $isApprover = $user->id == $approverUserId;
+                                }
+                            } else {
+                                // Hierarchical approver check
+                                if ($approverEntity === 'role') {
+                                    $hierarchicalRoleIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_role_ids', []);
+                                    $isApprover = !empty(array_intersect($userRoleIds, $hierarchicalRoleIds));
+                                } else {
+                                    $hierarchicalUserIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_user_ids', []);
+                                    $isApprover = in_array($user->id, $hierarchicalUserIds);
+                                }
+                            }
+                            
+                            if ($isApprover) {
+                                $showApprovals = true;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Settings not configured yet
+                }
+                
                 $menu->submenu(
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-users"></i> <span>' . __('Employees') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
@@ -164,6 +230,9 @@ class AppMenuListener
                         ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showSelfService, Link::toRoute('attendance.my', __('My Attendance'))->addClass(route_is('attendance.my') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showRoleEntry, Link::toRoute('attendance.enter', __('Enter Attendance'))->addClass(route_is('attendance.enter') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showApprovals, Link::toRoute('attendance.approvals', __('Attendance Approvals'))->addClass(route_is('attendance.approvals') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 

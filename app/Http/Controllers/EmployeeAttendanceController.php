@@ -15,12 +15,67 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 
+use App\Models\AttendanceSetting;
+use Symfony\Component\HttpFoundation\IpUtils;
+
 class EmployeeAttendanceController extends Controller
 {
 
     public function clockIn(Request $request)
     {
         try {
+            // Get Web Portal Settings
+            $requireGPS = AttendanceSetting::get('web_portal_require_gps', false);
+            $ipWhitelist = AttendanceSetting::get('web_portal_ip_whitelist', '');
+            $allowedStart = AttendanceSetting::get('web_portal_allowed_hours_start', '');
+            $allowedEnd = AttendanceSetting::get('web_portal_allowed_hours_end', '');
+
+            // 1. Enforce GPS Requirement
+            if ($requireGPS && (!$request->latitude || !$request->longitude)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('GPS location is required to clock in.'),
+                    'error_code' => 'GPS_REQUIRED'
+                ], 422);
+            }
+
+            // 2. Enforce Time Window
+            $now = Carbon::now();
+            if ($allowedStart && $now->format('H:i') < $allowedStart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Clock-in is not allowed before :time.', ['time' => $allowedStart]),
+                    'error_code' => 'TIME_RESTRICTED'
+                ], 403);
+            }
+            if ($allowedEnd && $now->format('H:i') > $allowedEnd) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Clock-in is not allowed after :time.', ['time' => $allowedEnd]),
+                    'error_code' => 'TIME_RESTRICTED'
+                ], 403);
+            }
+
+            // 3. Enforce IP Whitelist
+            if ($ipWhitelist) {
+                $allowedIps = array_map('trim', explode(',', $ipWhitelist));
+                $clientIp = $request->ip();
+                
+                // Handle localhost development edge case
+                if ($clientIp === '127.0.0.1' && !in_array('127.0.0.1', $allowedIps)) {
+                    // Optionally allow localhost automatically or strict check
+                    // For now strict check unless localhost is in list or list is empty
+                }
+
+                if (!IpUtils::checkIp($clientIp, $allowedIps)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('Clock-in is not allowed from this IP address.'),
+                        'error_code' => 'IP_RESTRICTED'
+                    ], 403);
+                }
+            }
+
             // Validate input
             $validated = $request->validate([
                 'latitude' => 'nullable|numeric',
