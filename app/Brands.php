@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Spatie\Activitylog\LogOptions;
 
-class Brands extends Model
+class Brands extends \App\Models\TenantModel
 {
     use SoftDeletes;
 

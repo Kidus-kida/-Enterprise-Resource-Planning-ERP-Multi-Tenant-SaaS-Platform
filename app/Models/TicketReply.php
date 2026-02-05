@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class TicketReply extends Model implements HasMedia
+class TicketReply extends TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
@@ -32,3 +32,4 @@ class TicketReply extends Model implements HasMedia
 
     
 }
+

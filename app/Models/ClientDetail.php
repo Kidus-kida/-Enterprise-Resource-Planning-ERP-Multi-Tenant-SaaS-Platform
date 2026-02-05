@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ClientDetail extends Model
+class ClientDetail extends TenantModel
 {
     use HasFactory;
 
@@ -19,3 +19,4 @@ class ClientDetail extends Model
 
 
 }
+

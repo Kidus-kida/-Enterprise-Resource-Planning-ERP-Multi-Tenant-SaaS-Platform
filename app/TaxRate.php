@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 
-class TaxRate extends Model
+class TaxRate extends \App\Models\TenantModel
 {
 
     protected static $logAttributes = ['*'];

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BusinessLocation extends Model
+class BusinessLocation extends TenantModel
 {
     use SoftDeletes;
 
@@ -16,3 +16,4 @@ class BusinessLocation extends Model
         return self::where('business_id', $business_id)->pluck('name', 'id');
     }
 }
+

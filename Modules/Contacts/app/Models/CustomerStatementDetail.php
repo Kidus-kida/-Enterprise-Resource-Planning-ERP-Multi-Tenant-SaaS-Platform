@@ -2,10 +2,12 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CustomerStatementDetail extends Model
+class CustomerStatementDetail extends TenantModel
 {
     use HasFactory;
     
@@ -21,3 +23,4 @@ class CustomerStatementDetail extends Model
         return $this->belongsTo(CustomerStatement::class, 'statement_id');
     }
 }
+

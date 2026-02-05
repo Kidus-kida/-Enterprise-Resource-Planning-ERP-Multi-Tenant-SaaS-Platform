@@ -13,7 +13,7 @@ use App\Models\Label;
 
 
 
-class Task extends Model implements HasMedia
+class Task extends \App\Models\TenantModel implements HasMedia
 
 {
 

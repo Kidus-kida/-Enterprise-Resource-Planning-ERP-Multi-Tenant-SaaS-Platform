@@ -2,10 +2,12 @@
 
 namespace Modules\Accounting\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class AccountSetting extends Model
+class AccountSetting extends TenantModel
 {
     use HasFactory;
 
@@ -25,3 +27,4 @@ class AccountSetting extends Model
         'settings' => 'array',
     ];
 }
+

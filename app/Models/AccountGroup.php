@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AccountGroup extends Model
+class AccountGroup extends TenantModel
 {
     use SoftDeletes;
 
@@ -56,3 +56,4 @@ class AccountGroup extends Model
         return self::where('account_type_id', $type_id)->pluck('name', 'id');
     }
 }
+

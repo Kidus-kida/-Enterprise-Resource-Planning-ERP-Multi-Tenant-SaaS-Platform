@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PayrollSetting extends Model
+class PayrollSetting extends TenantModel
 {
     use HasFactory;
 
@@ -58,3 +58,4 @@ class PayrollSetting extends Model
         ];
     }
 }
+

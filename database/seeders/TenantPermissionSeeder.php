@@ -78,5 +78,6 @@ class TenantPermissionSeeder extends Seeder
         $role->syncPermissions($allPermissions);
         
         $this->command->info("Seeded " . count($allPermissions) . " permissions and created 'Tenant Admin' role.");
+        $this->command->info("TIP: Use 'Clear Permission Cache' button in setup wizard if menus don't appear.");
     }
 }

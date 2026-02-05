@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Crm\Database\Factories\BudgetCategoryFactory;
 
-class Campaign extends Model
+class Campaign extends \App\Models\TenantModel
 {
     use HasFactory;
 

@@ -2,11 +2,13 @@
 
 namespace Modules\Project\Models;
 
+use App\Models\TenantModel;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class TaskHistory extends Model
+class TaskHistory extends TenantModel
 {
     use HasFactory;
 
@@ -30,3 +32,4 @@ class TaskHistory extends Model
         return $this->belongsTo(Task::class, 'task_id');
     }
 }
+

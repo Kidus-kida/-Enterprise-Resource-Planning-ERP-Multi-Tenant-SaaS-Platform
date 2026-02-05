@@ -15,8 +15,10 @@ class AttendanceSettingsController extends Controller
     {
         $pageTitle = __('Attendance Settings');
         $settings = AttendanceSetting::getAllByCategory();
+        $roles = \Spatie\Permission\Models\Role::all();
+        $users = \App\Models\User::where('is_active', true)->where('type', 'employee')->get();
         
-        return view('pages.settings.attendance', compact('pageTitle', 'settings'));
+        return view('pages.settings.attendance', compact('pageTitle', 'settings', 'roles', 'users'));
     }
 
     /**
@@ -148,51 +150,186 @@ class AttendanceSettingsController extends Controller
     }
 
     /**
-     * Show flexible hours configuration
+     * Update Late Arrival configuration
      */
-    public function flexible()
-    {
-        $pageTitle = __('Flexible Hours Configuration');
-        
-        $settings = [
-            'flexible_hours_enabled' => AttendanceSetting::get('flexible_hours_enabled', false),
-            'flexible_daily_target_hours' => AttendanceSetting::get('flexible_daily_target_hours', 8.0),
-            'flexible_core_start_time' => AttendanceSetting::get('flexible_core_start_time', '10:00'),
-            'flexible_core_end_time' => AttendanceSetting::get('flexible_core_end_time', '15:00'),
-            'flexible_window_start' => AttendanceSetting::get('flexible_window_start', '06:00'),
-            'flexible_window_end' => AttendanceSetting::get('flexible_window_end', '22:00'),
-        ];
-        
-        return view('pages.settings.attendance_flexible_hours', compact('pageTitle', 'settings'));
-    }
-
-    /**
-     * Update flexible hours configuration
-     */
-    public function updateFlexible(Request $request)
+    public function updateLateArrival(Request $request)
     {
         $request->validate([
-            'flexible_daily_target_hours' => 'required|numeric|min:0|max:24',
-            'flexible_core_start_time' => 'required|date_format:H:i',
-            'flexible_core_end_time' => 'required|date_format:H:i',
-            'flexible_window_start' => 'required|date_format:H:i',
-            'flexible_window_end' => 'required|date_format:H:i',
+            'late_arrival_grace_period' => 'required|integer|min:0',
+            'late_arrival_penalty_type' => 'required|in:none,warning,deduction',
+            'late_arrival_deduction_amount' => 'nullable|numeric|min:0',
+            'late_arrival_deduction_type' => 'nullable|in:fixed,per_minute,percentage,half_day,full_day',
         ]);
 
         try {
-            AttendanceSetting::set('flexible_daily_target_hours', $request->flexible_daily_target_hours);
-            AttendanceSetting::set('flexible_core_start_time', $request->flexible_core_start_time);
-            AttendanceSetting::set('flexible_core_end_time', $request->flexible_core_end_time);
-            AttendanceSetting::set('flexible_window_start', $request->flexible_window_start);
-            AttendanceSetting::set('flexible_window_end', $request->flexible_window_end);
+            AttendanceSetting::set('late_arrival_grace_period', $request->late_arrival_grace_period);
+            AttendanceSetting::set('late_arrival_penalty_type', $request->late_arrival_penalty_type);
             
-            $notification = notify(__('Flexible hours configuration updated successfully'));
+            if ($request->has('late_arrival_deduction_amount')) {
+                AttendanceSetting::set('late_arrival_deduction_amount', $request->late_arrival_deduction_amount);
+            }
+            
+            if ($request->has('late_arrival_deduction_type')) {
+                AttendanceSetting::set('late_arrival_deduction_type', $request->late_arrival_deduction_type);
+            }
+            
+            $notification = notify(__('Late arrival configuration updated successfully'));
             return redirect()->route('admin.attendance-settings.index')->with($notification);
             
         } catch (\Exception $e) {
-            \Log::error('Error updating flexible hours configuration: ' . $e->getMessage());
+            \Log::error('Error updating late arrival configuration: ' . $e->getMessage());
             
-            $notification = notify(__('Failed to update flexible hours configuration'), 'error');
+            $notification = notify(__('Failed to update late arrival configuration'), 'error');
+            return back()->withInput();
+        }
+    }
+
+    /**
+     * Update Early Checkout configuration
+     */
+    public function updateEarlyCheckout(Request $request)
+    {
+        $request->validate([
+            'early_checkout_grace_period' => 'required|integer|min:0',
+            'early_checkout_penalty_type' => 'required|in:none,warning,deduction',
+            'early_checkout_deduction_amount' => 'nullable|numeric|min:0',
+            'early_checkout_deduction_type' => 'nullable|in:fixed,per_minute,percentage,half_day,full_day',
+        ]);
+
+        try {
+            AttendanceSetting::set('early_checkout_grace_period', $request->early_checkout_grace_period);
+            AttendanceSetting::set('early_checkout_penalty_type', $request->early_checkout_penalty_type);
+            
+            if ($request->has('early_checkout_deduction_amount')) {
+                AttendanceSetting::set('early_checkout_deduction_amount', $request->early_checkout_deduction_amount);
+            }
+            
+            if ($request->has('early_checkout_deduction_type')) {
+                AttendanceSetting::set('early_checkout_deduction_type', $request->early_checkout_deduction_type);
+            }
+            
+            $notification = notify(__('Early checkout configuration updated successfully'));
+            return redirect()->route('admin.attendance-settings.index')->with($notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating early checkout configuration: ' . $e->getMessage());
+            
+            $notification = notify(__('Failed to update early checkout configuration'), 'error');
+            return back()->withInput();
+        }
+    }
+
+    /**
+     * Update Overtime configuration
+     */
+    public function updateOvertime(Request $request)
+    {
+        $request->validate([
+            'overtime_min_minutes' => 'required|integer|min:0',
+            'overtime_rate_normal' => 'required|numeric|min:1',
+            'overtime_rate_night' => 'required|numeric|min:1',
+            'overtime_rate_dayoff' => 'required|numeric|min:1',
+            'overtime_rate_holiday' => 'required|numeric|min:1',
+        ]);
+
+        try {
+            AttendanceSetting::set('overtime_min_minutes', $request->overtime_min_minutes);
+            AttendanceSetting::set('overtime_rate_normal', $request->overtime_rate_normal);
+            AttendanceSetting::set('overtime_rate_night', $request->overtime_rate_night);
+            AttendanceSetting::set('overtime_rate_dayoff', $request->overtime_rate_dayoff);
+            AttendanceSetting::set('overtime_rate_holiday', $request->overtime_rate_holiday);
+            
+            $notification = notify(__('Overtime configuration updated successfully'));
+            return redirect()->route('admin.attendance-settings.index')->with($notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating overtime configuration: ' . $e->getMessage());
+            
+            $notification = notify(__('Failed to update overtime configuration'), 'error');
+            return back()->withInput();
+        }
+    }
+
+    /**
+     * Update Web Portal configuration
+     */
+    public function updateWebPortal(Request $request)
+    {
+        $request->validate([
+            'web_portal_require_gps' => 'nullable|boolean',
+            'web_portal_ip_whitelist' => 'nullable|string',
+            'web_portal_allowed_hours_start' => 'nullable|date_format:H:i',
+            'web_portal_allowed_hours_end' => 'nullable|date_format:H:i',
+        ]);
+
+        try {
+            // Handle checkbox: if not present (unchecked), it should be false
+            AttendanceSetting::set('web_portal_require_gps', $request->has('web_portal_require_gps') ? true : false);
+            AttendanceSetting::set('web_portal_ip_whitelist', $request->web_portal_ip_whitelist ?? '');
+            AttendanceSetting::set('web_portal_allowed_hours_start', $request->web_portal_allowed_hours_start ?? '');
+            AttendanceSetting::set('web_portal_allowed_hours_end', $request->web_portal_allowed_hours_end ?? '');
+            
+            $notification = notify(__('Web Portal configuration updated successfully'));
+            return redirect()->route('admin.attendance-settings.index')->with($notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating web portal configuration: ' . $e->getMessage());
+            
+            $notification = notify(__('Failed to update web portal configuration'), 'error');
+            return back()->withInput();
+        }
+    }
+
+    public function updateManualEntry(Request $request)
+    {
+        $request->validate([
+            'manual_entry_permission_mode' => 'required|string|in:roles,everyone',
+            'manual_entry_allowed_roles' => 'nullable|array',
+            'manual_entry_approval_policy' => 'required|string|in:auto_approve,manual_approval',
+            'manual_entry_approval_structure' => 'required_if:manual_entry_approval_policy,manual_approval|string|in:single,hierarchical',
+            'manual_entry_approver_entity' => 'required_if:manual_entry_approval_policy,manual_approval|string|in:role,individual',
+            'manual_entry_approver_role_id' => 'nullable|exists:roles,id',
+            'manual_entry_approver_user_id' => 'nullable|exists:users,id',
+            'manual_entry_hierarchical_role_ids' => 'nullable|array',
+            'manual_entry_hierarchical_user_ids' => 'nullable|array',
+            'manual_entry_track_project' => 'nullable|boolean',
+            'manual_entry_require_project' => 'nullable|boolean',
+            'manual_entry_require_reason' => 'nullable|boolean',
+            'manual_entry_max_days_back' => 'required|integer|min:0',
+            'manual_entry_allow_future' => 'nullable|boolean',
+        ]);
+
+        try {
+            // General Settings
+            AttendanceSetting::set('manual_entry_permission_mode', $request->manual_entry_permission_mode);
+            AttendanceSetting::set('manual_entry_allowed_roles', $request->manual_entry_allowed_roles ?? []);
+            
+            // Approval Settings
+            AttendanceSetting::set('manual_entry_approval_policy', $request->manual_entry_approval_policy);
+            AttendanceSetting::set('manual_entry_approval_structure', $request->manual_entry_approval_structure ?? 'single');
+            AttendanceSetting::set('manual_entry_approver_entity', $request->manual_entry_approver_entity ?? 'role');
+            AttendanceSetting::set('manual_entry_approver_role_id', $request->manual_entry_approver_role_id);
+            AttendanceSetting::set('manual_entry_approver_user_id', $request->manual_entry_approver_user_id);
+            
+            // Hierarchical Arrays
+            AttendanceSetting::set('manual_entry_hierarchical_role_ids', $request->manual_entry_hierarchical_role_ids ?? []);
+            AttendanceSetting::set('manual_entry_hierarchical_user_ids', $request->manual_entry_hierarchical_user_ids ?? []);
+
+            // Booleans (Checkboxes)
+            AttendanceSetting::set('manual_entry_track_project', $request->has('manual_entry_track_project'));
+            AttendanceSetting::set('manual_entry_require_project', $request->has('manual_entry_require_project'));
+            AttendanceSetting::set('manual_entry_require_reason', $request->has('manual_entry_require_reason'));
+            AttendanceSetting::set('manual_entry_allow_future', $request->has('manual_entry_allow_future'));
+
+            // Integers
+            AttendanceSetting::set('manual_entry_max_days_back', $request->manual_entry_max_days_back);
+
+            $notification = notify(__('Manual Entry configuration updated successfully'));
+            return redirect()->route('admin.attendance-settings.index')->with($notification);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating manual entry configuration: ' . $e->getMessage());
+            $notification = notify(__('Failed to update manual entry configuration'), 'error');
             return back()->withInput();
         }
     }

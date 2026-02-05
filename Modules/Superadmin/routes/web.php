@@ -17,7 +17,7 @@ use Modules\Superadmin\Http\Controllers\AddonController;
 |--------------------------------------------------------------------------
 */
 
-Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']], function () {
+Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin', 'central_domain']], function () {
     
     // Dashboard
     Route::get('/', [SuperadminController::class, 'index'])->name('superadmin.dashboard');
@@ -26,6 +26,7 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']],
     Route::resource('businesses', BusinessController::class)->names('superadmin.businesses');
     Route::post('businesses/{business}/activate', [BusinessController::class, 'activate'])->name('superadmin.businesses.activate');
     Route::post('businesses/{business}/deactivate', [BusinessController::class, 'deactivate'])->name('superadmin.businesses.deactivate');
+    Route::post('businesses/{id}/resend-invite', [BusinessController::class, 'resendInvite'])->name('superadmin.businesses.resend-invite');
 
     // Module Management
     Route::resource('modules', ModuleController::class)->names('superadmin.modules');
@@ -51,6 +52,7 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin']],
         Route::get('/setup-wizard/{businessId}', [TenantManagementController::class, 'setupWizard'])->name('setup-wizard');
         Route::post('/verify-connection/{tenantId}', [TenantManagementController::class, 'verifyConnection'])->name('verify-connection');
         Route::post('/run-migrations/{tenantId}', [TenantManagementController::class, 'runMigrations'])->name('run-migrations');
+        Route::post('/clear-permission-cache/{tenantId}', [TenantManagementController::class, 'clearPermissionCache'])->name('clear-permission-cache');
         Route::delete('/{tenantId}', [TenantManagementController::class, 'destroy'])->name('destroy');
     });
 

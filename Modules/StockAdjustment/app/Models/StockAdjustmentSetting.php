@@ -2,9 +2,11 @@
 
 namespace Modules\StockAdjustment\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 
-class StockAdjustmentSetting extends Model
+class StockAdjustmentSetting extends TenantModel
 {
     //
     protected static $logAttributes = ['*'];
@@ -30,3 +32,4 @@ class StockAdjustmentSetting extends Model
     protected $guarded = ['id'];
     
 }
+

@@ -2,11 +2,13 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ContactGroup extends Model
+class ContactGroup extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -41,3 +43,4 @@ class ContactGroup extends Model
         return $groups;
     }
 }
+

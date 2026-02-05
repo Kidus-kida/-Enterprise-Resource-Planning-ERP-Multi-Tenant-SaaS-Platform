@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserFamilyInfo extends Model
+class UserFamilyInfo extends TenantModel
 {
     use HasFactory;
 
@@ -21,3 +21,4 @@ class UserFamilyInfo extends Model
         return $this->belongsTo(User::class,'user_id');
     }
 }
+

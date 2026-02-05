@@ -2,12 +2,14 @@
 
 namespace Modules\Logistics\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 
-class Document extends Model
+class Document extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -40,3 +42,4 @@ class Document extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 }
+

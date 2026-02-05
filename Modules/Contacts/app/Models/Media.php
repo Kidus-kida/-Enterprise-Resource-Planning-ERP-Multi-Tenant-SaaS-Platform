@@ -2,12 +2,14 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 // use Spatie\Activitylog\Traits\LogsActivity;
 // use Spatie\Activitylog\LogOptions;
 
-class Media extends Model
+class Media extends TenantModel
 {
     // use LogsActivity;
 
@@ -201,3 +203,4 @@ class Media extends Model
         }
     }
 }
+

@@ -1,17 +1,17 @@
-@extends('layouts.app')
+@extends('pages.settings.index')
 @section('title', __('company.companies'))
 
-@section('page-content')
+@section('page-header-section')
+     <!-- Page Header -->
+     <x-breadcrumb>
+        <x-slot name="title">@lang('company.companies')</x-slot>
+    </x-breadcrumb>
+    <!-- /Page Header -->
+@endsection
 
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <h1>@lang('company.companies')
-        <small>@lang('company.manage_your_companies')</small>
-    </h1>
-</section>
-
-<!-- Main content -->
-<section class="content">
+@section('page-section')
+    <!-- Main content -->
+    <section class="content ps-0 pe-0">
     @component('components.widget', ['class' => 'box-primary', 'title' => __('company.all_your_companies')])
         @slot('tool')
             <div class="box-tools">

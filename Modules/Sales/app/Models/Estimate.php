@@ -9,7 +9,7 @@ use Modules\Sales\Database\Factories\EstimateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasCompany;
 
-class Estimate extends Model
+class Estimate extends \App\Models\TenantModel
 {
     use HasFactory, HasCompany;
 

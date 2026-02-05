@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 
-class Variation extends Model
+class Variation extends \App\Models\TenantModel
 {
 
     protected static $logAttributes = ['*'];

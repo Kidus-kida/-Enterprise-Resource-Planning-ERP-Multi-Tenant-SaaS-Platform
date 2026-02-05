@@ -38,6 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
             
             // Database error handling
             'db.errors' => \App\Http\Middleware\HandleDatabaseErrors::class,
+            
+            // Domain restriction
+            'central_domain' => \App\Http\Middleware\CentralDomainOnly::class,
         ]);
         
         $middleware->web(append: [

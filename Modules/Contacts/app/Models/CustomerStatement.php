@@ -2,6 +2,8 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Modules\Contacts\Models\Contact;
 use App\Models\User;
 
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CustomerStatement extends Model
+class CustomerStatement extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -36,3 +38,4 @@ class CustomerStatement extends Model
         return $this->belongsTo(User::class, 'added_by');
     }
 }
+

@@ -141,7 +141,73 @@ class AppMenuListener
 
             // Employees Submenu
             if (auth()->user()->canAny(['view-employees', 'view-attendances', 'view-departments', 'view-designations'])) {
-                $activeClass = route_is(['employees.index', 'employees.list', 'departments.index', 'designations.index', 'attendances.index']) ? "active" : "";
+                $activeClass = route_is(['employees.index', 'employees.list', 'departments.index', 'designations.index', 'attendances.index', 'attendance.my', 'attendance.enter', 'attendance.approvals']) ? "active" : "";
+                
+                // Check manual entry configuration
+                $manualEntryEnabled = false;
+                $showSelfService = false;
+                $showRoleEntry = false;
+                $showApprovals = false;
+                
+                try {
+                    $captureMethods = \App\Models\AttendanceSetting::get('allowed_methods', []);
+                    $manualEntryEnabled = in_array('manual', $captureMethods);
+                    
+                    if ($manualEntryEnabled) {
+                        $permissionMode = \App\Models\AttendanceSetting::get('manual_entry_permission_mode', 'roles');
+                        $allowedRoles = \App\Models\AttendanceSetting::get('manual_entry_allowed_roles', []);
+                        $userRoleIds = $user->roles->pluck('id')->toArray();
+                        
+                        // Self Service: Everyone can add for themselves
+                        if ($permissionMode === 'everyone') {
+                            $showSelfService = true;
+                        }
+                        
+                        // Role Entry: Specific roles can add for self AND others
+                        if ($permissionMode === 'roles' && !empty($allowedRoles)) {
+                            $hasRole = !empty(array_intersect($userRoleIds, $allowedRoles));
+                            if ($hasRole) {
+                                $showRoleEntry = true;
+                            }
+                        }
+                        
+                        // Approvals: Check if user is an approver
+                        $approvalPolicy = \App\Models\AttendanceSetting::get('manual_entry_approval_policy', 'auto_approve');
+                        if ($approvalPolicy === 'manual_approval') {
+                            $approverEntity = \App\Models\AttendanceSetting::get('manual_entry_approver_entity', 'role');
+                            $approvalStructure = \App\Models\AttendanceSetting::get('manual_entry_approval_structure', 'single');
+                            
+                            $isApprover = false;
+                            
+                            if ($approvalStructure === 'single') {
+                                // Single approver check
+                                if ($approverEntity === 'role') {
+                                    $approverRoleId = \App\Models\AttendanceSetting::get('manual_entry_approver_role_id');
+                                    $isApprover = in_array($approverRoleId, $userRoleIds);
+                                } else {
+                                    $approverUserId = \App\Models\AttendanceSetting::get('manual_entry_approver_user_id');
+                                    $isApprover = $user->id == $approverUserId;
+                                }
+                            } else {
+                                // Hierarchical approver check
+                                if ($approverEntity === 'role') {
+                                    $hierarchicalRoleIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_role_ids', []);
+                                    $isApprover = !empty(array_intersect($userRoleIds, $hierarchicalRoleIds));
+                                } else {
+                                    $hierarchicalUserIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_user_ids', []);
+                                    $isApprover = in_array($user->id, $hierarchicalUserIds);
+                                }
+                            }
+                            
+                            if ($isApprover) {
+                                $showApprovals = true;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Settings not configured yet
+                }
+                
                 $menu->submenu(
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-users"></i> <span>' . __('Employees') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
@@ -151,12 +217,15 @@ class AppMenuListener
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-attendances', Link::toRoute('admin.missed-punches.index', __('Missed Punches'))->addClass(route_is(['admin.missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showSelfService, Link::toRoute('attendance.my', __('My Attendance'))->addClass(route_is('attendance.my') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showRoleEntry, Link::toRoute('attendance.enter', __('Enter Attendance'))->addClass(route_is('attendance.enter') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIf($showApprovals, Link::toRoute('attendance.approvals', __('Attendance Approvals'))->addClass(route_is('attendance.approvals') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
             // Leave Management Submenu
             if (auth()->user()->canAny(['view-request', 'edit-request', 'create-annual-leave', 'create-leave-type'])) {
-                $activeClass = route_is(['leaverequests.index', 'leaverequests.myleaverequests', 'leavetypes.index', 'annual_leaves.index']) ? "active" : "";
+                $activeClass = route_is(['leave.*', 'leaverequests.index', 'leaverequests.myleaverequests', 'leavetypes.index', 'annual_leaves.index']) ? "active" : "";
                 $menu->submenu(
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calendar-check-o"></i> <span>' . __('Leave Management') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
@@ -165,6 +234,12 @@ class AppMenuListener
                         ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->add(Link::toRoute('missed-punches.index', __('My Missed Punches'))->addClass(route_is(['missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // New Odoo-style Leave Management (Priority)
+                        ->add(Link::toRoute('leave.my-time', __('Time Off'))->addClass(route_is(['leave.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // Legacy leave system (temporary, will be removed later)
+                        // ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
@@ -431,13 +506,12 @@ class AppMenuListener
         }
 
         // Administration
-        if (auth()->user()->canAny(['view-holidays', 'view-users', 'view-roles'])) {
-            $activeClass = route_is(['holidays.*', 'users.*', 'roles.*']) ? "active" : "";
+        if (auth()->user()->canAny(['view-users', 'view-roles'])) {
+            $activeClass = route_is(['users.*', 'roles.*']) ? "active" : "";
             $menu->submenu(
                 Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-shield"></i> <span>' . __('Administration') . '</span><span class="menu-arrow"></span></a>'),
                 Menu::new()
                     ->addParentClass('submenu')
-                    ->addIfCan('view-holidays', Link::toRoute('holidays.index', __('Holidays'))->addClass(route_is('holidays.*') ? 'active' : ''))
                     ->addIfCan('view-users', Link::toRoute('users.index', __('User Management'))->addClass(route_is('users.*') ? 'active' : ''))
                     ->addIfCan('view-roles', Link::toRoute('roles.index', __('Roles & Permissions'))->addClass(route_is('roles.*') ? 'active' : ''))
             );
@@ -451,7 +525,6 @@ class AppMenuListener
                 Menu::new()
                     ->addParentClass('submenu')
                     ->addIfCan('view-settings', Link::toRoute('settings.index', __('Settings'))->addClass(route_is('settings.index') ? 'active' : ''))
-                    ->addIfCan('business_settings.access', Link::toRoute('multi-companies.index', __('Companies'))->addClass(route_is('multi-companies.*') ? 'active' : ''))
                     ->addIfCan('view-backups', Link::toRoute('backups.index', __('Backups'))->addClass(route_is('backups.*') ? 'active' : ''))
             );
         }

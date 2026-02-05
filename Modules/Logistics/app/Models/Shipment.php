@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 
-class Shipment extends Model
+class Shipment extends \App\Models\TenantModel
 {
     use HasFactory, SoftDeletes;
 

@@ -84,8 +84,55 @@
         $wfh = $getValue('policies', 'wfh_enabled', false);
         $compOff = $getValue('policies', 'comp_off_enabled', true);
 
+        // --- Late Arrival Config (Direct Access) ---
+        $lateArrivalGrace = \App\Models\AttendanceSetting::get('late_arrival_grace_period', 15);
+        $lateArrivalPenalty = \App\Models\AttendanceSetting::get('late_arrival_penalty_type', 'none');
+        $lateArrivalDeductionAmount = \App\Models\AttendanceSetting::get('late_arrival_deduction_amount', 0);
+        $lateArrivalDeductionType = \App\Models\AttendanceSetting::get('late_arrival_deduction_type', 'fixed');
+
+        // --- Early Checkout Config (Direct Access) ---
+        $earlyCheckoutGrace = \App\Models\AttendanceSetting::get('early_checkout_grace_period', 15);
+        $earlyCheckoutPenalty = \App\Models\AttendanceSetting::get('early_checkout_penalty_type', 'none');
+        $earlyCheckoutDeductionAmount = \App\Models\AttendanceSetting::get('early_checkout_deduction_amount', 0);
+        $earlyCheckoutDeductionType = \App\Models\AttendanceSetting::get('early_checkout_deduction_type', 'fixed');
+
+        // --- Overtime Config (Direct Access) ---
+        $overtimeMinMinutes = \App\Models\AttendanceSetting::get('overtime_min_minutes', 60);
+        $overtimeRateNormal = \App\Models\AttendanceSetting::get('overtime_rate_normal', 1.25);
+        $overtimeRateNight = \App\Models\AttendanceSetting::get('overtime_rate_night', 1.5);
+        $overtimeRateDayOff = \App\Models\AttendanceSetting::get('overtime_rate_dayoff', 2.0);
+        $overtimeRateHoliday = \App\Models\AttendanceSetting::get('overtime_rate_holiday', 2.5);
+
+        // --- Web Portal Config (Direct Access) ---
+        $webPortalRequireGPS = \App\Models\AttendanceSetting::get('web_portal_require_gps', false);
+        $webPortalIPWhitelist = \App\Models\AttendanceSetting::get('web_portal_ip_whitelist', '');
+        $webPortalAllowedHoursStart = \App\Models\AttendanceSetting::get('web_portal_allowed_hours_start', '');
+        $webPortalAllowedHoursEnd = \App\Models\AttendanceSetting::get('web_portal_allowed_hours_end', '');
+
+        // --- Manual Entry Config ---
+        $manualEntryPermissionMode = \App\Models\AttendanceSetting::get('manual_entry_permission_mode', 'roles');
+        $manualEntryAllowedRoles = \App\Models\AttendanceSetting::get('manual_entry_allowed_roles', []);
+        
+        $manualEntryApprovalPolicy = \App\Models\AttendanceSetting::get('manual_entry_approval_policy', 'auto_approve');
+        $manualEntryApprovalStructure = \App\Models\AttendanceSetting::get('manual_entry_approval_structure', 'single');
+        $manualEntryApproverEntity = \App\Models\AttendanceSetting::get('manual_entry_approver_entity', 'role');
+        $manualEntryApproverRoleId = \App\Models\AttendanceSetting::get('manual_entry_approver_role_id', '');
+        $manualEntryApproverUserId = \App\Models\AttendanceSetting::get('manual_entry_approver_user_id', '');
+        
+        $manualEntryHierarchicalRoleIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_role_ids', []);
+        $manualEntryHierarchicalUserIds = \App\Models\AttendanceSetting::get('manual_entry_hierarchical_user_ids', []);
+
+        $manualEntryTrackProject = \App\Models\AttendanceSetting::get('manual_entry_track_project', false);
+        $manualEntryRequireProject = \App\Models\AttendanceSetting::get('manual_entry_require_project', false);
+        $manualEntryRequireReason = \App\Models\AttendanceSetting::get('manual_entry_require_reason', true);
+        $manualEntryMaxDaysBack = \App\Models\AttendanceSetting::get('manual_entry_max_days_back', 30);
+        $manualEntryAllowFuture = \App\Models\AttendanceSetting::get('manual_entry_allow_future', false);
+
         // --- Approvals ---
         $missedPunchApproval = $getValue('approvals', 'missed_punch_approval_enabled', true);
+
+
+
         $correctionApproval = $getValue('approvals', 'correction_approval_enabled', true);
         $overtimeApproval = $getValue('approvals', 'overtime_approval_enabled', true);
         $autoApproval = $getValue('approvals', 'auto_approval_enabled', false);
@@ -142,7 +189,7 @@
                     </x-settings.row>
                     
                     <x-settings.row label="{{ __('Web Portal') }}" description="{{ __('Browser-based check-in') }}"
-                                    id="web_portal" configureLink="/config/web-attendance" :showConfigure="in_array('web_based', $allowedMethods)">
+                                    id="web_portal" configureLink="#" :showConfigure="in_array('web_based', $allowedMethods)">
                         <div class="form-check form-switch">
                              <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="web_based" 
                                    {{ in_array('web_based', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('web_portal', this)">
@@ -150,7 +197,8 @@
                     </x-settings.row>
 
                      <x-settings.row label="{{ __('Manual Entry') }}" description="{{ __('HR/Admin manual entry') }}"
-                                     id="manual" configureLink="/config/manual" :showConfigure="in_array('manual', $allowedMethods)">
+                                     id="manual" configureLink="#" :showConfigure="in_array('manual', $allowedMethods)"
+                                     data-configure-id="configure-manual-entry-link">
                         <div class="form-check form-switch">
                             <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="manual"
                                    {{ in_array('manual', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('manual', this)">
@@ -292,21 +340,21 @@
                     <x-settings.header icon="la la-file-text" title="{{ __('Attendance Policies') }}" description="{{ __('Rules for attendance calculation') }}" />
 
                     <x-settings.row label="{{ __('Late Arrival Rules') }}" description="{{ __('Penalties for coming late') }}"
-                                    id="late_arrival" configureLink="/policies/attendance#late" :showConfigure="$lateArrival">
+                                    id="late_arrival" configureLink="#" :showConfigure="$lateArrival">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_enabled" value="true" {{ $lateArrival ? 'checked' : '' }} onchange="toggleConfigLink('late_arrival', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Early Checkout Rules') }}" description="{{ __('Penalties for leaving early') }}"
-                                    id="early_checkout" configureLink="/policies/attendance#early" :showConfigure="$earlyCheckout">
+                                    id="early_checkout" configureLink="#" :showConfigure="$earlyCheckout">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="early_checkout_enabled" value="true" {{ $earlyCheckout ? 'checked' : '' }} onchange="toggleConfigLink('early_checkout', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime') }}" description="{{ __('Track and compensate extra hours') }}"
-                                    id="overtime" configureLink="/policies/overtime" :showConfigure="$overtime">
+                                    id="overtime" configureLink="#" :showConfigure="$overtime">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="overtime_enabled" value="true" {{ $overtime ? 'checked' : '' }} onchange="toggleConfigLink('overtime', this)">
                         </div>
@@ -742,11 +790,15 @@
         const formData = new FormData(form);
         const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
         
-        // Only show loading state if NOT silent
-        if (!silent && submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="la la-spinner la-spin"></i> ' + '{{ __("Saving...") }}';
+        // Fix for checkbox arrays: if no checkboxes are checked, FormData won't have the field
+        // We need to explicitly send an empty array by appending a dummy entry
+        if (!formData.has('allowed_methods[]')) {
+            // Append an entry that will be interpreted as an empty array by the backend
+            formData.append('allowed_methods', '[]');
         }
+        
+        // Show generic loading or small indicator if needed
+        // For now, we rely on the toast feedback
         
         fetch('{{ route('admin.attendance-settings.update') }}', {
             method: 'POST',
@@ -812,6 +864,883 @@
                 triggerAutoSave();
             });
         }
+    });
+</script>
+@endpush
+
+    <!-- Late Arrival Configuration Modal -->
+    <div class="modal fade" id="lateArrivalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Late Arrival Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.late-arrival.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="la la-info-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('These settings apply globally. You can override them in Shift Templates if needed.') }}
+                            </div>
+                        </div>
+
+                        <!-- Grace Period -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Grace Period') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Allow employees to arrive late by this many minutes before marking as late.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="late_arrival_grace_period" class="form-control" value="{{ $lateArrivalGrace }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Penalty Configuration -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Penalty Action') }}</label>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_none" value="none" 
+                                           {{ $lateArrivalPenalty === 'none' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_none">
+                                        <div class="fw-bold">{{ __('No Penalty') }}</div>
+                                        <div class="text-muted small">{{ __('Just mark as "Late" in reports without further action.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_warning" value="warning" 
+                                           {{ $lateArrivalPenalty === 'warning' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_warning">
+                                        <div class="fw-bold">{{ __('Send Warning') }}</div>
+                                        <div class="text-muted small">{{ __('Mark as "Late" and trigger a warning notification to the employee.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="late_arrival_penalty_type" id="penalty_deduction" value="deduction" 
+                                           {{ $lateArrivalPenalty === 'deduction' ? 'checked' : '' }} onchange="toggleDeductionFields()">
+                                    <label class="form-check-label ms-2" for="penalty_deduction">
+                                        <div class="fw-bold">{{ __('Apply Deduction') }}</div>
+                                        <div class="text-muted small">{{ __('Deduct salary or leave balance based on rules.') }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deduction Settings (Conditional) -->
+                        <div id="deduction_config" class="bg-light p-3 rounded border {{ $lateArrivalPenalty === 'deduction' ? '' : 'd-none' }}">
+                            <h6 class="fw-bold mb-3">{{ __('Deduction Rules') }}</h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Deduction Type') }}</label>
+                                    <select name="late_arrival_deduction_type" class="form-select" onchange="toggleAmountField()">
+                                        <option value="fixed" {{ $lateArrivalDeductionType === 'fixed' ? 'selected' : '' }}>{{ __('Fixed Amount') }}</option>
+                                        <option value="per_minute" {{ $lateArrivalDeductionType === 'per_minute' ? 'selected' : '' }}>{{ __('Per Minute Amount') }}</option>
+                                        <option value="percentage" {{ $lateArrivalDeductionType === 'percentage' ? 'selected' : '' }}>{{ __('Percentage of Daily Salary') }}</option>
+                                        <option value="half_day" {{ $lateArrivalDeductionType === 'half_day' ? 'selected' : '' }}>{{ __('Mark as Half Day') }}</option>
+                                        <option value="full_day" {{ $lateArrivalDeductionType === 'full_day' ? 'selected' : '' }}>{{ __('Mark as Absent (Full Day)') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" id="deduction_amount_wrapper">
+                                    <label class="form-label" id="amount_label">{{ __('Amount') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="currency_symbol">$</span>
+                                        <input type="number" name="late_arrival_deduction_amount" class="form-control" value="{{ $lateArrivalDeductionAmount }}" step="0.01" min="0">
+                                        <span class="input-group-text d-none" id="percentage_symbol">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Early Checkout Configuration Modal -->
+    <div class="modal fade" id="earlyCheckoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Early Checkout Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.early-checkout.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="la la-info-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('These settings apply globally. You can override them in Shift Templates if needed.') }}
+                            </div>
+                        </div>
+
+                        <!-- Grace Period -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Grace Period') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Allow employees to leave early by this many minutes before marking as early checkout.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="early_checkout_grace_period" class="form-control" value="{{ $earlyCheckoutGrace }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Penalty Configuration -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Penalty Action') }}</label>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_none" value="none" 
+                                           {{ $earlyCheckoutPenalty === 'none' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_none">
+                                        <div class="fw-bold">{{ __('No Penalty') }}</div>
+                                        <div class="text-muted small">{{ __('Just mark as "Early Checkout" in reports without further action.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_warning" value="warning" 
+                                           {{ $earlyCheckoutPenalty === 'warning' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_warning">
+                                        <div class="fw-bold">{{ __('Send Warning') }}</div>
+                                        <div class="text-muted small">{{ __('Mark and trigger a warning notification to the employee.') }}</div>
+                                    </label>
+                                </div>
+
+                                <div class="form-check card-radio p-3 border rounded">
+                                    <input class="form-check-input mt-1" type="radio" name="early_checkout_penalty_type" id="early_penalty_deduction" value="deduction" 
+                                           {{ $earlyCheckoutPenalty === 'deduction' ? 'checked' : '' }} onchange="toggleEarlyDeductionFields()">
+                                    <label class="form-check-label ms-2" for="early_penalty_deduction">
+                                        <div class="fw-bold">{{ __('Apply Deduction') }}</div>
+                                        <div class="text-muted small">{{ __('Deduct salary or leave balance based on rules.') }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deduction Settings (Conditional) -->
+                        <div id="early_deduction_config" class="bg-light p-3 rounded border {{ $earlyCheckoutPenalty === 'deduction' ? '' : 'd-none' }}">
+                            <h6 class="fw-bold mb-3">{{ __('Deduction Rules') }}</h6>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Deduction Type') }}</label>
+                                    <select name="early_checkout_deduction_type" class="form-select" onchange="toggleEarlyAmountField()">
+                                        <option value="fixed" {{ $earlyCheckoutDeductionType === 'fixed' ? 'selected' : '' }}>{{ __('Fixed Amount') }}</option>
+                                        <option value="per_minute" {{ $earlyCheckoutDeductionType === 'per_minute' ? 'selected' : '' }}>{{ __('Per Minute Amount') }}</option>
+                                        <option value="percentage" {{ $earlyCheckoutDeductionType === 'percentage' ? 'selected' : '' }}>{{ __('Percentage of Daily Salary') }}</option>
+                                        <option value="half_day" {{ $earlyCheckoutDeductionType === 'half_day' ? 'selected' : '' }}>{{ __('Mark as Half Day') }}</option>
+                                        <option value="full_day" {{ $earlyCheckoutDeductionType === 'full_day' ? 'selected' : '' }}>{{ __('Mark as Absent (Full Day)') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" id="early_deduction_amount_wrapper">
+                                    <label class="form-label" id="early_amount_label">{{ __('Amount') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="early_currency_symbol">$</span>
+                                        <input type="number" name="early_checkout_deduction_amount" class="form-control" value="{{ $earlyCheckoutDeductionAmount }}" step="0.01" min="0">
+                                        <span class="input-group-text d-none" id="early_percentage_symbol">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Overtime Configuration Modal -->
+    <div class="modal fade" id="overtimeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Overtime Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.overtime.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-success d-flex align-items-center mb-4">
+                            <i class="la la-check-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('Overtime is calculated based on daily work hours exceeding the shift duration.') }}
+                            </div>
+                        </div>
+
+                        <!-- Minimum Minutes -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('Minimum Duration') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Minimum extra minutes required to count as Overtime.') }}</p>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="number" name="overtime_min_minutes" class="form-control" value="{{ $overtimeMinMinutes }}" min="0">
+                                <span class="input-group-text">{{ __('Minutes') }}</span>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Rate Multipliers -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Overtime Rate Multipliers') }}</label>
+                            <p class="text-muted small mb-3">{{ __('Different scenarios have different pay rates. Set the multiplier for each type.') }}</p>
+                            
+                            <div class="row g-3">
+                                <!-- Normal OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Normal OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_normal" class="form-control" value="{{ $overtimeRateNormal }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Weekday overtime (e.g., 1.25)') }}</div>
+                                </div>
+
+                                <!-- Night OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Night OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_night" class="form-control" value="{{ $overtimeRateNight }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Night shift overtime (e.g., 1.5)') }}</div>
+                                </div>
+
+                                <!-- Day Off OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Day Off OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_dayoff" class="form-control" value="{{ $overtimeRateDayOff }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Weekend/day off overtime (e.g., 2.0)') }}</div>
+                                </div>
+
+                                <!-- Holiday OT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Holiday OT Rate') }}</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">x</span>
+                                        <input type="number" name="overtime_rate_holiday" class="form-control" value="{{ $overtimeRateHoliday }}" step="0.01" min="1">
+                                    </div>
+                                    <div class="form-text">{{ __('Public holiday overtime (e.g., 2.5)') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Web Portal Configuration Modal -->
+    <div class="modal fade" id="webPortalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Web Portal Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.web-portal.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="la la-info-circle fs-4 me-2"></i>
+                            <div>
+                                <strong>{{ __('Note:') }}</strong> {{ __('Configure security and validation settings for browser-based attendance.') }}
+                            </div>
+                        </div>
+
+                        <!-- Security Options -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Security & Validation') }}</label>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="web_portal_require_gps" name="web_portal_require_gps" value="1" {{ $webPortalRequireGPS ? 'checked' : '' }}>
+                                <label class="form-check-label" for="web_portal_require_gps">
+                                    <strong>{{ __('Require GPS Location') }}</strong>
+                                    <p class="text-muted small mb-0">{{ __('Require GPS coordinates for location tracking and geofencing.') }}</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- IP Whitelist -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ __('IP Address Whitelist') }}</label>
+                            <p class="text-muted small mb-2">{{ __('Restrict clock-in to specific IP addresses or ranges (comma-separated). Leave empty to allow all.') }}</p>
+                            <textarea name="web_portal_ip_whitelist" class="form-control" rows="2" placeholder="e.g., 192.168.1.0/24, 10.0.0.1">{{ $webPortalIPWhitelist }}</textarea>
+                            <div class="form-text">{{ __('Example: 192.168.1.0/24 (office network), 10.0.0.1 (specific IP)') }}</div>
+                        </div>
+
+                        <hr class="text-muted my-4">
+
+                        <!-- Time Window -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">{{ __('Allowed Time Window') }}</label>
+                            <p class="text-muted small mb-3">{{ __('Restrict when employees can clock in via web portal. Leave empty for 24/7 access.') }}</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Start Time') }}</label>
+                                    <input type="time" name="web_portal_allowed_hours_start" class="form-control" value="{{ $webPortalAllowedHoursStart }}">
+                                    <div class="form-text">{{ __('Earliest allowed clock-in time') }}</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('End Time') }}</label>
+                                    <input type="time" name="web_portal_allowed_hours_end" class="form-control" value="{{ $webPortalAllowedHoursEnd }}">
+                                    <div class="form-text">{{ __('Latest allowed clock-in time') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Configuration Modal -->
+    <div class="modal fade" id="manualEntryConfigModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Manual Entry Configuration') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.manual-entry.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        
+                        <!-- 1. Permissions -->
+                        <div class="mb-4 text-start">
+                            <label class="form-label fw-bold mb-3 d-block border-bottom pb-2">{{ __('1. Who can add attendance?') }}</label>
+                            
+                            <div class="d-flex gap-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="manual_entry_permission_mode" id="perm_mode_roles" value="roles" 
+                                           {{ $manualEntryPermissionMode == 'roles' ? 'checked' : '' }} onchange="togglePermissionFields()">
+                                    <label class="form-check-label" for="perm_mode_roles">
+                                        {{ __('Specific Roles') }} 
+                                        <small class="text-muted d-block">{{ __('(Can add for Self AND Others)') }}</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="manual_entry_permission_mode" id="perm_mode_everyone" value="everyone" 
+                                           {{ $manualEntryPermissionMode == 'everyone' ? 'checked' : '' }} onchange="togglePermissionFields()">
+                                    <label class="form-check-label" for="perm_mode_everyone">
+                                        {{ __('Everyone (Self-Service)') }}
+                                        <small class="text-muted d-block">{{ __('(Can add for Self ONLY)') }}</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 ps-4 border-start border-3" id="allowedRolesDiv">
+                                <label class="form-label">{{ __('Select Allowed Roles') }}</label>
+                                <select class="form-select select2" name="manual_entry_allowed_roles[]" multiple data-placeholder="{{ __('Select Roles') }}">
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}" {{ in_array($role->id, $manualEntryAllowedRoles) ? 'selected' : '' }}>{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 2. Approval Workflow -->
+                        <div class="mb-4 text-start">
+                            <label class="form-label fw-bold mb-3 d-block border-bottom pb-2">{{ __('2. Approval Workflow') }}</label>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ __('Approval Policy') }}</label>
+                                <select class="form-select" name="manual_entry_approval_policy" id="manualEntryApprovalPolicy" onchange="toggleApprovalLogic()">
+                                    <option value="auto_approve" {{ $manualEntryApprovalPolicy == 'auto_approve' ? 'selected' : '' }}>{{ __('Auto Approve (No Review Needed)') }}</option>
+                                    <option value="manual_approval" {{ $manualEntryApprovalPolicy == 'manual_approval' ? 'selected' : '' }}>{{ __('Require Approval') }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Nested Approval Logic -->
+                            <div id="approvalLogic" class="ps-4 border-start border-3" style="display: none; background-color: #f8f9fa; padding: 15px; border-radius: 4px;">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ __('Structure') }}</label>
+                                        <select class="form-select" name="manual_entry_approval_structure" id="approvalStructure" onchange="toggleEntitySelects()">
+                                            <option value="single" {{ $manualEntryApprovalStructure == 'single' ? 'selected' : '' }}>{{ __('Single Person/Role') }}</option>
+                                            <option value="hierarchical" {{ $manualEntryApprovalStructure == 'hierarchical' ? 'selected' : '' }}>{{ __('Hierarchical Chain') }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ __('Approver Entity') }}</label>
+                                        <select class="form-select" name="manual_entry_approver_entity" id="approverEntity" onchange="toggleEntitySelects()">
+                                            <option value="role" {{ $manualEntryApproverEntity == 'role' ? 'selected' : '' }}>{{ __('Role') }}</option>
+                                            <option value="individual" {{ $manualEntryApproverEntity == 'individual' ? 'selected' : '' }}>{{ __('Individual User') }}</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Single Selects -->
+                                    <div class="col-12" id="entityRoleDiv" style="display: none;">
+                                        <label class="form-label">{{ __('Select Approver Role') }}</label>
+                                        <select class="form-select select2" name="manual_entry_approver_role_id" data-placeholder="{{ __('Choose ONE Role') }}">
+                                            <option value="">{{ __('Select Role...') }}</option>
+                                            @foreach($roles as $role)
+                                                <option value="{{ $role->id }}" {{ $manualEntryApproverRoleId == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12" id="entityUserDiv" style="display: none;">
+                                        <label class="form-label">{{ __('Select Approver User') }}</label>
+                                        <select class="form-select select2" name="manual_entry_approver_user_id" data-placeholder="{{ __('Choose ONE User') }}">
+                                            <option value="">{{ __('Select User...') }}</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" {{ $manualEntryApproverUserId == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <!-- Hierarchical Builders -->
+                                    <div class="col-12" id="hierarchicalRoleWrapper" style="display: none;">
+                                        <label class="form-label mb-2">{{ __('Approver Chain (Ordered)') }}</label>
+                                        <div id="hierarchicalRoleList" class="d-flex flex-column gap-2 mb-2">
+                                            <!-- Dynamic Rows Will Be Injected Here -->
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" style="border-style: dashed;" onclick="addHierarchicalRow('role')">
+                                            <i class="fas fa-plus-circle me-1"></i> {{ __('Add Next Approver') }}
+                                        </button>
+                                        <div class="form-text mt-1">{{ __('Define the approval chain from first to last.') }}</div>
+                                    </div>
+
+                                    <div class="col-12" id="hierarchicalUserWrapper" style="display: none;">
+                                        <label class="form-label mb-2">{{ __('Approver Chain (Ordered)') }}</label>
+                                        <div id="hierarchicalUserList" class="d-flex flex-column gap-2 mb-2">
+                                            <!-- Dynamic Rows Will Be Injected Here -->
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" style="border-style: dashed;" onclick="addHierarchicalRow('user')">
+                                            <i class="fas fa-plus-circle me-1"></i> {{ __('Add Next Approver') }}
+                                        </button>
+                                        <div class="form-text mt-1">{{ __('Define the approval chain from first to last.') }}</div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Validation -->
+                        <div class="mb-4 text-start">
+                             <label class="form-label fw-bold mb-3 d-block border-bottom pb-2">{{ __('3. Data & Validation') }}</label>
+
+                            <!-- DATA PASSING FOR JS -->
+                            <script>
+                                window.attendanceConfig = {
+                                    roles: @json($roles),
+                                    users: @json($users->map(fn($u) => ['id' => $u->id, 'text' => $u->name . ' (' . $u->email . ')'])),
+                                    savedHierarchicalRoles: @json($manualEntryHierarchicalRoleIds),
+                                    savedHierarchicalUsers: @json($manualEntryHierarchicalUserIds)
+                                };
+                            </script>
+
+                            <style>
+                                /* Fix Select2 Auto-select on click by ensuring dropdown doesn't overlap input */
+                                .select2-container .select2-dropdown--below {
+                                    margin-top: 4px !important;
+                                }
+                                .select2-container .select2-dropout--above {
+                                    margin-bottom: 4px !important;
+                                }
+                                /* Ensure Select2 dropdown appears above modal when attached to body */
+                                .select2-dropdown-in-modal {
+                                    z-index: 9999 !important;
+                                }
+                            </style>
+                            
+                            <!-- Project Tracking -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                     <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="manual_entry_track_project" name="manual_entry_track_project" value="1" {{ $manualEntryTrackProject ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="manual_entry_track_project">
+                                            <strong>{{ __('Track Project') }}</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="manual_entry_require_project" name="manual_entry_require_project" value="1" {{ $manualEntryRequireProject ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="manual_entry_require_project">
+                                            <strong>{{ __('Require Project') }}</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3 opacity-25">
+
+                            <!-- Reason & Format -->
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="manual_entry_require_reason" name="manual_entry_require_reason" value="1" {{ $manualEntryRequireReason ? 'checked' : '' }}>
+                                <label class="form-check-label" for="manual_entry_require_reason">
+                                    <strong>{{ __('Require Reason/Remark') }}</strong>
+                                </label>
+                            </div>
+                            
+                            <!-- Limits -->
+                             <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ __('Max Days Back') }}</label>
+                                    <input type="number" class="form-control" name="manual_entry_max_days_back" value="{{ $manualEntryMaxDaysBack }}" min="0">
+                                </div>
+                                 <div class="col-md-6 pt-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="manual_entry_allow_future" name="manual_entry_allow_future" value="1" {{ $manualEntryAllowFuture ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="manual_entry_allow_future">
+                                            <strong>{{ __('Allow Future Dates') }}</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Configuration') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+@push('page-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Safe selector helper
+        const getCheckedValue = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        };
+
+        const safeToggleClass = (id, className, condition) => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (condition) {
+                    el.classList.remove(className);
+                } else {
+                    el.classList.add(className);
+                }
+            }
+        };
+
+        // --- LATE ARRIVAL LOGIC ---
+        window.toggleDeductionFields = function() {
+            const type = getCheckedValue('late_arrival_penalty_type');
+            safeToggleClass('deduction_config', 'd-none', type === 'deduction');
+        };
+
+        window.toggleAmountField = function() {
+            const typeEl = document.querySelector('select[name="late_arrival_deduction_type"]');
+            if (!typeEl) return;
+            
+            const type = typeEl.value;
+            const wrapper = document.getElementById('deduction_amount_wrapper');
+            const currency = document.getElementById('currency_symbol');
+            const percentage = document.getElementById('percentage_symbol');
+            
+            if (!wrapper || !currency || !percentage) return;
+            
+            if (type === 'half_day' || type === 'full_day') {
+                wrapper.classList.add('d-none');
+            } else {
+                wrapper.classList.remove('d-none');
+                if (type === 'percentage') {
+                    currency.classList.add('d-none');
+                    percentage.classList.remove('d-none');
+                } else {
+                    currency.classList.remove('d-none');
+                    percentage.classList.add('d-none');
+                }
+            }
+        };
+
+        // --- EARLY CHECKOUT LOGIC ---
+        window.toggleEarlyDeductionFields = function() {
+            const type = getCheckedValue('early_checkout_penalty_type');
+            safeToggleClass('early_deduction_config', 'd-none', type === 'deduction');
+        };
+
+        window.toggleEarlyAmountField = function() {
+            const typeEl = document.querySelector('select[name="early_checkout_deduction_type"]');
+            if (!typeEl) return;
+            
+            const type = typeEl.value;
+            const wrapper = document.getElementById('early_deduction_amount_wrapper');
+            const currency = document.getElementById('early_currency_symbol');
+            const percentage = document.getElementById('early_percentage_symbol');
+            
+            if (!wrapper || !currency || !percentage) return;
+            
+            if (type === 'half_day' || type === 'full_day') {
+                wrapper.classList.add('d-none');
+            } else {
+                wrapper.classList.remove('d-none');
+                if (type === 'percentage') {
+                    currency.classList.add('d-none');
+                    percentage.classList.remove('d-none');
+                } else {
+                    currency.classList.remove('d-none');
+                    percentage.classList.add('d-none');
+                }
+            }
+        };
+
+
+        // --- BINDINGS ---
+        
+        // Helper to open modal safely
+        const openModal = (modalId, callback) => {
+            const modalEl = document.getElementById(modalId);
+            if (!modalEl) {
+                console.error(`Modal element ${modalId} not found`);
+                return;
+            }
+
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap 5 is not loaded or not available globally');
+                if (typeof $ !== 'undefined' && $.fn.modal) {
+                    $(modalEl).modal('show');
+                    if(callback) callback();
+                }
+                return;
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            if(callback) callback();
+            modal.show();
+        };
+
+        // Late Arrival Binding
+        const lateArrivalLink = document.getElementById('config_link_late_arrival');
+        if (lateArrivalLink) {
+            lateArrivalLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('lateArrivalModal', () => {
+                    toggleDeductionFields();
+                    toggleAmountField();
+                });
+            });
+        }
+
+        // Early Checkout Binding
+        const earlyCheckoutLink = document.getElementById('config_link_early_checkout');
+        if (earlyCheckoutLink) {
+            earlyCheckoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('earlyCheckoutModal', () => {
+                    toggleEarlyDeductionFields();
+                    toggleEarlyAmountField();
+                });
+            });
+        }
+
+        // Overtime Binding
+        const overtimeLink = document.getElementById('config_link_overtime');
+        if (overtimeLink) {
+            overtimeLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('overtimeModal');
+            });
+        }
+
+        // Web Portal Binding
+        const webPortalLink = document.getElementById('config_link_web_portal');
+        if (webPortalLink) {
+            webPortalLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('webPortalModal');
+            });
+        }
+        // --- MANUAL ENTRY LOGIC ---
+        window.togglePermissionFields = function() {
+            const mode = document.querySelector('input[name="manual_entry_permission_mode"]:checked').value;
+            const rolesDiv = document.getElementById('allowedRolesDiv');
+            if(rolesDiv) {
+                rolesDiv.style.display = (mode === 'roles') ? 'block' : 'none';
+            }
+        };
+
+        window.toggleApprovalLogic = function() {
+            const policy = document.getElementById('manualEntryApprovalPolicy').value;
+            const logicDiv = document.getElementById('approvalLogic');
+            if(logicDiv) {
+                logicDiv.style.display = (policy === 'manual_approval') ? 'block' : 'none';
+            }
+            if(policy === 'manual_approval') toggleEntitySelects();
+        };
+
+        // --- HIERARCHICAL LIST BUILDER ---
+        window.isHierarchicalInit = false;
+
+        window.addHierarchicalRow = function(type, selectedValue = null) {
+            const listId = type === 'role' ? 'hierarchicalRoleList' : 'hierarchicalUserList';
+            const listEl = document.getElementById(listId);
+            const inputName = type === 'role' ? 'manual_entry_hierarchical_role_ids[]' : 'manual_entry_hierarchical_user_ids[]';
+            const data = type === 'role' ? window.attendanceConfig.roles : window.attendanceConfig.users;
+            
+            const rowId = 'h_row_' + Date.now() + Math.floor(Math.random() * 1000);
+            
+            // Empty first option for placeholder support
+            let optionsHtml = '<option value=""></option>';
+            data.forEach(item => {
+                const isSelected = selectedValue == item.id ? 'selected' : '';
+                const text = item.name || item.text; 
+                optionsHtml += `<option value="${item.id}" ${isSelected}>${text}</option>`;
+            });
+
+            const rowHtml = `
+                <div class="d-flex align-items-center gap-2" id="${rowId}">
+                    <span class="badge bg-secondary rounded-pill step-badge">Step</span>
+                    <div class="flex-grow-1">
+                        <select class="hierarchical-select" name="${inputName}" style="width: 100%;">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHierarchicalRow('${rowId}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+
+            listEl.insertAdjacentHTML('beforeend', rowHtml);
+            
+            // Re-init Select2 with delay to prevent click-through issues
+            setTimeout(() => {
+                const newRow = document.getElementById(rowId);
+                const newSelect = newRow.querySelector('select');
+                
+                // Update badges immediately
+                updateStepBadges(listId);
+                
+                if (typeof $ !== 'undefined') {
+                    $(newSelect).select2({ 
+                        dropdownParent: $('body'),
+                        width: '100%',
+                        placeholder: "Select Value...",
+                        allowClear: true,
+                        dropdownCssClass: 'select2-dropdown-in-modal'
+                    });
+                }
+            }, 10);
+        };
+
+        window.removeHierarchicalRow = function(rowId) {
+            const row = document.getElementById(rowId);
+            const parentId = row.parentElement.id;
+            if(row) row.remove();
+            updateStepBadges(parentId);
+        };
+
+        window.updateStepBadges = function(listId) {
+            const list = document.getElementById(listId);
+            const badges = list.querySelectorAll('.step-badge');
+            badges.forEach((badge, index) => {
+                badge.textContent = index + 1;
+            });
+        };
+
+        window.initHierarchicalLists = function() {
+            if(window.isHierarchicalInit) return;
+
+            // Clear existing
+            document.getElementById('hierarchicalRoleList').innerHTML = '';
+            document.getElementById('hierarchicalUserList').innerHTML = '';
+
+            // Populate Roles
+            const savedRoles = window.attendanceConfig.savedHierarchicalRoles || [];
+            if(savedRoles.length > 0) {
+                savedRoles.forEach(id => addHierarchicalRow('role', id));
+            } else {
+                addHierarchicalRow('role'); // Add 1 empty row default
+            }
+
+            // Populate Users
+            const savedUsers = window.attendanceConfig.savedHierarchicalUsers || [];
+            if(savedUsers.length > 0) {
+                savedUsers.forEach(id => addHierarchicalRow('user', id));
+            } else {
+                addHierarchicalRow('user'); // Add 1 empty row default
+            }
+
+            window.isHierarchicalInit = true;
+        };
+
+        window.toggleEntitySelects = function() {
+            const structure = document.getElementById('approvalStructure').value;
+            const entity = document.getElementById('approverEntity').value;
+            
+            const roleDiv = document.getElementById('entityRoleDiv');
+            const userDiv = document.getElementById('entityUserDiv');
+            const hRoleWrapper = document.getElementById('hierarchicalRoleWrapper');
+            const hUserWrapper = document.getElementById('hierarchicalUserWrapper');
+            
+            // Hide all first
+            if(roleDiv) roleDiv.style.display = 'none';
+            if(userDiv) userDiv.style.display = 'none';
+            if(hRoleWrapper) hRoleWrapper.style.display = 'none';
+            if(hUserWrapper) hUserWrapper.style.display = 'none';
+
+            if (structure === 'single') {
+                if (entity === 'role' && roleDiv) roleDiv.style.display = 'block';
+                if (entity === 'individual' && userDiv) userDiv.style.display = 'block';
+            } else if (structure === 'hierarchical') {
+                if (entity === 'role' && hRoleWrapper) hRoleWrapper.style.display = 'block';
+                if (entity === 'individual' && hUserWrapper) hUserWrapper.style.display = 'block';
+            }
+        };
+
+        // Manual Entry Binding
+        const manualEntryLink = document.getElementById('config_link_manual');
+        if (manualEntryLink) {
+            manualEntryLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal('manualEntryConfigModal', () => {
+                    togglePermissionFields();
+                    toggleApprovalLogic();
+                    // Initialize Hierarchical Builder
+                    initHierarchicalLists(); 
+                    toggleEntitySelects(); 
+                });
+            });
+        }
+
+
     });
 </script>
 @endpush

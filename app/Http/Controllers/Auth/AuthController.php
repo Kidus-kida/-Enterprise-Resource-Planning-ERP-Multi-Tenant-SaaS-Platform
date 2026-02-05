@@ -20,6 +20,10 @@ class AuthController extends BaseController
         $tenantId = request()->query('tenant') ?? session('sticky_tenant_id');
         
         if (Auth::check()) {
+            // Type-based redirect: Superadmins go to /superadmin, others to /dashboard
+            if (Auth::user()->type === \App\Enums\UserType::SUPERADMIN) {
+                return redirect()->route('superadmin.dashboard');
+            }
             return redirect()->route('dashboard');
         }
         $this->data['pageTitle'] = __('Login');
@@ -96,6 +100,12 @@ class AuthController extends BaseController
                         'is_online' => true,
                     ]);
                     \Log::info("AuthController: Central login SUCCESS for user {$user->id}");
+                    
+                    // Type-based redirect: Superadmins go to /superadmin, others to /dashboard
+                    if ($user->type === \App\Enums\UserType::SUPERADMIN) {
+                        return redirect()->route('superadmin.dashboard');
+                    }
+                    
                     return redirect()->route('dashboard');
                 }
                 return back()->withErrors(['password' => 'Incorrect Password']);

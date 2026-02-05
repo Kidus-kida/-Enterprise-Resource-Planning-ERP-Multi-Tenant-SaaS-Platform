@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -29,8 +28,8 @@ return new class extends Migration
         Schema::create('holidays', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->date('startDate');
+            $table->date('endDate');
             $table->integer('total_days');
             $table->text('description')->nullable();
             $table->timestamps();

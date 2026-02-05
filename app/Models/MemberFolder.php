@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MemberFolder extends Model
+class MemberFolder extends TenantModel
 {
     use HasFactory;
 
@@ -29,3 +29,4 @@ class MemberFolder extends Model
 
 
 }
+

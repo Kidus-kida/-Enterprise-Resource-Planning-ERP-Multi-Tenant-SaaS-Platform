@@ -272,49 +272,64 @@
                                 @csrf
                                 
                                 <h5 class="mt-4"><i class="fa fa-user-plus"></i> {{ $business->is_active ? 'Re-Initialize' : 'Setup' }} Admin User</h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>First Name <span class="text-danger">*</span></label>
-                                            <input type="text" name="admin_firstname" class="form-control" value="{{ $business->owner->firstname ?? '' }}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Last Name <span class="text-danger">*</span></label>
-                                            <input type="text" name="admin_lastname" class="form-control" value="{{ $business->owner->lastname ?? '' }}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Admin Email <span class="text-danger">*</span></label>
-                                            <input type="email" name="admin_email" class="form-control" value="{{ $business->owner->email ?? '' }}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Admin Password <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="password" name="admin_password" id="admin_password" class="form-control" required minlength="8">
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword" title="Show/Hide Password">
-                                                        <i class="fa fa-eye" id="togglePasswordIcon"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <small class="text-muted">Minimum 8 characters</small>
-                                        </div>
-                                    </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fa fa-envelope"></i> <strong>Note:</strong> 
+                                    The owner will receive an email to set up their password. 
+                                    The details below are pre-filled from the Business Owner information.
                                 </div>
-                                <div class="form-group">
-                                    <label>Admin Username <span class="text-danger">*</span></label>
-                                    <input type="text" name="admin_username" class="form-control" value="{{ explode('@', $business->owner->email ?? '')[0] }}" required>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>First Name</label>
+                                            <input type="text" name="admin_firstname" class="form-control" value="{{ $business->owner_firstname }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Last Name</label>
+                                            <input type="text" name="admin_lastname" class="form-control" value="{{ $business->owner_lastname }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Admin Email</label>
+                                            <input type="email" name="admin_email" class="form-control" value="{{ $business->owner_email }}" readonly>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button type="submit" class="btn btn-{{ $business->is_active ? 'warning' : 'success' }} btn-lg mt-3" onclick="return confirm('Are you sure you want to run migrations and seed the database? This might take a few moments.');">
                                     <i class="fa fa-cogs"></i> {{ $business->is_active ? 'Re-Run Migrations & Seed' : 'Run Migrations & Setup Tenant' }}
                                 </button>
                             </form>
+
+                            @if($business->is_active && !$business->owner_activated_at)
+                                <form action="{{ route('superadmin.businesses.resend-invite', $business->id) }}" method="POST" class="d-inline-block ml-2">
+                                    @csrf
+                                    <button type="submit" class="btn btn-warning btn-lg mt-3" title="Resend the password setup email to the owner">
+                                        <i class="fa fa-envelope"></i> Resend Setup Email
+                                    </button>
+                                </form>
+                                
+                                @if($business->owner_invite_sent_at)
+                                    <small class="d-block text-muted mt-2">
+                                        <i class="fa fa-clock-o"></i> Last invite sent: {{ $business->owner_invite_sent_at->diffForHumans() }}
+                                    </small>
+                                @endif
+                            @endif
+
+                            {{-- Quick Permission Cache Clear Button --}}
+                            <form action="{{ route('superadmin.tenant-management.clear-permission-cache', $tenant->id) }}" method="POST" class="d-inline-block">
+                                @csrf
+                                <button type="submit" class="btn btn-info btn-lg mt-3 ml-2" title="Clears all caches to fix permission issues">
+                                    <i class="fa fa-refresh"></i> Clear All Caches
+                                </button>
+                            </form>
+                            <small class="d-block text-muted mt-2">
+                                <i class="fa fa-info-circle"></i> Click this after migrations to fix missing menus. The tenant user should refresh their browser or log out/in after this.
+                            </small>
                         @endif
 
                         @if(session('migration_output'))
@@ -380,29 +395,7 @@
 
 
 <script>
-// Password visibility toggle
-document.addEventListener('DOMContentLoaded', function() {
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('admin_password');
-    const toggleIcon = document.getElementById('togglePasswordIcon');
-    
-    if (togglePassword && passwordField && toggleIcon) {
-        togglePassword.addEventListener('click', function() {
-            // Toggle password visibility
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-            
-            // Toggle icon
-            if (type === 'password') {
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
-            } else {
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            }
-        });
-    }
-});
+// No scripts needed for now
 </script>
 
 @endsection

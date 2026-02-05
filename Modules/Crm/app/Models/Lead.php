@@ -5,7 +5,7 @@ namespace Modules\Crm\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Lead extends Model
+class Lead extends \App\Models\TenantModel
 {
     use HasFactory;
 

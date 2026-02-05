@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AttendancePolicyEvent extends Model
+class AttendancePolicyEvent extends TenantModel
 {
     protected $fillable = [
         'attendance_timestamp_id',
@@ -103,3 +103,4 @@ class AttendancePolicyEvent extends Model
         ]);
     }
 }
+

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Ticket extends Model implements HasMedia
+class Ticket extends TenantModel implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
@@ -39,3 +39,4 @@ class Ticket extends Model implements HasMedia
         return $this->hasMany(TicketReply::class);
     }
 }
+

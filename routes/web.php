@@ -38,6 +38,32 @@ use App\Http\Controllers\StockTransferRequestController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+Route::middleware(['auth'])->group(function () {
+
+
+    // remove this code after production 
+    
+    // Migration and Seeder routes
+    Route::get('/run-migrations', function() {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $output = Artisan::output();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Migrations completed successfully',
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    })->name('run.migrations');
+
+});
+
 
 // Public landing routes
 Route::view('/', 'landing.home')->name('landing.home');
@@ -47,6 +73,25 @@ Route::view('/industries', 'landing.industries')->name('landing.industries');
 Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
+
+// Clear permission cache - access from TENANT subdomain to fix missing menus
+Route::get('/clear-permission-cache', function () {
+    try {
+        // Clear Spatie permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission cache cleared! Please refresh the page.',
+            'database' => \DB::connection()->getDatabaseName()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
 
 // Database diagnostic routes (accessible without authentication)
 Route::get('/tenant-login/{id}', [AuthController::class, 'tenantLogin']);
@@ -373,7 +418,11 @@ Route::get('/test-dashboard-parts', function() {
     }
 })->name('test.dashboard.parts');
 
-include __DIR__ . '/auth.php';
+Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class])->group(function () {
+    include __DIR__ . '/auth.php';
+
+
+});
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
     // Add a test route within the authenticated group to isolate the issue
@@ -449,6 +498,35 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::group(['middleware' => ['module.access:contacts']], function () {
         Route::resource('clients', ClientsController::class);
         Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
+    })
+
+;
+
+    // Leave Management Module Routes
+    Route::prefix('leave-management')->name('leave.')->middleware(['module.access:hr'])->group(function () {
+        // Main navigation tabs
+        Route::get('/', [App\Http\Controllers\Leave\LeaveManagementController::class, 'index'])->name('index');
+        Route::get('/my-time', [App\Http\Controllers\Leave\LeaveManagementController::class, 'myTime'])->name('my-time');
+        Route::get('/overview', [App\Http\Controllers\Leave\LeaveManagementController::class, 'overview'])->name('overview');
+        Route::get('/management', [App\Http\Controllers\Leave\LeaveManagementController::class, 'management'])->name('management');
+        Route::get('/reporting', [App\Http\Controllers\Leave\LeaveManagementController::class, 'reporting'])->name('reporting');
+        Route::get('/configuration', [App\Http\Controllers\Leave\LeaveManagementController::class, 'configuration'])->name('configuration');
+        
+        // Management Routes
+        Route::resource('allocations', App\Http\Controllers\Leave\LeaveAllocationController::class)->names('management.allocations');
+        
+        // Configuration routes
+        Route::prefix('configuration')->name('config.')->group(function () {
+            // Public Holidays (moved from HR module)
+            // Configuration Resource Routes
+            Route::resource('time-off-types', App\Http\Controllers\Leave\TimeOffTypeController::class);
+            Route::resource('accrual-plans', App\Http\Controllers\Leave\AccrualPlanController::class);
+            Route::resource('mandatory-days', App\Http\Controllers\Leave\MandatoryDayController::class);
+            
+            // Public Holidays (Resource already defined as HolidaysController, let's keep it or alias it if needed)
+            Route::resource('public-holidays', HolidaysController::class);
+            Route::get('public-holidays-calendar', [HolidaysController::class, 'calendar'])->name('public-holidays.calendar');
+        });
     });
 
     // HR Module Routes
@@ -459,8 +537,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         
         Route::resource('departments', DepartmentsController::class)->except(['show']);
         Route::resource('designations', DesignationsController::class)->except(['show']);
-        Route::resource('holidays', HolidaysController::class);
-        Route::get('holidays-calendar', [HolidaysController::class, 'calendar'])->name('holidays.calendar');
+        // Holidays moved to Leave Management > Configuration > Public Holidays
         Route::resource('family-information', FamilyInfoController::class);
 
         
@@ -479,6 +556,25 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
             ->name('admin.missed-punches.reject');
         Route::delete('missed-punches/{missedPunchRequest}', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'destroy'])
             ->name('admin.missed-punches.destroy');
+        
+        // Manual Entry Routes
+        Route::get('attendance/my', [AttendancesController::class, 'myAttendance'])->name('attendance.my');
+    // Draft Management
+    Route::post('/attendance/my/draft', [AttendancesController::class, 'saveDraft'])->name('attendance.my.draft.save');
+    Route::put('/attendance/my/draft/{draft}', [AttendancesController::class, 'updateDraft'])->name('attendance.my.draft.update');
+    Route::delete('/attendance/my/draft/{draft}', [AttendancesController::class, 'deleteDraft'])->name('attendance.my.draft.delete');
+    Route::post('/attendance/my/submit', [AttendancesController::class, 'submitDrafts'])->name('attendance.my.submit');
+    
+    // Approval Actions
+    Route::post('/attendance/approve/{draft}', [AttendancesController::class, 'approveDraft'])->name('attendance.approvals.approve');
+    Route::post('/attendance/reject/{draft}', [AttendancesController::class, 'rejectDraft'])->name('attendance.approvals.reject');
+    Route::post('/attendance/approve-batch', [AttendancesController::class, 'approveBatch'])->name('attendance.approvals.approve_batch');
+    Route::post('/attendance/reject-batch', [AttendancesController::class, 'rejectBatch'])->name('attendance.approvals.reject_batch');
+        
+        Route::get('attendance/enter', [AttendancesController::class, 'enterAttendance'])->name('attendance.enter');
+        Route::post('attendance/enter', [AttendancesController::class, 'storeManualAttendance'])->name('attendance.storeManual');
+        Route::post('attendance/submit-manual', [AttendancesController::class, 'submitManualDrafts'])->name('attendance.submitManual');
+        Route::get('attendance/approvals', [AttendancesController::class, 'attendanceApprovals'])->name('attendance.approvals');
         
 
         Route::resource('leavetypes', LeaveTypeController::class);
@@ -644,6 +740,18 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::post('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertimeApproval'])->name('admin.attendance-settings.overtime-approval.update');
         Route::get('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'autoApproval'])->name('admin.attendance-settings.auto-approval');
         Route::post('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateAutoApproval'])->name('admin.attendance-settings.auto-approval.update');
+        // Late Arrival Configuration (Modal)
+        Route::post('/late-arrival', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateLateArrival'])->name('admin.attendance-settings.late-arrival.update');
+        
+        // Early Checkout Configuration (Modal)
+        Route::post('/early-checkout', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateEarlyCheckout'])->name('admin.attendance-settings.early-checkout.update');
+
+        // Overtime Configuration (Modal)
+        Route::post('/overtime', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertime'])->name('admin.attendance-settings.overtime.update');
+
+        // Web Portal Configuration (Modal)
+        Route::post('/web-portal', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateWebPortal'])->name('admin.attendance-settings.web-portal.update');
+        Route::post('/manual-entry', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateManualEntry'])->name('admin.attendance-settings.manual-entry.update');
     });
 
     // Audit Logs
@@ -817,225 +925,6 @@ Route::get('/emergency-db-fix', function() {
     }
     
     return response()->json($results);
-});
-
-// One-time fix for subscriptions missing module_activation_details
-Route::get('/fix-subscription-modules', function () {
-    // Note: Auth check removed for immediate access. Delete this route after use.
-
-    $fixed = [];
-    $skipped = [];
-
-    // Get all active modules from master DB
-    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
-    $moduleActivation = [];
-    foreach ($activeModules as $module) {
-        $moduleActivation[$module->key] = true;
-    }
-
-    // Get ALL approved subscriptions (not just empty ones)
-    $subscriptions = \Modules\Superadmin\Models\Subscription::on('mysql')
-        ->where('status', 'approved')
-        ->get();
-
-    foreach ($subscriptions as $subscription) {
-        try {
-            // Merge existing modules with all active modules (existing take priority if already set)
-            $existing = $subscription->module_activation_details ?? [];
-            $updated = array_merge($moduleActivation, $existing); // This ensures all modules are present
-            
-            $subscription->module_activation_details = $updated;
-            $subscription->save();
-            $fixed[] = [
-                'id' => $subscription->id,
-                'business_id' => $subscription->business_id,
-                'package_id' => $subscription->package_id,
-                'modules_before' => count($existing),
-                'modules_after' => count($updated)
-            ];
-        } catch (\Exception $e) {
-            $skipped[] = [
-                'id' => $subscription->id,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Subscription module access updated successfully',
-        'modules_granted' => array_keys($moduleActivation),
-        'subscriptions_fixed' => count($fixed),
-        'subscriptions_skipped' => count($skipped),
-        'details' => [
-            'fixed' => $fixed,
-            'skipped' => $skipped
-        ]
-    ]);
-})->name('fix.subscription.modules');
-
-// Debug: View subscription details
-Route::get('/debug-subscription/{businessId}', function ($businessId) {
-    $business = \App\Business::on('mysql')->with('subscription')->find($businessId);
-    
-    if (!$business) {
-        return response()->json(['error' => 'Business not found']);
-    }
-
-    $subscription = $business->subscription;
-    
-    return response()->json([
-        'business' => [
-            'id' => $business->id,
-            'name' => $business->name,
-            'package_id' => $business->package_id
-        ],
-        'subscription' => $subscription ? [
-            'id' => $subscription->id,
-            'status' => $subscription->status,
-            'start_date' => $subscription->start_date,
-            'end_date' => $subscription->end_date,
-            'module_activation_details' => $subscription->module_activation_details,
-            'module_count' => is_array($subscription->module_activation_details) ? count($subscription->module_activation_details) : 0
-        ] : null
-    ]);
-});
-
-// View Laravel Log (last 100 lines)
-Route::get('/view-log', function () {
-    $logPath = storage_path('logs/laravel.log');
-    
-    if (!file_exists($logPath)) {
-        return response()->json(['error' => 'Log file not found']);
-    }
-    
-    $lines = file($logPath);
-    $lastLines = array_slice($lines, -100); // Last 100 lines
-    
-    // Search for module access related logs
-    $relevantLogs = [];
-    foreach ($lastLines as $line) {
-        if (strpos($line, 'Module Access') !== false || 
-            strpos($line, 'module_activation_details') !== false ||
-            strpos($line, 'CheckModuleAccess') !== false) {
-            $relevantLogs[] = $line;
-        }
-    }
-    
-    return response()->json([
-        'total_lines' => count($lastLines),
-        'relevant_logs' => $relevantLogs,
-        'all_last_100_lines' => implode('', $lastLines)
-    ]);
-});
-
-// Fix: Create missing subscription for a business
-Route::get('/create-subscription/{businessId}', function ($businessId) {
-    $business = \App\Business::on('mysql')->find($businessId);
-    
-    if (!$business) {
-        return response()->json(['error' => 'Business not found'], 404);
-    }
-
-    // Check if subscription already exists
-    $existingSubscription = \Modules\Superadmin\Models\Subscription::on('mysql')
-        ->where('business_id', $businessId)
-        ->first();
-
-    if ($existingSubscription) {
-        return response()->json([
-            'message' => 'Subscription already exists',
-            'subscription' => $existingSubscription
-        ]);
-    }
-
-    // Get all active modules
-    $activeModules = \Modules\Superadmin\Models\Module::on('mysql')->where('is_active', 1)->get();
-    $moduleActivation = [];
-    foreach ($activeModules as $module) {
-        $moduleActivation[$module->key] = true;
-    }
-
-    // Create subscription
-    $subscription = \Modules\Superadmin\Models\Subscription::on('mysql')->create([
-        'business_id' => $businessId,
-        'package_id' => $business->package_id ?? 1,
-        'start_date' => now(),
-        'end_date' => now()->addYear(),
-        'status' => 'approved',
-        'module_activation_details' => $moduleActivation,
-        'base_price' => 0,
-        'total_price' => 0
-    ]);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Subscription created successfully',
-        'subscription' => $subscription,
-        'modules_granted' => count($moduleActivation)
-    ]);
-});
-
-// Run tenant migrations via web route (use business_id)
-Route::get('/run-tenant-migrations-for-business/{businessId}', function ($businessId) {
-    try {
-        // Get business and its tenant
-        $business = \App\Business::on('mysql')->with('tenant')->find($businessId);
-        
-        if (!$business) {
-            return response()->json(['error' => 'Business not found'], 404);
-        }
-
-        if (!$business->tenant) {
-            return response()->json(['error' => 'No tenant configured for this business'], 404);
-        }
-
-        $tenant = $business->tenant;
-
-        // Get database credentials
-        $credentials = $tenant->data;
-        if (!is_array($credentials)) {
-            $credentials = json_decode($tenant->data, true);
-        }
-
-        // Configure tenant connection
-        config(['database.connections.tenant' => [
-            'driver' => 'mysql',
-            'host' => $credentials['db_host'],
-            'port' => $credentials['db_port'] ?? 3306,
-            'database' => $credentials['db_name'],
-            'username' => $credentials['db_username'],
-            'password' => decrypt($credentials['db_password']),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-        ]]);
-
-        \DB::purge('tenant');
-        \DB::reconnect('tenant');
-
-        // Run migrations
-        \Artisan::call('migrate', [
-            '--database' => 'tenant',
-            '--path' => 'database/migrations/tenant',
-            '--force' => true
-        ]);
-
-        $output = \Artisan::output();
-
-        return response()->json([
-            'success' => true,
-            'business_id' => $businessId,
-            'tenant_id' => $tenant->id,
-            'database' => $credentials['db_name'],
-            'output' => $output
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
 });
 
 // End of file

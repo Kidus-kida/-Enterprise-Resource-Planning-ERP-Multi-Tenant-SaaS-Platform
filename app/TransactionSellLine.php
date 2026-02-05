@@ -5,7 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TransactionSellLine extends Model
+class TransactionSellLine extends \App\Models\TenantModel
 {
     use SoftDeletes;
 

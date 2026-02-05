@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TaxRate extends Model
+class TaxRate extends TenantModel
 {
     use SoftDeletes;
 
@@ -16,3 +16,4 @@ class TaxRate extends Model
         return self::where('business_id', $business_id)->get();
     }
 }
+

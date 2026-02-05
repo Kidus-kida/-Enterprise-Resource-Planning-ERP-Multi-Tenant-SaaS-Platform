@@ -2,11 +2,13 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 // use Spatie\Activitylog\Traits\LogsActivity;
 // use Spatie\Activitylog\LogOptions;
 
-class ReferenceCount extends Model
+class ReferenceCount extends TenantModel
 {
     // use LogsActivity;
     protected $table = 'reference_counts';
@@ -33,3 +35,4 @@ class ReferenceCount extends Model
     }
     */
 }
+

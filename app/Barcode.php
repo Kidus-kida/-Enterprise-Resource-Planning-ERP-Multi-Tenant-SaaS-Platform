@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class Barcode extends Model
+class Barcode extends \App\Models\TenantModel
 {
     /**
      * The attributes that aren't mass assignable.

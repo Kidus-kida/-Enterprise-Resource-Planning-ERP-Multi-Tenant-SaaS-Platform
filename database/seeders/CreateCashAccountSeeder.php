@@ -25,14 +25,24 @@ class CreateCashAccountSeeder extends Seeder
             return;
         }
 
-        // Check if Cash account already exists
+        // Check if Cash account already exists for this business
         $exists = DB::table('accounts')
             ->where('name', 'Cash')
             ->where('business_id', $business_id)
             ->exists();
 
         if ($exists) {
-            echo "Cash account already exists.\n";
+            echo "Cash account already exists for this business.\n";
+            return;
+        }
+
+        // Check if CASH-001 account number is already taken (unique constraint)
+        $accountNumberExists = DB::table('accounts')
+            ->where('account_number', 'CASH-001')
+            ->exists();
+
+        if ($accountNumberExists) {
+            echo "Cash account with number CASH-001 already exists in the system. Skipping.\n";
             return;
         }
 

@@ -2,11 +2,13 @@
 
 namespace Modules\Sales\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Sales\Database\Factories\EstimateItemFactory;
 
-class EstimateItem extends Model
+class EstimateItem extends TenantModel
 {
     use HasFactory;
 
@@ -22,3 +24,4 @@ class EstimateItem extends Model
         return EstimateItemFactory::new();
     }
 }
+

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
-class Account extends Model
+class Account extends TenantModel
 {
     use SoftDeletes;
 
@@ -186,3 +186,4 @@ class Account extends Model
         return round($balance, 2);
     }
 }
+

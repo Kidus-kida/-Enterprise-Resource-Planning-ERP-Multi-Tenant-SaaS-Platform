@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class CashRegisterTransaction extends Model
+class CashRegisterTransaction extends TenantModel
 {
     use LogsActivity;
 
@@ -29,3 +29,4 @@ class CashRegisterTransaction extends Model
             ->logOnly(['fillable', 'some_other_attribute']);
     }
 }
+

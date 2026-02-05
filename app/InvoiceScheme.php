@@ -5,7 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class InvoiceScheme extends Model
+class InvoiceScheme extends \App\Models\TenantModel
 {
 
     /**

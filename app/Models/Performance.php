@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Performance extends Model
+class Performance extends TenantModel
 {
     protected $casts = [
         'employment_date' => 'date',
@@ -74,3 +74,4 @@ class Performance extends Model
         return $this->belongsTo(User::class, 'evaluator_id');
     }
 }
+

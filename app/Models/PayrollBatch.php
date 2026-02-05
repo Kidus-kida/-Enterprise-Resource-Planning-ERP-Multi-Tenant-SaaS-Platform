@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PayrollBatch extends Model
+class PayrollBatch extends TenantModel
 {
     use HasFactory;
 
@@ -66,3 +66,4 @@ class PayrollBatch extends Model
         return "PAY-{$year}{$month}-{$newNumber}";
     }
 }
+

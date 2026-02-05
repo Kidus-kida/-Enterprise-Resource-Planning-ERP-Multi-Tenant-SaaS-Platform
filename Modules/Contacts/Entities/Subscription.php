@@ -2,12 +2,14 @@
 
 namespace Modules\Contacts\Entities;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Support\Facades\DB;
 
-class Subscription extends Model
+class Subscription extends TenantModel
 {
     use SoftDeletes;
 
@@ -447,3 +449,4 @@ class Subscription extends Model
 
 
 }
+

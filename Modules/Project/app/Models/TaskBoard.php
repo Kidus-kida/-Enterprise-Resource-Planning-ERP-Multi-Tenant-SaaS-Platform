@@ -2,12 +2,14 @@
 
 namespace Modules\Project\Models;
 
+use App\Models\TenantModel;
+
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Project\Database\Factories\TaskBoardFactory;
 
-class TaskBoard extends Model
+class TaskBoard extends TenantModel
 {
     use HasFactory;
 
@@ -29,3 +31,4 @@ class TaskBoard extends Model
     }
 
 }
+

@@ -49,19 +49,35 @@ class HolidaysController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'startDate' => 'required|date',
-            'endDate' => 'required|date',
+            'endDate' => 'required|date|after_or_equal:startDate',
             'description' => 'nullable|max:255',
+            'duration' => 'required|in:full_day,half_day',
+            'exclude_from_leave' => 'boolean',
+            'weekend_adjustment' => 'required|in:none,next_monday,previous_friday',
+            'is_paid' => 'boolean',
+            'block_leave_requests' => 'boolean',
+            'allow_attendance_exception' => 'boolean',
         ]);
+        
         Holiday::create([
             'name' => $request->name,
             'startDate' => $request->startDate,
             'endDate' => $request->endDate,
             'description' => $request->description,
-            'is_annual' => !empty($request->is_annual) ? true: false,
-            'color'  => $request->color
+            'is_annual' => !empty($request->is_annual) ? true : false,
+            'color' => $request->color,
+            // New Odoo fields
+            'duration' => $request->duration ?? 'full_day',
+            'applicable_to' => $request->applicable_to ?? ['type' => 'all'],
+            'exclude_from_leave' => $request->has('exclude_from_leave') ? (bool)$request->exclude_from_leave : true,
+            'weekend_adjustment' => $request->weekend_adjustment ?? 'none',
+            'is_paid' => $request->has('is_paid') ? (bool)$request->is_paid : true,
+            'block_leave_requests' => $request->has('block_leave_requests') ? (bool)$request->block_leave_requests : false,
+            'allow_attendance_exception' => $request->has('allow_attendance_exception') ? (bool)$request->allow_attendance_exception : false,
         ]);
+        
         $notification = notify(__("Holiday has been created"));
         return back()->with($notification);
     }
@@ -77,8 +93,9 @@ class HolidaysController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Holiday $holiday)
+    public function edit(Holiday $public_holiday)
     {
+        $holiday = $public_holiday;
         return view('pages.holidays.edit',compact(
             'holiday'
         ));
@@ -87,22 +104,39 @@ class HolidaysController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Holiday $holiday)
+    public function update(Request $request, Holiday $public_holiday)
     {
+        $holiday = $public_holiday;
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'startDate' => 'required|date',
-            'endDate' => 'required|date',
+            'endDate' => 'required|date|after_or_equal:startDate',
             'description' => 'nullable|max:255',
+            'duration' => 'required|in:full_day,half_day',
+            'exclude_from_leave' => 'boolean',
+            'weekend_adjustment' => 'required|in:none,next_monday,previous_friday',
+            'is_paid' => 'boolean',
+            'block_leave_requests' => 'boolean',
+            'allow_attendance_exception' => 'boolean',
         ]);
+        
         $holiday->update([
             'name' => $request->name,
             'startDate' => $request->startDate,
             'endDate' => $request->endDate,
             'description' => $request->description,
-            'is_annual' => !empty($request->is_annual) ? true: false,
-            'color'  => $request->color
+            'is_annual' => !empty($request->is_annual) ? true : false,
+            'color' => $request->color,
+            // New Odoo fields
+            'duration' => $request->duration ?? 'full_day',
+            'applicable_to' => $request->applicable_to ?? ['type' => 'all'],
+            'exclude_from_leave' => $request->has('exclude_from_leave') ? (bool)$request->exclude_from_leave : true,
+            'weekend_adjustment' => $request->weekend_adjustment ?? 'none',
+            'is_paid' => $request->has('is_paid') ? (bool)$request->is_paid : true,
+            'block_leave_requests' => $request->has('block_leave_requests') ? (bool)$request->block_leave_requests : false,
+            'allow_attendance_exception' => $request->has('allow_attendance_exception') ? (bool)$request->allow_attendance_exception : false,
         ]);
+        
         $notification = notify(__("Holiday has been updated"));
         return back()->with($notification);
     }
@@ -110,8 +144,9 @@ class HolidaysController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Holiday $holiday)
+    public function destroy(Holiday $public_holiday)
     {
+        $holiday = $public_holiday;
         $holiday->delete();
         $notification = notify(__("Holiday has been deleted"));
         return back()->with($notification);

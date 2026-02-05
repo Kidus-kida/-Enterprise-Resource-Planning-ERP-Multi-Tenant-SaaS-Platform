@@ -2,13 +2,15 @@
 
 namespace Modules\Contacts\Models;
 
+use App\Models\TenantModel;
+
 use Modules\Contacts\Models\Contact;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Transaction extends Model
+class Transaction extends TenantModel
 {
     use HasFactory, SoftDeletes;
 
@@ -162,3 +164,4 @@ class Transaction extends Model
         return $this->hasMany(Transaction::class, 'recur_parent_id');
     }
 }
+

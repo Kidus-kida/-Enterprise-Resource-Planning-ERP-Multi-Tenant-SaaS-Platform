@@ -2,9 +2,11 @@
 
 namespace Modules\StockAdjustment\Models;
 
+use App\Models\TenantModel;
+
 use Illuminate\Database\Eloquent\Model;
 
-class StockAdjustmentLine extends Model
+class StockAdjustmentLine extends TenantModel
 {
     /**
      * The attributes that aren't mass assignable.
@@ -23,3 +25,4 @@ class StockAdjustmentLine extends Model
         return $this->belongsTo(\App\PurchaseLine::class, 'lot_no_line_id');
     }
 }
+

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-class AttendanceSetting extends Model
+class AttendanceSetting extends TenantModel
 {
     use HasFactory;
 
@@ -201,8 +201,15 @@ class AttendanceSetting extends Model
                 continue; // Skip unknown keys
             }
 
-            // Prepare value for validation and storage
-            $processedValue = $value;
+            // Decode JSON strings for json type settings (e.g., when frontend sends '[]' for empty arrays)
+            if ($setting->type === 'json' && is_string($value) && in_array($value[0] ?? '', ['[', '{'])) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $value = $decoded;
+                }
+            }
+
+            // Convert array to JSON string for json type settings
             if ($setting->type === 'json' && is_array($value)) {
                 $processedValue = json_encode($value);
             } elseif ($setting->type === 'boolean') {
@@ -243,3 +250,4 @@ class AttendanceSetting extends Model
         return $errors;
     }
 }
+
