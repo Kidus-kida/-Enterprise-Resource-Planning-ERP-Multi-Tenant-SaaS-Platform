@@ -16,7 +16,7 @@ class ShiftsController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!attendance_setting('shifts_enabled', true)) {
+            if (!AttendanceSetting::get('shifts_enabled', true)) {
                 return redirect()->route('dashboard')->with('error', __('Shifts module is currently disabled in Attendance Settings.'));
             }
             return $next($request);
@@ -30,14 +30,17 @@ class ShiftsController extends Controller
     {
         $pageTitle = __('Shifts Management');
         
-        $shifts = Shift::withCount('userShifts')
+        $shifts = Shift::withCount(['userShifts' => function($query) {
+            $query->where('is_active', 1);
+        }])
             ->orderBy('name')
             ->get();
 
         $shiftMode = AttendanceSetting::get('shift_mode', 'mandatory');
         $shiftsEnabled = AttendanceSetting::get('shifts_enabled', true);
+        $nightShiftEnabled = AttendanceSetting::get('night_shift_enabled', false);
         
-        return view('pages.shifts.index', compact('pageTitle', 'shifts', 'shiftMode', 'shiftsEnabled'));
+        return view('pages.shifts.index', compact('pageTitle', 'shifts', 'shiftMode', 'shiftsEnabled', 'nightShiftEnabled'));
     }
 
     /**
@@ -153,38 +156,23 @@ class ShiftsController extends Controller
             return true;
         }
 
-        // Check if it's a night shift (crosses midnight)
-        if ($endTime < $startTime) {
-            $errorMessage = __('Night shifts (crossing midnight) are currently disabled in Attendance Settings.');
+        // Create a temporary Shift instance for validation
+        $tempShift = new Shift([
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+        ]);
+
+        if ($tempShift->isRestrictedNightShift()) {
+            $nightStart = AttendanceSetting::get('night_time_start', '22:00');
+            $nightEnd = AttendanceSetting::get('night_time_end', '06:00');
+
+            if ($tempShift->isNightShift()) {
+                $errorMessage = __('Night shifts (crossing midnight) are currently disabled in Attendance Settings.');
+            } else {
+                $errorMessage = __('This shift overlaps with the restricted night time range (:start - :end).', 
+                    ['start' => $nightStart, 'end' => $nightEnd]);
+            }
             return false;
-        }
-
-        // Check for overlap with restricted night time range
-        $nightStart = AttendanceSetting::get('night_time_start', '22:00');
-        $nightEnd = AttendanceSetting::get('night_time_end', '06:00');
-
-        // Simple overlap check (assuming both ranges are within same day for simplicity of comparison)
-        // A shift overlaps with night time if:
-        // shift_start < night_end AND shift_end > night_start
-        
-        // Handling midnight crossing in restricted range (e.g. 22:00 - 06:00)
-        if ($nightEnd < $nightStart) {
-            // Restricted range crosses midnight. Check two segments: [nightStart, 23:59] and [00:00, nightEnd]
-            $overlapsSegment1 = ($startTime < '23:59' && $endTime > $nightStart);
-            $overlapsSegment2 = ($startTime < $nightEnd && $endTime > '00:00');
-            
-            if ($overlapsSegment1 || $overlapsSegment2) {
-                $errorMessage = __('This shift overlaps with the restricted night time range (:start - :end).', 
-                    ['start' => $nightStart, 'end' => $nightEnd]);
-                return false;
-            }
-        } else {
-            // Restricted range is within same day
-            if ($startTime < $nightEnd && $endTime > $nightStart) {
-                $errorMessage = __('This shift overlaps with the restricted night time range (:start - :end).', 
-                    ['start' => $nightStart, 'end' => $nightEnd]);
-                return false;
-            }
         }
 
         return true;

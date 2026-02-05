@@ -125,10 +125,10 @@ Route::get('/test-db-connection', function () {
         ], 500);
     }
 });
-Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
-Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
-Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
-Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
+// Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
+// Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
+// Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
+// Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
 
 // Simple test route to bypass middleware
 Route::get('/test-route', function() {
@@ -512,6 +512,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('/reporting', [App\Http\Controllers\Leave\LeaveManagementController::class, 'reporting'])->name('reporting');
         Route::get('/configuration', [App\Http\Controllers\Leave\LeaveManagementController::class, 'configuration'])->name('configuration');
         
+        // Allocation Request Routes (Employee)
+        Route::get('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'request'])->name('management.allocations.request');
+        Route::post('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'storeRequest'])->name('management.allocations.store-request');
+
         // Management Routes
         Route::resource('allocations', App\Http\Controllers\Leave\LeaveAllocationController::class)->names('management.allocations');
         
@@ -544,6 +548,18 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         
         Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
         Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
+        Route::get('attendance/{user}/{date}/correct', [AttendancesController::class, 'edit'])->name('admin.attendances.edit');
+        Route::post('attendance/correct', [AttendancesController::class, 'update'])->name('admin.attendances.update');
+        
+        // Missed Punch Approvals (Admin Side)
+        Route::get('missed-punches', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'index'])
+            ->name('admin.missed-punches.index');
+        Route::post('missed-punches/{missedPunchRequest}/approve', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'approve'])
+            ->name('admin.missed-punches.approve');
+        Route::post('missed-punches/{missedPunchRequest}/reject', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'reject'])
+            ->name('admin.missed-punches.reject');
+        Route::delete('missed-punches/{missedPunchRequest}', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'destroy'])
+            ->name('admin.missed-punches.destroy');
         
         // Manual Entry Routes
         Route::get('attendance/my', [AttendancesController::class, 'myAttendance'])->name('attendance.my');
@@ -571,6 +587,14 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
             ->name('leaverequests.update_status');
         Route::get('/myleaverequests', [LeaveRequestController::class, 'myLeaveRequests'])
             ->name('leaverequests.myleaverequests');
+
+        // Missed Punch Requests (Employee Side)
+        Route::get('/mymissedpunches', [\App\Http\Controllers\MissedPunchRequestController::class, 'index'])
+            ->name('missed-punches.index');
+        Route::get('/missed-punches/create', [\App\Http\Controllers\MissedPunchRequestController::class, 'create'])
+            ->name('missed-punches.create');
+        Route::post('/missed-punches', [\App\Http\Controllers\MissedPunchRequestController::class, 'store'])
+            ->name('missed-punches.store');
 
         Route::resource('annual_leaves', AnunalLeaveController::class);
         Route::resource('awards', AwardController::class);
@@ -691,6 +715,35 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'nightShift'])->name('admin.attendance-settings.night-shift');
         Route::post('/night-shift', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateNightShift'])->name('admin.attendance-settings.night-shift.update');
 
+        // Rotational Shifts
+        Route::prefix('rotation')->name('shifts.rotation.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ShiftRotationsController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\ShiftRotationsController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\ShiftRotationsController::class, 'store'])->name('store');
+            Route::get('/{rotation}/edit', [\App\Http\Controllers\ShiftRotationsController::class, 'edit'])->name('edit');
+            Route::put('/{rotation}', [\App\Http\Controllers\ShiftRotationsController::class, 'update'])->name('update');
+            Route::delete('/{rotation}', [\App\Http\Controllers\ShiftRotationsController::class, 'destroy'])->name('destroy');
+
+            // Forecast
+            Route::get('/forecast', [\App\Http\Controllers\ShiftRotationsController::class, 'forecast'])->name('forecast');
+            Route::get('/forecast/data', [\App\Http\Controllers\ShiftRotationsController::class, 'getForecastData'])->name('forecast.data');
+        });
+
+        // Flexible Hours Configuration
+        Route::get('/flexible', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'flexible'])->name('admin.attendance-settings.flexible');
+        Route::post('/flexible', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateFlexible'])->name('admin.attendance-settings.flexible.update');
+
+        // Missed Punch Configuration
+        Route::get('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'missedPunch'])->name('admin.attendance-settings.missed-punch');
+        Route::post('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateMissedPunch'])->name('admin.attendance-settings.missed-punch.update');
+        
+        Route::get('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'corrections'])->name('admin.attendance-settings.corrections');
+        Route::post('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateCorrections'])->name('admin.attendance-settings.corrections.update');
+
+        Route::get('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'overtimeApproval'])->name('admin.attendance-settings.overtime-approval');
+        Route::post('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertimeApproval'])->name('admin.attendance-settings.overtime-approval.update');
+        Route::get('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'autoApproval'])->name('admin.attendance-settings.auto-approval');
+        Route::post('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateAutoApproval'])->name('admin.attendance-settings.auto-approval.update');
         // Late Arrival Configuration (Modal)
         Route::post('/late-arrival', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateLateArrival'])->name('admin.attendance-settings.late-arrival.update');
         
@@ -738,6 +791,12 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
 
     // awards
     Route::resource('awards', AwardController::class);
+
+    // Notifications
+    Route::get('/notifications/clear', function() {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.clear');
 });
 
 Route::group(['prefix' => 'deposits-module', 'middleware' => ['auth', 'module.access:accounting']], function () {

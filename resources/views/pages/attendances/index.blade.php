@@ -104,11 +104,25 @@
                                                     ->whereYear('created_at', $year)
                                                     ->first();
                                         @endphp
-                                        @if (!empty($attendance->startDate) && !empty($attendance->endDate))
-                                        <td><a href="javascript:void(0);" data-ajax-modal="true" data-title="{{ __('Attendance Details') }}" data-size="lg" data-url="{{ route('attendance.details', $attendance->id) }}"><i class="fa-solid fa-check text-success"></i></a></td>
-                                        @else
-                                        <td><a href="javascript:void(0);"><i class="fa-solid fa-close text-danger"></i></a></td>
-                                        @endif
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1">
+                                                @if (!empty($attendance->startDate) && !empty($attendance->endDate))
+                                                    <a href="javascript:void(0);" data-ajax-modal="true" data-title="{{ __('Attendance Details') }}" data-size="lg" data-url="{{ route('attendance.details', $attendance->id) }}">
+                                                        <i class="fa-solid fa-check text-success"></i>
+                                                    </a>
+                                                @else
+                                                    <a href="javascript:void(0);">
+                                                        <i class="fa-solid fa-close text-danger"></i>
+                                                    </a>
+                                                @endif
+
+                                                @if(auth()->user()->type === 'admin' || auth()->user()->type === 'manager')
+                                                    <a href="javascript:void(0);" class="text-muted ms-1" data-ajax-modal="true" data-title="{{ __('Correct Attendance') }}" data-size="md" data-url="{{ route('admin.attendances.edit', ['user' => $employee->id, 'date' => $year.'-'.$currentMonth.'-'.$day]) }}">
+                                                        <i class="fa-solid fa-pencil" style="font-size: 0.7rem;"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
                                     @endfor
                                 </tr>
                                 @endforeach

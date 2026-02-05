@@ -2,10 +2,10 @@
 
 @section('page-header-section')
     <!-- Page Header -->
-    <div class="breadcrumb-header">
-        <x-breadcrumb>
-            <x-slot name="title">{{ __('Attendance Settings') }}</x-slot>
-            <x-slot name="actions">
+    <x-breadcrumb>
+        <x-slot name="title">{{ __('Attendance Settings') }}</x-slot>
+        <x-slot name="right">
+            <div class="col-auto float-end ms-auto">
                 <form action="{{ route('admin.attendance-settings.clear-cache') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip" title="{{ __('Clear Cache') }}">
@@ -22,9 +22,9 @@
                 <button type="submit" form="attendance-settings-form" class="btn btn-primary btn-sm ms-2">
                     <i class="la la-save"></i> {{ __('Save Changes') }}
                 </button>
-            </x-slot>
-        </x-breadcrumb>
-    </div>
+            </div>
+        </x-slot>
+    </x-breadcrumb>
 @endsection
 
 @section('page-section')
@@ -176,7 +176,7 @@
                                     id="biometric" configureLink="/config/biometric" :showConfigure="in_array('biometric', $allowedMethods)">
                         <div class="form-check form-switch">
                             <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="biometric" 
-                                   {{ in_array('biometric', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('biometric', this); autoSaveSettings()">
+                                   {{ in_array('biometric', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('biometric', this)">
                         </div>
                     </x-settings.row>
                     
@@ -184,7 +184,7 @@
                                     id="mobile" configureLink="/config/mobile" :showConfigure="in_array('mobile', $allowedMethods)">
                         <div class="form-check form-switch">
                             <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="mobile" 
-                                   {{ in_array('mobile', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('mobile', this); autoSaveSettings()">
+                                   {{ in_array('mobile', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('mobile', this)">
                         </div>
                     </x-settings.row>
                     
@@ -192,7 +192,7 @@
                                     id="web_portal" configureLink="#" :showConfigure="in_array('web_based', $allowedMethods)">
                         <div class="form-check form-switch">
                              <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="web_based" 
-                                   {{ in_array('web_based', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('web_portal', this); autoSaveSettings()">
+                                   {{ in_array('web_based', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('web_portal', this)">
                         </div>
                     </x-settings.row>
 
@@ -201,14 +201,14 @@
                                      data-configure-id="configure-manual-entry-link">
                         <div class="form-check form-switch">
                             <input class="form-check-input method-check" type="checkbox" role="switch" name="allowed_methods[]" value="manual"
-                                   {{ in_array('manual', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('manual', this); autoSaveSettings()">
+                                   {{ in_array('manual', $allowedMethods) ? 'checked' : '' }} onchange="toggleConfigLink('manual', this)">
                         </div>
                     </x-settings.row>
 
                      <x-settings.row label="{{ __('Single Method Only') }}" description="{{ __('Restrict to one method only') }}">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="single_method_only" name="single_method_only" value="true" 
-                                   {{ $singleMethodOnly ? 'checked' : '' }} onchange="toggleMethodSelectionMode(); autoSaveSettings()">
+                                   {{ $singleMethodOnly ? 'checked' : '' }} onchange="toggleMethodSelectionMode()">
                         </div>
                     </x-settings.row>
                     </div>
@@ -221,30 +221,30 @@
                     <x-settings.header icon="la la-check-square" title="{{ __('Approvals and Workflow') }}" description="{{ __('Request and approval settings') }}" />
 
                     <x-settings.row label="{{ __('Missed Punch Requests') }}" description="{{ __('Allow employees to request corrections') }}"
-                                    id="missed_punch" configureLink="/config/approvals#missed-punch" :showConfigure="$missedPunchApproval">
+                                    id="missed_punch" :configureLink="route('admin.attendance-settings.missed-punch')" :showConfigure="$missedPunchApproval">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="missed_punch_approval_enabled" value="true" {{ $missedPunchApproval ? 'checked' : '' }} onchange="toggleConfigLink('missed_punch', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="missed_punch_approval_enabled" value="true" {{ $missedPunchApproval ? 'checked' : '' }} onchange="toggleConfigLink('missed_punch', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Attendance Corrections') }}" description="{{ __('HR/Manager can modify attendance') }}"
-                                    id="corrections" configureLink="/config/approvals#correction" :showConfigure="$correctionApproval">
+                                    id="corrections" :configureLink="route('admin.attendance-settings.corrections')" :showConfigure="$correctionApproval">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="correction_approval_enabled" value="true" {{ $correctionApproval ? 'checked' : '' }} onchange="toggleConfigLink('corrections', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="correction_approval_enabled" value="true" {{ $correctionApproval ? 'checked' : '' }} onchange="toggleConfigLink('corrections', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime Approval') }}" description="{{ __('Require approval for overtime') }}"
-                                    id="overtime_approval" configureLink="/config/approvals#overtime" :showConfigure="$overtimeApproval">
+                                    id="overtime_approval" :configureLink="route('admin.attendance-settings.overtime-approval')" :showConfigure="$overtimeApproval">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="overtime_approval_enabled" value="true" {{ $overtimeApproval ? 'checked' : '' }} onchange="toggleConfigLink('overtime_approval', this); autoSaveSettings()">
+                                <input class="form-check-input" type="checkbox" role="switch" name="overtime_approval_enabled" value="true" {{ $overtimeApproval ? 'checked' : '' }} onchange="toggleConfigLink('overtime_approval', this)">
                             </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Auto-Approval') }}" description="{{ __('Automatically approve based on rules') }}"
-                                    id="auto_approval" configureLink="/config/approvals#auto" :showConfigure="$autoApproval">
+                                    id="auto_approval" :configureLink="route('admin.attendance-settings.auto-approval')" :showConfigure="$autoApproval">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="auto_approval_enabled" value="true" {{ $autoApproval ? 'checked' : '' }} onchange="toggleConfigLink('auto_approval', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="auto_approval_enabled" value="true" {{ $autoApproval ? 'checked' : '' }} onchange="toggleConfigLink('auto_approval', this)">
                         </div>
                     </x-settings.row>
                     </div>
@@ -257,16 +257,16 @@
                     <x-settings.header icon="la la-clock" title="{{ __('Shifts and Schedule') }}" description="{{ __('Work timing configuration') }}" />
                     
                     <x-settings.row label="{{ __('Enable Shifts') }}" description="{{ __('Use shift-based attendance') }}"
-                                    id="shifts_enabled" configureLink="/shifts/templates" :showConfigure="$shiftsEnabled">
+                                    id="shifts_enabled" configureLink="{{ route('shifts.index') }}" :showConfigure="$shiftsEnabled">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="shifts_enabled" value="true" 
-                                   {{ $shiftsEnabled ? 'checked' : '' }} onchange="toggleShifts(this); toggleConfigLink('shifts_enabled', this); autoSaveSettings()">
+                                   {{ $shiftsEnabled ? 'checked' : '' }} onchange="toggleShifts(this); toggleConfigLink('shifts_enabled', this)">
                         </div>
                     </x-settings.row>
 
                     <div id="shift_config" class="{{ $shiftsEnabled ? '' : 'd-none' }}">
                         <x-settings.row label="{{ __('Shift Assignment') }}" indent>
-                            <select name="shift_mode" class="form-select form-select-sm" style="width: 130px;" onchange="autoSaveSettings()">
+                            <select name="shift_mode" class="form-select form-select-sm" style="width: 130px;">
                                 <option value="mandatory" {{ $shiftMode === 'mandatory' ? 'selected' : '' }}>{{ __('Mandatory') }}</option>
                                 <option value="optional" {{ $shiftMode === 'optional' ? 'selected' : '' }}>{{ __('Optional') }}</option>
                                 <option value="disabled" {{ $shiftMode === 'disabled' ? 'selected' : '' }}>{{ __('Disabled') }}</option>
@@ -277,12 +277,11 @@
                             <div class="d-flex align-items-center gap-2">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch" name="grace_in_enabled" value="true" 
-                                           {{ $graceInEnabled ? 'checked' : '' }} onchange="toggleGraceIn(this); autoSaveSettings()">
+                                           {{ $graceInEnabled ? 'checked' : '' }} onchange="toggleGraceIn(this)">
                                 </div>
                                 <div class="input-group input-group-sm" style="width: 100px;" id="grace_in_input">
                                     <input type="number" name="grace_in_minutes" class="form-control {{ $graceInEnabled ? '' : 'text-muted' }}" 
                                            value="{{ $graceInMinutes }}" min="0" max="60" 
-                                           onchange="autoSaveSettings()"
                                            {{ $graceInEnabled ? '' : 'readonly style=background-color:#e9ecef;' }}>
                                     <span class="input-group-text">min</span>
                                 </div>
@@ -293,12 +292,11 @@
                             <div class="d-flex align-items-center gap-2">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch" name="grace_out_enabled" value="true" 
-                                           {{ $graceOutEnabled ? 'checked' : '' }} onchange="toggleGraceOut(this); autoSaveSettings()">
+                                           {{ $graceOutEnabled ? 'checked' : '' }} onchange="toggleGraceOut(this)">
                                 </div>
                                 <div class="input-group input-group-sm" style="width: 100px;" id="grace_out_input">
                                     <input type="number" name="grace_out_minutes" class="form-control {{ $graceOutEnabled ? '' : 'text-muted' }}" 
                                            value="{{ $graceOutMinutes }}" min="0" max="60" 
-                                           onchange="autoSaveSettings()"
                                            {{ $graceOutEnabled ? '' : 'readonly style=background-color:#e9ecef;' }}>
                                     <span class="input-group-text">min</span>
                                 </div>
@@ -306,29 +304,29 @@
                         </x-settings.row>
 
                         <x-settings.row label="{{ __('Night Shift') }}" description="{{ __('Shifts crossing midnight') }}" indent
-                                        id="night_shift" configureLink="/shifts/night-shift" :showConfigure="!$nightShift">
+                                        id="night_shift" configureLink="{{ route('admin.attendance-settings.night-shift') }}" :showConfigure="!$nightShift">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="night_shift_enabled" value="true" {{ $nightShift ? 'checked' : '' }} onchange="toggleConfigLink('night_shift', this, true); autoSaveSettings()">
+                                <input class="form-check-input" type="checkbox" role="switch" name="night_shift_enabled" value="true" {{ $nightShift ? 'checked' : '' }} onchange="toggleConfigLink('night_shift', this, true)">
                             </div>
                         </x-settings.row>
 
                         <x-settings.row label="{{ __('Rotational Shifts') }}" description="{{ __('Auto-rotate employee shifts') }}" indent
-                                        id="rotational_shift" configureLink="/shifts/rotation" :showConfigure="$rotationalShift">
+                                        id="rotational_shift" configureLink="{{ route('shifts.rotation.index') }}" :showConfigure="$rotationalShift">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="rotational_shift_enabled" value="true" {{ $rotationalShift ? 'checked' : '' }} onchange="toggleConfigLink('rotational_shift', this); autoSaveSettings()">
+                                <input class="form-check-input" type="checkbox" role="switch" name="rotational_shift_enabled" value="true" {{ $rotationalShift ? 'checked' : '' }} onchange="toggleConfigLink('rotational_shift', this)">
                             </div>
                         </x-settings.row>
 
                         <x-settings.row label="{{ __('Flexible Hours') }}" description="{{ __('Employees choose work timing') }}" indent
-                                        id="flexible_hours" configureLink="/shifts/flexible" :showConfigure="$flexibleHours">
+                                        id="flexible_hours" :configureLink="route('admin.attendance-settings.flexible')" :showConfigure="$flexibleHours">
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="flexible_hours_enabled" value="true" {{ $flexibleHours ? 'checked' : '' }} onchange="toggleConfigLink('flexible_hours', this); autoSaveSettings()">
+                                <input class="form-check-input" type="checkbox" role="switch" name="flexible_hours_enabled" value="true" {{ $flexibleHours ? 'checked' : '' }} onchange="toggleConfigLink('flexible_hours', this)">
                             </div>
                         </x-settings.row>
 
                         <x-settings.row label="{{ __('Split Shifts') }}" description="{{ __('Shifts with breaks') }}" indent>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" name="split_shift_enabled" value="true" {{ $splitShift ? 'checked' : '' }} onchange="autoSaveSettings()">
+                                <input class="form-check-input" type="checkbox" role="switch" name="split_shift_enabled" value="true" {{ $splitShift ? 'checked' : '' }}>
                             </div>
                         </x-settings.row>
                     </div>
@@ -344,47 +342,47 @@
                     <x-settings.row label="{{ __('Late Arrival Rules') }}" description="{{ __('Penalties for coming late') }}"
                                     id="late_arrival" configureLink="#" :showConfigure="$lateArrival">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_enabled" value="true" {{ $lateArrival ? 'checked' : '' }} onchange="toggleConfigLink('late_arrival', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_enabled" value="true" {{ $lateArrival ? 'checked' : '' }} onchange="toggleConfigLink('late_arrival', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Early Checkout Rules') }}" description="{{ __('Penalties for leaving early') }}"
                                     id="early_checkout" configureLink="#" :showConfigure="$earlyCheckout">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="early_checkout_enabled" value="true" {{ $earlyCheckout ? 'checked' : '' }} onchange="toggleConfigLink('early_checkout', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="early_checkout_enabled" value="true" {{ $earlyCheckout ? 'checked' : '' }} onchange="toggleConfigLink('early_checkout', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime') }}" description="{{ __('Track and compensate extra hours') }}"
                                     id="overtime" configureLink="#" :showConfigure="$overtime">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="overtime_enabled" value="true" {{ $overtime ? 'checked' : '' }} onchange="toggleConfigLink('overtime', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="overtime_enabled" value="true" {{ $overtime ? 'checked' : '' }} onchange="toggleConfigLink('overtime', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Half Day') }}" description="{{ __('Allow half-day attendance') }}">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="half_day_enabled" value="true" {{ $halfDay ? 'checked' : '' }} onchange="autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="half_day_enabled" value="true" {{ $halfDay ? 'checked' : '' }}>
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Absence Tracking') }}" description="{{ __('Track employee absences') }}">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="absence_enabled" value="true" {{ $absence ? 'checked' : '' }} onchange="autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="absence_enabled" value="true" {{ $absence ? 'checked' : '' }}>
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Work from Home') }}" description="{{ __('Remote attendance rules') }}"
                                     id="wfh" configureLink="/policies/wfh" :showConfigure="$wfh">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="wfh_enabled" value="true" {{ $wfh ? 'checked' : '' }} onchange="toggleConfigLink('wfh', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="wfh_enabled" value="true" {{ $wfh ? 'checked' : '' }} onchange="toggleConfigLink('wfh', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Compensatory Off') }}" description="{{ __('Earn leave for extra work') }}"
                                     id="comp_off" configureLink="/policies/comp-off" :showConfigure="$compOff">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="comp_off_enabled" value="true" {{ $compOff ? 'checked' : '' }} onchange="toggleConfigLink('comp_off', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="comp_off_enabled" value="true" {{ $compOff ? 'checked' : '' }} onchange="toggleConfigLink('comp_off', this)">
                         </div>
                     </x-settings.row>
                     </div>
@@ -398,7 +396,7 @@
                     
                     <x-settings.row label="{{ __('Grace Period') }}" description="{{ __('Allowed delay before late mark') }}">
                          <div class="input-group input-group-sm" style="width: 120px;">
-                            <input type="number" name="grace_period_minutes" class="form-control" value="{{ $gracePeriod }}" min="0" max="60" onchange="autoSaveSettings()">
+                            <input type="number" name="grace_period_minutes" class="form-control" value="{{ $gracePeriod }}" min="0" max="60">
                             <span class="input-group-text">{{ __('Min') }}</span>
                         </div>
                     </x-settings.row>
@@ -406,13 +404,13 @@
                      <x-settings.row label="{{ __('Auto Clock-Out') }}" description="{{ __('Automatically check out at fixed time') }}">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="auto_clockout_enabled" value="true" 
-                                   {{ $autoClockOut ? 'checked' : '' }} onchange="toggleAutoClockOut(this); autoSaveSettings()">
+                                   {{ $autoClockOut ? 'checked' : '' }} onchange="toggleAutoClockOut(this)">
                         </div>
                     </x-settings.row>
                     
                     <div id="auto_clockout_config" class="{{ $autoClockOut ? '' : 'd-none' }}">
                         <x-settings.row label="{{ __('Clock-Out Time') }}" indent>
-                            <input type="time" name="auto_clockout_time" class="form-control form-control-sm" value="{{ $autoClockOutTime }}" style="width: 100px;" onchange="autoSaveSettings()">
+                            <input type="time" name="auto_clockout_time" class="form-control form-control-sm" value="{{ $autoClockOutTime }}" style="width: 100px;">
                         </x-settings.row>
                     </div>
                     </div>
@@ -426,7 +424,7 @@
                     
                     <x-settings.row label="{{ __('Require GPS') }}" description="{{ __('Mandatory for mobile punch') }}">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="require_gps" value="true" {{ $gpsRequired ? 'checked' : '' }} onchange="autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="require_gps" value="true" {{ $gpsRequired ? 'checked' : '' }}>
                         </div>
                     </x-settings.row>
 
@@ -434,14 +432,14 @@
                                     id="geofencing" configureLink="/config/geofences" :showConfigure="$geofencingEnabled">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="enable_geofencing" value="true" 
-                                   {{ $geofencingEnabled ? 'checked' : '' }} onchange="toggleGeofencing(this); toggleConfigLink('geofencing', this); autoSaveSettings()">
+                                   {{ $geofencingEnabled ? 'checked' : '' }} onchange="toggleGeofencing(this); toggleConfigLink('geofencing', this)">
                         </div>
                     </x-settings.row>
 
                      <div id="geofencing_config" class="{{ $geofencingEnabled ? '' : 'd-none' }}">
                         <x-settings.row label="{{ __('Location Radius') }}" description="{{ __('Max distance (meters)') }}" indent>
                             <div class="input-group input-group-sm" style="width: 140px;">
-                                <input type="number" name="location_radius_meters" class="form-control" value="{{ $locationRadius }}" step="10" min="10" onchange="autoSaveSettings()">
+                                <input type="number" name="location_radius_meters" class="form-control" value="{{ $locationRadius }}" step="10" min="10">
                                 <span class="input-group-text">m</span>
                             </div>
                         </x-settings.row>
@@ -449,7 +447,7 @@
                     
                     <x-settings.row label="{{ __('Remote Work') }}" description="{{ __('Allow clock-in from anywhere') }}">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="allow_remote_work" value="true" {{ $allowRemote ? 'checked' : '' }} onchange="autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="allow_remote_work" value="true" {{ $allowRemote ? 'checked' : '' }}>
                         </div>
                     </x-settings.row>
                     </div>
@@ -466,7 +464,7 @@
                             @foreach($workingDaysList as $day)
                                 <input type="checkbox" class="btn-check working-day-input" 
                                        name="working_days[]" id="day_{{ $day }}" value="{{ $day }}" 
-                                       {{ in_array($day, $workingDays) ? 'checked' : '' }} autocomplete="off" onchange="autoSaveSettings()">
+                                       {{ in_array($day, $workingDays) ? 'checked' : '' }} autocomplete="off">
                                 <label class="btn btn-outline-primary btn-sm pb-0 pt-0 d-flex align-items-center justify-content-center" 
                                        for="day_{{ $day }}" style="width: 36px; height: 32px; font-weight: 600;">
                                     {{ substr($allAndWeekendDays[$day], 0, 1) }}
@@ -477,15 +475,15 @@
                     
                     <x-settings.row label="{{ __('Work Day Duration') }}" description="{{ __('Official start and end time') }}">
                         <div class="d-flex align-items-center gap-2">
-                            <input type="time" name="work_day_start_time" class="form-control form-control-sm" value="{{ $workDayStartTime }}" style="width: 100px;" onchange="autoSaveSettings()">
+                            <input type="time" name="work_day_start_time" class="form-control form-control-sm" value="{{ $workDayStartTime }}" style="width: 100px;">
                             <span class="text-muted">-</span>
-                            <input type="time" name="work_day_end_time" class="form-control form-control-sm" value="{{ $workDayEndTime }}" style="width: 100px;" onchange="autoSaveSettings()">
+                            <input type="time" name="work_day_end_time" class="form-control form-control-sm" value="{{ $workDayEndTime }}" style="width: 100px;">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Minimum Hours') }}" description="{{ __('Required hours for full day') }}">
                          <div class="input-group input-group-sm" style="width: 120px;">
-                            <input type="number" name="minimum_work_hours" class="form-control" value="{{ $minWorkHours }}" step="0.5" min="0" max="24" onchange="autoSaveSettings()">
+                            <input type="number" name="minimum_work_hours" class="form-control" value="{{ $minWorkHours }}" step="0.5" min="0" max="24">
                             <span class="input-group-text">{{ __('Hrs') }}</span>
                         </div>
                     </x-settings.row>
@@ -501,21 +499,21 @@
                     <x-settings.row label="{{ __('Late Arrival') }}" description="{{ __('Penalty for late clock-in') }}"
                                     id="late_penalty" configureLink="/config/penalties#late" :showConfigure="$latePenalty">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_penalty_enabled" value="true" {{ $latePenalty ? 'checked' : '' }} onchange="toggleConfigLink('late_penalty', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_penalty_enabled" value="true" {{ $latePenalty ? 'checked' : '' }} onchange="toggleConfigLink('late_penalty', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Early Departure') }}" description="{{ __('Penalty for early clock-out') }}"
                                     id="early_penalty" configureLink="/config/penalties#early" :showConfigure="$earlyPenalty">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="early_departure_penalty_enabled" value="true" {{ $earlyPenalty ? 'checked' : '' }} onchange="toggleConfigLink('early_penalty', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="early_departure_penalty_enabled" value="true" {{ $earlyPenalty ? 'checked' : '' }} onchange="toggleConfigLink('early_penalty', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Missing Clock-Out') }}" description="{{ __('Penalty for forgotten clock-out') }}"
                                     id="missing_clockout_penalty" configureLink="/config/penalties#missing" :showConfigure="$missingClockOutPenalty">
                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="missing_clockout_penalty_enabled" value="true" {{ $missingClockOutPenalty ? 'checked' : '' }} onchange="toggleConfigLink('missing_clockout_penalty', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="missing_clockout_penalty_enabled" value="true" {{ $missingClockOutPenalty ? 'checked' : '' }} onchange="toggleConfigLink('missing_clockout_penalty', this)">
                         </div>
                     </x-settings.row>
                     </div>
@@ -531,14 +529,14 @@
                                     id="audit_logging" configureLink="/audit/logs" :showConfigure="$auditLogging">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="audit_logging_enabled" value="true" 
-                                   {{ $auditLogging ? 'checked' : '' }} onchange="toggleAuditLogging(this); toggleConfigLink('audit_logging', this); autoSaveSettings()">
+                                   {{ $auditLogging ? 'checked' : '' }} onchange="toggleAuditLogging(this); toggleConfigLink('audit_logging', this)">
                         </div>
                     </x-settings.row>
 
                     @if($auditLogging)
                         <div id="audit_config" class="mb-2">
                             <x-settings.row label="{{ __('Logging Level') }}">
-                                <select name="audit_level" class="form-select form-select-sm" style="width: 130px;" onchange="autoSaveSettings()">
+                                <select name="audit_level" class="form-select form-select-sm" style="width: 130px;">
                                     <option value="minimal" {{ $auditLevel === 'minimal' ? 'selected' : '' }}>{{ __('Minimal') }}</option>
                                     <option value="standard" {{ $auditLevel === 'standard' ? 'selected' : '' }}>{{ __('Standard') }}</option>
                                     <option value="detailed" {{ $auditLevel === 'detailed' ? 'selected' : '' }}>{{ __('Detailed') }}</option>
@@ -550,14 +548,14 @@
 
                     <x-settings.row label="{{ __('Tamper Detection') }}" description="{{ __('Detect fraudulent attendance') }}" tooltip="{{ __('Monitors for anomalies like buddy punching, GPS spoofing') }}">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="tamper_detection_enabled" value="true" {{ $tamperDetection ? 'checked' : '' }} onchange="autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="tamper_detection_enabled" value="true" {{ $tamperDetection ? 'checked' : '' }}>
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Compliance Mode') }}" description="{{ __('SOC2, ISO, labor law compliance') }}"
                                     id="compliance" configureLink="/config/compliance" :showConfigure="$complianceMode">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="compliance_mode" value="true" {{ $complianceMode ? 'checked' : '' }} onchange="toggleConfigLink('compliance', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="compliance_mode" value="true" {{ $complianceMode ? 'checked' : '' }} onchange="toggleConfigLink('compliance', this)">
                         </div>
                     </x-settings.row>
                     </div>
@@ -572,28 +570,28 @@
                     <x-settings.row label="{{ __('Leave Integration') }}" description="{{ __('Sync with leave management') }}"
                                     id="leave_integration" configureLink="/config/integrations#leave" :showConfigure="$leaveIntegration">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="leave_integration_enabled" value="true" {{ $leaveIntegration ? 'checked' : '' }} onchange="toggleConfigLink('leave_integration', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="leave_integration_enabled" value="true" {{ $leaveIntegration ? 'checked' : '' }} onchange="toggleConfigLink('leave_integration', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Holiday Calendar') }}" description="{{ __('Auto-mark holidays') }}"
                                     id="holiday_integration" configureLink="/config/holidays" :showConfigure="$holidayIntegration">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="holiday_integration_enabled" value="true" {{ $holidayIntegration ? 'checked' : '' }} onchange="toggleConfigLink('holiday_integration', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="holiday_integration_enabled" value="true" {{ $holidayIntegration ? 'checked' : '' }} onchange="toggleConfigLink('holiday_integration', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Payroll Lock') }}" description="{{ __('Lock attendance for payroll') }}"
                                     id="payroll_lock" configureLink="/config/payroll" :showConfigure="$payrollLock">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="payroll_lock_enabled" value="true" {{ $payrollLock ? 'checked' : '' }} onchange="toggleConfigLink('payroll_lock', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="payroll_lock_enabled" value="true" {{ $payrollLock ? 'checked' : '' }} onchange="toggleConfigLink('payroll_lock', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Payroll Export') }}" description="{{ __('Export data for payroll processing') }}"
                                     id="payroll_export" configureLink="/config/payroll#export" :showConfigure="$payrollExport">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="payroll_export_enabled" value="true" {{ $payrollExport ? 'checked' : '' }} onchange="toggleConfigLink('payroll_export', this); autoSaveSettings()">
+                            <input class="form-check-input" type="checkbox" role="switch" name="payroll_export_enabled" value="true" {{ $payrollExport ? 'checked' : '' }} onchange="toggleConfigLink('payroll_export', this)">
                         </div>
                     </x-settings.row>
                     </div>
@@ -777,9 +775,20 @@
         }
     }
 
-    function autoSaveSettings() {
+    function toggleAuditLogging(checkbox) {
+        const config = document.getElementById('audit_config');
+        if (config) {
+            if (checkbox.checked) config.classList.remove('d-none');
+            else config.classList.add('d-none');
+        }
+    }
+
+    let autoSaveTimeout = null;
+
+    function submitAttendanceSettings(silent = false) {
         const form = document.getElementById('attendance-settings-form');
         const formData = new FormData(form);
+        const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
         
         // Fix for checkbox arrays: if no checkboxes are checked, FormData won't have the field
         // We need to explicitly send an empty array by appending a dummy entry
@@ -808,27 +817,53 @@
             return response.json();
         })
         .then(data => {
-            if (data.success) {
-                showToast(data.message || 'Settings saved successfully', 'success');
+            if (data.success && !silent) {
+                showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
             }
         })
         .catch(error => {
             console.error('Error saving settings:', error);
-            showToast('Failed to save settings. Please check console for details.', 'error');
+            // Even in silent mode, we might want to alert if save FAILED completely
+            if (!silent) {
+                showToast('{{ __("Failed to save settings. Please check console for details.") }}', 'error');
+            }
+        })
+        .finally(() => {
+            // Re-enable button if it was disabled
+            if (!silent && submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
+            }
         });
     }
 
-    function toggleAuditLogging(checkbox) {
-        const config = document.getElementById('audit_config');
-        if (config) {
-            if (checkbox.checked) config.classList.remove('d-none');
-            else config.classList.add('d-none');
-        }
+    function triggerAutoSave() {
+        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            submitAttendanceSettings(true); // Call in silent mode
+        }, 800); // 800ms debounce
     }
 
     // Init
     document.addEventListener('DOMContentLoaded', function() {
         toggleMethodSelectionMode();
+
+        const form = document.getElementById('attendance-settings-form');
+        if (form) {
+            // Standard form submit (Manual Save)
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (autoSaveTimeout) clearTimeout(autoSaveTimeout); // Cancel any pending auto-save
+                submitAttendanceSettings(false); // Explicit save with feedback
+            });
+
+            // Silent Auto-save on change
+            form.addEventListener('change', function(e) {
+                // Don't auto-save if it's a specific button or non-input change if needed
+                // But generally all changes in this form should be persisted
+                triggerAutoSave();
+            });
+        }
     });
 </script>
 @endpush

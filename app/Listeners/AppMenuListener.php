@@ -27,7 +27,6 @@ class AppMenuListener
     {
         $menu = $event->menu;
         $user = auth()->user();
-        $user = auth()->user();
         $business = $user->business;
 
         // Dynamic Tenant Resolution: identify which business owns the current context
@@ -70,9 +69,12 @@ class AppMenuListener
         }
 
         // If the user's business_id doesn't match the tenant's business_id, prefer the tenant's ID
-        // This fixes the case where seeding set user->business_id = 1, but the tenant is actually business_id = 6
         if ($tenantBusinessId && (!$business || $business->id != $tenantBusinessId)) {
-             $business = \App\Business::on('mysql')->with('subscription')->find($tenantBusinessId);
+             // Cache the business lookup to avoid repeated DB calls on every request
+             $cacheKey = "business_resolution_u{$user->id}_t" . ($tenantId ?? 'none');
+             $business = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($tenantBusinessId) {
+                 return \App\Business::on('mysql')->with('subscription')->find($tenantBusinessId);
+             });
         } elseif ($business && !$business->relationLoaded('subscription')) {
              // If business exists but subscription not loaded, load it explicitly
              $business->load('subscription');
@@ -81,25 +83,9 @@ class AppMenuListener
         // Ensure connection is correct if we found a business
         if ($business && $business->getConnectionName() !== 'mysql') {
             $business->setConnection('mysql');
-            // Reload subscription after connection change
+            // Reload subscription after connection change if not cached (simple load here for safety)
             $business->load('subscription');
         }
-
-        // DEBUG: Write final state to log
-        $logPath = public_path('debug_menu_log.txt');
-        $debugData = [
-            'timestamp' => now()->toDateTimeString(),
-            'user_id' => $user->id,
-            'session_tenant_id' => $tenantId,
-            'tenant_business_id_found' => $tenantBusinessId,
-            'final_business_id' => $business ? $business->id : 'NULL',
-            'subscription_loaded' => $business && $business->subscription ? 'YES' : 'NO',
-            'sub_id' => $business && $business->subscription ? $business->subscription->id : 'N/A',
-            'company_count' => $business && $business->subscription ? ($business->subscription->company_count ?? 'NULL') : 'N/A',
-            'has_biz_settings_perm' => auth()->user()->can('business_settings.access') ? 'YES' : 'NO',
-            'module_details' => $business && $business->subscription ? $business->subscription->module_activation_details : 'N/A'
-        ];
-        file_put_contents($logPath, print_r($debugData, true), FILE_APPEND);
 
         // Helper to check if module is enabled in subscription
         $isModuleEnabled = function($moduleKey) use ($user, $business) {
@@ -230,6 +216,7 @@ class AppMenuListener
                         ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-attendances', Link::toRoute('admin.missed-punches.index', __('Missed Punches'))->addClass(route_is(['admin.missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIf($showSelfService, Link::toRoute('attendance.my', __('My Attendance'))->addClass(route_is('attendance.my') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIf($showRoleEntry, Link::toRoute('attendance.enter', __('Enter Attendance'))->addClass(route_is('attendance.enter') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIf($showApprovals, Link::toRoute('attendance.approvals', __('Attendance Approvals'))->addClass(route_is('attendance.approvals') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
@@ -243,13 +230,17 @@ class AppMenuListener
                     Html::raw('<a href="#" class="' . $activeClass . '"><i class="la la-calendar-check-o"></i> <span>' . __('Leave Management') . '</span><span class="menu-arrow"></span></a>'),
                     Menu::new()
                         ->addParentClass('submenu')
+                        ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->add(Link::toRoute('missed-punches.index', __('My Missed Punches'))->addClass(route_is(['missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         // New Odoo-style Leave Management (Priority)
                         ->add(Link::toRoute('leave.my-time', __('Time Off'))->addClass(route_is(['leave.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         // Legacy leave system (temporary, will be removed later)
                         // ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
-                        // ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         // ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
-                        ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 

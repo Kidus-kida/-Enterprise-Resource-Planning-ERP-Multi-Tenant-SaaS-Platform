@@ -12,3 +12,4 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new AutoClockoutUnsignedAttendances())->cron("0 */8 * * *");
 Schedule::command('leave:process-accruals')->daily();
+Schedule::command('leave:year-end-process')->yearlyOn(1, 1, '01:00');

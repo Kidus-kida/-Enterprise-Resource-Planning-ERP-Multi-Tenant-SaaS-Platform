@@ -178,36 +178,27 @@ class AttendanceSetting extends TenantModel
     {
         $errors = [];
         
-        // Fetch all current settings to handle missing checkboxes (booleans)
-        $allPossibleSettings = self::all();
+        // Fetch ALL current settings in one go to avoid N+1 queries
+        $allSettings = self::all()->keyBy('key');
         
-        foreach ($allPossibleSettings as $possibleSetting) {
-            $key = $possibleSetting->key;
-            
-            // If a boolean setting is missing from the request, it was unchecked
-            if (!isset($settings[$key]) && $possibleSetting->type === 'boolean') {
+        // Prepare the effective settings to be saved (handling booleans/arrays)
+        foreach ($allSettings as $key => $setting) {
+            // Handle booleans (missing from request = unchecked)
+            if ($setting->type === 'boolean' && !isset($settings[$key])) {
                 $settings[$key] = 'false';
             }
             
-            // Special case for allowed_methods (json array) if it's missing entirely
-            if (!isset($settings['allowed_methods']) && $key === 'allowed_methods') {
-                $settings['allowed_methods'] = [];
-            }
-
-            // Special case for working_days (json array) if it's missing entirely
-            if (!isset($settings['working_days']) && $key === 'working_days') {
-                $settings['working_days'] = [];
+            // Handle json/arrays (missing from request = empty)
+            if ($setting->type === 'json' && !isset($settings[$key])) {
+                $settings[$key] = [];
             }
         }
         
         foreach ($settings as $key => $value) {
-            // Find the setting first
-            $setting = self::where('key', $key)->first();
+            $setting = $allSettings->get($key);
             
             if (!$setting) {
-                // Skip unknown keys silently (like _token, require_location, etc)
-                // instead of erroring out and failing the whole update.
-                continue;
+                continue; // Skip unknown keys
             }
 
             // Decode JSON strings for json type settings (e.g., when frontend sends '[]' for empty arrays)
@@ -220,35 +211,40 @@ class AttendanceSetting extends TenantModel
 
             // Convert array to JSON string for json type settings
             if ($setting->type === 'json' && is_array($value)) {
-                $value = json_encode($value);
+                $processedValue = json_encode($value);
+            } elseif ($setting->type === 'boolean') {
+                $processedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             }
 
-            if ($setting->type === 'boolean') {
-                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-            }
-
+            // Perform validation
             $rules = $setting->validation_rules ?? [];
             if ($setting->type === 'boolean') {
                 $rules = array_filter($rules, fn($r) => $r !== 'required');
             }
 
             $validator = \Validator::make(
-                [$key => $value],
+                [$key => $processedValue],
                 [$key => $rules]
             );
 
             if ($validator->fails()) {
                 $errors[$key] = $validator->errors()->get($key);
-                \Log::warning("Validation failed for $key:", ['value' => $value, 'errors' => $errors[$key]]);
                 continue;
             }
 
-            \Log::info("Saving setting: $key = " . (is_bool($value) ? ($value ? 'true' : 'false') : $value));
-            self::set($key, $value);
+            // Only save if the value has actually changed to minimize DB and Cache ops
+            $stringValue = is_bool($processedValue) ? ($processedValue ? 'true' : 'false') : (string)$processedValue;
+            if ($setting->value !== $stringValue) {
+                $setting->update(['value' => $stringValue]);
+                
+                // Clear specific cache
+                Cache::forget(self::CACHE_PREFIX . $key);
+            }
         }
 
-        if (!empty($errors)) {
-            \Log::error("setMultiple errors:", $errors);
+        // Always clear the "all" cache if we successfully updated anything
+        if (empty($errors)) {
+            Cache::forget(self::CACHE_ALL_KEY);
         }
 
         return $errors;

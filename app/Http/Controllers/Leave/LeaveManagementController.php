@@ -69,7 +69,27 @@ class LeaveManagementController extends Controller
     public function reporting()
     {
         $pageTitle = __('Reporting');
-        return view('leave.reporting.index', compact('pageTitle'));
+        
+        // Summary Stats
+        $stats = [
+            'total_requests' => \App\Models\LeaveRequest::count(),
+            'approved' => \App\Models\LeaveRequest::where('status', 'approved')->count(),
+            'pending' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
+            'rejected' => \App\Models\LeaveRequest::where('status', 'rejected')->count(),
+        ];
+
+        // Leave Type Utilization
+        $utilization = \App\Models\LeaveType::withCount(['leaveRequests as days_used' => function($query) {
+            $query->where('status', 'approved'); // Count processed requests
+        }])->get();
+
+        // Recent Activity
+        $recent_activity = \App\Models\LeaveRequest::with(['user', 'leaveType'])
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('leave.reporting.index', compact('pageTitle', 'stats', 'utilization', 'recent_activity'));
     }
 
     /**
