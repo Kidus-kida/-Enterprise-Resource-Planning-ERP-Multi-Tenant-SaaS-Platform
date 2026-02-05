@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,14 +12,14 @@ return new class extends Migration
     {
         Schema::create('businesses', function (Blueprint $table) {
             $table->id();
-            
+
             // Tenancy fields
             $table->string('tenant_id')->unique()->nullable();
             $table->string('subdomain')->unique()->nullable();
             $table->boolean('is_active')->default(1);
             $table->unsignedBigInteger('package_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
-            
+
             // Basic business information
             $table->string('name');
             $table->string('currency_id')->nullable();
@@ -39,7 +38,7 @@ return new class extends Migration
             $table->enum('sell_price_tax', ['includes', 'excludes'])->default('includes');
             $table->string('logo')->nullable();
             $table->string('sku_prefix')->nullable();
-            
+
             // Product settings
             $table->boolean('enable_product_expiry')->default(0);
             $table->enum('expiry_type', ['add_expiry', 'add_manufacturing'])->default('add_expiry');
@@ -75,7 +74,7 @@ return new class extends Migration
             $table->string('time_format')->default('12');
             $table->text('ref_no_prefixes')->nullable();
             $table->integer('theme_color')->nullable();
-            
+
             // Communication settings
             $table->text('email_settings')->nullable();
             $table->text('sms_settings')->nullable();
@@ -83,7 +82,7 @@ return new class extends Migration
             $table->text('custom_labels')->nullable();
             $table->text('contact_fields')->nullable();
             $table->text('ref_no_starting_number')->nullable();
-            
+
             // Reward points settings
             $table->boolean('enable_rp')->default(0);
             $table->string('rp_name')->nullable();
@@ -96,7 +95,34 @@ return new class extends Migration
             $table->integer('max_redeem_point')->nullable();
             $table->integer('rp_expiry_period')->nullable();
             $table->enum('rp_expiry_type', ['month', 'year'])->default('year');
-            
+
+            $table->string('reg_no')->nullable();
+            $table->string('font_size')->nullable();
+            $table->string('font_style')->nullable();
+
+            $table->boolean('popup_load_save_data')->default(0);
+            $table->boolean('day_end_enable')->default(0);
+            $table->boolean('enable_line_discount')->default(0);
+            $table->boolean('duplicate_orders_allowed')->default(0);
+            $table->boolean('show_for_customers')->default(0);
+            $table->text('business_categories')->nullable();
+
+            $table->string('owner_email')->nullable();
+            $table->string('owner_firstname')->nullable();
+            $table->string('owner_lastname')->nullable();
+            $table->string('owner_phone')->nullable();
+
+            // Link to tenant user after creation (canonical reference)
+            $table->uuid('owner_user_uuid')->nullable();
+
+            // Invite tracking
+            $table->timestamp('owner_invite_sent_at')->nullable();
+            $table->timestamp('owner_activated_at')->nullable();
+
+            // Indexes for performance
+            $table->index('owner_email');
+            $table->index('owner_user_uuid');
+
             $table->timestamps();
 
             $table->index('owner_id');
@@ -123,7 +149,11 @@ return new class extends Migration
             $table->string('alternate_number')->nullable();
             $table->string('email')->nullable();
             $table->string('website')->nullable();
+            $table->boolean('is_active')->default(1);
             $table->timestamps();
+
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
 
             $table->index('business_id');
         });

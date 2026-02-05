@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -57,7 +56,7 @@ return new class extends Migration
             $table->string('custom_field8')->nullable();
             $table->string('custom_field9')->nullable();
             $table->string('custom_field10')->nullable();
-            
+
             // Additional fields from later migrations
             $table->string('landmark')->nullable();
             $table->string('image')->nullable();
@@ -77,7 +76,9 @@ return new class extends Migration
             $table->string('nic_number', 20)->nullable();
             $table->integer('user_id')->nullable();
             $table->integer('sub_customer')->default(0);
-            
+            $table->boolean('sol_with_approval')->default(0);
+            $table->string('landmark')->nullable();
+
             $table->softDeletes();
             $table->timestamps();
 

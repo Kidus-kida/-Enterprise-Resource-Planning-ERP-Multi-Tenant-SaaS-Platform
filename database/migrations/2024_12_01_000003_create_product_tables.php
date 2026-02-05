@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,6 +13,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->boolean('weight_excess_loss_applicable')->default(0);
             $table->unsignedBigInteger('business_id');
             $table->string('type')->nullable();
             $table->unsignedInteger('unit_id')->nullable();
@@ -34,6 +34,7 @@ return new class extends Migration
             $table->decimal('weight', 22, 4)->nullable();
             $table->text('product_description')->nullable();
             $table->string('image')->nullable();
+            $table->decimal('min_sell_price', 22, 4)->default(0);
             $table->unsignedInteger('warranty_id')->nullable();
             $table->boolean('is_inactive')->default(0);
             $table->boolean('not_for_selling')->default(0);
@@ -52,6 +53,7 @@ return new class extends Migration
             $table->string('disabled_in')->nullable();
             $table->unsignedInteger('repair_model_id')->nullable();
             $table->boolean('vat_claimed')->default(0);
+            $table->integer('stock_type')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

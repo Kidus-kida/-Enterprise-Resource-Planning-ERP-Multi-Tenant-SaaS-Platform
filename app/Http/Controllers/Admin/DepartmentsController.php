@@ -87,8 +87,9 @@ class DepartmentsController extends BaseController
             $dept->hierarchical_name = $this->getHierarchicalName($dept);
             return $dept;
         })->sortBy('hierarchical_name');
+        $companies = cache()->remember('companies.all', 3600, fn() => \App\Company::all());
         
-        return view('pages.departments.create', compact('employees', 'departments'));
+        return view('pages.departments.create', compact('employees', 'departments', 'companies'));
     }
 
     private function getHierarchicalName($department) {
@@ -109,7 +110,7 @@ class DepartmentsController extends BaseController
             'manager_id' => 'nullable|exists:users,id',
             'parent_id' => 'nullable|exists:departments,id',
             'color' => 'nullable|string',
-            'company_name' => 'nullable|string',
+            'company_id' => 'nullable|exists:companies,id',
         ]);
 
         Department::create([
@@ -117,8 +118,7 @@ class DepartmentsController extends BaseController
             'parent_id' => $request->parent_id,
             'manager_id' => $request->manager_id,
             'color' => $request->color,
-            'company_name' => $request->company_name,
-            'location' => $request->company_name, // Map company name to location for backward compatibility if needed, or separate
+            'company_id' => $request->company_id,
             'description' => $request->description
         ]);
         $notification = notify('Department has been added');
@@ -140,11 +140,13 @@ class DepartmentsController extends BaseController
                 return $dept;
             })
             ->sortBy('hierarchical_name');
+        $companies = cache()->remember('companies.all', 3600, fn() => \App\Company::all());
             
         return view('pages.departments.edit',compact(
             'department',
             'employees',
-            'departments'
+            'departments',
+            'companies'
         ));
     }
 
@@ -159,7 +161,7 @@ class DepartmentsController extends BaseController
             'manager_id' => 'nullable|exists:users,id',
             'parent_id' => 'nullable|exists:departments,id',
             'color' => 'nullable|string',
-            'company_name' => 'nullable|string',
+            'company_id' => 'nullable|exists:companies,id',
         ]);
         
         // Prevent setting parent to self
@@ -172,8 +174,7 @@ class DepartmentsController extends BaseController
             'parent_id' => $request->parent_id,
             'manager_id' => $request->manager_id,
             'color' => $request->color,
-            'company_name' => $request->company_name,
-            'location' => $request->company_name,
+            'company_id' => $request->company_id,
             'description' => $request->description,
         ]);
         $notification = notify(__("Department has been updated"));

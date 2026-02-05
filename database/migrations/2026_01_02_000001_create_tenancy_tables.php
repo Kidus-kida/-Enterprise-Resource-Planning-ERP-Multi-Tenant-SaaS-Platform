@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -29,6 +28,9 @@ return new class extends Migration
                 $table->boolean('is_active')->default(1);
                 $table->boolean('is_private')->default(0);
                 $table->integer('sort_order')->default(0);
+                $table->decimal('price_per_user', 10, 2)->default(0)->after('price');
+                $table->integer('min_users')->default(1)->after('user_count');
+                $table->boolean('is_per_user_pricing')->default(0)->after('is_private');
                 $table->timestamps();
                 $table->softDeletes();
             });
@@ -47,6 +49,10 @@ return new class extends Migration
                 $table->string('payment_transaction_id')->nullable();
                 $table->enum('status', ['approved', 'waiting', 'declined'])->default('waiting');
                 $table->unsignedBigInteger('created_id')->nullable();
+                $table->integer('subscribed_user_count')->nullable()->after('package_id');
+                $table->decimal('base_price', 10, 2)->default(0)->after('module_activation_details');
+                $table->decimal('addons_price', 10, 2)->default(0)->after('base_price');
+                $table->decimal('total_price', 10, 2)->default(0)->after('addons_price');
                 $table->timestamps();
                 $table->softDeletes();
 
@@ -72,7 +78,7 @@ return new class extends Migration
                 $table->string('domain')->unique();
                 $table->string('tenant_id');
                 $table->timestamps();
-                
+
                 $table->foreign('tenant_id')->references('id')->on('tenants')->onUpdate('cascade')->onDelete('cascade');
             });
         }

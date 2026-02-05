@@ -11,7 +11,7 @@ class Department extends TenantModel
     use \App\Traits\HasCompany;
 
     protected $fillable = [
-        'name', 'location','description', 'manager_id', 'color', 'company_name', 'parent_id', 'is_active'
+        'name', 'location','description', 'manager_id', 'color', 'company_name', 'company_id', 'parent_id', 'is_active'
     ];
 
     public function employeeDetails()

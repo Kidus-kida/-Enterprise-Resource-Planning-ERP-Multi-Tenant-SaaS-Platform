@@ -28,6 +28,10 @@ return new class extends Migration {
             $table->longText('emergency_contacts')->nullable();
             $table->date('date_joined')->nullable();
             $table->date('dob')->nullable();
+            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('company_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('job_position_id')->nullable()->constrained('job_positions')->onDelete('set null');
+            $table->string('job_title')->nullable();
             $table->timestamps();
         });
 

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -18,6 +17,7 @@ return new class extends Migration
             $table->integer('parent_account_type_id')->nullable();
             $table->integer('business_id');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('business_id');
             $table->index('parent_account_type_id');
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->integer('business_id');
             $table->integer('parent_account_group_id')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('business_id');
             $table->index('account_type_id');
         });
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->string('account_sub_type')->nullable();
             $table->integer('parent_account_id')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('business_id');
             $table->index('account_type_id');
             $table->index('account_group_id');
@@ -94,7 +94,7 @@ return new class extends Migration
             $table->integer('reconciled_by')->nullable();
             $table->unsignedBigInteger('location_id')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('account_id');
             $table->index('type');
             $table->index('transaction_id');

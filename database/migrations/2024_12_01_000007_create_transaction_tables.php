@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -24,6 +23,21 @@ return new class extends Migration
             $table->decimal('item_tax', 22, 4)->default(0);
             $table->unsignedInteger('tax_id')->nullable();
             $table->decimal('sell_line_note', 22, 4)->nullable();
+            $table->unsignedBigInteger('parent_sell_line_id')->nullable();
+            $table->string('children_type')->nullable();
+            $table->string('line_discount_type')->nullable()->comment('fixed or percentage');
+            $table->decimal('line_discount_amount', 22, 4)->default(0);
+            $table->decimal('unit_price_before_discount', 22, 4)->default(0);
+            $table->text('sell_line_note')->nullable();
+            $table->unsignedBigInteger('discount_id')->nullable();
+            $table->unsignedBigInteger('sub_unit_id')->nullable()->comment('Unit ID for the sold quantity');
+            $table->unsignedBigInteger('res_service_staff_id')->nullable();
+            $table->unsignedBigInteger('lot_no_line_id')->nullable();
+            $table->string('res_line_order_status')->nullable();
+            $table->decimal('weight_loss', 22, 4)->nullable();
+            $table->decimal('weight_excess', 22, 4)->nullable();
+            $table->decimal('last_purchased_price', 22, 4)->nullable();
+            $table->decimal('quantity_returned', 22, 4)->default(0);
             $table->timestamps();
 
             $table->index('transaction_id');

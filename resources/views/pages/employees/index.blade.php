@@ -168,8 +168,26 @@
         initEmployeeScripts();
     });
 
+    // Handle Livewire navigation
+    document.addEventListener('livewire:navigated', function() {
+        initEmployeeScripts();
+    });
+
     function initEmployeeScripts() {
         $(document).ready(function() {
+            // Destroy existing instances if any to prevent conflicts with global app.js
+            $('#add_employee .select').each(function() {
+                if ($(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2('destroy');
+                }
+            });
+            
+             $('#add_job_position_modal .select').each(function() {
+                if ($(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2('destroy');
+                }
+            });
+
             // Initialize Select2 specifically for these modals (double check to ensure they render correctly)
             $('#add_employee .select').select2({
                 width: '100%',
