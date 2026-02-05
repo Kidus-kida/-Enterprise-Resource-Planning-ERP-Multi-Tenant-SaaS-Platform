@@ -11,6 +11,9 @@
             <p class="text-muted">{{ __('Manage your leave requests and view your balances.') }}</p>
         </div>
         <div class="col-md-4 text-end">
+            <a href="{{ route('leave.management.allocations.request') }}" class="btn btn-outline-primary rounded-pill px-3 me-2">
+                <i class="fa fa-hand-holding-medical me-2"></i>{{ __('Request Allocation') }}
+            </a>
             <a href="{{ route('leaverequests.create') }}" class="btn btn-primary rounded-pill px-4">
                 <i class="fa fa-plus me-2"></i>{{ __('New Request') }}
             </a>

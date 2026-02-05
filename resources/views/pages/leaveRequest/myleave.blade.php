@@ -21,7 +21,7 @@
 
                     <a href="javascript:void(0)" data-url="{{ route('leaverequests.create') }}" class="btn add-btn"
                         data-ajax-modal="true" data-size="lg" data-title="{{ __('Add Leave Request') }}">
-                        <i class="fa-solid fa-plus"></i> {{ __('Add Leav Request') }}
+                        <i class="fa-solid fa-plus"></i> {{ __('Add Leave Request') }}
                     </a>
                     <div class="view-icons">
                         <a href="{{ route('leaverequests.index') }}" class="grid-view btn btn-link"><i

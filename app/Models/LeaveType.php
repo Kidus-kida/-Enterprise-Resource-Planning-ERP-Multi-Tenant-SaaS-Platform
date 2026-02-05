@@ -26,6 +26,12 @@ class LeaveType extends Model
         'color',
         'sort_order',
         'is_active',
+        // Negative Balance & Carryover
+        'allow_negative_balance',
+        'max_negative_balance',
+        'can_carry_forward',
+        'max_carry_forward',
+        'carry_forward_expiry',
     ];
 
     protected $casts = [
@@ -36,11 +42,18 @@ class LeaveType extends Model
         'requires_approval' => 'boolean',
         'auto_approve_if_balance' => 'boolean',
         'is_active' => 'boolean',
+        'allow_negative_balance' => 'boolean',
+        'can_carry_forward' => 'boolean',
     ];
 
     public function accrualPlan()
     {
         return $this->belongsTo(LeaveAccrualPlan::class, 'default_accrual_plan_id');
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class, 'leave_type_id');
     }
 
 

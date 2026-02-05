@@ -87,26 +87,29 @@ class LeaveService
     {
         $totalAvailable = LeaveAllocation::where('user_id', $userId)
             ->where('leave_type_id', $leaveTypeId)
+            ->where('status', 'approved') // Only confirmed allocations
             ->sum('available_days');
 
-        // Future: Add negative balance check here based on LeaveType settings
-        
-        return $totalAvailable >= $daysRequested;
+        if ($totalAvailable >= $daysRequested) {
+            return true;
+        }
+
+        // Check for Negative Balance allowance
+        $leaveType = LeaveType::find($leaveTypeId);
+        if ($leaveType && $leaveType->allow_negative_balance) {
+            $defecit = $daysRequested - $totalAvailable;
+            return $defecit <= $leaveType->max_negative_balance;
+        }
+
+        return false;
     }
 
-    /**
-     * Deduct days from user's allocations (FIFO - First In First Out).
-     *
-     * @param int $userId
-     * @param int $leaveTypeId
-     * @param float $daysToDeduct
-     * @return void
-     */
     public function deductBalance($userId, $leaveTypeId, $daysToDeduct)
     {
-        // Fetch allocations with available balance, ordered by year/date (oldest first)
+        // Fetch allocations with available balance
         $allocations = LeaveAllocation::where('user_id', $userId)
             ->where('leave_type_id', $leaveTypeId)
+            ->where('status', 'approved')
             ->where('available_days', '>', 0)
             ->orderBy('year', 'asc')
             ->orderBy('created_at', 'asc')
@@ -114,6 +117,7 @@ class LeaveService
 
         $remaining = $daysToDeduct;
 
+        // 1. Consume existing positive allocations
         foreach ($allocations as $allocation) {
             if ($remaining <= 0) break;
 
@@ -133,10 +137,31 @@ class LeaveService
             }
         }
 
-        // If $remaining > 0 here, it means we deducted everything but still owe days.
-        // This implies negative balance. logic handles it but allocations are empty.
-        // We might need to record negative on the *current* year allocation if it exists, or create one.
-        // For Phase 5 basic, we assume checkBalance prevented execution if insufficient.
+        // 2. Handle Defecit (Negative Balance)
+        if ($remaining > 0) {
+            // Find or create current year allocation to store the debt
+            $currentYearAllocation = LeaveAllocation::where('user_id', $userId)
+                ->where('leave_type_id', $leaveTypeId)
+                ->where('year', Carbon::now()->year)
+                ->first();
+
+            if (!$currentYearAllocation) {
+                $currentYearAllocation = LeaveAllocation::create([
+                    'user_id' => $userId,
+                    'leave_type_id' => $leaveTypeId,
+                    'year' => Carbon::now()->year,
+                    'allocation_type' => 'manual', // or adjustment
+                    'status' => 'approved',
+                    'available_days' => 0,
+                    'allocated_days' => 0,
+                ]);
+            }
+
+            // Apply negative balance
+            $currentYearAllocation->available_days -= $remaining; // Goes negative
+            $currentYearAllocation->used_days += $remaining;
+            $currentYearAllocation->save();
+        }
     }
     
     /**
@@ -160,4 +185,23 @@ class LeaveService
              $allocation->save();
          }
      }
+
+    /**
+     * Get approved leaves overlapping with a pay period.
+     * Useful for Payroll calculation.
+     */
+    public function getApprovedLeavesForPeriod($startDate, $endDate) 
+    {
+        return \App\Models\LeaveRequest::with('leaveType')
+            ->where('status', 'approved')
+            ->where(function($q) use ($startDate, $endDate) {
+                 $q->whereBetween('leave_start_date', [$startDate, $endDate])
+                   ->orWhereBetween('leave_end_date', [$startDate, $endDate])
+                   ->orWhere(function($q2) use ($startDate, $endDate) {
+                       $q2->where('leave_start_date', '<=', $startDate)
+                          ->where('leave_end_date', '>=', $endDate);
+                   });
+            })
+            ->get();
+    }
 }

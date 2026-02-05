@@ -178,9 +178,9 @@ class AppMenuListener
                         ->add(Link::toRoute('leave.my-time', __('Time Off'))->addClass(route_is(['leave.*']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         // Legacy leave system (temporary, will be removed later)
                         // ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
-                        // ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         // ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
-                        ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        // ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
