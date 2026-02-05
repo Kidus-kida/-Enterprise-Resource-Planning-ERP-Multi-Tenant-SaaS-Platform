@@ -10,9 +10,6 @@ use Nwidart\Modules\Facades\Module;
 use Spatie\Menu\Laravel\Link;
 use Spatie\Menu\Laravel\Menu;
 
-// Load Attendance Helpers explicitly as a fallback
-require_once __DIR__ . '/AttendanceHelpers.php';
-
 if (!function_exists('route_is')) {
     function route_is($route = null)
     {
@@ -37,6 +34,19 @@ if(!function_exists('appLogo')){
             }
         }
         return $logo;
+    }
+}
+
+if (!function_exists('route_is')) {
+    function route_is($routes = [])
+    {
+        foreach ($routes as $route) {
+            if (request()->is($route) || request()->routeIs($route) || Route::currentRouteName() == $route) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 }
 
