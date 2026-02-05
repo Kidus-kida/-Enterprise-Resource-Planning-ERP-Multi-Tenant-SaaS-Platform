@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->boolean('weight_excess_loss_applicable')->default(0);
             $table->unsignedBigInteger('business_id');
@@ -67,6 +68,7 @@ return new class extends Migration {
 
         Schema::create('variation_templates', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('business_id');
             $table->integer('created_by');
@@ -77,6 +79,7 @@ return new class extends Migration {
 
         Schema::create('variation_value_templates', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('variation_template_id');
             $table->timestamps();
@@ -86,6 +89,7 @@ return new class extends Migration {
 
         Schema::create('product_variations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('variation_template_id')->nullable();
             $table->string('name');
             $table->unsignedBigInteger('product_id');
@@ -97,6 +101,7 @@ return new class extends Migration {
 
         Schema::create('variations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('product_id');
             $table->string('sub_sku');

@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->enum('type', ['customer', 'supplier', 'both'])->default('customer');
             $table->string('supplier_business_name')->nullable();
@@ -77,7 +78,6 @@ return new class extends Migration {
             $table->integer('user_id')->nullable();
             $table->integer('sub_customer')->default(0);
             $table->boolean('sol_with_approval')->default(0);
-            $table->string('landmark')->nullable();
 
             $table->softDeletes();
             $table->timestamps();
@@ -109,6 +109,7 @@ return new class extends Migration {
 
         Schema::create('client_details', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('company_name')->nullable();
             $table->string('website')->nullable();

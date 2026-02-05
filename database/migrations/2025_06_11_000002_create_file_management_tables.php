@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('folders', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->timestamps();
         });
 
         Schema::create('member_folder', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('folder_id')->constrained('folders')->onDelete('cascade');
             $table->timestamps();
@@ -28,6 +30,7 @@ return new class extends Migration
 
         Schema::create('files', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('file_path');
             $table->foreignId('folder_id')->constrained('folders')->onDelete('cascade');

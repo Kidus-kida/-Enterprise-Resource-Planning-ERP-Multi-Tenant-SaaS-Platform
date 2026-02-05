@@ -33,6 +33,7 @@ return new class extends Migration {
 
             $table->foreignId('dry_port_id')->nullable()->constrained('dry_ports');
             $table->unsignedBigInteger('user_id'); // Created by
+            $table->decimal('value_etb', 15, 2)->default(0);
 
             $table->timestamps();
             $table->softDeletes();

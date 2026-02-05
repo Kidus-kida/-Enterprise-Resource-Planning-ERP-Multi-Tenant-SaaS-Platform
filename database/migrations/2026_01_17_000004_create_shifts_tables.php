@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->boolean('is_active')->default(true);
             $table->text('description')->nullable();
             $table->json('work_days')->nullable(); // JSON array: [1,2,3,4,5] for Mon-Fri
-            $table->integer('grace_out_minutes')->nullable()->after('grace_period_minutes');
+            $table->integer('grace_out_minutes')->nullable();
             $table->timestamps();
 
             $table->index('code');

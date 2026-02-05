@@ -10,6 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        Schema::create('job_positions', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->unsignedBigInteger('company_id')->nullable()->index();
+            $table->foreignId('department_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+
         Schema::create('employee_details', function (Blueprint $table) {
             $table->id();
             $table->string('emp_id')->nullable();
@@ -29,7 +37,7 @@ return new class extends Migration {
             $table->date('date_joined')->nullable();
             $table->date('dob')->nullable();
             $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('company_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('job_position_id')->nullable()->constrained('job_positions')->onDelete('set null');
             $table->string('job_title')->nullable();
             $table->timestamps();
@@ -37,6 +45,7 @@ return new class extends Migration {
 
         Schema::create('user_family_infos', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('name')->nullable();
             $table->string('relationship')->nullable();
@@ -49,6 +58,7 @@ return new class extends Migration {
 
         Schema::create('employee_work_experiences', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('employee_detail_id')->constrained('employee_details')->onDelete('cascade');
             $table->string('company');
             $table->string('location')->nullable();
@@ -61,6 +71,7 @@ return new class extends Migration {
 
         Schema::create('employee_education', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('employee_detail_id')->nullable()->constrained('employee_details')->onDelete('cascade');
             $table->string('institution')->nullable();
             $table->string('subject')->nullable();
@@ -78,6 +89,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        Schema::dropIfExists('job_positions');
         Schema::dropIfExists('employee_education');
         Schema::dropIfExists('employee_work_experiences');
         Schema::dropIfExists('user_family_infos');

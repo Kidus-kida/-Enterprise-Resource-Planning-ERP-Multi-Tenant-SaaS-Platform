@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('color')->nullable();
             $table->timestamps();
@@ -20,6 +21,7 @@ return new class extends Migration
 
         Schema::create('label_task', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('label_id')->constrained('labels')->onDelete('cascade');
             $table->unsignedBigInteger('task_id');
             $table->timestamps();

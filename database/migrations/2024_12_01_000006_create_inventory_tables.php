@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('variation_location_details', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('product_id');
             $table->unsignedInteger('product_variation_id');
             $table->unsignedInteger('variation_id');
@@ -25,6 +26,7 @@ return new class extends Migration
 
         Schema::create('product_locations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->unsignedBigInteger('location_id');
             $table->unsignedBigInteger('product_id');
@@ -42,6 +44,7 @@ return new class extends Migration
 
         Schema::create('selling_price_groups', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->text('description')->nullable();
             $table->unsignedBigInteger('business_id');
@@ -54,6 +57,7 @@ return new class extends Migration
 
         Schema::create('variation_group_prices', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedInteger('variation_id');
             $table->decimal('price_inc_tax', 22, 4);
             $table->unsignedInteger('price_group_id');
@@ -64,6 +68,7 @@ return new class extends Migration
 
         Schema::create('stores', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('business_id');
             $table->unsignedBigInteger('location_id')->nullable();
@@ -77,6 +82,7 @@ return new class extends Migration
 
         Schema::create('system', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('key')->unique();
             $table->text('value')->nullable();
             $table->timestamps();

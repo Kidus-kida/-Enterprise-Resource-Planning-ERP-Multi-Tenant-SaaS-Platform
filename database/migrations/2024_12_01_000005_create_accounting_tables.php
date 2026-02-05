@@ -12,10 +12,12 @@ return new class extends Migration {
     {
         Schema::create('account_types', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('class_type');
             $table->integer('parent_account_type_id')->nullable();
             $table->integer('business_id');
+            $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
@@ -25,6 +27,7 @@ return new class extends Migration {
 
         Schema::create('account_groups', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('account_type_id');
             $table->integer('business_id');
@@ -37,6 +40,7 @@ return new class extends Migration {
 
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('gl_code')->nullable();
             $table->unsignedBigInteger('account_type_id');
@@ -61,6 +65,7 @@ return new class extends Migration {
 
         Schema::create('account_transactions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('account_id');
             $table->string('type');
             $table->string('sub_type')->nullable();
@@ -93,6 +98,8 @@ return new class extends Migration {
             $table->date('reconciled_on')->nullable();
             $table->integer('reconciled_by')->nullable();
             $table->unsignedBigInteger('location_id')->nullable();
+
+            $table->unsignedBigInteger('transaction_payment_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->index('account_id');

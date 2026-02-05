@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('performances', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('review_period');
             $table->date('review_date');
@@ -42,6 +43,7 @@ return new class extends Migration
 
         Schema::create('awards', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('award_name');
             $table->string('award_type')->nullable();
@@ -56,6 +58,7 @@ return new class extends Migration
 
         Schema::create('employee_evaluator', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('evaluator_id')->constrained('users')->onDelete('cascade');
             $table->string('relationship_type')->default('supervisor');

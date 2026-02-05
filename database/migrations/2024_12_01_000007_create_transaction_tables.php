@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('transaction_sell_lines', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('transaction_id');
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('variation_id');
@@ -25,10 +26,7 @@ return new class extends Migration {
             $table->decimal('sell_line_note', 22, 4)->nullable();
             $table->unsignedBigInteger('parent_sell_line_id')->nullable();
             $table->string('children_type')->nullable();
-            $table->string('line_discount_type')->nullable()->comment('fixed or percentage');
-            $table->decimal('line_discount_amount', 22, 4)->default(0);
             $table->decimal('unit_price_before_discount', 22, 4)->default(0);
-            $table->text('sell_line_note')->nullable();
             $table->unsignedBigInteger('discount_id')->nullable();
             $table->unsignedBigInteger('sub_unit_id')->nullable()->comment('Unit ID for the sold quantity');
             $table->unsignedBigInteger('res_service_staff_id')->nullable();
@@ -47,6 +45,7 @@ return new class extends Migration {
 
         Schema::create('transaction_sell_lines_purchase_lines', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('sell_line_id')->nullable();
             $table->unsignedBigInteger('purchase_line_id');
             $table->unsignedBigInteger('stock_adjustment_line_id')->nullable();
@@ -61,6 +60,7 @@ return new class extends Migration {
 
         Schema::create('reference_counts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('ref_type')->unique();
             $table->unsignedBigInteger('ref_count')->default(0);
             $table->integer('business_id')->default(1);

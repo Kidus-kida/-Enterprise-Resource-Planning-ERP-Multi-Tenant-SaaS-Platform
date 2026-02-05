@@ -12,14 +12,13 @@ return new class extends Migration {
     {
         Schema::create('leave_types', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('type_name');
             $table->integer('max_date_allowed');
             $table->string('leave_allowed_interval')->nullable();
             $table->string('description')->nullable();
             $table->string('status')->default('allowed');
             $table->boolean('uses_accrual')->default(false);
-            $table->foreignId('default_accrual_plan_id')->nullable()
-                ->constrained('leave_accrual_plans')->onDelete('set null');
 
             // Leave Behavior
             $table->boolean('requires_attachment')->default(false);
@@ -44,6 +43,7 @@ return new class extends Migration {
 
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->integer('employee_id');
             $table->integer('leave_type_id');
             $table->date('leave_start_date')->nullable();
@@ -87,6 +87,7 @@ return new class extends Migration {
 
         Schema::create('anunal_leaves', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->integer('employee_id');
             $table->decimal('current_year', 8, 2)->default(0.00);
             $table->decimal('previous_year', 8, 2)->default(0.00);

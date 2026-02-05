@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('ast_id');
             $table->string('name');
             $table->date('purchase_date')->nullable();
@@ -35,6 +36,7 @@ return new class extends Migration {
 
         Schema::create('asset_issues', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('asset_id')->nullable()->constrained('assets')->onDelete('cascade');
             $table->foreignId('raised_by')->nullable()->constrained('users')->onDelete('cascade');
             $table->longText('description');

@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('designations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->text('description')->nullable();
             $table->timestamps();
@@ -19,6 +20,7 @@ return new class extends Migration {
 
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->text('description')->nullable();
             $table->integer('parent_id')->nullable();
@@ -31,6 +33,7 @@ return new class extends Migration {
 
         Schema::create('holidays', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->date('startDate');
             $table->date('endDate');

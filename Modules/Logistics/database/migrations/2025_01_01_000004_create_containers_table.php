@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -23,9 +22,10 @@ return new class extends Migration
             $table->integer('demurrage_days')->default(0);
             $table->datetime('arrived_at_djibouti')->nullable();
             $table->datetime('arrived_at_dry_port')->nullable();
+            $table->string('location')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index('container_no');
         });
     }

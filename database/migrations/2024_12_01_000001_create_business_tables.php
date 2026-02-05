@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('businesses', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // Tenancy fields
             $table->string('tenant_id')->unique()->nullable();
@@ -152,8 +153,7 @@ return new class extends Migration {
             $table->boolean('is_active')->default(1);
             $table->timestamps();
 
-            $table->unsignedBigInteger('company_id')->nullable();
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             $table->index('business_id');
         });

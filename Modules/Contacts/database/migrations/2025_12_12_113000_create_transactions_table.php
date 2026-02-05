@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('return_parent_id')->nullable();
             $table->unsignedBigInteger('business_id')->default(1);
             $table->unsignedBigInteger('location_id')->nullable();
             $table->string('type')->index()->comment('sell, purchase, opening_balance, payment, direct_customer_loan, etc');
@@ -79,6 +80,14 @@ return new class extends Migration {
 
             $table->boolean('is_pos')->default(0);
             $table->integer('reprint_no')->default(0);
+
+            $table->unsignedBigInteger('tax_id')->nullable();
+            $table->decimal('exchange_rate', 22, 4)->default(1);
+            $table->string('document')->nullable();
+
+            // For purchase order
+            $table->integer('import_batch')->nullable();
+            $table->integer('import_licence_number')->nullable();
 
 
             $table->timestamps();

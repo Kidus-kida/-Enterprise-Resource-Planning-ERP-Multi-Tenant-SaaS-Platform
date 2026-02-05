@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->after('id')->nullable();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
+            $table->uuid('uuid')->nullable();
             $table->integer('business_id')->nullable();
             $table->string('firstname');
             $table->string('middlename')->nullable();
@@ -47,6 +48,7 @@ return new class extends Migration {
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
