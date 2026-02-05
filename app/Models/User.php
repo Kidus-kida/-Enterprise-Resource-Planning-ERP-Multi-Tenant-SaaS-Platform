@@ -262,4 +262,12 @@ public static function forDropdown($business_id, $prepend_none = true, $include_
     {
         return !empty($this->company_id);
     }
+
+    /**
+     * Get the shift rotations assigned to this user.
+     */
+    public function shiftRotations()
+    {
+        return $this->hasMany(UserShiftRotation::class);
+    }
 }

@@ -38,6 +38,14 @@
                         <span class="badge bg-{{ $shiftMode === 'mandatory' ? 'primary' : 'info' }}-light text-{{ $shiftMode === 'mandatory' ? 'primary' : 'info' }} d-flex align-items-center">
                             <i class="la la-cog me-1"></i> {{ __('Mode') }}: {{ ucfirst($shiftMode) }}
                         </span>
+                        @if($nightShiftEnabled)
+                            <a href="{{ route('admin.attendance-settings.night-shift') }}" class="btn btn-outline-info">
+                                <i class="la la-moon"></i> {{ __('Night Shift Settings') }}
+                            </a>
+                        @endif
+                        <a href="{{ route('admin.attendance-settings.index') }}#shifts_enabled" class="btn btn-outline-secondary">
+                            <i class="la la-cog"></i> {{ __('Global Settings') }}
+                        </a>
                         <a href="{{ route('shifts.assign') }}" class="btn btn-outline-primary">
                             <i class="la la-users"></i> {{ __('Assign Employees') }}
                         </a>

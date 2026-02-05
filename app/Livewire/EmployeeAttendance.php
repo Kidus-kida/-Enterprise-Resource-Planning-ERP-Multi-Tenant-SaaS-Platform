@@ -70,7 +70,19 @@ class EmployeeAttendance extends Component
                 $locationName = $this->getLocationNameFromCoords($this->latitude, $this->longitude);
             }
             // dd($locationName);
-            $user  = auth()->user();
+            $user = auth()->user();
+            
+            // --- Shift Mode Integration ---
+            $now = now();
+            $resolvedShift = \App\Models\UserShift::getShiftForTime($user->id, $now);
+            $shiftMode = \App\Models\AttendanceSetting::get('shift_mode', 'optional');
+            $shiftsEnabled = \App\Models\AttendanceSetting::get('shifts_enabled', false);
+
+            if ($shiftsEnabled && $shiftMode === 'mandatory' && !$resolvedShift) {
+                $this->dispatch('Notification', __('You do not have an assigned shift for this time. Clock-in denied.'));
+                return;
+            }
+            // ------------------------------
 
             // check if user is clocked in
             $existingActiveTimestamp = AttendanceTimestamp::where('user_id', $user->id)
@@ -105,6 +117,7 @@ class EmployeeAttendance extends Component
                 'user_id' => $user->id,
                 'attendance_id' => $attendance->id,
                 'project_id' => $this->project,
+                'shift_id' => $resolvedShift ? $resolvedShift->id : null, // NEW: Link to shift
                 'startTime' => now(),
                 'endTime' => null,
                 // 'location' => $user->employeeDetail->department->location ?? null,

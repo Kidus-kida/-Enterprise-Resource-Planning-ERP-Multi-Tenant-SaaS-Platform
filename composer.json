@@ -54,7 +54,8 @@
             "Modules\\Superadmin\\": "Modules/Superadmin/app/"
         },
         "files": [
-            "app/Helpers/general.php"
+            "app/Helpers/general.php",
+            "app/Helpers/AttendanceHelpers.php"
         ]
     },
     "autoload-dev": {

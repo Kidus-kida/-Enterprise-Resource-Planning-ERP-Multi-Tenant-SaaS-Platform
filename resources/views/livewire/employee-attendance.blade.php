@@ -7,6 +7,11 @@
                         <div class="row">
                             <div class="col-9">
                                 {{ __('Timesheet') }} <small class="text-muted">{{ format_date(Date('Y-m-d')) }}</small>
+                                @if(\App\Models\AttendanceSetting::get('missed_punch_approval_enabled', true))
+                                    <a href="{{ route('missed-punches.index') }}" class="ms-1 small text-primary text-decoration-none" style="font-size: 0.75rem;">
+                                        <i class="la la-edit"></i> {{ __('Missed Punch?') }}
+                                    </a>
+                                @endif
                             </div>
                             <div class="col-3">
                                 <div class="d-flex" x-data="{init(){
