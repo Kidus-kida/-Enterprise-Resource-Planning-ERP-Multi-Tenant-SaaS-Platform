@@ -150,6 +150,7 @@ class AppMenuListener
                         ->addIfCan('view-departments', Link::toRoute('departments.index', __('Departments'))->addClass(route_is('departments.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-designations', Link::toRoute('designations.index', __('Designations'))->addClass(route_is('designations.index') ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-attendances', Link::toRoute('attendances.index', __('Attendance'))->addClass(route_is(['attendances.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->addIfCan('view-attendances', Link::toRoute('admin.missed-punches.index', __('Missed Punches'))->addClass(route_is(['admin.missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );
             }
 
@@ -162,6 +163,7 @@ class AppMenuListener
                         ->addParentClass('submenu')
                         ->addIfCan('edit-request', Link::toRoute('leaverequests.index', __('Leave Requests'))->addClass(route_is(['leaverequests.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('view-request', Link::toRoute('leaverequests.myleaverequests', __('My Leaves'))->addClass(route_is(['leaverequests.myleaverequests']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
+                        ->add(Link::toRoute('missed-punches.index', __('My Missed Punches'))->addClass(route_is(['missed-punches.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('create-leave-type', Link::toRoute('leavetypes.index', __('Leave Types'))->addClass(route_is(['leavetypes.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                         ->addIfCan('create-annual-leave', Link::toRoute('annual_leaves.index', __('Annual Leave Settings'))->addClass(route_is(['annual_leaves.index']) ? 'active' : '')->setAttributes(['wire:navigate' => 'true']))
                 );

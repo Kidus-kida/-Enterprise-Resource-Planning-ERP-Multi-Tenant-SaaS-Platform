@@ -173,28 +173,28 @@
                     <x-settings.header icon="la la-check-square" title="{{ __('Approvals and Workflow') }}" description="{{ __('Request and approval settings') }}" />
 
                     <x-settings.row label="{{ __('Missed Punch Requests') }}" description="{{ __('Allow employees to request corrections') }}"
-                                    id="missed_punch" configureLink="/config/approvals#missed-punch" :showConfigure="$missedPunchApproval">
+                                    id="missed_punch" :configureLink="route('admin.attendance-settings.missed-punch')" :showConfigure="$missedPunchApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="missed_punch_approval_enabled" value="true" {{ $missedPunchApproval ? 'checked' : '' }} onchange="toggleConfigLink('missed_punch', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Attendance Corrections') }}" description="{{ __('HR/Manager can modify attendance') }}"
-                                    id="corrections" configureLink="/config/approvals#correction" :showConfigure="$correctionApproval">
+                                    id="corrections" :configureLink="route('admin.attendance-settings.corrections')" :showConfigure="$correctionApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="correction_approval_enabled" value="true" {{ $correctionApproval ? 'checked' : '' }} onchange="toggleConfigLink('corrections', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime Approval') }}" description="{{ __('Require approval for overtime') }}"
-                                    id="overtime_approval" configureLink="/config/approvals#overtime" :showConfigure="$overtimeApproval">
+                                    id="overtime_approval" :configureLink="route('admin.attendance-settings.overtime-approval')" :showConfigure="$overtimeApproval">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" name="overtime_approval_enabled" value="true" {{ $overtimeApproval ? 'checked' : '' }} onchange="toggleConfigLink('overtime_approval', this)">
                             </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Auto-Approval') }}" description="{{ __('Automatically approve based on rules') }}"
-                                    id="auto_approval" configureLink="/config/approvals#auto" :showConfigure="$autoApproval">
+                                    id="auto_approval" :configureLink="route('admin.attendance-settings.auto-approval')" :showConfigure="$autoApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="auto_approval_enabled" value="true" {{ $autoApproval ? 'checked' : '' }} onchange="toggleConfigLink('auto_approval', this)">
                         </div>

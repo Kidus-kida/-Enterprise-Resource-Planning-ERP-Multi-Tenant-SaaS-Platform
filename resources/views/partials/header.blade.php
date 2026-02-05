@@ -137,6 +137,45 @@
         @endif
 
 
+        <!-- Notifications -->
+        <li class="nav-item dropdown has-arrow main-drop">
+            <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
+                <i class="fa-regular fa-bell"></i>
+                @if(auth()->user()->unreadNotifications->count() > 0)
+                    <span class="badge rounded-pill bg-primary">{{ auth()->user()->unreadNotifications->count() }}</span>
+                @endif
+            </a>
+            <div class="dropdown-menu dropdown-menu-right notifications" style="min-width: 300px;">
+                <div class="topnav-dropdown-header" style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                    <span class="notification-title">{{ __('Notifications') }}</span>
+                    <a href="{{ route('notifications.clear') }}" class="clear-noti" style="font-size: 12px;">{{ __('Clear All') }}</a>
+                </div>
+                <div class="noti-content">
+                    <ul class="notification-list" style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
+                        @forelse(auth()->user()->notifications->take(5) as $notification)
+                            <li class="notification-message" style="border-bottom: 1px solid #f5f5f5;">
+                                <a href="{{ $notification->data['action_url'] ?? '#' }}" style="display: block; padding: 10px; color: #333;">
+                                    <div class="media d-flex">
+                                        <div class="media-body flex-grow-1">
+                                            <p class="noti-details" style="margin-bottom: 5px; font-size: 13px;">{{ $notification->data['message'] ?? '' }}</p>
+                                            <p class="noti-time" style="margin-bottom: 0;"><span class="notification-time" style="font-size: 11px; color: #999;">{{ $notification->created_at->diffForHumans() }}</span></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @empty
+                            <li class="notification-message text-center p-3 text-muted">
+                                {{ __('No notifications') }}
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+                <div class="topnav-dropdown-footer" style="padding: 10px; border-top: 1px solid #eee; text-align: center;">
+                    <a href="#" style="font-size: 12px;">{{ __('View all Notifications') }}</a>
+                </div>
+            </div>
+        </li>
+
         <li class="nav-item dropdown has-arrow main-drop">
             <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
                 <span class="user-img"><img src="{{ !empty(auth()->user()->avatar) ? uploadedAsset(auth()->user()->avatar,'users'): asset('images/user.jpg') }}" alt="User Image">
