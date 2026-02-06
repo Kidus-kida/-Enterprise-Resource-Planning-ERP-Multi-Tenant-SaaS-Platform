@@ -31,7 +31,7 @@ return new class extends Migration {
             $table->string('tax_label_2')->nullable();
             $table->enum('default_sales_tax', ['includes', 'excludes'])->nullable();
             $table->string('default_profit_percent')->default(0);
-            $table->unsignedInteger('owner_id');
+            $table->unsignedInteger('owner_id')->nullable();
             $table->string('time_zone')->default('Africa/Addis_Ababa');
             $table->string('fy_start_month')->default('1');
             $table->enum('accounting_method', ['fifo', 'lifo', 'avco'])->default('fifo');

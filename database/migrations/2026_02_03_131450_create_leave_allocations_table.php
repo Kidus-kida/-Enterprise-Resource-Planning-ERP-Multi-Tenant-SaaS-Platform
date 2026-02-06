@@ -35,6 +35,7 @@ return new class extends Migration
             $table->date('last_accrual_date')->nullable();
             $table->text('notes')->nullable();
             $table->enum('allocation_type', ['manual', 'accrual', 'carryover', 'bonus', 'adjustment'])->default('manual');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('approved');
             $table->boolean('is_manual_allocation')->default(false); // Manual vs auto-accrued
             $table->foreignId('allocated_by')->nullable()->constrained('users')->onDelete('set null');
             

@@ -30,6 +30,11 @@ return new class extends Migration {
             $table->boolean('requires_approval')->default(true);
             $table->integer('approval_levels')->default(1); // Number of approval levels
             $table->boolean('auto_approve_if_balance')->default(false);
+            $table->boolean('allow_negative_balance')->default(false);
+            $table->integer('max_negative_balance')->default(0);
+            $table->boolean('can_carry_forward')->default(false);
+            $table->integer('max_carry_forward')->default(0); // Max days to carry over
+            $table->integer('carry_forward_expiry')->nullable(); // Months until expiry (e.g. 3 = March 31st)
 
             // Display & Ordering
             $table->string('color', 7)->default('#0d6efd'); // Hex color for UI
