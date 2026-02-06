@@ -6,6 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Business;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Arr;
 use Modules\Superadmin\Models\Package;
 use Modules\Superadmin\Models\Subscription;
 use Modules\Superadmin\Services\SubscriptionService;
@@ -60,14 +66,14 @@ class BusinessController extends Controller
             'owner_user_uuid' => null, // Will be linked after tenant user creation
             'package_id' => $validated['package_id'],
             'is_active' => 1,
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
         ]);
 
         $package = Package::find($validated['package_id']);
         $subscription = $this->subscriptionService->createSubscription($business, $package, [
             'start_date' => $validated['start_date'],
             'status' => 'approved',
-            'created_by' => auth()->id()
+            'created_by' => Auth::id()
         ]);
 
         // Attach add-ons if selected (optional)
@@ -93,26 +99,50 @@ class BusinessController extends Controller
         $business = Business::with(['owner', 'subscription.addons'])->findOrFail($id);
         $packages = Package::active()->orderBy('sort_order')->get();
         $addons = \Modules\Superadmin\Models\PackageAddon::active()->orderBy('sort_order')->get();
+        $owners = User::orderBy('firstname')->orderBy('lastname')->get();
         
-        return view('superadmin::businesses.edit', compact('business', 'packages', 'addons'));
+        return view('superadmin::businesses.edit', compact('business', 'packages', 'addons', 'owners'));
     }
 
     public function update(Request $request, $id): RedirectResponse
     {
         $business = Business::with(['owner', 'subscription'])->findOrFail($id);
         
+        $ownerIdForValidation = $request->input('owner_id') ?: optional($business->owner)->id;
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'owner_email' => 'nullable|email|unique:businesses,owner_email,' . $id,
             'owner_firstname' => 'nullable|string|max:255',
             'owner_lastname' => 'nullable|string|max:255',
             'owner_phone' => 'nullable|string|max:20',
+            'owner_id' => 'nullable|exists:users,id',
             'package_id' => 'nullable|exists:packages,id',
+            'address' => 'nullable|string',
             'addons' => 'nullable|array',
             'addons.*' => 'exists:package_addons,id',
         ]);
 
-        $business->update($validated);
+        $business->update(Arr::except($validated, ['address', 'addons']));
+
+        $ownerIdToUpdate = $validated['owner_id'] ?? $business->owner_id;
+        if ($ownerIdToUpdate && ($request->has('address') || $request->has('owner_phone') || $request->has('owner_email'))) {
+            $owner = User::find($ownerIdToUpdate);
+            if ($owner) {
+                if ($request->has('address')) {
+                    $owner->address = $request->input('address');
+                }
+                if ($request->has('owner_phone')) {
+                    $owner->phone = $request->input('owner_phone');
+                }
+                if ($request->filled('owner_email')) {
+                    $request->validate([
+                        'owner_email' => 'nullable|email|unique:users,email,' . $owner->id,
+                    ]);
+                    $owner->email = $request->input('owner_email');
+                }
+                $owner->save();
+            }
+        }
 
         // Update subscription add-ons if business has subscription (optional)
         if ($business->subscription && $request->has('addons')) {
