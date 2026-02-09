@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('parent_id')->nullable();
             $table->string('category_type')->default('product');
-            
+
             // Accounting fields
             $table->integer('income_account_id')->nullable();
             $table->integer('expense_account_id')->nullable();
@@ -31,7 +30,7 @@ return new class extends Migration
             $table->integer('discount_account_id')->nullable();
             $table->integer('vat_input_account_id')->nullable();
             $table->integer('vat_output_account_id')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
 
@@ -90,7 +89,7 @@ return new class extends Migration
             $table->boolean('is_tax_group')->default(0);
             $table->integer('created_by');
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('business_id');
         });
 
