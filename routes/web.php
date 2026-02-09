@@ -734,18 +734,14 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::post('/flexible', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateFlexible'])->name('admin.attendance-settings.flexible.update');
 
         // Missed Punch Configuration
-        Route::get('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'missedPunch'])->name('admin.attendance-settings.missed-punch');
+        // Route::get('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'missedPunch'])->name('admin.attendance-settings.missed-punch');
         Route::post('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateMissedPunch'])->name('admin.attendance-settings.missed-punch.update');
         
-        Route::get('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'corrections'])->name('admin.attendance-settings.corrections');
+        // Route::get('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'corrections'])->name('admin.attendance-settings.corrections');
         Route::post('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateCorrections'])->name('admin.attendance-settings.corrections.update');
 
         Route::get('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'overtimeApproval'])->name('admin.attendance-settings.overtime-approval');
         Route::post('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertimeApproval'])->name('admin.attendance-settings.overtime-approval.update');
-        Route::get('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'autoApproval'])->name('admin.attendance-settings.auto-approval');
-        Route::post('/auto-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateAutoApproval'])->name('admin.attendance-settings.auto-approval.update');
-
-        Route::post('/missing-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateMissingPunch'])->name('admin.attendance-settings.missing-punch.update');
         // Late Arrival Configuration (Modal)
         Route::post('/late-arrival', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateLateArrival'])->name('admin.attendance-settings.late-arrival.update');
         

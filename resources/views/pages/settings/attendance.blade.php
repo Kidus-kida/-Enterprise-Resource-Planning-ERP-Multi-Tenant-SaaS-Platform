@@ -52,15 +52,9 @@
         $autoClockOut = $getValue('time_rules', 'auto_clockout_enabled', true);
         $autoClockOutTime = $getValue('time_rules', 'auto_clockout_time', '23:59');
 
-        // --- Location Rules ---
-        $gpsRequired = $getValue('location_rules', 'require_gps', false);
-        $geofencingEnabled = $getValue('location_rules', 'enable_geofencing', false);
-        $locationRadius = $getValue('location_rules', 'location_radius_meters', 100);
-        $allowRemote = $getValue('location_rules', 'allow_remote_work', true);
 
-        // --- Penalties ---
-        $latePenalty = $getValue('penalties', 'late_arrival_penalty_enabled', false);
-        $earlyPenalty = $getValue('penalties', 'early_departure_penalty_enabled', false);
+
+
 
         // --- Shifts ---
         $shiftsEnabled = $getValue('shifts', 'shifts_enabled', true);
@@ -130,8 +124,14 @@
 
         // --- Approvals ---
         $missedPunchApproval = $getValue('approvals', 'missed_punch_approval_enabled', true);
+        $missedPunchRetroactiveLimit = \App\Models\AttendanceSetting::get('missed_punch_retroactive_limit', 7);
+        $missedPunchMaxRequests = \App\Models\AttendanceSetting::get('missed_punch_max_requests_per_month', 5);
+        $missedPunchRequireReason = \App\Models\AttendanceSetting::get('missed_punch_require_reason', true);
+        $missedPunchApprovalMode = \App\Models\AttendanceSetting::get('missed_punch_approval_mode', 'manager');
 
-
+        $correctionRetroactiveLimit = \App\Models\AttendanceSetting::get('correction_retroactive_limit', 30);
+        $correctionRequireReason = \App\Models\AttendanceSetting::get('correction_require_reason', true);
+        $correctionAuditTrail = \App\Models\AttendanceSetting::get('correction_audit_trail_enabled', true);
 
         $correctionApproval = $getValue('approvals', 'correction_approval_enabled', true);
         $overtimeApproval = $getValue('approvals', 'overtime_approval_enabled', true);
@@ -144,10 +144,7 @@
         $payrollExport = $getValue('integrations', 'payroll_export_enabled', true);
 
         // --- Audit & Security ---
-        $auditLogging = $getValue('audit_security', 'audit_logging_enabled', true);
-        $auditLevel = $getValue('audit_security', 'audit_level', 'standard');
-        $tamperDetection = $getValue('audit_security', 'tamper_detection_enabled', true);
-        $complianceMode = $getValue('audit_security', 'compliance_mode', false);
+
 
         // Weekdays for selection
         $workingDaysList = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -221,14 +218,14 @@
                     <x-settings.header icon="la la-check-square" title="{{ __('Approvals and Workflow') }}" description="{{ __('Request and approval settings') }}" />
 
                     <x-settings.row label="{{ __('Missed Punch Requests') }}" description="{{ __('Allow employees to request corrections') }}"
-                                    id="missed_punch" :configureLink="route('admin.attendance-settings.missed-punch')" :showConfigure="$missedPunchApproval">
+                                    id="missed_punch" configureLink="#" :showConfigure="$missedPunchApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="missed_punch_approval_enabled" value="true" {{ $missedPunchApproval ? 'checked' : '' }} onchange="toggleConfigLink('missed_punch', this)">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Attendance Corrections') }}" description="{{ __('HR/Manager can modify attendance') }}"
-                                    id="corrections" :configureLink="route('admin.attendance-settings.corrections')" :showConfigure="$correctionApproval">
+                                    id="corrections" :configureLink="'#'" :showConfigure="$correctionApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="correction_approval_enabled" value="true" {{ $correctionApproval ? 'checked' : '' }} onchange="toggleConfigLink('corrections', this)">
                         </div>
@@ -241,8 +238,8 @@
                             </div>
                     </x-settings.row>
 
-                    <x-settings.row label="{{ __('Auto-Approval') }}" description="{{ __('Automatically approve based on rules') }}"
-                                    id="auto_approval" :configureLink="route('admin.attendance-settings.auto-approval')" :showConfigure="$autoApproval">
+                    <x-settings.row label="{{ __('Auto-Approval') }}" 
+                                    id="auto_approval" configureLink="#" :showConfigure="$autoApproval">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="auto_approval_enabled" value="true" {{ $autoApproval ? 'checked' : '' }} onchange="toggleConfigLink('auto_approval', this)">
                         </div>
@@ -438,42 +435,7 @@
                 </x-settings.section>
             </div>
 
-            <!-- Location Rules -->
-            <div class="col-md-6 d-flex">
-                <x-settings.section class="settings-section h-100 mb-0 w-100">
-                    <x-settings.header icon="la la-map-marker" title="{{ __('Location Rules') }}" description="{{ __('GPS and Geofencing') }}" />
-                    
-                    <x-settings.row label="{{ __('Require GPS') }}" description="{{ __('Mandatory for mobile punch') }}">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="require_gps" value="true" {{ $gpsRequired ? 'checked' : '' }}>
-                        </div>
-                    </x-settings.row>
 
-                    <x-settings.row label="{{ __('Geofencing') }}" description="{{ __('Restrict punch to allowed areas') }}"
-                                    id="geofencing" configureLink="/config/geofences" :showConfigure="$geofencingEnabled">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="enable_geofencing" value="true" 
-                                   {{ $geofencingEnabled ? 'checked' : '' }} onchange="toggleGeofencing(this); toggleConfigLink('geofencing', this)">
-                        </div>
-                    </x-settings.row>
-
-                     <div id="geofencing_config" class="{{ $geofencingEnabled ? '' : 'd-none' }}">
-                        <x-settings.row label="{{ __('Location Radius') }}" description="{{ __('Max distance (meters)') }}" indent>
-                            <div class="input-group input-group-sm" style="width: 140px;">
-                                <input type="number" name="location_radius_meters" class="form-control" value="{{ $locationRadius }}" step="10" min="10">
-                                <span class="input-group-text">m</span>
-                            </div>
-                        </x-settings.row>
-                    </div>
-                    
-                    <x-settings.row label="{{ __('Remote Work') }}" description="{{ __('Allow clock-in from anywhere') }}">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="allow_remote_work" value="true" {{ $allowRemote ? 'checked' : '' }}>
-                        </div>
-                    </x-settings.row>
-                    </div>
-                </x-settings.section>
-            </div>
 
             <!-- General Schedule -->
             <div class="col-md-6">
@@ -494,6 +456,7 @@
                         </div>
                     </x-settings.row>
                     
+                    
                     <x-settings.row label="{{ __('Work Day Duration') }}" description="{{ __('Official start and end time') }}">
                         <div class="d-flex align-items-center gap-2">
                             <input type="time" name="work_day_start_time" class="form-control form-control-sm" value="{{ $workDayStartTime }}" style="width: 100px;">
@@ -512,71 +475,16 @@
                 </x-settings.section>
             </div>
 
-            <!-- Penalties -->
-            <div class="col-md-6">
-                <x-settings.section class="settings-section">
-                    <x-settings.header icon="la la-exclamation-triangle" title="{{ __('Penalties') }}" description="{{ __('Policy violations') }}" />
-                    
-                    <x-settings.row label="{{ __('Late Arrival') }}" description="{{ __('Penalty for late clock-in') }}"
-                                    id="late_penalty" configureLink="/config/penalties#late" :showConfigure="$latePenalty">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_penalty_enabled" value="true" {{ $latePenalty ? 'checked' : '' }} onchange="toggleConfigLink('late_penalty', this)">
-                        </div>
-                    </x-settings.row>
 
-                    <x-settings.row label="{{ __('Early Departure') }}" description="{{ __('Penalty for early clock-out') }}"
-                                    id="early_penalty" configureLink="/config/penalties#early" :showConfigure="$earlyPenalty">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="early_departure_penalty_enabled" value="true" {{ $earlyPenalty ? 'checked' : '' }} onchange="toggleConfigLink('early_penalty', this)">
-                        </div>
-                    </x-settings.row>
 
+<<<<<<< HEAD
+=======
 
                     </div>
                 </x-settings.section>
             </div>
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
 
-            <!-- Audit and Security -->
-            <div class="col-md-6 d-flex">
-                <x-settings.section class="settings-section h-100 mb-0 w-100">
-                    <x-settings.header icon="la la-shield" title="{{ __('Audit and Security') }}" description="{{ __('Logging and compliance') }}" />
-
-                    <x-settings.row label="{{ __('Audit Logging') }}" description="{{ __('Track all attendance changes') }}"
-                                    id="audit_logging" configureLink="/audit/logs" :showConfigure="$auditLogging">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="audit_logging_enabled" value="true" 
-                                   {{ $auditLogging ? 'checked' : '' }} onchange="toggleAuditLogging(this); toggleConfigLink('audit_logging', this)">
-                        </div>
-                    </x-settings.row>
-
-                    @if($auditLogging)
-                        <div id="audit_config" class="mb-2">
-                            <x-settings.row label="{{ __('Logging Level') }}">
-                                <select name="audit_level" class="form-select form-select-sm" style="width: 130px;">
-                                    <option value="minimal" {{ $auditLevel === 'minimal' ? 'selected' : '' }}>{{ __('Minimal') }}</option>
-                                    <option value="standard" {{ $auditLevel === 'standard' ? 'selected' : '' }}>{{ __('Standard') }}</option>
-                                    <option value="detailed" {{ $auditLevel === 'detailed' ? 'selected' : '' }}>{{ __('Detailed') }}</option>
-                                    <option value="forensic" {{ $auditLevel === 'forensic' ? 'selected' : '' }}>{{ __('Forensic') }}</option>
-                                </select>
-                            </x-settings.row>
-                        </div>
-                    @endif
-
-                    <x-settings.row label="{{ __('Tamper Detection') }}" description="{{ __('Detect fraudulent attendance') }}" tooltip="{{ __('Monitors for anomalies like buddy punching, GPS spoofing') }}">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="tamper_detection_enabled" value="true" {{ $tamperDetection ? 'checked' : '' }}>
-                        </div>
-                    </x-settings.row>
-
-                    <x-settings.row label="{{ __('Compliance Mode') }}" description="{{ __('SOC2, ISO, labor law compliance') }}"
-                                    id="compliance" configureLink="/config/compliance" :showConfigure="$complianceMode">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" name="compliance_mode" value="true" {{ $complianceMode ? 'checked' : '' }} onchange="toggleConfigLink('compliance', this)">
-                        </div>
-                    </x-settings.row>
-                    </div>
-                </x-settings.section>
-            </div>
 
             <!-- Integrations -->
             <div class="col-md-6 d-flex">
@@ -614,7 +522,6 @@
                 </x-settings.section>
             </div>
         </div>
-    </form>
 @endsection
 
 @push('page-styles')
@@ -664,6 +571,8 @@
 </style>
 @endpush
 
+<<<<<<< HEAD
+=======
 @push('page-scripts')
 <script>
     // Toggle Configuration Links visibility
@@ -883,6 +792,7 @@
     });
 </script>
 @endpush
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
 
     <!-- Late Arrival Configuration Modal -->
     <div class="modal fade" id="lateArrivalModal" tabindex="-1" aria-hidden="true">
@@ -892,9 +802,7 @@
                     <h5 class="modal-title">{{ __('Late Arrival Configuration') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.late-arrival.update') }}" method="POST">
-                    @csrf
-                    <div class="modal-body p-4">
+                <div class="modal-body p-4">
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="la la-info-circle fs-4 me-2"></i>
                             <div>
@@ -977,9 +885,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Changes') }}</button>
                     </div>
-                </form>
+
             </div>
         </div>
     </div>
@@ -993,9 +901,7 @@
                     <h5 class="modal-title">{{ __('Early Checkout Configuration') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.early-checkout.update') }}" method="POST">
-                    @csrf
-                    <div class="modal-body p-4">
+                <div class="modal-body p-4">
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="la la-info-circle fs-4 me-2"></i>
                             <div>
@@ -1078,9 +984,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Changes') }}</button>
                     </div>
-                </form>
+
             </div>
         </div>
     </div>
@@ -1094,9 +1000,7 @@
                     <h5 class="modal-title">{{ __('Overtime Configuration') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.overtime.update') }}" method="POST">
-                    @csrf
-                    <div class="modal-body p-4">
+                <div class="modal-body p-4">
                         <div class="alert alert-success d-flex align-items-center mb-4">
                             <i class="la la-check-circle fs-4 me-2"></i>
                             <div>
@@ -1167,9 +1071,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Changes') }}</button>
                     </div>
-                </form>
+
             </div>
         </div>
     </div>
@@ -1182,9 +1086,7 @@
                     <h5 class="modal-title">{{ __('Web Portal Configuration') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.web-portal.update') }}" method="POST">
-                    @csrf
-                    <div class="modal-body p-4">
+                <div class="modal-body p-4">
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="la la-info-circle fs-4 me-2"></i>
                             <div>
@@ -1240,9 +1142,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Changes') }}</button>
                     </div>
-                </form>
+
             </div>
         </div>
     </div>
@@ -1255,8 +1157,6 @@
                     <h5 class="modal-title">{{ __('Manual Entry Configuration') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.manual-entry.update') }}" method="POST">
-                    @csrf
                     <div class="modal-body">
                         
                         <!-- 1. Permissions -->
@@ -1448,13 +1348,109 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Save Configuration') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Configuration') }}</button>
                     </div>
-                </form>
             </div>
         </div>
     </div>
 
+<<<<<<< HEAD
+    <!-- Missed Punch Configuration Modal -->
+    <div class="modal fade" id="missedPunchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Missed Punch Rules & Workflow') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                        <p class="text-muted small mb-4">
+                            {{ __('Define how employees can request corrections for missed attendance records and who approves them.') }}
+                        </p>
+
+                        <!-- Retroactive Limit -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <label class="form-label fw-bold text-dark mb-1">{{ __('Retroactive Submission Limit') }} <span class="text-danger">*</span></label>
+                                            <p class="text-muted small mb-0">{{ __('Maximum number of days in the past a request can be submitted.') }}</p>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="input-group" style="width: 150px;">
+                                                <input type="number" name="missed_punch_retroactive_limit" class="form-control" 
+                                                       value="{{ $missedPunchRetroactiveLimit }}" min="0" max="30" required>
+                                                <span class="input-group-text bg-white border-start-0">{{ __('Days') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monthly Limit -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <label class="form-label fw-bold text-dark mb-1">{{ __('Monthly Request Limit') }} <span class="text-danger">*</span></label>
+                                            <p class="text-muted small mb-0">{{ __('Maximum number of missed punch requests can make per month.') }}</p>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="input-group" style="width: 150px;">
+                                                <input type="number" name="missed_punch_max_requests_per_month" class="form-control" 
+                                                       value="{{ $missedPunchMaxRequests }}" min="1" max="31" required>
+                                                <span class="input-group-text bg-white border-start-0">{{ __('Qty') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reason Requirement -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="missed_punch_require_reason" name="missed_punch_require_reason" value="true" 
+                                               {{ $missedPunchRequireReason ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold text-dark" for="missed_punch_require_reason">{{ __('Mandatory Reason Submission') }}</label>
+                                        <p class="text-muted small mb-0">{{ __('Employees must provide a reason for every correction request.') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Approval Mode -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card border shadow-none">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold d-flex align-items-center gap-2 mb-3">
+                                            <i class="la la-user-check text-info"></i>
+                                            {{ __('Approval Workflow Routing') }}
+                                        </h6>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label small text-muted mb-1">{{ __('Select Approval Strategy') }}</label>
+                                                <select name="missed_punch_approval_mode" class="form-select">
+                                                    <option value="manager" {{ $missedPunchApprovalMode === 'manager' ? 'selected' : '' }}>
+                                                        {{ __('Direct Manager') }}
+                                                    </option>
+                                                    <option value="hr" {{ $missedPunchApprovalMode === 'hr' ? 'selected' : '' }}>
+                                                        {{ __('HR Administrator') }}
+                                                    </option>
+                                                    <option value="multi" {{ $missedPunchApprovalMode === 'multi' ? 'selected' : '' }}>
+                                                        {{ __('Multi-Level Approval') }}
+                                                    </option>
+                                                </select>
+                                                <div class="form-text small mt-2">
+                                                    {{ __('Define who reviews and approves missed punch requests.') }}
+=======
     <!-- Missing Punch Configuration Modal -->
     <style>
         /* CSS-Only Tooltip (Robust Fallback) */
@@ -1561,10 +1557,278 @@
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="missing_punch_notify_supervisor" value="true" {{ $missingPunchSettings['notify_supervisor'] ? 'checked' : '' }}>
                                                     <label class="form-check-label">{{ __('Notify Supervisor') }}</label>
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+<<<<<<< HEAD
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Configuration') }}</button>
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Corrections Configuration Modal -->
+    <div class="modal fade" id="attendanceCorrectionsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Attendance Correction Policies') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                        <p class="text-muted small mb-4">
+                            {{ __('Configure how admins and managers can directly modify attendance records.') }}
+                        </p>
+
+                        <!-- Retroactive Limit -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <label class="form-label fw-bold text-dark mb-1">{{ __('Retroactive Limit (Days)') }}</label>
+                                            <p class="text-muted small mb-0">{{ __('How many days back can an admin or manager modify attendance? (0 = No limit)') }}</p>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="input-group" style="width: 150px;">
+                                                <input type="number" name="correction_retroactive_limit" class="form-control" 
+                                                       value="{{ $correctionRetroactiveLimit }}" min="0" max="365" required>
+                                                <span class="input-group-text bg-white border-start-0">{{ __('Days') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Require Reason -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="correction_require_reason" name="correction_require_reason" value="true" 
+                                               {{ $correctionRequireReason ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold text-dark" for="correction_require_reason">{{ __('Require Reason for Correction') }}</label>
+                                        <p class="text-muted small mb-0">{{ __('Force the admin to provide an explanation for every manual change.') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Trail -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="correction_audit_trail_enabled" name="correction_audit_trail_enabled" value="true" 
+                                               {{ $correctionAuditTrail ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold text-dark" for="correction_audit_trail_enabled">{{ __('Enable Advanced Audit Trail') }}</label>
+                                        <p class="text-muted small mb-0">{{ __('Keep a detailed log of original vs corrected times and who made the change.') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Configuration') }}</button>
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
+</form>
+
+@push('page-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- LOGIC FROM FIRST BLOCK ---
+        window.toggleConfigLink = function(rowId, checkbox, invert = false) {
+            const link = document.getElementById('config_link_' + rowId);
+            if (link) {
+                const shouldShow = invert ? !checkbox.checked : checkbox.checked;
+                if (shouldShow) link.classList.remove('d-none');
+                else link.classList.add('d-none');
+            }
+        }
+
+        window.toggleMethodSelectionMode = function() {
+            const isSingle = document.getElementById('single_method_only').checked;
+            const checks = document.querySelectorAll('.method-check');
+            checks.forEach(chk => {
+                chk.onclick = null;
+                if (isSingle) {
+                    chk.onclick = function() {
+                        if (this.checked) {
+                            checks.forEach(c => {
+                                if (c !== this) {
+                                    c.checked = false;
+                                    const rowId = c.closest('[id]')?.id;
+                                    if(rowId) {
+                                        const link = document.getElementById('config_link_' + rowId);
+                                        if(link) link.classList.add('d-none');
+                                    }
+                                 }
+                            });
+                        }
+                    };
+                }
+            });
+            if (isSingle) {
+                let found = false;
+                checks.forEach(chk => {
+                    if (chk.checked) {
+                        if (found) chk.checked = false;
+                        found = true;
+                    }
+                });
+                if (!found && checks.length > 0) checks[0].checked = true;
+            }
+        }
+
+        window.toggleAutoClockOut = function(checkbox) {
+            const config = document.getElementById('auto_clockout_config');
+            if (config) {
+                if (checkbox.checked) config.classList.remove('d-none');
+                else config.classList.add('d-none');
+            }
+        }
+
+        window.toggleShifts = function(checkbox) {
+            const config = document.getElementById('shift_config');
+            if (config) {
+                if (checkbox.checked) config.classList.remove('d-none');
+                else config.classList.add('d-none');
+            }
+        }
+
+        window.showToast = function(message, type = 'success') {
+            if (typeof toastr !== 'undefined') {
+                toastr[type](message);
+            } else {
+                alert(message);
+            }
+        }
+
+        window.toggleGraceIn = function(checkbox) {
+            const inputContainer = document.getElementById('grace_in_input');
+            if (inputContainer) {
+                const input = inputContainer.querySelector('input[name="grace_in_minutes"]');
+                if (input) {
+                    if (checkbox.checked) {
+                        input.removeAttribute('readonly');
+                        input.removeAttribute('style');
+                        input.classList.remove('text-muted');
+                    } else {
+                        input.setAttribute('readonly', 'readonly');
+                        input.setAttribute('style', 'background-color:#e9ecef;');
+                        input.classList.add('text-muted');
+                    }
+                }
+            }
+        }
+
+        window.toggleGraceOut = function(checkbox) {
+            const inputContainer = document.getElementById('grace_out_input');
+            if (inputContainer) {
+                const input = inputContainer.querySelector('input[name="grace_out_minutes"]');
+                if (input) {
+                    if (checkbox.checked) {
+                        input.removeAttribute('readonly');
+                        input.removeAttribute('style');
+                        input.classList.remove('text-muted');
+                    } else {
+                        input.setAttribute('readonly', 'readonly');
+                        input.setAttribute('style', 'background-color:#e9ecef;');
+                        input.classList.add('text-muted');
+                    }
+                }
+            }
+        }
+
+        const workingDayCheckboxes = document.querySelectorAll('.working-day-input');
+        workingDayCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                triggerAutoSave();
+            });
+        });
+
+        if (typeof window.autoSaveTimeout === 'undefined') {
+            window.autoSaveTimeout = null;
+        }
+
+        window.submitAttendanceSettings = function(silent = false) {
+            const form = document.getElementById('attendance-settings-form');
+            if (!form) return;
+            const formData = new FormData(form);
+            const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
+            if (!formData.has('allowed_methods[]') && !formData.has('allowed_methods')) {
+                formData.append('allowed_methods', '[]');
+            }
+            if (!formData.has('working_days[]') && !formData.has('working_days')) {
+                formData.append('working_days', '[]');
+            }
+
+            // Explicitly handle unchecked checkboxes so they are sent as 'false'
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.name && !cb.name.endsWith('[]') && !formData.has(cb.name)) {
+                    formData.append(cb.name, 'false');
+                }
+            });
+            if (!silent && submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="la la-spinner la-spin"></i> ' + '{{ __("Saving...") }}';
+            }
+            fetch('{{ route('admin.attendance-settings.update') }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && !silent) {
+                    showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                if (!silent) showToast('Error saving settings', 'error');
+            })
+            .finally(() => {
+                if (!silent && submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
+                }
+            });
+        }
+
+        window.triggerAutoSave = function() {
+            if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
+            window.autoSaveTimeout = setTimeout(() => {
+                submitAttendanceSettings(true);
+            }, 800);
+        }
+
+        // --- LOGIC FROM SECOND BLOCK ---
+        const getCheckedValue = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        };
+
+=======
 
                                     <!-- Handling Tab -->
                                     <div class="tab-pane fade" id="mp-handling" role="tabpanel">
@@ -1682,18 +1946,15 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
         const safeToggleClass = (id, className, condition) => {
             const el = document.getElementById(id);
             if (el) {
-                if (condition) {
-                    el.classList.remove(className);
-                } else {
-                    el.classList.add(className);
-                }
+                if (condition) el.classList.remove(className);
+                else el.classList.add(className);
             }
         };
 
-        // --- LATE ARRIVAL LOGIC ---
         window.toggleDeductionFields = function() {
             const type = getCheckedValue('late_arrival_penalty_type');
             safeToggleClass('deduction_config', 'd-none', type === 'deduction');
@@ -1702,14 +1963,11 @@
         window.toggleAmountField = function() {
             const typeEl = document.querySelector('select[name="late_arrival_deduction_type"]');
             if (!typeEl) return;
-            
             const type = typeEl.value;
             const wrapper = document.getElementById('deduction_amount_wrapper');
             const currency = document.getElementById('currency_symbol');
             const percentage = document.getElementById('percentage_symbol');
-            
             if (!wrapper || !currency || !percentage) return;
-            
             if (type === 'half_day' || type === 'full_day') {
                 wrapper.classList.add('d-none');
             } else {
@@ -1724,7 +1982,6 @@
             }
         };
 
-        // --- EARLY CHECKOUT LOGIC ---
         window.toggleEarlyDeductionFields = function() {
             const type = getCheckedValue('early_checkout_penalty_type');
             safeToggleClass('early_deduction_config', 'd-none', type === 'deduction');
@@ -1733,14 +1990,11 @@
         window.toggleEarlyAmountField = function() {
             const typeEl = document.querySelector('select[name="early_checkout_deduction_type"]');
             if (!typeEl) return;
-            
             const type = typeEl.value;
             const wrapper = document.getElementById('early_deduction_amount_wrapper');
             const currency = document.getElementById('early_currency_symbol');
             const percentage = document.getElementById('early_percentage_symbol');
-            
             if (!wrapper || !currency || !percentage) return;
-            
             if (type === 'half_day' || type === 'full_day') {
                 wrapper.classList.add('d-none');
             } else {
@@ -1755,201 +2009,111 @@
             }
         };
 
-
-        // --- BINDINGS ---
-        
-        // Helper to open modal safely
         const openModal = (modalId, callback) => {
             const modalEl = document.getElementById(modalId);
-            if (!modalEl) {
-                console.error(`Modal element ${modalId} not found`);
-                return;
-            }
-
+            if (!modalEl) return;
             if (typeof bootstrap === 'undefined') {
-                console.error('Bootstrap 5 is not loaded or not available globally');
                 if (typeof $ !== 'undefined' && $.fn.modal) {
                     $(modalEl).modal('show');
                     if(callback) callback();
                 }
                 return;
             }
-
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             if(callback) callback();
             modal.show();
         };
 
-        // Late Arrival Binding
-        const lateArrivalLink = document.getElementById('config_link_late_arrival');
-        if (lateArrivalLink) {
-            lateArrivalLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal('lateArrivalModal', () => {
-                    toggleDeductionFields();
-                    toggleAmountField();
+        const applyModalBinding = (linkId, modalId, preOpen) => {
+            const link = document.getElementById(linkId);
+            if (link) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openModal(modalId, preOpen);
                 });
-            });
-        }
+            }
+        };
 
-        // Early Checkout Binding
-        const earlyCheckoutLink = document.getElementById('config_link_early_checkout');
-        if (earlyCheckoutLink) {
-            earlyCheckoutLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal('earlyCheckoutModal', () => {
-                    toggleEarlyDeductionFields();
-                    toggleEarlyAmountField();
-                });
-            });
-        }
+        applyModalBinding('config_link_late_arrival', 'lateArrivalModal', () => { toggleDeductionFields(); toggleAmountField(); });
+        applyModalBinding('config_link_early_checkout', 'earlyCheckoutModal', () => { toggleEarlyDeductionFields(); toggleEarlyAmountField(); });
+        applyModalBinding('config_link_overtime', 'overtimeModal');
+        applyModalBinding('config_link_missed_punch', 'missedPunchModal');
+        applyModalBinding('config_link_corrections', 'attendanceCorrectionsModal');
+        applyModalBinding('config_link_web_portal', 'webPortalModal');
 
-        // Overtime Binding
-        const overtimeLink = document.getElementById('config_link_overtime');
-        if (overtimeLink) {
-            overtimeLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal('overtimeModal');
-            });
-        }
-
-        // Web Portal Binding
-        const webPortalLink = document.getElementById('config_link_web_portal');
-        if (webPortalLink) {
-            webPortalLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openModal('webPortalModal');
-            });
-        }
-        // --- MANUAL ENTRY LOGIC ---
         window.togglePermissionFields = function() {
             const mode = document.querySelector('input[name="manual_entry_permission_mode"]:checked').value;
             const rolesDiv = document.getElementById('allowedRolesDiv');
-            if(rolesDiv) {
-                rolesDiv.style.display = (mode === 'roles') ? 'block' : 'none';
-            }
+            if(rolesDiv) rolesDiv.style.display = (mode === 'roles') ? 'block' : 'none';
         };
 
         window.toggleApprovalLogic = function() {
             const policy = document.getElementById('manualEntryApprovalPolicy').value;
             const logicDiv = document.getElementById('approvalLogic');
-            if(logicDiv) {
-                logicDiv.style.display = (policy === 'manual_approval') ? 'block' : 'none';
-            }
+            if(logicDiv) logicDiv.style.display = (policy === 'manual_approval') ? 'block' : 'none';
             if(policy === 'manual_approval') toggleEntitySelects();
         };
 
-        // --- HIERARCHICAL LIST BUILDER ---
         window.isHierarchicalInit = false;
-
         window.addHierarchicalRow = function(type, selectedValue = null) {
             const listId = type === 'role' ? 'hierarchicalRoleList' : 'hierarchicalUserList';
             const listEl = document.getElementById(listId);
             const inputName = type === 'role' ? 'manual_entry_hierarchical_role_ids[]' : 'manual_entry_hierarchical_user_ids[]';
             const data = type === 'role' ? window.attendanceConfig.roles : window.attendanceConfig.users;
-            
             const rowId = 'h_row_' + Date.now() + Math.floor(Math.random() * 1000);
-            
-            // Empty first option for placeholder support
             let optionsHtml = '<option value=""></option>';
             data.forEach(item => {
                 const isSelected = selectedValue == item.id ? 'selected' : '';
-                const text = item.name || item.text; 
-                optionsHtml += `<option value="${item.id}" ${isSelected}>${text}</option>`;
+                optionsHtml += `<option value="${item.id}" ${isSelected}>${item.name || item.text}</option>`;
             });
-
-            const rowHtml = `
-                <div class="d-flex align-items-center gap-2" id="${rowId}">
-                    <span class="badge bg-secondary rounded-pill step-badge">Step</span>
-                    <div class="flex-grow-1">
-                        <select class="hierarchical-select" name="${inputName}" style="width: 100%;">
-                            ${optionsHtml}
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHierarchicalRow('${rowId}')">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            `;
-
+            const rowHtml = `<div class="d-flex align-items-center gap-2" id="${rowId}"><span class="badge bg-secondary rounded-pill step-badge">Step</span><div class="flex-grow-1"><select class="hierarchical-select" name="${inputName}" style="width: 100%;">${optionsHtml}</select></div><button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHierarchicalRow('${rowId}')"><i class="fas fa-trash-alt"></i></button></div>`;
             listEl.insertAdjacentHTML('beforeend', rowHtml);
-            
-            // Re-init Select2 with delay to prevent click-through issues
             setTimeout(() => {
                 const newRow = document.getElementById(rowId);
                 const newSelect = newRow.querySelector('select');
-                
-                // Update badges immediately
                 updateStepBadges(listId);
-                
                 if (typeof $ !== 'undefined') {
-                    $(newSelect).select2({ 
-                        dropdownParent: $('body'),
-                        width: '100%',
-                        placeholder: "Select Value...",
-                        allowClear: true,
-                        dropdownCssClass: 'select2-dropdown-in-modal'
-                    });
+                    $(newSelect).select2({ dropdownParent: $('body'), width: '100%', placeholder: "Select Value...", allowClear: true, dropdownCssClass: 'select2-dropdown-in-modal' });
                 }
             }, 10);
         };
 
         window.removeHierarchicalRow = function(rowId) {
             const row = document.getElementById(rowId);
-            const parentId = row.parentElement.id;
-            if(row) row.remove();
-            updateStepBadges(parentId);
+            if(row) {
+                const parentId = row.parentElement.id;
+                row.remove();
+                updateStepBadges(parentId);
+            }
         };
 
-        window.updateStepBadges = function(listId) {
+        const updateStepBadges = (listId) => {
             const list = document.getElementById(listId);
-            const badges = list.querySelectorAll('.step-badge');
-            badges.forEach((badge, index) => {
-                badge.textContent = index + 1;
-            });
+            if(!list) return;
+            list.querySelectorAll('.step-badge').forEach((badge, index) => { badge.textContent = index + 1; });
         };
 
         window.initHierarchicalLists = function() {
             if(window.isHierarchicalInit) return;
-
-            // Clear existing
             document.getElementById('hierarchicalRoleList').innerHTML = '';
             document.getElementById('hierarchicalUserList').innerHTML = '';
-
-            // Populate Roles
             const savedRoles = window.attendanceConfig.savedHierarchicalRoles || [];
-            if(savedRoles.length > 0) {
-                savedRoles.forEach(id => addHierarchicalRow('role', id));
-            } else {
-                addHierarchicalRow('role'); // Add 1 empty row default
-            }
-
-            // Populate Users
+            if(savedRoles.length > 0) savedRoles.forEach(id => addHierarchicalRow('role', id));
+            else addHierarchicalRow('role');
             const savedUsers = window.attendanceConfig.savedHierarchicalUsers || [];
-            if(savedUsers.length > 0) {
-                savedUsers.forEach(id => addHierarchicalRow('user', id));
-            } else {
-                addHierarchicalRow('user'); // Add 1 empty row default
-            }
-
+            if(savedUsers.length > 0) savedUsers.forEach(id => addHierarchicalRow('user', id));
+            else addHierarchicalRow('user');
             window.isHierarchicalInit = true;
         };
 
         window.toggleEntitySelects = function() {
             const structure = document.getElementById('approvalStructure').value;
             const entity = document.getElementById('approverEntity').value;
-            
             const roleDiv = document.getElementById('entityRoleDiv');
             const userDiv = document.getElementById('entityUserDiv');
             const hRoleWrapper = document.getElementById('hierarchicalRoleWrapper');
             const hUserWrapper = document.getElementById('hierarchicalUserWrapper');
-            
-            // Hide all first
-            if(roleDiv) roleDiv.style.display = 'none';
-            if(userDiv) userDiv.style.display = 'none';
-            if(hRoleWrapper) hRoleWrapper.style.display = 'none';
-            if(hUserWrapper) hUserWrapper.style.display = 'none';
-
+            [roleDiv, userDiv, hRoleWrapper, hUserWrapper].forEach(div => { if(div) div.style.display = 'none'; });
             if (structure === 'single') {
                 if (entity === 'role' && roleDiv) roleDiv.style.display = 'block';
                 if (entity === 'individual' && userDiv) userDiv.style.display = 'block';
@@ -1959,22 +2123,24 @@
             }
         };
 
-        // Manual Entry Binding
-        const manualEntryLink = document.getElementById('config_link_manual');
-        if (manualEntryLink) {
-            manualEntryLink.addEventListener('click', function(e) {
+        applyModalBinding('config_link_manual', 'manualEntryConfigModal', () => {
+            togglePermissionFields();
+            toggleApprovalLogic();
+            initHierarchicalLists(); 
+            toggleEntitySelects(); 
+        });
+
+
+        const form = document.getElementById('attendance-settings-form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                openModal('manualEntryConfigModal', () => {
-                    togglePermissionFields();
-                    toggleApprovalLogic();
-                    // Initialize Hierarchical Builder
-                    initHierarchicalLists(); 
-                    toggleEntitySelects(); 
-                });
+                if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
+                submitAttendanceSettings(false);
             });
+            form.addEventListener('change', () => { triggerAutoSave(); });
         }
-
-
+        toggleMethodSelectionMode();
     });
 </script>
 @endpush
