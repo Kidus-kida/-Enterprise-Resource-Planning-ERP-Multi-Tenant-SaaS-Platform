@@ -18,7 +18,25 @@ class AttendanceSettingsController extends Controller
         $roles = \Spatie\Permission\Models\Role::all();
         $users = \App\Models\User::where('is_active', true)->where('type', 'employee')->get();
         
-        return view('pages.settings.attendance', compact('pageTitle', 'settings', 'roles', 'users'));
+        // Missing Punch Settings for Modal
+        $missingPunchSettings = [
+            'auto_detect' => filter_var(AttendanceSetting::get('missing_punch_auto_detect', true), FILTER_VALIDATE_BOOLEAN),
+            'grace_period' => AttendanceSetting::get('missing_punch_grace_period', 30),
+            'notification_enabled' => filter_var(AttendanceSetting::get('missing_punch_notification_enabled', true), FILTER_VALIDATE_BOOLEAN),
+            'notify_employee' => filter_var(AttendanceSetting::get('missing_punch_notify_employee', true), FILTER_VALIDATE_BOOLEAN),
+            'notify_supervisor' => filter_var(AttendanceSetting::get('missing_punch_notify_supervisor', true), FILTER_VALIDATE_BOOLEAN),
+            'action' => AttendanceSetting::get('missing_punch_action', 'mark_absent'),
+            'allow_backdated' => filter_var(AttendanceSetting::get('missing_punch_allow_backdated', true), FILTER_VALIDATE_BOOLEAN),
+            'backdate_limit_days' => AttendanceSetting::get('missing_punch_backdate_limit_days', 2),
+            'require_reason' => filter_var(AttendanceSetting::get('missing_punch_require_reason', true), FILTER_VALIDATE_BOOLEAN),
+            'auto_pair' => filter_var(AttendanceSetting::get('missing_punch_auto_pair', true), FILTER_VALIDATE_BOOLEAN),
+            'auto_pair_threshold' => AttendanceSetting::get('missing_punch_auto_pair_threshold', 60),
+            'deduction_type' => AttendanceSetting::get('missing_punch_deduction_type', 'none'),
+            'deduction_amount' => AttendanceSetting::get('missing_punch_deduction_amount', 0),
+            'max_occurrences' => AttendanceSetting::get('missing_punch_max_occurrences', 3),
+        ];
+
+        return view('pages.settings.attendance', compact('pageTitle', 'settings', 'roles', 'users', 'missingPunchSettings'));
     }
 
     /**
@@ -633,6 +651,54 @@ class AttendanceSettingsController extends Controller
             \Log::error('Error updating auto-approval configuration: ' . $e->getMessage());
             
             $notification = notify(__('Failed to update auto-approval configuration'), 'error');
+            return back()->withInput()->with($notification);
+        }
+    }
+
+
+
+    /**
+     * Update missing punch configuration
+     */
+    public function updateMissingPunch(Request $request)
+    {
+        $request->validate([
+            'missing_punch_grace_period' => 'required|integer|min:0|max:240',
+            'missing_punch_backdate_limit_days' => 'required|integer|min:0|max:30',
+            'missing_punch_action' => 'required|in:mark_absent,half_day,request_clarification,auto_approve',
+            'missing_punch_auto_pair_threshold' => 'required|integer|min:15|max:480',
+            'missing_punch_deduction_type' => 'required|in:none,fixed,percentage,hourly',
+            'missing_punch_deduction_amount' => 'required|numeric|min:0',
+            'missing_punch_max_occurrences' => 'required|integer|min:0|max:31',
+        ]);
+
+        try {
+            // Save all settings
+            AttendanceSetting::set('missing_punch_auto_detect', $request->has('missing_punch_auto_detect'));
+            AttendanceSetting::set('missing_punch_grace_period', $request->missing_punch_grace_period);
+            AttendanceSetting::set('missing_punch_notification_enabled', $request->has('missing_punch_notification_enabled'));
+            AttendanceSetting::set('missing_punch_notify_employee', $request->has('missing_punch_notify_employee'));
+            AttendanceSetting::set('missing_punch_notify_supervisor', $request->has('missing_punch_notify_supervisor'));
+            
+            AttendanceSetting::set('missing_punch_action', $request->missing_punch_action);
+            AttendanceSetting::set('missing_punch_allow_backdated', $request->has('missing_punch_allow_backdated'));
+            AttendanceSetting::set('missing_punch_backdate_limit_days', $request->missing_punch_backdate_limit_days);
+            AttendanceSetting::set('missing_punch_require_reason', $request->has('missing_punch_require_reason'));
+            
+            AttendanceSetting::set('missing_punch_auto_pair', $request->has('missing_punch_auto_pair'));
+            AttendanceSetting::set('missing_punch_auto_pair_threshold', $request->missing_punch_auto_pair_threshold);
+            
+            AttendanceSetting::set('missing_punch_deduction_type', $request->missing_punch_deduction_type);
+            AttendanceSetting::set('missing_punch_deduction_amount', $request->missing_punch_deduction_amount);
+            AttendanceSetting::set('missing_punch_max_occurrences', $request->missing_punch_max_occurrences);
+            
+            $notification = notify(__('Missing punch configuration updated successfully'));
+            return redirect()->route('admin.attendance-settings.index')->with($notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating missing punch configuration: ' . $e->getMessage());
+            
+            $notification = notify(__('Failed to update missing punch configuration'), 'error');
             return back()->withInput()->with($notification);
         }
     }
