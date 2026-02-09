@@ -53,7 +53,9 @@
         $autoClockOutTime = $getValue('time_rules', 'auto_clockout_time', '23:59');
 
 
-
+        // --- Penalties ---
+        $latePenalty = $getValue('penalties', 'late_arrival_penalty_enabled', false);
+        $earlyPenalty = $getValue('penalties', 'early_departure_penalty_enabled', false);
 
 
         // --- Shifts ---
@@ -477,13 +479,7 @@
 
 
 
-<<<<<<< HEAD
-=======
 
-                    </div>
-                </x-settings.section>
-            </div>
->>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
 
 
             <!-- Integrations -->
@@ -571,8 +567,6 @@
 </style>
 @endpush
 
-<<<<<<< HEAD
-=======
 @push('page-scripts')
 <script>
     // Toggle Configuration Links visibility
@@ -792,7 +786,7 @@
     });
 </script>
 @endpush
->>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
+
 
     <!-- Late Arrival Configuration Modal -->
     <div class="modal fade" id="lateArrivalModal" tabindex="-1" aria-hidden="true">
@@ -1041,7 +1035,7 @@
                                     <label class="form-label">{{ __('Night OT Rate') }}</label>
                                     <div class="input-group">
                                         <span class="input-group-text">x</span>
-                                        <input type="number" name="overtime_rate_night" class="form-control" value="{{ $overtimeRateNight }}" step="0.01" min="1">
+                                        <input type="number" name="overtime_rate_night" class="form-control" value="{{ $overtimeRateNight }}" step="0.01" min="1" />
                                     </div>
                                     <div class="form-text">{{ __('Night shift overtime (e.g., 1.5)') }}</div>
                                 </div>
@@ -1354,7 +1348,7 @@
         </div>
     </div>
 
-<<<<<<< HEAD
+
     <!-- Missed Punch Configuration Modal -->
     <div class="modal fade" id="missedPunchModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -1450,7 +1444,6 @@
                                                 </select>
                                                 <div class="form-text small mt-2">
                                                     {{ __('Define who reviews and approves missed punch requests.') }}
-=======
     <!-- Missing Punch Configuration Modal -->
     <style>
         /* CSS-Only Tooltip (Robust Fallback) */
@@ -1502,7 +1495,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('admin.attendance-settings.missing-punch.update') }}" method="POST">
+                <form action="{{ route('admin.attendance-settings.missed-punch.update') }}" method="POST">
                     @csrf
                     <div class="modal-body p-0">
                         <div class="row g-0">
@@ -1557,12 +1550,10 @@
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="missing_punch_notify_supervisor" value="true" {{ $missingPunchSettings['notify_supervisor'] ? 'checked' : '' }}>
                                                     <label class="form-check-label">{{ __('Notify Supervisor') }}</label>
->>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-<<<<<<< HEAD
                                 </div>
                             </div>
                         </div>
@@ -1827,8 +1818,9 @@
             const el = document.querySelector(`input[name="${name}"]:checked`);
             return el ? el.value : null;
         };
-
-=======
+    });
+</script>
+@endpush
 
                                     <!-- Handling Tab -->
                                     <div class="tab-pane fade" id="mp-handling" role="tabpanel">
@@ -1946,7 +1938,45 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         
->>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
+
+ route('admin.attendance-settings.update'), {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && !silent) {
+                    showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                if (!silent) showToast('Error saving settings', 'error');
+            })
+            .finally(() => {
+                if (!silent && submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
+                }
+            });
+        }
+
+        window.triggerAutoSave = function() {
+            if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
+            window.autoSaveTimeout = setTimeout(() => {
+                submitAttendanceSettings(true);
+            }, 800);
+        }
+
+        // --- LOGIC FROM SECOND BLOCK ---
+        const getCheckedValue = (name) => {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : null;
+        };
+
         const safeToggleClass = (id, className, condition) => {
             const el = document.getElementById(id);
             if (el) {
