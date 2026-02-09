@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->string('description')->nullable();
             $table->string('status')->default('allowed');
             $table->boolean('uses_accrual')->default(false);
+            $table->boolean('is_paid')->default(true);
 
             // Leave Behavior
             $table->boolean('requires_attachment')->default(false);
