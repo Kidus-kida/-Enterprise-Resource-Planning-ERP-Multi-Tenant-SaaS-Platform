@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('business_id');
             $table->text('description')->nullable();
@@ -40,6 +41,7 @@ return new class extends Migration
 
         Schema::create('merged_sub_categories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->string('name');
             $table->text('description')->nullable();
@@ -52,6 +54,7 @@ return new class extends Migration
 
         Schema::create('brands', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->string('name');
             $table->text('description')->nullable();
@@ -64,6 +67,7 @@ return new class extends Migration
 
         Schema::create('units', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->string('actual_name');
             $table->string('short_name');
@@ -79,6 +83,7 @@ return new class extends Migration
 
         Schema::create('tax_rates', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->string('name');
             $table->decimal('amount', 22, 4);
@@ -91,6 +96,7 @@ return new class extends Migration
 
         Schema::create('warranties', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('business_id');
             $table->text('description')->nullable();

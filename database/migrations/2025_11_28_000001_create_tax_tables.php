@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('tax_calculations', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->decimal('income_from', 15, 2);
             $table->decimal('income_to', 15, 2)->nullable();
             $table->decimal('tax_rate', 5, 2);
@@ -22,6 +23,7 @@ return new class extends Migration
 
         Schema::create('payroll_tax_brackets', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->decimal('min_income', 15, 2);
             $table->decimal('max_income', 15, 2)->nullable();
             $table->decimal('tax_rate', 5, 2);
@@ -31,6 +33,7 @@ return new class extends Migration
 
         Schema::create('payroll_settings', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('key')->unique();
             $table->text('value')->nullable();
             $table->timestamps();

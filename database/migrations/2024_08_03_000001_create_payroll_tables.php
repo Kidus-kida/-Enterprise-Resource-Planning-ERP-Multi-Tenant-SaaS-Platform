@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('employee_salary_details', function (Blueprint $table) {
             // 1. id bigint(20) UNSIGNED AUTO_INCREMENT
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // 2. employee_detail_id bigint(20) UNSIGNED NULL
             // Assuming this links to an 'employee_details' table. If not, remove the ->constrained part.
@@ -64,6 +65,7 @@ return new class extends Migration
             Schema::create('employee_allowances', function (Blueprint $table) {
                 // 1. id bigint(20) UNSIGNED AUTO_INCREMENT
                 $table->id();
+                $table->unsignedBigInteger('company_id')->nullable()->index();
 
                 // 2. employee_detail_id bigint(20) UNSIGNED NULL
                 // Links to 'employee_details' table.
@@ -88,6 +90,7 @@ return new class extends Migration
         Schema::create('employee_deductions', function (Blueprint $table) {
             // 1. id bigint(20) UNSIGNED AUTO_INCREMENT
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // 2. employee_detail_id bigint(20) UNSIGNED NULL
             // Links to 'employee_details' table.
@@ -111,6 +114,7 @@ return new class extends Migration
        Schema::create('payslips', function (Blueprint $table) {
             // 1. id bigint(20) UNSIGNED AUTO_INCREMENT
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // 2. ps_id varchar(255) NULL
             $table->string('ps_id')->nullable();
@@ -158,6 +162,7 @@ return new class extends Migration
         Schema::create('payslip_items', function (Blueprint $table) {
             // 1. id bigint(20) UNSIGNED AUTO_INCREMENT
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
 
             // 2. payslip_id bigint(20) UNSIGNED NULL
             $table->foreignId('payslip_id')

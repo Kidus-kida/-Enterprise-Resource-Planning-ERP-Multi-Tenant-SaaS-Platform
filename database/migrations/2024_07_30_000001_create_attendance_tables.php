@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->date('startDate')->nullable()->default('2025-05-20');
             $table->date('endDate')->nullable()->default('2025-05-20');
@@ -21,6 +22,7 @@ return new class extends Migration
 
         Schema::create('attendance_timestamps', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('attendance_id')->nullable()->constrained('attendances')->onDelete('cascade');
             $table->integer('project_id')->nullable();

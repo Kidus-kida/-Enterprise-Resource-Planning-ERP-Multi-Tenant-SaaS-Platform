@@ -41,29 +41,27 @@
 
                                     <div class="form-group">
                                         <label>Email</label>
-                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $business->owner->email ?? '') }}" readonly>
-                                        @error('email')
+                                        <input type="email" name="owner_email" class="form-control @error('owner_email') is-invalid @enderror" value="{{ old('owner_email', $business->owner_email ?? ($business->owner->email ?? '')) }}">
+                                        @error('owner_email')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                        <small class="form-text text-muted">From Business Owner</small>
+                                        <small class="form-text text-muted">Owner email used for invitations & subscription</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Phone</label>
-                                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $business->owner->phone ?? '') }}" readonly>
-                                        @error('phone')
+                                        <input type="text" name="owner_phone" class="form-control @error('owner_phone') is-invalid @enderror" value="{{ old('owner_phone', $business->owner_phone ?? ($business->owner->phone ?? '')) }}">
+                                        @error('owner_phone')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                        <small class="form-text text-muted">From Business Owner</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Address</label>
-                                        <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3" readonly>{{ old('address', $business->owner->address ?? '') }}</textarea>
+                                        <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3">{{ old('address', $business->owner->address ?? '') }}</textarea>
                                         @error('address')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                        <small class="form-text text-muted">From Business Owner</small>
                                     </div>
                                 </div>
 
@@ -73,8 +71,17 @@
                                     
                                     <div class="form-group">
                                         <label>Current Owner</label>
-                                        <input type="text" class="form-control" value="{{ $business->owner->name ?? 'N/A' }} ({{ $business->owner->email ?? 'N/A' }})" disabled>
-                                        <small class="form-text text-muted">Owner cannot be changed after creation</small>
+                                        <select name="owner_id" class="form-control @error('owner_id') is-invalid @enderror">
+                                            <option value="">No Owner</option>
+                                            @foreach($owners as $owner)
+                                                <option value="{{ $owner->id }}" {{ old('owner_id', $business->owner_id) == $owner->id ? 'selected' : '' }}>
+                                                    {{ $owner->firstname }} {{ $owner->lastname }} ({{ $owner->email }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('owner_id')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
                                     </div>
 
                                     <div class="form-group">

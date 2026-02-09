@@ -18,7 +18,25 @@ class AttendanceSettingsController extends Controller
         $roles = \Spatie\Permission\Models\Role::all();
         $users = \App\Models\User::where('is_active', true)->where('type', 'employee')->get();
         
-        return view('pages.settings.attendance', compact('pageTitle', 'settings', 'roles', 'users'));
+        // Missing Punch Settings for Modal
+        $missingPunchSettings = [
+            'auto_detect' => filter_var(AttendanceSetting::get('missing_punch_auto_detect', true), FILTER_VALIDATE_BOOLEAN),
+            'grace_period' => AttendanceSetting::get('missing_punch_grace_period', 30),
+            'notification_enabled' => filter_var(AttendanceSetting::get('missing_punch_notification_enabled', true), FILTER_VALIDATE_BOOLEAN),
+            'notify_employee' => filter_var(AttendanceSetting::get('missing_punch_notify_employee', true), FILTER_VALIDATE_BOOLEAN),
+            'notify_supervisor' => filter_var(AttendanceSetting::get('missing_punch_notify_supervisor', true), FILTER_VALIDATE_BOOLEAN),
+            'action' => AttendanceSetting::get('missing_punch_action', 'mark_absent'),
+            'allow_backdated' => filter_var(AttendanceSetting::get('missing_punch_allow_backdated', true), FILTER_VALIDATE_BOOLEAN),
+            'backdate_limit_days' => AttendanceSetting::get('missing_punch_backdate_limit_days', 2),
+            'require_reason' => filter_var(AttendanceSetting::get('missing_punch_require_reason', true), FILTER_VALIDATE_BOOLEAN),
+            'auto_pair' => filter_var(AttendanceSetting::get('missing_punch_auto_pair', true), FILTER_VALIDATE_BOOLEAN),
+            'auto_pair_threshold' => AttendanceSetting::get('missing_punch_auto_pair_threshold', 60),
+            'deduction_type' => AttendanceSetting::get('missing_punch_deduction_type', 'none'),
+            'deduction_amount' => AttendanceSetting::get('missing_punch_deduction_amount', 0),
+            'max_occurrences' => AttendanceSetting::get('missing_punch_max_occurrences', 3),
+        ];
+
+        return view('pages.settings.attendance', compact('pageTitle', 'settings', 'roles', 'users', 'missingPunchSettings'));
     }
 
     /**

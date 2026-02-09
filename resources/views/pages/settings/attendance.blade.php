@@ -76,6 +76,7 @@
         $overtime = $getValue('policies', 'overtime_enabled', true);
         $wfh = $getValue('policies', 'wfh_enabled', false);
         $compOff = $getValue('policies', 'comp_off_enabled', true);
+        $missingPunch = $getValue('policies', 'missing_punch_enabled', true);
 
         // --- Late Arrival Config (Direct Access) ---
         $lateArrivalGrace = \App\Models\AttendanceSetting::get('late_arrival_grace_period', 15);
@@ -381,6 +382,27 @@
                             <input class="form-check-input" type="checkbox" role="switch" name="comp_off_enabled" value="true" {{ $compOff ? 'checked' : '' }} onchange="toggleConfigLink('comp_off', this)">
                         </div>
                     </x-settings.row>
+
+                    <x-settings.row label="{{ __('Missing Clock-In/Out') }}" description="{{ __('Handle incomplete attendance records') }}"
+                                    id="missing_punch" configureLink="#" :showConfigure="$missingPunch">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="missing_punch_enabled" value="true" {{ $missingPunch ? 'checked' : '' }} onchange="toggleConfigLink('missing_punch', this)">
+                        </div>
+                         <!-- Custom Link Override via JS -->
+                         @push('page-scripts')
+                         <script>
+                             document.addEventListener('DOMContentLoaded', function() {
+                                 const link = document.getElementById('config_link_missing_punch');
+                                 if(link) {
+                                      link.removeAttribute('href');
+                                      link.style.cursor = 'pointer';
+                                      link.setAttribute('data-bs-toggle', 'modal');
+                                      link.setAttribute('data-bs-target', '#missingPunchModal');
+                                 }
+                             });
+                         </script>
+                         @endpush
+                    </x-settings.row>
                     </div>
                 </x-settings.section>
             </div>
@@ -455,6 +477,13 @@
 
 
 
+<<<<<<< HEAD
+=======
+
+                    </div>
+                </x-settings.section>
+            </div>
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
 
 
             <!-- Integrations -->
@@ -542,6 +571,228 @@
 </style>
 @endpush
 
+<<<<<<< HEAD
+=======
+@push('page-scripts')
+<script>
+    // Toggle Configuration Links visibility
+    function toggleConfigLink(rowId, checkbox, invert = false) {
+        const link = document.getElementById('config_link_' + rowId);
+        if (link) {
+            const shouldShow = invert ? !checkbox.checked : checkbox.checked;
+            if (shouldShow) link.classList.remove('d-none');
+            else link.classList.add('d-none');
+        }
+    }
+
+    // Capture Methods Logic (Single vs Multi)
+    function toggleMethodSelectionMode() {
+        const isSingle = document.getElementById('single_method_only').checked;
+        const checks = document.querySelectorAll('.method-check');
+        
+        checks.forEach(chk => {
+            // Remove old listeners
+            chk.onclick = null;
+            
+            if (isSingle) {
+                // In single mode, behave like radio buttons
+                chk.onclick = function() {
+                    if (this.checked) {
+                        checks.forEach(c => {
+                            if (c !== this) {
+                                c.checked = false;
+                                // In single mode, if it's unchecked, hide its config link
+                                const rowId = c.closest('[id]')?.id;
+                                if(rowId) {
+                                    const link = document.getElementById('config_link_' + rowId);
+                                    if(link) link.classList.add('d-none');
+                                }
+                             }
+                        });
+                    }
+                };
+            }
+        });
+
+        // Validation correction: If single mode and multiple checked, keep only first
+        if (isSingle) {
+            let found = false;
+            checks.forEach(chk => {
+                if (chk.checked) {
+                    if (found) chk.checked = false;
+                    found = true;
+                }
+            });
+            // If none checked, check first
+            if (!found && checks.length > 0) checks[0].checked = true;
+        }
+    }
+
+    // Section specific toggles
+    function toggleAutoClockOut(checkbox) {
+        const config = document.getElementById('auto_clockout_config');
+        if (config) {
+            if (checkbox.checked) config.classList.remove('d-none');
+            else config.classList.add('d-none');
+        }
+    }
+
+    function toggleGeofencing(checkbox) {
+        const config = document.getElementById('geofencing_config');
+        if (config) {
+            if (checkbox.checked) config.classList.remove('d-none');
+            else config.classList.add('d-none');
+        }
+    }
+
+    function toggleShifts(checkbox) {
+        const config = document.getElementById('shift_config');
+        if (config) {
+            if (checkbox.checked) config.classList.remove('d-none');
+            else config.classList.add('d-none');
+        }
+    }
+    
+    
+    function showToast(message, type = 'success') {
+        // Check if toastr is available
+        if (typeof toastr !== 'undefined') {
+            toastr[type](message);
+        } else {
+            // Fallback to alert if toastr is not available
+            alert(message);
+        }
+    }
+
+    function toggleGraceIn(checkbox) {
+        const inputContainer = document.getElementById('grace_in_input');
+        if (inputContainer) {
+            const input = inputContainer.querySelector('input[name="grace_in_minutes"]');
+            if (input) {
+                if (checkbox.checked) {
+                    input.removeAttribute('readonly');
+                    input.removeAttribute('style');
+                    input.classList.remove('text-muted');
+                } else {
+                    input.setAttribute('readonly', 'readonly');
+                    input.setAttribute('style', 'background-color:#e9ecef;');
+                    input.classList.add('text-muted');
+                }
+            }
+        }
+    }
+
+    function toggleGraceOut(checkbox) {
+        const inputContainer = document.getElementById('grace_out_input');
+        if (inputContainer) {
+            const input = inputContainer.querySelector('input[name="grace_out_minutes"]');
+            if (input) {
+                if (checkbox.checked) {
+                    input.removeAttribute('readonly');
+                    input.removeAttribute('style');
+                    input.classList.remove('text-muted');
+                } else {
+                    input.setAttribute('readonly', 'readonly');
+                    input.setAttribute('style', 'background-color:#e9ecef;');
+                    input.classList.add('text-muted');
+                }
+            }
+        }
+    }
+
+    function toggleAuditLogging(checkbox) {
+        const config = document.getElementById('audit_config');
+        if (config) {
+            if (checkbox.checked) config.classList.remove('d-none');
+            else config.classList.add('d-none');
+        }
+    }
+
+    var autoSaveTimeout = null;
+
+    function submitAttendanceSettings(silent = false) {
+        const form = document.getElementById('attendance-settings-form');
+        const formData = new FormData(form);
+        const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
+        
+        // Fix for checkbox arrays: if no checkboxes are checked, FormData won't have the field
+        // We need to explicitly send an empty array by appending a dummy entry
+        if (!formData.has('allowed_methods[]')) {
+            // Append an entry that will be interpreted as an empty array by the backend
+            formData.append('allowed_methods', '[]');
+        }
+        
+        // Show generic loading or small indicator if needed
+        // For now, we rely on the toast feedback
+        
+        fetch('{{ route('admin.attendance-settings.update') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    console.error('Validation errors:', data.errors);
+                    throw new Error(data.message || 'Validation failed');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && !silent) {
+                showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving settings:', error);
+            // Even in silent mode, we might want to alert if save FAILED completely
+            if (!silent) {
+                showToast('{{ __("Failed to save settings. Please check console for details.") }}', 'error');
+            }
+        })
+        .finally(() => {
+            // Re-enable button if it was disabled
+            if (!silent && submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
+            }
+        });
+    }
+
+    function triggerAutoSave() {
+        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            submitAttendanceSettings(true); // Call in silent mode
+        }, 800); // 800ms debounce
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleMethodSelectionMode();
+
+        const form = document.getElementById('attendance-settings-form');
+        if (form) {
+            // Standard form submit (Manual Save)
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (autoSaveTimeout) clearTimeout(autoSaveTimeout); // Cancel any pending auto-save
+                submitAttendanceSettings(false); // Explicit save with feedback
+            });
+
+            // Silent Auto-save on change
+            form.addEventListener('change', function(e) {
+                // Don't auto-save if it's a specific button or non-input change if needed
+                // But generally all changes in this form should be persisted
+                triggerAutoSave();
+            });
+        }
+    });
+</script>
+@endpush
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
 
     <!-- Late Arrival Configuration Modal -->
     <div class="modal fade" id="lateArrivalModal" tabindex="-1" aria-hidden="true">
@@ -1103,6 +1354,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Missed Punch Configuration Modal -->
     <div class="modal fade" id="missedPunchModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -1198,10 +1450,119 @@
                                                 </select>
                                                 <div class="form-text small mt-2">
                                                     {{ __('Define who reviews and approves missed punch requests.') }}
+=======
+    <!-- Missing Punch Configuration Modal -->
+    <style>
+        /* CSS-Only Tooltip (Robust Fallback) */
+        .custom-tooltip {
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .custom-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: normal;
+            width: 220px;
+            text-align: center;
+            z-index: 1000020; /* Extremely high z-index */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 8px;
+            pointer-events: none;
+        }
+        /* Arrow */
+        .custom-tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+            margin-bottom: -4px;
+            z-index: 1000020;
+        }
+    </style>
+    <div class="modal fade" id="missingPunchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="la la-clock me-2 text-primary"></i>
+                        {{ __('Missing Clock-In/Out Configuration') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.attendance-settings.missing-punch.update') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-0">
+                        <div class="row g-0">
+                            <!-- Sidebar/Tabs -->
+                            <div class="col-md-3 bg-light border-end">
+                                <div class="nav flex-column nav-pills p-3" id="missing-punch-tab" role="tablist" aria-orientation="vertical">
+                                    <button class="nav-link active text-start mb-1" id="mp-detection-tab" data-bs-toggle="pill" data-bs-target="#mp-detection" type="button" role="tab">
+                                        <i class="la la-search me-2"></i> {{ __('Detection') }}
+                                    </button>
+                                    <button class="nav-link text-start mb-1" id="mp-handling-tab" data-bs-toggle="pill" data-bs-target="#mp-handling" type="button" role="tab">
+                                        <i class="la la-cogs me-2"></i> {{ __('Handling') }}
+                                    </button>
+                                    <button class="nav-link text-start mb-1" id="mp-auto-tab" data-bs-toggle="pill" data-bs-target="#mp-auto" type="button" role="tab">
+                                        <i class="la la-magic me-2"></i> {{ __('Correction') }}
+                                    </button>
+                                    <button class="nav-link text-start" id="mp-penalties-tab" data-bs-toggle="pill" data-bs-target="#mp-penalties" type="button" role="tab">
+                                        <i class="la la-gavel me-2"></i> {{ __('Penalties') }}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Content -->
+                            <div class="col-md-9">
+                                <div class="tab-content p-4" id="missing-punch-tabContent">
+                                    
+                                    <!-- Detection Tab -->
+                                    <div class="tab-pane fade show active" id="mp-detection" role="tabpanel">
+                                        <h6 class="fw-bold mb-3 text-primary">{{ __('Detection & Monitoring') }}</h6>
+                                        
+                                        <div class="mb-3 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="missing_punch_auto_detect" name="missing_punch_auto_detect" value="true" {{ $missingPunchSettings['auto_detect'] ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="missing_punch_auto_detect">{{ __('Auto-Detect Missing Punches') }}</label>
+                                            <div class="form-text mt-0">{{ __('Automatically identify incomplete records.') }}</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">{{ __('Grace Period (Minutes)') }}</label>
+                                            <input type="number" name="missing_punch_grace_period" class="form-control" value="{{ $missingPunchSettings['grace_period'] }}" min="0" max="240" required>
+                                            <div class="form-text">{{ __('Time after shift end before marking as missing.') }}</div>
+                                        </div>
+
+                                        <div class="border rounded p-3 bg-light">
+                                            <div class="form-check form-switch mb-2">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="missing_punch_notification_enabled" name="missing_punch_notification_enabled" value="true" {{ $missingPunchSettings['notification_enabled'] ? 'checked' : '' }}>
+                                                <label class="form-check-label fw-bold" for="missing_punch_notification_enabled">{{ __('Enable Notifications') }}</label>
+                                            </div>
+                                            <div class="ps-4">
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" name="missing_punch_notify_employee" value="true" {{ $missingPunchSettings['notify_employee'] ? 'checked' : '' }}>
+                                                    <label class="form-check-label">{{ __('Notify Employee') }}</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="missing_punch_notify_supervisor" value="true" {{ $missingPunchSettings['notify_supervisor'] ? 'checked' : '' }}>
+                                                    <label class="form-check-label">{{ __('Notify Supervisor') }}</label>
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+<<<<<<< HEAD
                                 </div>
                             </div>
                         </div>
@@ -1467,6 +1828,125 @@
             return el ? el.value : null;
         };
 
+=======
+
+                                    <!-- Handling Tab -->
+                                    <div class="tab-pane fade" id="mp-handling" role="tabpanel">
+                                        <h6 class="fw-bold mb-3 text-primary">{{ __('Handling & Actions') }}</h6>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                {{ __('Default Action') }}
+                                                <i class="la la-info-circle text-primary ms-1 custom-tooltip" data-tooltip="{{ __('Determines the Attendance Status (e.g., Absent, Half Day) recorded for the day.') }}"></i>
+                                            </label>
+                                            <select name="missing_punch_action" class="form-select">
+                                                <option value="mark_absent" {{ $missingPunchSettings['action'] === 'mark_absent' ? 'selected' : '' }}>{{ __('Mark as Absent') }}</option>
+                                                <option value="half_day" {{ $missingPunchSettings['action'] === 'half_day' ? 'selected' : '' }}>{{ __('Mark as Half Day') }}</option>
+                                                <option value="request_clarification" {{ $missingPunchSettings['action'] === 'request_clarification' ? 'selected' : '' }}>{{ __('Request Clarification') }}</option>
+                                                <option value="auto_approve" {{ $missingPunchSettings['action'] === 'auto_approve' ? 'selected' : '' }}>{{ __('Auto-Approve Full Day') }}</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="missing_punch_allow_backdated" name="missing_punch_allow_backdated" value="true" {{ $missingPunchSettings['allow_backdated'] ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="missing_punch_allow_backdated">
+                                                {{ __('Allow Backdated Punches') }}
+                                                <i class="la la-info-circle text-primary ms-1 custom-tooltip" data-tooltip="{{ __('Allows employees to submit attendance requests for past dates they forgot to clock in.') }}"></i>
+                                            </label>
+                                        </div>
+
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">{{ __('Backdate Limit (Days)') }}</label>
+                                                <input type="number" name="missing_punch_backdate_limit_days" class="form-control" value="{{ $missingPunchSettings['backdate_limit_days'] }}" min="0" max="30">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="missing_punch_require_reason" name="missing_punch_require_reason" value="true" {{ $missingPunchSettings['require_reason'] ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="missing_punch_require_reason">{{ __('Require Reason for Correction') }}</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Auto-Correction Tab -->
+                                    <div class="tab-pane fade" id="mp-auto" role="tabpanel">
+                                        <h6 class="fw-bold mb-3 text-primary">{{ __('Auto-Correction') }}</h6>
+                                        
+                                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                                            <div class="d-flex gap-2">
+                                                <i class="la la-info-circle mt-1"></i>
+                                                <small>{{ __('System attempts to match orphaned punches within a threshold. Useful if employee forgot one punch.') }}</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="missing_punch_auto_pair" name="missing_punch_auto_pair" value="true" {{ $missingPunchSettings['auto_pair'] ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="missing_punch_auto_pair">
+                                                {{ __('Auto-Pair Orphaned Punches') }}
+                                                <i class="la la-info-circle text-primary ms-1 custom-tooltip" data-tooltip="{{ __('An "Orphan" is a punch without a partner (In without Out). This setting tries to intelligently close incomplete records.') }}"></i>
+                                            </label>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                {{ __('Pairing Threshold (Minutes)') }}
+                                                <i class="la la-info-circle text-primary ms-1 custom-tooltip" data-tooltip="{{ __('How close a punch must be to the shift end to be considered a match. Punches outside this window stay as orphans.') }}"></i>
+                                            </label>
+                                            <input type="number" name="missing_punch_auto_pair_threshold" class="form-control" value="{{ $missingPunchSettings['auto_pair_threshold'] }}" min="15" max="480">
+                                            <div class="form-text">{{ __('Max gap between punch and shift time to consider a match.') }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Penalties Tab -->
+                                    <div class="tab-pane fade" id="mp-penalties" role="tabpanel">
+                                        <h6 class="fw-bold mb-3 text-primary">{{ __('Penalties & Deductions') }}</h6>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                {{ __('Deduction Type') }}
+                                                <i class="la la-info-circle text-primary ms-1 custom-tooltip" data-tooltip="{{ __('Financial fine applied ON TOP of the attendance status.') }}"></i>
+                                            </label>
+                                            <select name="missing_punch_deduction_type" class="form-select">
+                                                <option value="none" {{ $missingPunchSettings['deduction_type'] === 'none' ? 'selected' : '' }}>{{ __('No Deduction') }}</option>
+                                                <option value="fixed" {{ $missingPunchSettings['deduction_type'] === 'fixed' ? 'selected' : '' }}>{{ __('Fixed Amount') }}</option>
+                                                <option value="percentage" {{ $missingPunchSettings['deduction_type'] === 'percentage' ? 'selected' : '' }}>{{ __('Percentage of Daily Wage') }}</option>
+                                                <option value="hourly" {{ $missingPunchSettings['deduction_type'] === 'hourly' ? 'selected' : '' }}>{{ __('Hourly Rate Deduction') }}</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">{{ __('Deduction Amount') }}</label>
+                                            <input type="number" step="0.01" name="missing_punch_deduction_amount" class="form-control" value="{{ $missingPunchSettings['deduction_amount'] }}" min="0">
+                                            <div class="form-text">{{ __('Amount or Percentage based on type.') }}</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">{{ __('Max Occurrences / Month') }}</label>
+                                            <input type="number" name="missing_punch_max_occurrences" class="form-control" value="{{ $missingPunchSettings['max_occurrences'] }}" min="0" max="31">
+                                            <div class="form-text">{{ __('Occurrences before escalation/review is triggered.') }}</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+@push('page-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+>>>>>>> b54d36acbb580a913ac42838cfe720ef145664b9
         const safeToggleClass = (id, className, condition) => {
             const el = document.getElementById(id);
             if (el) {
