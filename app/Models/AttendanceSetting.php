@@ -181,44 +181,65 @@ class AttendanceSetting extends TenantModel
         // Fetch ALL current settings in one go to avoid N+1 queries
         $allSettings = self::all()->keyBy('key');
         
-        // Prepare the effective settings to be saved (handling booleans/arrays)
-        foreach ($allSettings as $key => $setting) {
-            // Handle booleans (missing from request = unchecked)
-            if ($setting->type === 'boolean' && !isset($settings[$key])) {
-                $settings[$key] = 'false';
+        // Pre-process settings to handle array-like keys (e.g. working_days[])
+        $processedRequest = [];
+        foreach ($settings as $key => $value) {
+            $cleanKey = str_replace('[]', '', $key);
+            $processedRequest[$cleanKey] = $value;
+        }
+
+        // Determine which categories are present in the request
+        $presentCategories = [];
+        foreach ($processedRequest as $key => $value) {
+            $setting = $allSettings->get($key);
+            if ($setting) {
+                $presentCategories[$setting->category] = true;
             }
-            
-            // Handle json/arrays (missing from request = empty)
-            if ($setting->type === 'json' && !isset($settings[$key])) {
-                $settings[$key] = [];
+        }
+
+        // Handle checkboxes - boolean settings in present categories that are missing from request
+        foreach ($allSettings as $key => $setting) {
+            if ($setting->type === 'boolean' && !isset($processedRequest[$key])) {
+                if (isset($presentCategories[$setting->category])) {
+                    $processedRequest[$key] = 'false';
+                }
             }
         }
         
-        foreach ($settings as $key => $value) {
+        // Prepare the effective settings to be saved (handling booleans/arrays)
+        foreach ($processedRequest as $key => $value) {
             $setting = $allSettings->get($key);
-            
             if (!$setting) {
-                continue; // Skip unknown keys
+                continue; // Skip settings that don't exist in our database
             }
+            
+            $value = $processedRequest[$key];
+            $processedValue = $value;
 
             // Decode JSON strings for json type settings (e.g., when frontend sends '[]' for empty arrays)
-            if ($setting->type === 'json' && is_string($value) && in_array($value[0] ?? '', ['[', '{'])) {
+            if ($setting->type === 'json' && is_string($value) && !empty($value) && in_array($value[0], ['[', '{'])) {
                 $decoded = json_decode($value, true);
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $value = $decoded;
+                    $processedValue = $decoded;
                 }
             }
 
-            // Convert array to JSON string for json type settings
-            if ($setting->type === 'json' && is_array($value)) {
-                $processedValue = json_encode($value);
+            // Convert processed values to string format for storage comparison
+            if ($setting->type === 'json') {
+                if (is_string($processedValue) && empty($processedValue)) {
+                    $processedValue = [];
+                }
+                $stringValue = json_encode(is_array($processedValue) ? $processedValue : []);
             } elseif ($setting->type === 'boolean') {
-                $processedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                $processedValue = filter_var($processedValue, FILTER_VALIDATE_BOOLEAN);
+                $stringValue = $processedValue ? 'true' : 'false';
+            } else {
+                $stringValue = (string)$processedValue;
             }
 
             // Perform validation
             $rules = $setting->validation_rules ?? [];
-            if ($setting->type === 'boolean') {
+            if ($setting->type === 'boolean' || $setting->type === 'json') {
                 $rules = array_filter($rules, fn($r) => $r !== 'required');
             }
 
@@ -232,22 +253,14 @@ class AttendanceSetting extends TenantModel
                 continue;
             }
 
-            // Only save if the value has actually changed to minimize DB and Cache ops
-            $stringValue = is_bool($processedValue) ? ($processedValue ? 'true' : 'false') : (string)$processedValue;
+            // Only save if the value has actually changed
             if ($setting->value !== $stringValue) {
                 $setting->update(['value' => $stringValue]);
-                
-                // Clear specific cache
                 Cache::forget(self::CACHE_PREFIX . $key);
             }
         }
 
-        // Always clear the "all" cache if we successfully updated anything
-        if (empty($errors)) {
-            Cache::forget(self::CACHE_ALL_KEY);
-        }
-
+        Cache::forget(self::CACHE_ALL_KEY);
         return $errors;
     }
 }
-

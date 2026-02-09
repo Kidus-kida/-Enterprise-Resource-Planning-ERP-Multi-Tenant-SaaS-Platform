@@ -26,11 +26,7 @@ class AttendancePolicyEngine
             $violations[] = $lateArrival;
         }
 
-        // Evaluate location compliance
-        $locationViolation = $this->evaluateLocationCompliance($timestamp, 'clock_in');
-        if ($locationViolation) {
-            $violations[] = $locationViolation;
-        }
+
 
         // Store all violations
         foreach ($violations as $violation) {
@@ -62,11 +58,7 @@ class AttendancePolicyEngine
             $violations[] = $insufficientHours;
         }
 
-        // Evaluate location compliance
-        $locationViolation = $this->evaluateLocationCompliance($timestamp, 'clock_out');
-        if ($locationViolation) {
-            $violations[] = $locationViolation;
-        }
+
 
         // Store all violations
         foreach ($violations as $violation) {
@@ -115,8 +107,7 @@ class AttendancePolicyEngine
             $workStartTime = attendance_setting('work_day_start_time', '08:00');
         }
 
-        $penaltyEnabled = attendance_setting('late_arrival_penalty_enabled', false);
-        $penaltyAmount = attendance_setting('late_arrival_penalty_amount', 0);
+
 
         // Calculate allowed start time (work start + grace period)
         $workStart = Carbon::parse($timestamp->startTime->format('Y-m-d') . ' ' . $workStartTime);
@@ -136,7 +127,7 @@ class AttendancePolicyEngine
             'event_type' => 'clock_in',
             'policy_type' => 'late_arrival',
             'is_violation' => true,
-            'penalty_amount' => $penaltyEnabled ? $penaltyAmount : 0,
+            'penalty_amount' => 0,
             'message' => sprintf(
                 'Arrived %d minutes late (clocked in at %s, expected by %s)%s',
                 $minutesLate,
@@ -149,7 +140,6 @@ class AttendancePolicyEngine
                 'expected_time' => $workStart->format('H:i:s'),
                 'grace_period_end' => $allowedTime->format('H:i:s'),
                 'minutes_late' => $minutesLate,
-                'penalty_enabled' => $penaltyEnabled,
                 'shift_used' => $shiftUsed,
             ],
         ];
@@ -200,8 +190,7 @@ class AttendancePolicyEngine
             $workEndTime = attendance_setting('work_day_end_time', '17:00');
         }
 
-        $penaltyEnabled = attendance_setting('early_departure_penalty_enabled', false);
-        $penaltyAmount = attendance_setting('early_departure_penalty_amount', 0);
+
 
         // Handle night shifts: if shift crosses midnight, clock-out could be next day
         $workEndDate = $timestamp->endTime->format('Y-m-d');
@@ -236,7 +225,7 @@ class AttendancePolicyEngine
             'event_type' => 'clock_out',
             'policy_type' => 'early_departure',
             'is_violation' => true,
-            'penalty_amount' => $penaltyEnabled ? $penaltyAmount : 0,
+            'penalty_amount' => 0,
             'message' => sprintf(
                 'Left %d minutes early (clocked out at %s, expected after %s with %d min grace)%s%s',
                 $minutesEarly,
@@ -252,7 +241,6 @@ class AttendancePolicyEngine
                 'grace_period_minutes' => $graceOutMinutes,
                 'earliest_allowed_time' => $allowedEarliestTime->format('H:i:s'),
                 'minutes_early' => $minutesEarly,
-                'penalty_enabled' => $penaltyEnabled,
                 'shift_used' => $shiftUsed,
                 'is_night_shift' => $isNightShift,
             ],
@@ -304,59 +292,7 @@ class AttendancePolicyEngine
         ];
     }
 
-    /**
-     * Evaluate location compliance
-     * 
-     * @param AttendanceTimestamp $timestamp
-     * @param string $eventType
-     * @return array|null Violation data or null
-     */
-    protected function evaluateLocationCompliance(AttendanceTimestamp $timestamp, string $eventType): ?array
-    {
-        $requireGPS = attendance_setting('require_gps', false);
-        $geofencingEnabled = attendance_setting('enable_geofencing', false);
 
-        $location = $eventType === 'clock_in' ? $timestamp->location : $timestamp->co_location;
-
-        // Check if GPS is required but not provided
-        if ($requireGPS && empty($location)) {
-            return [
-                'attendance_timestamp_id' => $timestamp->id,
-                'user_id' => $timestamp->user_id,
-                'event_type' => $eventType,
-                'policy_type' => 'missing_gps',
-                'is_violation' => true,
-                'penalty_amount' => 0,
-                'message' => 'GPS location not provided',
-                'metadata' => [
-                    'require_gps' => true,
-                    'location_provided' => false,
-                ],
-            ];
-        }
-
-        // Check geofencing if enabled
-        if ($geofencingEnabled && !empty($location)) {
-            // Note: This requires GPS coordinates to be stored separately
-            // For now, we'll just flag that geofencing should be checked
-            // In a real implementation, you'd parse coordinates from metadata
-            return [
-                'attendance_timestamp_id' => $timestamp->id,
-                'user_id' => $timestamp->user_id,
-                'event_type' => $eventType,
-                'policy_type' => 'geofence_check_required',
-                'is_violation' => false,
-                'penalty_amount' => 0,
-                'message' => 'Geofencing check required (implement coordinate validation)',
-                'metadata' => [
-                    'geofencing_enabled' => true,
-                    'location' => $location,
-                ],
-            ];
-        }
-
-        return null; // No location violation
-    }
 
     /**
      * Record a policy event to the database
@@ -422,7 +358,6 @@ class AttendancePolicyEngine
             'late_arrivals' => $violations->where('policy_type', 'late_arrival')->count(),
             'early_departures' => $violations->where('policy_type', 'early_departure')->count(),
             'insufficient_hours' => $violations->where('policy_type', 'insufficient_hours')->count(),
-            'location_violations' => $violations->whereIn('policy_type', ['missing_gps', 'geofence_violation'])->count(),
             'total_penalties' => $violations->where('status', 'applied')->sum('penalty_amount'),
             'pending_penalties' => $violations->where('status', 'pending')->sum('penalty_amount'),
         ];
