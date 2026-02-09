@@ -22,6 +22,8 @@ return new class extends Migration
                 if (!Schema::hasColumn('currencies', 'decimal_separator')) $table->boolean('decimal_separator')->default(1);
                 if (!Schema::hasColumn('currencies', 'currency_symbol_placement')) $table->string('currency_symbol_placement')->default('before');
                 if (!Schema::hasColumn('currencies', 'created_by')) $table->integer('created_by')->default(1);
+                if (!Schema::hasColumn('currencies', 'created_at')) $table->timestamp('created_at')->nullable();
+                if (!Schema::hasColumn('currencies', 'updated_at')) $table->timestamp('updated_at')->nullable();
             });
         } else {
             Schema::create('currencies', function (Blueprint $table) {

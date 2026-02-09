@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -24,12 +23,23 @@ return new class extends Migration
             $table->enum('status', ['pending', 'vessel_departed', 'at_djibouti', 'in_transit', 'customs_clearance', 'released', 'delivered', 'cancelled'])->default('pending');
             $table->date('expected_arrival');
             $table->date('actual_arrival')->nullable();
-            
+            $table->unsignedBigInteger('business_id')->nullable();
+            $table->unsignedBigInteger('transaction_id')->nullable();
+            $table->text('shipping_details')->nullable();
+            $table->text('shipping_address')->nullable();
+            $table->string('shipping_status')->nullable();
+            $table->string('delivered_to')->nullable();
+            $table->decimal('shipping_charges', 22, 4)->default(0);
+
             $table->foreignId('dry_port_id')->nullable()->constrained('dry_ports');
             $table->unsignedBigInteger('user_id'); // Created by
-            
+            $table->decimal('value_etb', 15, 2)->default(0);
+
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('business_id');
+            $table->index('transaction_id');
         });
     }
 

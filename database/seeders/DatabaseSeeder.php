@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             \Modules\Roles\Database\Seeders\RolesDatabaseSeeder::class,
             UserSeeder::class, // Add Users and assign roles
+            \Modules\Superadmin\Database\Seeders\SuperadminDatabaseSeeder::class,
             BusinessSeeder::class,
             AccountTypesSeeder::class,
             AccountGroupsSeeder::class,
@@ -26,7 +27,6 @@ class DatabaseSeeder extends Seeder
             TaxRateSeeder::class,
             AccountingModuleSeeder::class,
             LeaveSeeder::class,
-            \Modules\Superadmin\Database\Seeders\ModuleSeeder::class,
         ]);
     }
 }

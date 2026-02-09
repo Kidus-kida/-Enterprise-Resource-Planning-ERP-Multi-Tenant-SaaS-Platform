@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,11 +12,14 @@ return new class extends Migration
     {
         Schema::create('account_types', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('class_type');
             $table->integer('parent_account_type_id')->nullable();
             $table->integer('business_id');
+            $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('business_id');
             $table->index('parent_account_type_id');
@@ -25,18 +27,20 @@ return new class extends Migration
 
         Schema::create('account_groups', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->unsignedBigInteger('account_type_id');
             $table->integer('business_id');
             $table->integer('parent_account_group_id')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('business_id');
             $table->index('account_type_id');
         });
 
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('name');
             $table->string('gl_code')->nullable();
             $table->unsignedBigInteger('account_type_id');
@@ -52,7 +56,7 @@ return new class extends Migration
             $table->string('account_sub_type')->nullable();
             $table->integer('parent_account_id')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->index('business_id');
             $table->index('account_type_id');
             $table->index('account_group_id');
@@ -61,6 +65,7 @@ return new class extends Migration
 
         Schema::create('account_transactions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('account_id');
             $table->string('type');
             $table->string('sub_type')->nullable();
@@ -93,8 +98,10 @@ return new class extends Migration
             $table->date('reconciled_on')->nullable();
             $table->integer('reconciled_by')->nullable();
             $table->unsignedBigInteger('location_id')->nullable();
-            $table->timestamps();
 
+            $table->unsignedBigInteger('transaction_payment_id')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
             $table->index('account_id');
             $table->index('type');
             $table->index('transaction_id');

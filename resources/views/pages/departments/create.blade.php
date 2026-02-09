@@ -11,7 +11,12 @@
             <div class="col-md-6">
                  <x-form.input-block>
                     <x-form.label>{{ __('Company') }}</x-form.label>
-                    <x-form.input type="text" name="company_name" placeholder="Company Name" />
+                    <select name="company_id" class="form-control select">
+                        <option value="">{{ __('Select Company') }}</option>
+                        @foreach($companies as $company)
+                            <option value="{{ $company->id }}">{{ $company->name }}</option>
+                        @endforeach
+                    </select>
                 </x-form.input-block>
             </div>
         </div>

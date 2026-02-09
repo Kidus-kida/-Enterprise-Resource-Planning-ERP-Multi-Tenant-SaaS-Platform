@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('payroll_batches', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('batch_number')->unique();
             $table->string('month');
             $table->string('year');
@@ -30,6 +31,7 @@ return new class extends Migration
 
         Schema::create('payroll_details', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('payroll_batch_id')->constrained('payroll_batches')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->decimal('basic_salary', 15, 2);

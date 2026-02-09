@@ -8,6 +8,9 @@ use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\WorldSeeder;
 
+use Modules\Superadmin\Models\Package;
+use Illuminate\Support\Facades\Schema;
+
 class BusinessSeeder extends Seeder
 {
     /**
@@ -61,9 +64,15 @@ class BusinessSeeder extends Seeder
             return;
         }
 
+        $enterprisePackageId = null;
+        if (class_exists(Package::class)) {
+            $enterprisePackageId = Package::where('name', 'Enterprise')->value('id');
+        }
+
         // 3. Create Business
         $business_id = DB::table('businesses')->insertGetId([
             'name' => 'Tewos Support',
+            'package_id' => $enterprisePackageId,
             'currency_id' => $currency_id,
             'start_date' => Carbon::now(),
             'tax_number_1' => '123456789',
@@ -84,8 +93,26 @@ class BusinessSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
+        DB::table('subscriptions')->updateOrInsert(
+            ['business_id' => $business_id],
+            [
+                'package_id' => $enterprisePackageId,
+                'start_date' => Carbon::now()->toDateString(),
+                'end_date' => Carbon::now()->addYear()->toDateString(),
+                'status' => 'approved',
+                'created_id' => $owner->id,
+                'subscribed_user_count' => 0,
+                'base_price' => 0,
+                'addons_price' => 0,
+                'total_price' => 0,
+                'company_count' => 1,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]
+        );
+
         // Update user business_id (if column exists)
-        if (\Schema::hasColumn('users', 'business_id')) {
+        if (Schema::hasColumn('users', 'business_id')) {
             $owner->business_id = $business_id;
             $owner->save();
         } else {

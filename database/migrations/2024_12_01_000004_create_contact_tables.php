@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,6 +12,7 @@ return new class extends Migration
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->unsignedBigInteger('business_id');
             $table->enum('type', ['customer', 'supplier', 'both'])->default('customer');
             $table->string('supplier_business_name')->nullable();
@@ -57,7 +57,7 @@ return new class extends Migration
             $table->string('custom_field8')->nullable();
             $table->string('custom_field9')->nullable();
             $table->string('custom_field10')->nullable();
-            
+
             // Additional fields from later migrations
             $table->string('landmark')->nullable();
             $table->string('image')->nullable();
@@ -77,7 +77,8 @@ return new class extends Migration
             $table->string('nic_number', 20)->nullable();
             $table->integer('user_id')->nullable();
             $table->integer('sub_customer')->default(0);
-            
+            $table->boolean('sol_with_approval')->default(0);
+
             $table->softDeletes();
             $table->timestamps();
 
@@ -108,6 +109,7 @@ return new class extends Migration
 
         Schema::create('client_details', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('company_name')->nullable();
             $table->string('website')->nullable();

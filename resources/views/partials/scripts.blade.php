@@ -224,7 +224,20 @@ document.addEventListener('livewire:navigated', () => {
                     className: "danger",
                 }).showToast();
                 break;
-            
         }
+    @endif
+
+    @if(Session::has('error'))
+        Toastify({
+            text: "{{ Session::get('error') }}",
+            className: "danger",
+        }).showToast();
+    @endif
+
+    @if(Session::has('success'))
+        Toastify({
+            text: "{{ Session::get('success') }}",
+            className: "success",
+        }).showToast();
     @endif
 </script>

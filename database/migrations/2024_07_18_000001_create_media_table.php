@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('media', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('model_type');
             $table->unsignedBigInteger('model_id');
             $table->string('uuid')->nullable()->unique();

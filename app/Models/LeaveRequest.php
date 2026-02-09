@@ -17,7 +17,19 @@ class LeaveRequest extends TenantModel
         'multiple_day',
         'reject_reason',
         'attended_by',
-        'status'
+        'status',
+        'current_approval_level',
+        'required_approval_levels',
+        'total_days',
+        'request_type',
+        'total_hours',
+        'approval_chain',
+        'is_cancelled',
+        'cancelled_by',
+        'cancelled_at',
+        'cancellation_reason',
+        'is_emergency',
+        'admin_notes'
 
     ];
     protected $casts = [
@@ -27,6 +39,13 @@ class LeaveRequest extends TenantModel
     {
         return $this->belongsTo(User::class, 'employee_id');
     }
+
+    // Alias for employee relationship (for consistency with other code)
+    public function user()
+    {
+        return $this->employee();
+    }
+
      public function admin()
     {
         return $this->belongsTo(User::class, 'attended_by');

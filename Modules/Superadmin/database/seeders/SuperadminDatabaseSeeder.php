@@ -13,6 +13,8 @@ class SuperadminDatabaseSeeder extends Seeder
     {
         $this->call([
             PackagesTableSeeder::class,
+            ModulesTableSeeder::class,
+            PackageAddonsTableSeeder::class,
         ]);
     }
 }

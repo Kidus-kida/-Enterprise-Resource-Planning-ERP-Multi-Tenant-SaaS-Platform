@@ -125,10 +125,10 @@ Route::get('/test-db-connection', function () {
         ], 500);
     }
 });
-Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
-Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
-Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
-Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
+// Route::get('/diagnostic', [\App\Http\Controllers\DiagnosticController::class, 'index'])->name('diagnostic.index');
+// Route::post('/diagnostic/fix-config', [\App\Http\Controllers\DiagnosticController::class, 'fixConfig'])->name('diagnostic.fix-config');
+// Route::post('/diagnostic/test-connection', [\App\Http\Controllers\DiagnosticController::class, 'testConnection'])->name('diagnostic.test-connection');
+// Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
 
 // Simple test route to bypass middleware
 Route::get('/test-route', function() {
@@ -512,6 +512,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('/reporting', [App\Http\Controllers\Leave\LeaveManagementController::class, 'reporting'])->name('reporting');
         Route::get('/configuration', [App\Http\Controllers\Leave\LeaveManagementController::class, 'configuration'])->name('configuration');
         
+        // Allocation Request Routes (Employee)
+        Route::get('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'request'])->name('management.allocations.request');
+        Route::post('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'storeRequest'])->name('management.allocations.store-request');
+
         // Management Routes
         Route::resource('allocations', App\Http\Controllers\Leave\LeaveAllocationController::class)->names('management.allocations');
         
