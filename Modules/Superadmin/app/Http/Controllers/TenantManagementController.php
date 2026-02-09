@@ -258,6 +258,14 @@ class TenantManagementController extends Controller
             ]);
             $debugLog .= "Permission Seeder Output:\n" . \Artisan::output() . "\n";
 
+            // RUN ATTENDANCE SETTINGS SEEDER
+            \Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\AttendanceSettingsSeeder',
+                '--database' => 'tenant',
+                '--force' => true
+            ]);
+            $debugLog .= "Attendance Settings Seeder Output:\n" . \Artisan::output() . "\n";
+
             // ASSIGN 'Tenant Admin' ROLE
             try {
                 $roleId = \DB::connection('tenant')->table('roles')->where('name', 'Tenant Admin')->value('id');

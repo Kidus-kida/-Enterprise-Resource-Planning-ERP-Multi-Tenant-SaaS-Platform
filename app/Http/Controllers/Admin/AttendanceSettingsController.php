@@ -61,8 +61,17 @@ class AttendanceSettingsController extends Controller
 
             $isDisablingNightShift = ($currentNightShift === true && $newNightShift === false);
             $isEnablingNightShift = ($currentNightShift === false && $newNightShift === true);
+            
+            \Log::info('Attendance Settings Update Request:', $request->all());
+        
+            if ($request->has('is_partial')) {
+                $errors = AttendanceSetting::setPartial($request->except('_token', '_method', 'is_partial'));
+            } else {
+                $errors = AttendanceSetting::setMultiple($request->except('_token', '_method'));
+            }
 
-            $errors = AttendanceSetting::setMultiple($request->except('_token', '_method'));
+            \Log::info('Attendance Settings Update Result (Errors):', ['errors' => $errors]);
+
             
             if (!empty($errors)) {
                 if ($request->ajax() || $request->wantsJson()) {

@@ -169,6 +169,69 @@ class AttendanceSetting extends TenantModel
     }
 
     /**
+     * Set specific settings (Partial Update)
+     * Does NOT treat missing booleans as false.
+     * 
+     * @param array $settings
+     * @return array Validation errors
+     */
+    public static function setPartial(array $settings): array
+    {
+        $errors = [];
+        $allSettings = self::whereIn('key', array_keys($settings))->get()->keyBy('key');
+
+        foreach ($settings as $key => $value) {
+            $setting = $allSettings->get($key);
+            
+            if (!$setting) {
+                continue; 
+            }
+
+            // Decode JSON if needed
+            if ($setting->type === 'json' && is_string($value) && in_array($value[0] ?? '', ['[', '{'])) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $value = $decoded;
+                }
+            }
+
+            // Convert types for storage
+            $processedValue = $value;
+            if ($setting->type === 'json' && is_array($value)) {
+                $processedValue = json_encode($value);
+            } elseif ($setting->type === 'boolean') {
+                $processedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+
+            // Validate
+            $rules = $setting->validation_rules ?? [];
+            if ($setting->type === 'boolean') {
+                $rules = array_filter($rules, fn($r) => $r !== 'required');
+            }
+
+            $validator = \Validator::make(
+                [$key => $processedValue],
+                [$key => $rules]
+            );
+
+            if ($validator->fails()) {
+                $errors[$key] = $validator->errors()->get($key);
+                continue;
+            }
+
+            // Update
+            $stringValue = is_bool($processedValue) ? ($processedValue ? 'true' : 'false') : (string)$processedValue;
+            if ($setting->value !== $stringValue) {
+                $setting->update(['value' => $stringValue]);
+                Cache::forget(self::CACHE_PREFIX . $key);
+            }
+        }
+        
+        Cache::forget(self::CACHE_ALL_KEY);
+        return $errors;
+    }
+
+    /**
      * Validate and set multiple settings
      * 
      * @param array $settings ['key' => 'value', ...]

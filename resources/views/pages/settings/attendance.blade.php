@@ -146,6 +146,10 @@
         $payrollExport = $getValue('integrations', 'payroll_export_enabled', true);
 
         // --- Audit & Security ---
+        $auditLogging = $getValue('audit_security', 'audit_logging_enabled', true);
+        $auditLevel = $getValue('audit_security', 'audit_level', 'standard');
+        $tamperDetection = $getValue('audit_security', 'tamper_detection_enabled', true);
+        $complianceMode = $getValue('audit_security', 'compliance_mode', false);
 
 
         // Weekdays for selection
@@ -207,7 +211,7 @@
                      <x-settings.row label="{{ __('Single Method Only') }}" description="{{ __('Restrict to one method only') }}">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="single_method_only" name="single_method_only" value="true" 
-                                   {{ $singleMethodOnly ? 'checked' : '' }} onchange="toggleMethodSelectionMode()">
+                                   {{ $singleMethodOnly ? 'checked' : '' }} onchange="toggleConfigLink('single_method_only', this); toggleMethodSelectionMode();">
                         </div>
                     </x-settings.row>
                     </div>
@@ -424,7 +428,7 @@
                      <x-settings.row label="{{ __('Auto Clock-Out') }}" description="{{ __('Automatically check out at fixed time') }}">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="auto_clockout_enabled" value="true" 
-                                   {{ $autoClockOut ? 'checked' : '' }} onchange="toggleAutoClockOut(this)">
+                                   {{ $autoClockOut ? 'checked' : '' }} onchange="toggleAutoClockOut(this); toggleConfigLink('auto_clockout', this)">
                         </div>
                     </x-settings.row>
                     
@@ -477,10 +481,69 @@
                 </x-settings.section>
             </div>
 
+            <!-- Penalties -->
+            <div class="col-md-6">
+                <x-settings.section class="settings-section">
+                    <x-settings.header icon="la la-exclamation-triangle" title="{{ __('Penalties') }}" description="{{ __('Policy violations') }}" />
+                    
+                    <x-settings.row label="{{ __('Late Arrival') }}" description="{{ __('Penalty for late clock-in') }}"
+                                    id="late_penalty" configureLink="/config/penalties#late" :showConfigure="$latePenalty">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="late_arrival_penalty_enabled" value="true" {{ $latePenalty ? 'checked' : '' }} onchange="toggleConfigLink('late_penalty', this)">
+                        </div>
+                    </x-settings.row>
+
+                    <x-settings.row label="{{ __('Early Departure') }}" description="{{ __('Penalty for early clock-out') }}"
+                                    id="early_penalty" configureLink="/config/penalties#early" :showConfigure="$earlyPenalty">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="early_departure_penalty_enabled" value="true" {{ $earlyPenalty ? 'checked' : '' }} onchange="toggleConfigLink('early_penalty', this)">
+                        </div>
+                    </x-settings.row>
 
 
+                    </div>
+                </x-settings.section>
+            </div>
 
+            <!-- Audit and Security -->
+            <div class="col-md-6 d-flex">
+                <x-settings.section class="settings-section h-100 mb-0 w-100">
+                    <x-settings.header icon="la la-shield" title="{{ __('Audit and Security') }}" description="{{ __('Logging and compliance') }}" />
 
+                    <x-settings.row label="{{ __('Audit Logging') }}" description="{{ __('Track all attendance changes') }}"
+                                    id="audit_logging" configureLink="/audit/logs" :showConfigure="$auditLogging">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="audit_logging_enabled" value="true" 
+                                   {{ $auditLogging ? 'checked' : '' }} onchange="toggleAuditLogging(this); toggleConfigLink('audit_logging', this)">
+                        </div>
+                    </x-settings.row>
+
+                        <div id="audit_config" class="mb-2 {{ $auditLogging ? '' : 'd-none' }}">
+                            <x-settings.row label="{{ __('Logging Level') }}">
+                                <select name="audit_level" class="form-select form-select-sm" style="width: 130px;">
+                                    <option value="minimal" {{ $auditLevel === 'minimal' ? 'selected' : '' }}>{{ __('Minimal') }}</option>
+                                    <option value="standard" {{ $auditLevel === 'standard' ? 'selected' : '' }}>{{ __('Standard') }}</option>
+                                    <option value="detailed" {{ $auditLevel === 'detailed' ? 'selected' : '' }}>{{ __('Detailed') }}</option>
+                                    <option value="forensic" {{ $auditLevel === 'forensic' ? 'selected' : '' }}>{{ __('Forensic') }}</option>
+                                </select>
+                            </x-settings.row>
+                        </div>
+
+                    <x-settings.row label="{{ __('Tamper Detection') }}" description="{{ __('Detect fraudulent attendance') }}" tooltip="{{ __('Monitors for anomalies like buddy punching, GPS spoofing') }}">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="tamper_detection_enabled" value="true" {{ $tamperDetection ? 'checked' : '' }}>
+                        </div>
+                    </x-settings.row>
+
+                    <x-settings.row label="{{ __('Compliance Mode') }}" description="{{ __('SOC2, ISO, labor law compliance') }}"
+                                    id="compliance" configureLink="/config/compliance" :showConfigure="$complianceMode">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="compliance_mode" value="true" {{ $complianceMode ? 'checked' : '' }} onchange="toggleConfigLink('compliance', this)">
+                        </div>
+                    </x-settings.row>
+                    </div>
+                </x-settings.section>
+            </div>
 
             <!-- Integrations -->
             <div class="col-md-6 d-flex">
@@ -518,7 +581,6 @@
                 </x-settings.section>
             </div>
         </div>
-@endsection
 
 @push('page-styles')
 <style>
@@ -778,8 +840,11 @@
 
             // Silent Auto-save on change
             form.addEventListener('change', function(e) {
-                // Don't auto-save if it's a specific button or non-input change if needed
-                // But generally all changes in this form should be persisted
+                // Ignore elements that manage their own saving via onchange attribute (like toggles)
+                if (e.target.hasAttribute('onchange')) {
+                    return;
+                }
+                
                 triggerAutoSave();
             });
         }
@@ -1934,12 +1999,39 @@
         </div>
     </div>
 
+@endsection
+
 @push('page-scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         
 
- route('admin.attendance-settings.update'), {
+        window.submitAttendanceSettings = function(silent = false) {
+            const form = document.getElementById('attendance-settings-form');
+            if (!form) return;
+            const formData = new FormData(form);
+            const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
+            
+            if (!formData.has('allowed_methods[]') && !formData.has('allowed_methods')) {
+                formData.append('allowed_methods', '[]');
+            }
+            if (!formData.has('working_days[]') && !formData.has('working_days')) {
+                formData.append('working_days', '[]');
+            }
+
+            // Explicitly handle unchecked checkboxes so they are sent as 'false'
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.name && !cb.name.endsWith('[]') && !formData.has(cb.name)) {
+                    formData.append(cb.name, 'false');
+                }
+            });
+            
+            if (!silent && submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="la la-spinner la-spin"></i> ' + '{{ __("Saving...") }}';
+            }
+
+            fetch('{{ route("admin.attendance-settings.update") }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -1950,6 +2042,8 @@
             .then(data => {
                 if (data.success && !silent) {
                     showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
+                } else if (!data.success && !silent) {
+                    showToast(data.message || '{{ __("Failed to save settings") }}', 'error');
                 }
             })
             .catch(error => {
@@ -1962,7 +2056,8 @@
                     submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
                 }
             });
-        }
+        };
+
 
         window.triggerAutoSave = function() {
             if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
@@ -1980,11 +2075,120 @@
         const safeToggleClass = (id, className, condition) => {
             const el = document.getElementById(id);
             if (el) {
-                if (condition) el.classList.remove(className);
-                else el.classList.add(className);
+                if (condition) {
+                    el.classList.remove(className);
+                } else {
+                    el.classList.add(className);
+                }
             }
         };
 
+        /*
+         * Generic Save & UI Toggle Function
+         */
+        window.toggleConfigLink = function(id, element) {
+            const isChecked = element.checked;
+            
+            // 1. UI Update for Config Link (if exists)
+            const configLink = document.getElementById('config_link_' + id);
+            if (configLink) {
+                if (isChecked) {
+                    configLink.classList.remove('d-none');
+                } else {
+                    configLink.classList.add('d-none');
+                }
+            }
+
+            // 2. AJAX Save
+            const key = element.getAttribute('name');
+            const isArrayField = key.endsWith('[]');
+            
+            const formData = new FormData();
+            
+            // For array checkboxes, collect ALL currently checked values
+            if (isArrayField) {
+                const baseName = key.replace('[]', '');
+                const allCheckboxes = document.querySelectorAll(`input[name="${key}"]`);
+                const checkedValues = Array.from(allCheckboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+                
+                // Send all checked values (or empty array if none checked)
+                if (checkedValues.length > 0) {
+                    checkedValues.forEach(val => formData.append(key, val));
+                } else {
+                    // Send empty array
+                    formData.append(baseName, '[]');
+                }
+            } else {
+                // For regular boolean toggles, send 1/0
+                const value = isChecked ? 1 : 0;
+                formData.append(key, value);
+            }
+            
+            formData.append('_method', 'PUT'); 
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('is_partial', '1'); // Trigger partial update logic
+
+            fetch('{{ route("admin.attendance-settings.update") }}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || '{{ __("Settings updated successfully") }}');
+                } else {
+                    toastr.error(data.message || '{{ __("Failed to update settings") }}');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('{{ __("An error occurred") }}');
+            });
+        };
+
+        /*
+         * Specific UI Toggles
+         */
+        window.toggleAutoClockOut = function(element) {
+            const configDiv = document.getElementById('auto_clockout_config');
+            if (configDiv) {
+                if (element.checked) {
+                    configDiv.classList.remove('d-none');
+                } else {
+                    configDiv.classList.add('d-none');
+                }
+            }
+        };
+
+        window.toggleGeofencing = function(element) {
+            const configDiv = document.getElementById('geofencing_config');
+            if (configDiv) {
+                if (element.checked) {
+                    configDiv.classList.remove('d-none');
+                } else {
+                    configDiv.classList.add('d-none');
+                }
+            }
+        };
+
+        window.toggleAuditLogging = function(element) {
+            const configDiv = document.getElementById('audit_config');
+            if (configDiv) {
+                if (element.checked) {
+                    configDiv.classList.remove('d-none');
+                } else {
+                    configDiv.classList.add('d-none');
+                }
+            }
+        };
+
+        // --- LATE ARRIVAL LOGIC ---
         window.toggleDeductionFields = function() {
             const type = getCheckedValue('late_arrival_penalty_type');
             safeToggleClass('deduction_config', 'd-none', type === 'deduction');
@@ -2168,7 +2372,13 @@
                 if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
                 submitAttendanceSettings(false);
             });
-            form.addEventListener('change', () => { triggerAutoSave(); });
+            form.addEventListener('change', (e) => {
+                // Ignore elements that manage their own saving via onchange attribute (like toggles)
+                if (e.target.hasAttribute('onchange')) {
+                    return;
+                }
+                triggerAutoSave();
+            });
         }
         toggleMethodSelectionMode();
     });
