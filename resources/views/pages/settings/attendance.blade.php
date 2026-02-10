@@ -482,7 +482,7 @@
             </div>
 
             <!-- Penalties -->
-            <div class="col-md-6">
+            <!-- <div class="col-md-6">
                 <x-settings.section class="settings-section">
                     <x-settings.header icon="la la-exclamation-triangle" title="{{ __('Penalties') }}" description="{{ __('Policy violations') }}" />
                     
@@ -503,10 +503,10 @@
 
                     </div>
                 </x-settings.section>
-            </div>
+            </div> -->
 
             <!-- Audit and Security -->
-            <div class="col-md-6 d-flex">
+            <!-- <div class="col-md-6 d-flex">
                 <x-settings.section class="settings-section h-100 mb-0 w-100">
                     <x-settings.header icon="la la-shield" title="{{ __('Audit and Security') }}" description="{{ __('Logging and compliance') }}" />
 
@@ -543,7 +543,7 @@
                     </x-settings.row>
                     </div>
                 </x-settings.section>
-            </div>
+            </div> -->
 
             <!-- Integrations -->
             <div class="col-md-6 d-flex">
