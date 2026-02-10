@@ -112,9 +112,9 @@ class SwitchTenantDatabase
         // Now verifying against the TARGET database context.
         // If we switched to tenant DB, we are checking the Tenant User.
         // If we failed to switch (still Main DB), we are checking the Main User.
-        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
-            abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
-        }
+        // if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+        //     abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
+        // }
 
 
         // Runtime Assertion: Security Check
