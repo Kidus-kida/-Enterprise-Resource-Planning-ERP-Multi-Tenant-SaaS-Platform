@@ -108,13 +108,19 @@ class SwitchTenantDatabase
             }
         }
 
+        
         // Defense in depth check (MOVED AFTER SWITCH):
         // Now verifying against the TARGET database context.
         // If we switched to tenant DB, we are checking the Tenant User.
         // If we failed to switch (still Main DB), we are checking the Main User.
-        // if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
-        //     abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
-        // }
+        if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
+             // If Superadmin somehow ended up in a tenant context, clear it and redirect to safety.
+             if (session()->has('current_tenant_id')) {
+                 \Log::warning('Security: Superadmin in tenant context. Clearing session and redirecting.');
+                 session()->forget('current_tenant_id');
+             }
+             return redirect()->route('superadmin.dashboard');
+        }
 
 
         // Runtime Assertion: Security Check
