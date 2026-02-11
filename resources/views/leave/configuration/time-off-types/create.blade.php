@@ -98,6 +98,53 @@
                                             <label class="form-check-label" for="notify_hr">{{ __('Notify HR') }}</label>
                                         </div>
                                     </div>
+                                    <div class="col-md-12 mb-3 hr-recipients-div" style="display: none;">
+                                        <label class="form-label fw-bold">{{ __('HR Notification Recipients') }}</label>
+                                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                            {{-- Roles Section --}}
+                                            <div class="mb-3">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="select_all_roles">
+                                                    <label class="form-check-label fw-bold" for="select_all_roles">
+                                                        {{ __('Select All Roles') }}
+                                                    </label>
+                                                </div>
+                                                <div class="ms-3">
+                                                    @foreach($roles as $role)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input hr-role-checkbox" type="checkbox" name="hr_notification_recipients[]" value="role_{{ $role->id }}" id="role_{{ $role->id }}" {{ in_array('role_'.$role->id, old('hr_notification_recipients', [])) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="role_{{ $role->id }}">
+                                                                {{ $role->name }}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            {{-- Users Section --}}
+                                            <div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="select_all_users">
+                                                    <label class="form-check-label fw-bold" for="select_all_users">
+                                                        {{ __('Select All Users') }}
+                                                    </label>
+                                                </div>
+                                                <div class="ms-3">
+                                                    @foreach($users as $user)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input hr-user-checkbox" type="checkbox" name="hr_notification_recipients[]" value="user_{{ $user->id }}" id="user_{{ $user->id }}" {{ in_array('user_'.$user->id, old('hr_notification_recipients', [])) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="user_{{ $user->id }}">
+                                                                {{ $user->firstname }} {{ $user->lastname }} <span class="text-muted">({{ $user->email }})</span>
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ __('Select roles and/or specific users to notify when this leave type is requested.') }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -174,8 +221,27 @@
                                         <label class="form-check-label" for="allow_negative_balance">{{ __('Allow Negative Cap') }}</label>
                                     </div>
                                     <div class="mt-2 ms-4 negative-cap-div" style="display: none;">
-                                        <label class="form-label mb-1">{{ __('Max Negative Days') }}</label>
+                                        <label class="form-label mb-1" id="max-negative-label">{{ __('Max Negative Days') }}</label>
                                         <input type="number" name="max_negative_balance" class="form-control form-control-sm" style="width: 100px;" value="{{ old('max_negative_balance', 0) }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="can_carry_forward" id="can_carry_forward" value="1" {{ old('can_carry_forward') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="can_carry_forward">{{ __('Allow Carry Forward') }}</label>
+                                    </div>
+                                    <div class="mt-2 ms-4 carry-forward-div" style="display: none;">
+                                        <div class="mb-2">
+                                            <label class="form-label mb-1">{{ __('Max Carry Forward Days') }}</label>
+                                            <input type="number" name="max_carry_forward" class="form-control form-control-sm" style="width: 100px;" value="{{ old('max_carry_forward', 0) }}">
+                                            <small class="text-muted d-block">{{ __('how many days can be rolled over') }}</small>
+                                        </div>
+                                        <div>
+                                            <label class="form-label mb-1">{{ __('Expiry (Months)') }}</label>
+                                            <input type="number" name="carry_forward_expiry" class="form-control form-control-sm" style="width: 100px;" value="{{ old('carry_forward_expiry') }}" placeholder="e.g. 3">
+                                            <small class="text-muted d-block">{{ __('Months after year-end') }}</small>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -196,13 +262,18 @@
                                             <label class="form-check-label" for="requires_attachment">{{ __('Requires Attachment') }}</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="allow_half_day" id="allow_half_day" value="1" {{ old('allow_half_day', 1) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="allow_half_day">{{ __('Allow Half Days') }}</label>
-                                        </div>
-                                    </div>
-                                </div>
+                                     <div class="col-md-4 mb-3 allow-half-day-div">
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="allow_half_day" id="allow_half_day" value="1" {{ old('allow_half_day', 1) ? 'checked' : '' }}>
+                                             <label class="form-check-label" for="allow_half_day">{{ __('Allow Half Days') }}</label>
+                                         </div>
+                                     </div>
+                                     <div class="col-md-4 mb-3">
+                                         <label class="form-label">{{ __('Max Consecutive Days') }}</label>
+                                         <input type="number" name="max_consecutive_days" class="form-control" value="{{ old('max_consecutive_days') }}" min="1" placeholder="e.g., 14">
+                                         <small class="text-muted">{{ __('Maximum days in a single request') }}</small>
+                                     </div>
+                                 </div>
                             </div>
                         </div>
                     </div>
@@ -221,6 +292,69 @@
 @push('page-scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Dynamic Duration Type Label Update
+        const durationTypeSelect = document.querySelector('select[name="duration_type"]');
+        const maxNegativeLabel = document.getElementById('max-negative-label');
+        
+        function updateNegativeLabel() {
+            if (durationTypeSelect && maxNegativeLabel) {
+                const durationType = durationTypeSelect.value;
+                let labelText = 'Max Negative Days'; // Default
+                
+                if (durationType === 'hours') {
+                    labelText = 'Max Negative Hours';
+                } else if (durationType === 'half_day') {
+                    labelText = 'Max Negative Half Days';
+                } else {
+                    labelText = 'Max Negative Days';
+                }
+                
+                maxNegativeLabel.textContent = labelText;
+            }
+        }
+        
+        if (durationTypeSelect) {
+            durationTypeSelect.addEventListener('change', updateNegativeLabel);
+            updateNegativeLabel(); // Set initial state
+        }
+        
+        // Allow Half Days Visibility Toggle (show only for Duration Type = "day")
+        const allowHalfDayDiv = document.querySelector('.allow-half-day-div');
+        
+        function toggleAllowHalfDay() {
+            if (durationTypeSelect && allowHalfDayDiv) {
+                const durationType = durationTypeSelect.value;
+                if (durationType === 'day') {
+                    allowHalfDayDiv.style.display = 'block';
+                } else {
+                    allowHalfDayDiv.style.display = 'none';
+                }
+            }
+        }
+        
+        if (durationTypeSelect) {
+            durationTypeSelect.addEventListener('change', toggleAllowHalfDay);
+            toggleAllowHalfDay(); // Set initial state
+        }
+
+        // Carry Forward Toggle
+        const canCarryForward = document.getElementById('can_carry_forward');
+        const carryForwardDiv = document.querySelector('.carry-forward-div');
+        
+        function toggleCarryForward() {
+            if(canCarryForward && carryForwardDiv) {
+                if(canCarryForward.checked) {
+                    carryForwardDiv.style.display = 'block';
+                } else {
+                    carryForwardDiv.style.display = 'none';
+                }
+            }
+        }
+        if(canCarryForward) {
+            canCarryForward.addEventListener('change', toggleCarryForward);
+            toggleCarryForward();
+        }
+        
         // Approval Toggle
         const requiresApproval = document.getElementById('requires_approval');
         const approvalLevelsDiv = document.querySelector('.approval-levels-div');
@@ -274,6 +408,48 @@
         if(requiresAllocation) {
             requiresAllocation.addEventListener('change', toggleAllocation);
             toggleAllocation();
+        }
+        
+        // HR Recipients Toggle
+        const notifyHr = document.getElementById('notify_hr');
+        const hrRecipientsDiv = document.querySelector('.hr-recipients-div');
+        
+        function toggleHrRecipients() {
+            if(notifyHr && hrRecipientsDiv) {
+                if(notifyHr.checked) {
+                    hrRecipientsDiv.style.display = 'block';
+                } else {
+                    hrRecipientsDiv.style.display = 'none';
+                }
+            }
+        }
+        if(notifyHr) {
+            notifyHr.addEventListener('change', toggleHrRecipients);
+            toggleHrRecipients();
+        }
+        
+        // Select All Roles
+        const selectAllRoles = document.getElementById('select_all_roles');
+        const roleCheckboxes = document.querySelectorAll('.hr-role-checkbox');
+        
+        if(selectAllRoles) {
+            selectAllRoles.addEventListener('change', function() {
+                roleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllRoles.checked;
+                });
+            });
+        }
+        
+        // Select All Users
+        const selectAllUsers = document.getElementById('select_all_users');
+        const userCheckboxes = document.querySelectorAll('.hr-user-checkbox');
+        
+        if(selectAllUsers) {
+            selectAllUsers.addEventListener('change', function() {
+                userCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllUsers.checked;
+                });
+            });
         }
     });
 </script>
