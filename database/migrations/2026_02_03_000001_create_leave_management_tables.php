@@ -14,32 +14,49 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('type_name');
-            $table->integer('max_date_allowed');
-            $table->string('leave_allowed_interval')->nullable();
             $table->string('description')->nullable();
-            $table->string('status')->default('allowed');
-            $table->boolean('uses_accrual')->default(false);
-            $table->unsignedBigInteger('default_accrual_plan_id')->nullable();
+            
+            // Time Off Logic
+            $table->enum('duration_type', ['day', 'half_day', 'hours'])->default('day');
+            $table->enum('count_as', ['absence', 'worked_time'])->default('absence');
+            $table->string('leave_allowed_interval')->nullable(); // e.g. 'monthly', 'yearly'
+            
+            // Availability & Visibility
+            $table->integer('max_date_allowed');
+            $table->boolean('ignore_public_holidays')->default(false);
+            $table->boolean('hide_on_dashboard')->default(false);
+            $table->boolean('eligible_for_accrual')->default(false);
+
+            // Notification
+            $table->boolean('notify_hr')->default(false);
+            $table->json('hr_notification_recipients')->nullable();
+
+            // Allocation Requests
+            $table->boolean('requires_allocation')->default(true);
+            $table->boolean('employee_requests_allowed')->default(false);
+            $table->integer('allocation_approval_levels')->default(1);
+
+            // Leave Behavior (Requests)
+            $table->boolean('requires_attachment')->default(false);
+            $table->integer('min_days_notice')->default(0); 
+            $table->integer('max_consecutive_days')->nullable(); 
+            $table->boolean('allow_half_day')->default(true);
             $table->boolean('is_paid')->default(true);
 
-            // Leave Behavior
-            $table->boolean('requires_attachment')->default(false);
-            $table->integer('min_days_notice')->default(0); // Days notice required
-            $table->integer('max_consecutive_days')->nullable(); // Max days in one request
-            $table->boolean('allow_half_day')->default(true);
-
-            // Approval Settings
+            // Request Approval Settings
             $table->boolean('requires_approval')->default(true);
-            $table->integer('approval_levels')->default(1); // Number of approval levels
+            $table->integer('approval_levels')->default(1); 
             $table->boolean('auto_approve_if_balance')->default(false);
-            $table->boolean('allow_negative_balance')->default(false);
+            
+            // Balance Settings
+            $table->boolean('allow_negative_balance')->default(false); // Negative Cap
             $table->integer('max_negative_balance')->default(0);
             $table->boolean('can_carry_forward')->default(false);
-            $table->integer('max_carry_forward')->default(0); // Max days to carry over
-            $table->integer('carry_forward_expiry')->nullable(); // Months until expiry (e.g. 3 = March 31st)
+            $table->integer('max_carry_forward')->default(0); 
+            $table->integer('carry_forward_expiry')->nullable(); 
 
             // Display & Ordering
-            $table->string('color', 7)->default('#0d6efd'); // Hex color for UI
+            $table->string('color', 7)->default('#0d6efd'); 
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
 

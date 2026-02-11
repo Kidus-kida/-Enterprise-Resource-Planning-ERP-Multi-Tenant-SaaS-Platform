@@ -387,8 +387,9 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.ettech.et</code>), configure
-                            the following in cPanel:</p>
+
+                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code>), configure the following in cPanel:</p>
+                        
 
                         <h5>Instructions:</h5>
                         <ol>
@@ -406,12 +407,9 @@
                         <div class="alert alert-info">
                             <h6>Access URLs:</h6>
                             <ul class="mb-0">
-                                <li><strong>With Subdomain:</strong>
-                                    <code>https://{{ $business->subdomain }}.ettech.et</code>
-                                </li>
-                                <li><strong>Without Subdomain:</strong>
-                                    <code>https://ettech.et?tenant={{ $tenant->id }}</code>
-                                </li>
+
+                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code></li>
+                                <li><strong>Without Subdomain:</strong> <code>{{ config('app.url') }}?tenant={{ $tenant->id }}</code></li
                             </ul>
                         </div>
                     </div>
