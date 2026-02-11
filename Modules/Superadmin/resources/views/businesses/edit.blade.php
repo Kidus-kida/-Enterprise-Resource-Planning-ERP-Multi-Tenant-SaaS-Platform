@@ -27,7 +27,7 @@
                             @method('PUT')
 
                             <div class="row">
-                                <!-- Left Column -->
+                                <!-- Left Column: Business Information -->
                                 <div class="col-md-6">
                                     <h4 class="card-title">Business Information</h4>
                                     
@@ -65,21 +65,22 @@
                                     </div>
                                 </div>
 
-                                <!-- Right Column -->
+                                <!-- Right Column: Package & Status -->
                                 <div class="col-md-6">
                                     <h4 class="card-title">Package & Status</h4>
                                     
                                     <div class="form-group">
-                                        <label>Current Owner</label>
-                                        <select name="owner_id" class="form-control @error('owner_id') is-invalid @enderror">
-                                            <option value="">No Owner</option>
-                                            @foreach($owners as $owner)
-                                                <option value="{{ $owner->id }}" {{ old('owner_id', $business->owner_id) == $owner->id ? 'selected' : '' }}>
-                                                    {{ $owner->firstname }} {{ $owner->lastname }} ({{ $owner->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('owner_id')
+                                        <label>Owner First Name<span class="text-danger">*</span></label>
+                                        <input type="text" name="owner_firstname" class="form-control @error('owner_firstname') is-invalid @enderror" value="{{ old('owner_firstname', $business->owner_firstname ?? ($business->owner->firstname ?? '')) }}">
+                                        @error('owner_firstname')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Owner Last Name<span class="text-danger">*</span></label>
+                                        <input type="text" name="owner_lastname" class="form-control @error('owner_lastname') is-invalid @enderror" value="{{ old('owner_lastname', $business->owner_lastname ?? ($business->owner->lastname ?? '')) }}">
+                                        @error('owner_lastname')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
