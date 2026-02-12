@@ -1460,7 +1460,7 @@
                                         <div class="col-auto">
                                             <div class="input-group" style="width: 150px;">
                                                 <input type="number" name="missed_punch_max_requests_per_month" class="form-control" 
-                                                       value="{{ $missedPunchMaxRequests }}" min="1" max="31" required>
+                                                       value="{{ $missedPunchMaxRequests }}" min="0" max="31" required>
                                                 <span class="input-group-text bg-white border-start-0">{{ __('Qty') }}</span>
                                             </div>
                                         </div>
