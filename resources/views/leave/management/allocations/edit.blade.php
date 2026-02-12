@@ -24,9 +24,53 @@
                     <input type="text" class="form-control" value="{{ $allocation->leaveType->type_name ?? '' }}" disabled>
                 </div>
 
+                {{-- Allocation Type --}}
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">{{ __('Year') }}</label>
-                    <input type="text" class="form-control" value="{{ $allocation->year }}" disabled>
+                    <label class="form-label">{{ __('Allocation Type') }} <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-3 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="allocation_type" id="type_manual" value="manual" {{ old('allocation_type', $allocation->allocation_type) == 'manual' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="type_manual">{{ __('Regular Allocation') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="allocation_type" id="type_accrual" value="accrual" {{ old('allocation_type', $allocation->allocation_type) == 'accrual' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="type_accrual">{{ __('Accrual Allocation') }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Accrual Plan (Conditional) --}}
+                <div class="col-md-6 mb-3" id="accrual_plan_div" style="display: none;">
+                    <label class="form-label">{{ __('Accrual Plan') }} <span class="text-danger">*</span></label>
+                    <select name="accrual_plan_id" class="form-select">
+                        <option value="">{{ __('Select Accrual Plan') }}</option>
+                        @foreach($accrualPlans as $plan)
+                            <option value="{{ $plan->id }}" {{ old('accrual_plan_id', $allocation->accrual_plan_id) == $plan->id ? 'selected' : '' }}>
+                                {{ $plan->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('Start Date') }} <span class="text-danger">*</span></label>
+                    <input type="date" name="start_date" class="form-control" value="{{ old('start_date', $allocation->period_start ? $allocation->period_start->format('Y-m-d') : '') }}" required>
+                </div>
+
+                {{-- Run Until --}}
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">{{ __('Run Until') }} <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-3 mt-2 mb-2">
+                         <div class="form-check">
+                            <input class="form-check-input" type="radio" name="run_until_option" id="run_no_limit" value="no_limit" {{ old('run_until_option', $allocation->period_end ? 'date' : 'no_limit') == 'no_limit' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="run_no_limit">{{ __('No Limit') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="run_until_option" id="run_specific_date" value="date" {{ old('run_until_option', $allocation->period_end ? 'date' : 'no_limit') == 'date' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="run_specific_date">{{ __('Specific Date') }}</label>
+                        </div>
+                    </div>
+                    <input type="date" name="run_until_date" id="run_until_date_input" class="form-control" value="{{ old('run_until_date', $allocation->period_end ? $allocation->period_end->format('Y-m-d') : '') }}" style="display: none;">
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -48,4 +92,40 @@
         </form>
     </div>
 </div>
+@push('page-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle Accrual Plan
+        const typeRadios = document.querySelectorAll('input[name="allocation_type"]');
+        const accrualDiv = document.getElementById('accrual_plan_div');
+        
+        function toggleAccrual() {
+             const selected = document.querySelector('input[name="allocation_type"]:checked').value;
+             if(selected === 'accrual') {
+                 accrualDiv.style.display = 'block';
+             } else {
+                 accrualDiv.style.display = 'none';
+             }
+        }
+        
+        typeRadios.forEach(radio => radio.addEventListener('change', toggleAccrual));
+        toggleAccrual(); // Init
+        
+        // Toggle Run Until Date
+        const runRadios = document.querySelectorAll('input[name="run_until_option"]');
+        const runDateInput = document.getElementById('run_until_date_input');
+        
+        function toggleRunDate() {
+            const selected = document.querySelector('input[name="run_until_option"]:checked').value;
+             if(selected === 'date') {
+                 runDateInput.style.display = 'block';
+             } else {
+                 runDateInput.style.display = 'none';
+             }
+        }
+        runRadios.forEach(radio => radio.addEventListener('change', toggleRunDate));
+        toggleRunDate(); // Init
+    });
+</script>
+@endpush
 @endsection

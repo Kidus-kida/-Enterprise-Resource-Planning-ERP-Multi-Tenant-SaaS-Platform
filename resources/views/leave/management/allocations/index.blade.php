@@ -22,7 +22,7 @@
                         <th>{{ __('Days Allocated') }}</th>
                         <th>{{ __('Days Remaining') }}</th>
                         <th>{{ __('Status') }}</th>
-                        <th>{{ __('Year') }}</th>
+                        <th>{{ __('Period') }}</th>
                         <th>{{ __('Notes') }}</th>
                         <th class="text-end">{{ __('Actions') }}</th>
                     </tr>
@@ -67,7 +67,14 @@
                                 <span class="badge bg-success">{{ __('Approved') }}</span>
                             @endif
                         </td>
-                        <td>{{ $allocation->year }}</td>
+                        <td>
+                            {{ \Carbon\Carbon::parse($allocation->period_start)->format('M d, Y') }}
+                            @if($allocation->period_end)
+                                <span class="text-muted text-xs"> - {{ \Carbon\Carbon::parse($allocation->period_end)->format('M d, Y') }}</span>
+                            @else
+                                <span class="text-muted text-xs"> (No Limit)</span>
+                            @endif
+                        </td>
                         <td><small class="text-muted">{{ Str::limit($allocation->notes, 30) }}</small></td>
                         <td class="text-end">
                             <div class="dropdown dropdown-action">
