@@ -9,7 +9,8 @@ class LeaveType extends TenantModel
     protected $fillable = [
         'type_name',
         'description',
-        
+        'default_accrual_plan_id',
+
         // Time Off Logic
         'duration_type',
         'count_as',
@@ -41,14 +42,14 @@ class LeaveType extends TenantModel
         'requires_approval',
         'approval_levels',
         'auto_approve_if_balance',
-        
+
         // Balance Settings
         'allow_negative_balance',
         'max_negative_balance',
         'can_carry_forward',
         'max_carry_forward',
         'carry_forward_expiry',
-        
+
         'active',
         'color',
         'sort_order',
