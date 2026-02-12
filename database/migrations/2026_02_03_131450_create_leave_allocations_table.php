@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('accrual_plan_id')->nullable()->constrained('leave_accrual_plans')->onDelete('set null');
             
             // Period
-            $table->integer('year'); // e.g., 2026
             $table->date('period_start')->nullable();
             $table->date('period_end')->nullable();
             
@@ -43,9 +42,8 @@ return new class extends Migration
             $table->softDeletes();
             
             // Indexes
-            $table->index(['user_id', 'leave_type_id', 'year']);
-            $table->index('year');
-            $table->unique(['user_id', 'leave_type_id', 'year']); // One allocation per user/type/year
+            $table->index(['user_id', 'leave_type_id']);
+            $table->index('period_start');
         });
     }
 

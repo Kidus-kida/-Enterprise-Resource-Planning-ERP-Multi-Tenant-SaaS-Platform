@@ -19,12 +19,12 @@ class TimeOffTypeController extends Controller
         // Search
         if ($request->has('search')) {
             $term = $request->search;
-            $query->where(function ($q) use ($term) {
+            $query->where(function($q) use ($term) {
                 $q->where('type_name', 'like', "%{$term}%")
-                    ->orWhere('description', 'like', "%{$term}%");
+                  ->orWhere('description', 'like', "%{$term}%");
             });
         }
-
+        
         // Filters
         if ($request->has('filter')) {
             if ($request->filter == 'paid') {
@@ -59,7 +59,15 @@ class TimeOffTypeController extends Controller
     {
         $pageTitle = __('Create Time Off Type');
         $accrualPlans = LeaveAccrualPlan::active()->get();
-        return view('leave.configuration.time-off-types.create', compact('pageTitle', 'accrualPlans'));
+        
+        // Get users and roles for HR notification recipients
+        $users = \App\Models\User::where('is_active', 1)
+            ->select('id', 'firstname', 'lastname', 'email')
+            ->orderBy('firstname')
+            ->get();
+        $roles = \Spatie\Permission\Models\Role::all();
+        
+        return view('leave.configuration.time-off-types.create', compact('pageTitle', 'accrualPlans', 'users', 'roles'));
     }
 
     public function store(Request $request)
@@ -67,70 +75,52 @@ class TimeOffTypeController extends Controller
         $validated = $request->validate([
             'type_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-
+            
             // Time Off Logic
             'duration_type' => 'required|in:day,half_day,hours',
             'count_as' => 'required|in:absence,worked_time',
             'leave_allowed_interval' => 'nullable|string',
 
             // Availability & Visibility
-            'max_date_allowed' => 'required|integer|min:0',
-            'ignore_public_holidays' => 'boolean',
-            'hide_on_dashboard' => 'boolean',
-            'eligible_for_accrual' => 'boolean',
 
+            
             // Notification
-            'notify_hr' => 'boolean',
             'hr_notification_recipients' => 'nullable|array',
 
             // Allocation Requests
-            'requires_allocation' => 'boolean',
-            'employee_requests_allowed' => 'boolean',
             'allocation_approval_levels' => 'integer|min:1|max:3',
 
             // Leave Behavior (Requests)
-            'requires_attachment' => 'boolean',
             'min_days_notice' => 'integer|min:0',
             'max_consecutive_days' => 'nullable|integer|min:1',
-            'allow_half_day' => 'boolean',
-            'is_paid' => 'boolean',
-
+            
             // Request Approval Settings
-            'requires_approval' => 'boolean',
             'approval_levels' => 'integer|min:1|max:3',
-            'auto_approve_if_balance' => 'boolean',
-
+            
             // Balance Settings
-            'allow_negative_balance' => 'boolean',
             'max_negative_balance' => 'integer|min:0',
-            'can_carry_forward' => 'boolean',
             'max_carry_forward' => 'integer|min:0',
             'carry_forward_expiry' => 'nullable|integer|min:1|max:12',
 
             'color' => 'nullable|string|max:7',
-            'default_accrual_plan_id' => 'nullable|exists:leave_accrual_plans,id',
         ]);
 
-        // Default Defaults
-        $defaults = [
-            'notify_hr' => false,
-            'ignore_public_holidays' => false,
-            'hide_on_dashboard' => false,
-            'eligible_for_accrual' => false,
-            'requires_allocation' => true,
-            'employee_requests_allowed' => false,
-            'requires_attachment' => false,
-            'allow_half_day' => true,
-            'is_paid' => true,
-            'requires_approval' => true,
-            'auto_approve_if_balance' => false,
-            'allow_negative_balance' => false,
-            'can_carry_forward' => false,
-        ];
+        // Handing Boolean Fields explicitly since unchecked boxes aren't sent
+        $validated['ignore_public_holidays'] = $request->boolean('ignore_public_holidays');
+        $validated['hide_on_dashboard'] = $request->boolean('hide_on_dashboard');
+        $validated['eligible_for_accrual'] = $request->boolean('eligible_for_accrual');
+        $validated['notify_hr'] = $request->boolean('notify_hr');
+        $validated['requires_allocation'] = $request->boolean('requires_allocation');
+        $validated['employee_requests_allowed'] = $request->boolean('employee_requests_allowed');
+        $validated['requires_attachment'] = $request->boolean('requires_attachment');
+        $validated['allow_half_day'] = $request->boolean('allow_half_day');
+        $validated['is_paid'] = $request->boolean('is_paid');
+        $validated['requires_approval'] = $request->boolean('requires_approval');
+        $validated['auto_approve_if_balance'] = $request->boolean('auto_approve_if_balance');
+        $validated['allow_negative_balance'] = $request->boolean('allow_negative_balance');
+        $validated['can_carry_forward'] = $request->boolean('can_carry_forward');
 
-        $data = array_merge($defaults, $validated);
-
-        LeaveType::create($data);
+        LeaveType::create($validated);
 
         return redirect()->route('leave.config.time-off-types.index')
             ->with('success', __('Time Off Type created successfully.'));
@@ -144,7 +134,15 @@ class TimeOffTypeController extends Controller
         $leaveType = LeaveType::findOrFail($id);
         $pageTitle = __('Edit Time Off Type');
         $accrualPlans = LeaveAccrualPlan::active()->get();
-        return view('leave.configuration.time-off-types.edit', compact('leaveType', 'pageTitle', 'accrualPlans'));
+        
+        // Get users and roles for HR notification recipients
+        $users = \App\Models\User::where('is_active', 1)
+            ->select('id', 'firstname', 'lastname', 'email')
+            ->orderBy('firstname')
+            ->get();
+        $roles = \Spatie\Permission\Models\Role::all();
+        
+        return view('leave.configuration.time-off-types.edit', compact('leaveType', 'pageTitle', 'accrualPlans', 'users', 'roles'));
     }
 
     public function update(Request $request, string $id)
@@ -154,78 +152,50 @@ class TimeOffTypeController extends Controller
         $validated = $request->validate([
             'type_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-
+            
             // Time Off Logic
             'duration_type' => 'required|in:day,half_day,hours',
             'count_as' => 'required|in:absence,worked_time',
             'leave_allowed_interval' => 'nullable|string',
 
             // Availability & Visibility
-            'max_date_allowed' => 'required|integer|min:0',
-            'ignore_public_holidays' => 'boolean',
-            'hide_on_dashboard' => 'boolean',
-            'eligible_for_accrual' => 'boolean',
 
+            
             // Notification
-            'notify_hr' => 'boolean',
             'hr_notification_recipients' => 'nullable|array',
 
             // Allocation Requests
-            'requires_allocation' => 'boolean',
-            'employee_requests_allowed' => 'boolean',
             'allocation_approval_levels' => 'integer|min:1|max:3',
 
             // Leave Behavior (Requests)
-            'requires_attachment' => 'boolean',
             'min_days_notice' => 'integer|min:0',
             'max_consecutive_days' => 'nullable|integer|min:1',
-            'allow_half_day' => 'boolean',
-            'is_paid' => 'boolean',
-
+            
             // Request Approval Settings
-            'requires_approval' => 'boolean',
             'approval_levels' => 'integer|min:1|max:3',
-            'auto_approve_if_balance' => 'boolean',
-
+            
             // Balance Settings
-            'allow_negative_balance' => 'boolean',
             'max_negative_balance' => 'integer|min:0',
-            'can_carry_forward' => 'boolean',
             'max_carry_forward' => 'integer|min:0',
             'carry_forward_expiry' => 'nullable|integer|min:1|max:12',
 
             'color' => 'nullable|string|max:7',
-            'default_accrual_plan_id' => 'nullable|exists:leave_accrual_plans,id',
         ]);
 
-        // Default Defaults for Boolean/Checkbox fields if missing
-        $defaults = [
-            'notify_hr' => false,
-            'ignore_public_holidays' => false,
-            'hide_on_dashboard' => false,
-            'eligible_for_accrual' => false,
-            'requires_allocation' => true,
-            'employee_requests_allowed' => false,
-            'requires_attachment' => false,
-            'allow_half_day' => true,
-            'is_paid' => true,
-            'requires_approval' => true,
-            'auto_approve_if_balance' => false,
-            'allow_negative_balance' => false,
-            'can_carry_forward' => false,
-        ];
-
-        // Merge defaults with validated data
-        // Note: For update, we must be careful. 
-        // checkboxes not sent means false. 
-        // validating checkboxes as 'boolean' usually handles this if present, 
-        // but if missing from request, we need to explicitly set them to false.
-
-        foreach ($defaults as $key => $value) {
-            if (!isset($validated[$key])) {
-                $validated[$key] = $value;
-            }
-        }
+        // Handing Boolean Fields explicitly since unchecked boxes aren't sent
+        $validated['ignore_public_holidays'] = $request->boolean('ignore_public_holidays');
+        $validated['hide_on_dashboard'] = $request->boolean('hide_on_dashboard');
+        $validated['eligible_for_accrual'] = $request->boolean('eligible_for_accrual');
+        $validated['notify_hr'] = $request->boolean('notify_hr');
+        $validated['requires_allocation'] = $request->boolean('requires_allocation');
+        $validated['employee_requests_allowed'] = $request->boolean('employee_requests_allowed');
+        $validated['requires_attachment'] = $request->boolean('requires_attachment');
+        $validated['allow_half_day'] = $request->boolean('allow_half_day');
+        $validated['is_paid'] = $request->boolean('is_paid');
+        $validated['requires_approval'] = $request->boolean('requires_approval');
+        $validated['auto_approve_if_balance'] = $request->boolean('auto_approve_if_balance');
+        $validated['allow_negative_balance'] = $request->boolean('allow_negative_balance');
+        $validated['can_carry_forward'] = $request->boolean('can_carry_forward');
 
         $leaveType->update($validated);
 

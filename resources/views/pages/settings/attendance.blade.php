@@ -238,7 +238,7 @@
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Overtime Approval') }}" description="{{ __('Require approval for overtime') }}"
-                                    id="overtime_approval" :configureLink="route('admin.attendance-settings.overtime-approval')" :showConfigure="$overtimeApproval">
+                                    id="overtime_approval" configureLink="#" :showConfigure="$overtimeApproval">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" role="switch" name="overtime_approval_enabled" value="true" {{ $overtimeApproval ? 'checked' : '' }} onchange="toggleConfigLink('overtime_approval', this)">
                             </div>
@@ -1509,6 +1509,23 @@
                                                 </select>
                                                 <div class="form-text small mt-2">
                                                     {{ __('Define who reviews and approves missed punch requests.') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAttendanceSettings(false)">{{ __('Save Changes') }}</button>
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Missing Punch Configuration Modal -->
     <style>
         /* CSS-Only Tooltip (Robust Fallback) */
@@ -2273,6 +2290,7 @@
         applyModalBinding('config_link_overtime', 'overtimeModal');
         applyModalBinding('config_link_missed_punch', 'missedPunchModal');
         applyModalBinding('config_link_corrections', 'attendanceCorrectionsModal');
+        applyModalBinding('config_link_overtime_approval', 'overtimeModal');
         applyModalBinding('config_link_web_portal', 'webPortalModal');
 
         window.togglePermissionFields = function() {

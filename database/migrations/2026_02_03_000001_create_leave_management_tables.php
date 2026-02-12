@@ -22,7 +22,6 @@ return new class extends Migration {
             $table->string('leave_allowed_interval')->nullable(); // e.g. 'monthly', 'yearly'
 
             // Availability & Visibility
-            $table->integer('max_date_allowed');
             $table->boolean('ignore_public_holidays')->default(false);
             $table->boolean('hide_on_dashboard')->default(false);
             $table->boolean('eligible_for_accrual')->default(false);
