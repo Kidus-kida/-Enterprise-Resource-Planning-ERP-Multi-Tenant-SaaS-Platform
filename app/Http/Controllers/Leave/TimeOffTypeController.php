@@ -19,12 +19,12 @@ class TimeOffTypeController extends Controller
         // Search
         if ($request->has('search')) {
             $term = $request->search;
-            $query->where(function($q) use ($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('type_name', 'like', "%{$term}%")
-                  ->orWhere('description', 'like', "%{$term}%");
+                    ->orWhere('description', 'like', "%{$term}%");
             });
         }
-        
+
         // Filters
         if ($request->has('filter')) {
             if ($request->filter == 'paid') {
@@ -67,7 +67,7 @@ class TimeOffTypeController extends Controller
         $validated = $request->validate([
             'type_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            
+
             // Time Off Logic
             'duration_type' => 'required|in:day,half_day,hours',
             'count_as' => 'required|in:absence,worked_time',
@@ -99,7 +99,7 @@ class TimeOffTypeController extends Controller
             'requires_approval' => 'boolean',
             'approval_levels' => 'integer|min:1|max:3',
             'auto_approve_if_balance' => 'boolean',
-            
+
             // Balance Settings
             'allow_negative_balance' => 'boolean',
             'max_negative_balance' => 'integer|min:0',
@@ -108,6 +108,7 @@ class TimeOffTypeController extends Controller
             'carry_forward_expiry' => 'nullable|integer|min:1|max:12',
 
             'color' => 'nullable|string|max:7',
+            'default_accrual_plan_id' => 'nullable|exists:leave_accrual_plans,id',
         ]);
 
         // Default Defaults
@@ -153,7 +154,7 @@ class TimeOffTypeController extends Controller
         $validated = $request->validate([
             'type_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            
+
             // Time Off Logic
             'duration_type' => 'required|in:day,half_day,hours',
             'count_as' => 'required|in:absence,worked_time',
@@ -185,7 +186,7 @@ class TimeOffTypeController extends Controller
             'requires_approval' => 'boolean',
             'approval_levels' => 'integer|min:1|max:3',
             'auto_approve_if_balance' => 'boolean',
-            
+
             // Balance Settings
             'allow_negative_balance' => 'boolean',
             'max_negative_balance' => 'integer|min:0',
@@ -194,6 +195,7 @@ class TimeOffTypeController extends Controller
             'carry_forward_expiry' => 'nullable|integer|min:1|max:12',
 
             'color' => 'nullable|string|max:7',
+            'default_accrual_plan_id' => 'nullable|exists:leave_accrual_plans,id',
         ]);
 
         // Default Defaults for Boolean/Checkbox fields if missing
@@ -218,7 +220,7 @@ class TimeOffTypeController extends Controller
         // checkboxes not sent means false. 
         // validating checkboxes as 'boolean' usually handles this if present, 
         // but if missing from request, we need to explicitly set them to false.
-        
+
         foreach ($defaults as $key => $value) {
             if (!isset($validated[$key])) {
                 $validated[$key] = $value;
