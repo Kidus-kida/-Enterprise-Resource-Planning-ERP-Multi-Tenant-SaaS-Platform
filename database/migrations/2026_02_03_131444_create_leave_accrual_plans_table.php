@@ -37,6 +37,9 @@ return new class extends Migration {
             $table->enum('start_type', ['days', 'months', 'years'])->default('days');
 
             $table->decimal('accrual_amount', 10, 4);
+            $table->enum('accrual_unit', ['days', 'hours'])->default('days');
+
+
             $table->enum('accrual_frequency', [
                 'hourly',
                 'daily',
@@ -46,10 +49,14 @@ return new class extends Migration {
                 'biyearly',
                 'yearly'
             ])->default('monthly');
-
+            $table->decimal('yearly_cap', 10, 4)->nullable();
+            $table->enum('yearly_cap_unit', ['days', 'hours'])->default('days');
             $table->decimal('cap_accrued_time', 10, 4)->nullable();
+            $table->enum('balance_cap_unit', ['days', 'hours'])->default('days');
             $table->enum('action_with_unused_accruals', ['lost', 'all', 'maximum'])->default('all');
             $table->decimal('max_carryover', 10, 4)->nullable();
+            $table->enum('max_carryover_unit', ['days', 'hours'])->default('days');
+
             $table->integer('carryover_validity_period')->nullable();
 
             $table->timestamps();

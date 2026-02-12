@@ -147,14 +147,14 @@ class AccrualPlanController extends Controller
             'transition_mode' => 'required|in:immediately,after_accrual',
             'is_active' => 'boolean',
             'description' => 'nullable|string',
-            'odoo_id' => 'nullable|integer', // Odoo field
-            'odoo_name' => 'nullable|string|max:255', // Odoo field
+            'odoo_id' => 'nullable|integer',
+            'odoo_name' => 'nullable|string|max:255',
 
             // Levels Validation
             'levels' => 'required|array|min:1',
             'levels.*.id' => [
                 'nullable',
-                Rule::exists('leave_accrual_levels', 'id')->where('leave_accrual_plan_id', $id)
+                Rule::exists(\App\Models\LeaveAccrualLevel::class, 'id')->where('leave_accrual_plan_id', $id)
             ],
             'levels.*.sequence' => 'required|integer',
             'levels.*.start_count' => 'required|integer|min:0',
@@ -175,14 +175,21 @@ class AccrualPlanController extends Controller
         \DB::transaction(function () use ($accrualPlan, $validated) {
             $accrualPlan->update(\Arr::except($validated, ['levels']));
 
-            // Simple sync logic: delete missing levels and update/create existing ones
-            $existingIds = collect($validated['levels'])->pluck('id')->filter()->toArray();
-            $accrualPlan->levels()->whereNotIn('id', $existingIds)->delete();
+            // Get IDs provided in the request
+            $providedIds = collect($validated['levels'])
+                ->pluck('id')
+                ->filter()
+                ->toArray();
+            
+            // Delete levels that are not in the request
+            $accrualPlan->levels()->whereNotIn('id', $providedIds)->delete();
 
             foreach ($validated['levels'] as $levelData) {
-                if (isset($levelData['id'])) {
-                    $accrualPlan->levels()->find($levelData['id'])->update($levelData);
+                if (!empty($levelData['id'])) {
+                    // Update existing level
+                    $accrualPlan->levels()->where('id', $levelData['id'])->first()?->update($levelData);
                 } else {
+                    // Create new level
                     $accrualPlan->levels()->create($levelData);
                 }
             }
