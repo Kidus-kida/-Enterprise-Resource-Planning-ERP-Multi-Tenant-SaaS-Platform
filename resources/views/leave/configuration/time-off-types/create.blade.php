@@ -12,7 +12,7 @@
         <form action="{{ route('leave.config.time-off-types.store') }}" method="POST">
             @csrf
             
-            <div class="leave-card-body p-3">
+            <div class="leave-card-body p-3 pb-5">
                 {{-- Basic Information --}}
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -157,17 +157,21 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <div class="form-check form-switch p-3 border rounded bg-light">
-                                    <input class="form-check-input" type="checkbox" name="requires_allocation" id="requires_allocation" value="1" {{ old('requires_allocation', 1) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="requires_allocation">{{ __('Requires Allocation') }}</label>
+                                <div class="p-3 border rounded bg-light">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="requires_allocation" id="requires_allocation" value="1" {{ old('requires_allocation', 1) ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold" for="requires_allocation">{{ __('Requires Allocation') }}</label>
+                                    </div>
                                     <small class="text-muted d-block mt-1">{{ __('If unchecked, users can request this leave without a preset balance (limitless).') }}</small>
                                 </div>
                             </div>
                             
                             <div class="col-md-6 mb-3 allocation-settings">
-                                <div class="form-check form-switch p-3 border rounded bg-light">
-                                    <input class="form-check-input" type="checkbox" name="employee_requests_allowed" id="employee_requests_allowed" value="1" {{ old('employee_requests_allowed') ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="employee_requests_allowed">{{ __('Allow Employee Requests') }}</label>
+                                <div class="p-3 border rounded bg-light">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="employee_requests_allowed" id="employee_requests_allowed" value="1" {{ old('employee_requests_allowed') ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold" for="employee_requests_allowed">{{ __('Allow Employee Requests') }}</label>
+                                    </div>
                                     <small class="text-muted d-block mt-1">{{ __('Users can request allocations for themselves (Extra Days).') }}</small>
                                 </div>
                             </div>
@@ -187,10 +191,6 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <h5 class="text-muted mb-3 border-bottom pb-2">{{ __('Visibility') }}</h5>
-                                <div class="mb-3">
-                                    <label class="form-label">{{ __('Max Days Allowed (Per Year)') }}</label>
-                                    <input type="number" name="max_date_allowed" class="form-control" value="{{ old('max_date_allowed', 0) }}" min="0">
-                                </div>
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="hide_on_dashboard" id="hide_on_dashboard" value="1" {{ old('hide_on_dashboard') ? 'checked' : '' }}>
@@ -280,7 +280,7 @@
 
                 </div>
 
-                <div class="submit-section mt-4 text-end">
+                <div class="submit-section mt-2 text-end">
                     <a href="{{ route('leave.config.time-off-types.index') }}" class="btn btn-secondary me-2">{{ __('Cancel') }}</a>
                     <button type="submit" class="btn btn-primary submit-btn px-4">{{ __('Save Time Off Type') }}</button>
                 </div>
