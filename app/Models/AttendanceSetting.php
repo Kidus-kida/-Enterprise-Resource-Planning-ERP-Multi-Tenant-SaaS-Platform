@@ -209,8 +209,21 @@ class AttendanceSetting extends TenantModel
                 $rules = array_filter($rules, fn($r) => $r !== 'required');
             }
 
+
+            // Use appropriate value for validation based on type and rules
+            if ($setting->type === 'boolean') {
+                // Booleans need the processed boolean value
+                $valueForValidation = $processedValue;
+            } elseif ($setting->type === 'json' && in_array('json', $rules)) {
+                // If 'json' validation rule is present, validate the JSON string
+                $valueForValidation = $processedValue;
+            } else {
+                // For array rules or other cases, use the raw value
+                $valueForValidation = $value;
+            }
+
             $validator = \Validator::make(
-                [$key => $processedValue],
+                [$key => $valueForValidation],
                 [$key => $rules]
             );
 
@@ -285,8 +298,21 @@ class AttendanceSetting extends TenantModel
                 $rules = array_filter($rules, fn($r) => $r !== 'required');
             }
 
+
+            // Use appropriate value for validation based on type and rules
+            if ($setting->type === 'boolean') {
+                // Booleans need the processed boolean value
+                $valueForValidation = $processedValue;
+            } elseif ($setting->type === 'json' && in_array('json', $rules)) {
+                // If 'json' validation rule is present, validate the JSON string
+                $valueForValidation = $processedValue;
+            } else {
+                // For array rules or other cases, use the raw value
+                $valueForValidation = $value;
+            }
+
             $validator = \Validator::make(
-                [$key => $processedValue],
+                [$key => $valueForValidation],
                 [$key => $rules]
             );
 
