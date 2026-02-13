@@ -157,14 +157,6 @@ class TenantManagementController extends Controller
             // Start Transaction for Provisioning
             \DB::beginTransaction();
 
-            // LOGGING START
-            $debugLog = "--- DEBUG INFO ---\n";
-            $debugLog .= "Host: " . config('database.connections.tenant.host') . "\n";
-            $debugLog .= "Port: " . config('database.connections.tenant.port') . "\n";
-            $debugLog .= "Database: " . config('database.connections.tenant.database') . "\n";
-            $debugLog .= "Username: " . config('database.connections.tenant.username') . "\n";
-            $debugLog .= "------------------\n\n";
-
             // COLLECT MIGRATION PATHS
             $migrationPaths = [];
             $migrationPaths[] = 'database/migrations'; // Root migrations
@@ -178,8 +170,6 @@ class TenantManagementController extends Controller
                 }
             }
 
-            $debugLog .= "Migration Paths:\n" . implode("\n", $migrationPaths) . "\n\n";
-
             // Use migrate:fresh to Ensure clean slate (drops existing tables like label_task from failed runs)
             \Artisan::call('migrate:fresh', [
                 '--database' => 'tenant',
@@ -187,24 +177,7 @@ class TenantManagementController extends Controller
                 '--path' => $migrationPaths,
             ]);
 
-            $migrationOutput = \Artisan::output();
-            $debugLog .= "Migration Command Output:\n" . ($migrationOutput ?: "(No output captured)") . "\n\n";
-
-            // VERIFY TABLES
-            try {
-                $tables = \DB::connection('tenant')->select('SHOW TABLES');
-                $debugLog .= "--- VERIFICATION ---\n";
-                $debugLog .= "Tables Found in '" . config('database.connections.tenant.database') . "': " . count($tables) . "\n";
-                foreach ($tables as $table) {
-                    $tableArray = (array) $table;
-                    $debugLog .= "- " . reset($tableArray) . "\n";
-                }
-            } catch (\Exception $e) {
-                $debugLog .= "Error listing tables: " . $e->getMessage() . "\n";
-            }
-            // LOGGING END
-
-            $output = $debugLog;
+            $output = \Artisan::output() ?: '(No migration output captured)';
 
             // SEEDING LOGIC
 
@@ -264,7 +237,7 @@ class TenantManagementController extends Controller
                 '--database' => 'tenant',
                 '--force' => true
             ]);
-            $debugLog .= "Permission Seeder Output:\n" . \Artisan::output() . "\n";
+            $output .= "\nPermission Seeder Output:\n" . \Artisan::output();
 
             // RUN ATTENDANCE SETTINGS SEEDER
             \Artisan::call('db:seed', [
@@ -272,7 +245,7 @@ class TenantManagementController extends Controller
                 '--database' => 'tenant',
                 '--force' => true
             ]);
-            $debugLog .= "Attendance Settings Seeder Output:\n" . \Artisan::output() . "\n";
+            $output .= "\nAttendance Settings Seeder Output:\n" . \Artisan::output();
 
             // ASSIGN 'Tenant Admin' ROLE
             try {
@@ -283,12 +256,12 @@ class TenantManagementController extends Controller
                         'model_type' => 'App\Models\User',
                         'model_id' => $tenantUserId
                     ]);
-                    $debugLog .= "Assigned 'Tenant Admin' role to user.\n";
+                    $output .= "\nAssigned 'Tenant Admin' role to user.";
                 } else {
-                    $debugLog .= "WARNING: 'Tenant Admin' role not found after seeding.\n";
+                    $output .= "\nWARNING: 'Tenant Admin' role not found after seeding.";
                 }
             } catch (\Exception $e) {
-                $debugLog .= "Error assigning role: " . $e->getMessage() . "\n";
+                $output .= "\nError assigning role: " . $e->getMessage();
             }
 
             // Clear permission cache to ensure the new role assignment is recognized immediately
