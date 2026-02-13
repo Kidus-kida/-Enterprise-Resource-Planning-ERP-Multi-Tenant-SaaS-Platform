@@ -23,7 +23,7 @@ class AccrualService
         // Find all allocations that are linked to an accrual plan
         $allocations = LeaveAllocation::whereNotNull('accrual_plan_id')
             ->where('status', 'approved')
-            ->where('year', $today->year)
+            ->currentYear()
             ->get();
 
         foreach ($allocations as $allocation) {
