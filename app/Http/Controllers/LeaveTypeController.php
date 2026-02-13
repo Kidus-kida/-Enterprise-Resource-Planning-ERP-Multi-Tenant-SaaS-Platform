@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeaveType;
+use App\Models\LeaveAccrualPlan;
 use Illuminate\Http\Request;
 
 use App\DataTables\leaveTypeDataTable;
@@ -24,8 +25,8 @@ class LeaveTypeController extends Controller
      */
     public function create()
     {
-        //  $users = User::where('type', UserType::EMPLOYEE)->whereIsActive(true)->get();
-        return view('pages.leavetype.create');
+        $accrualPlans = LeaveAccrualPlan::where('is_active', true)->get();
+        return view('pages.leavetype.create', compact('accrualPlans'));
     }
 
     /**
@@ -33,22 +34,22 @@ class LeaveTypeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(rules: [
+        $request->validate([
             'type_name' => 'required',
             'max_date_allowed' => 'required',
             'leave_allowed_interval' => 'nullable',
             'description' => 'nullable',
         ]);
-        // dd($request);
+
+        $description = $request->description ? html_entity_decode(strip_tags($request->description)) : null;
+
         $leavetype = LeaveType::create([
             'type_name' => $request->type_name,
             'max_date_allowed' => $request->max_date_allowed,
             'leave_allowed_interval' => $request->leave_allowed_interval,
-            $description = strip_tags($request->description), // remove HTML tags like <h1></h1>  <p></p>
-            $description = html_entity_decode($description), // convert &nbsp; to normal spaces
+            'default_accrual_plan_id' => $request->default_accrual_plan_id,
             'description' => $description,
             'status' => 'allowed',
-
         ]);
 
         $notification = notify(__('Leave Type has been Created'));
@@ -68,7 +69,8 @@ class LeaveTypeController extends Controller
      */
     public function edit(LeaveType $leaveType)
     {
-        //
+        $accrualPlans = LeaveAccrualPlan::where('is_active', true)->get();
+        return view('pages.leavetype.edit', compact('leaveType', 'accrualPlans'));
     }
 
     /**
@@ -76,7 +78,21 @@ class LeaveTypeController extends Controller
      */
     public function update(Request $request, LeaveType $leaveType)
     {
-        //
+        $request->validate([
+            'type_name' => 'required',
+            'max_date_allowed' => 'required',
+        ]);
+
+        $leaveType->update([
+            'type_name' => $request->type_name,
+            'max_date_allowed' => $request->max_date_allowed,
+            'leave_allowed_interval' => $request->leave_allowed_interval,
+            'default_accrual_plan_id' => $request->default_accrual_plan_id,
+            'description' => $request->description ? html_entity_decode(strip_tags($request->description)) : $leaveType->description,
+        ]);
+
+        $notification = notify(__('Leave Type has been Updated'));
+        return back()->with($notification);
     }
 
     /**

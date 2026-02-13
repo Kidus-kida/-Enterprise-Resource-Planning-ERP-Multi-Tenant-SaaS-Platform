@@ -19,9 +19,11 @@
                         <i class="la la-undo"></i>
                     </button>
                 </form>
-                <button type="submit" form="attendance-settings-form" class="btn btn-primary btn-sm ms-2">
-                    <i class="la la-save"></i> {{ __('Save Changes') }}
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="submit" form="attendance-settings-form" class="btn btn-primary btn-sm">
+                        <i class="la la-save"></i> {{ __('Save Changes') }}
+                    </button>
+                </div>
             </div>
         </x-slot>
     </x-breadcrumb>
@@ -692,163 +694,6 @@
             else config.classList.add('d-none');
         }
     }
-
-    function toggleGeofencing(checkbox) {
-        const config = document.getElementById('geofencing_config');
-        if (config) {
-            if (checkbox.checked) config.classList.remove('d-none');
-            else config.classList.add('d-none');
-        }
-    }
-
-    function toggleShifts(checkbox) {
-        const config = document.getElementById('shift_config');
-        if (config) {
-            if (checkbox.checked) config.classList.remove('d-none');
-            else config.classList.add('d-none');
-        }
-    }
-    
-    
-    function showToast(message, type = 'success') {
-        // Check if toastr is available
-        if (typeof toastr !== 'undefined') {
-            toastr[type](message);
-        } else {
-            // Fallback to alert if toastr is not available
-            alert(message);
-        }
-    }
-
-    function toggleGraceIn(checkbox) {
-        const inputContainer = document.getElementById('grace_in_input');
-        if (inputContainer) {
-            const input = inputContainer.querySelector('input[name="grace_in_minutes"]');
-            if (input) {
-                if (checkbox.checked) {
-                    input.removeAttribute('readonly');
-                    input.removeAttribute('style');
-                    input.classList.remove('text-muted');
-                } else {
-                    input.setAttribute('readonly', 'readonly');
-                    input.setAttribute('style', 'background-color:#e9ecef;');
-                    input.classList.add('text-muted');
-                }
-            }
-        }
-    }
-
-    function toggleGraceOut(checkbox) {
-        const inputContainer = document.getElementById('grace_out_input');
-        if (inputContainer) {
-            const input = inputContainer.querySelector('input[name="grace_out_minutes"]');
-            if (input) {
-                if (checkbox.checked) {
-                    input.removeAttribute('readonly');
-                    input.removeAttribute('style');
-                    input.classList.remove('text-muted');
-                } else {
-                    input.setAttribute('readonly', 'readonly');
-                    input.setAttribute('style', 'background-color:#e9ecef;');
-                    input.classList.add('text-muted');
-                }
-            }
-        }
-    }
-
-    function toggleAuditLogging(checkbox) {
-        const config = document.getElementById('audit_config');
-        if (config) {
-            if (checkbox.checked) config.classList.remove('d-none');
-            else config.classList.add('d-none');
-        }
-    }
-
-    var autoSaveTimeout = null;
-
-    function submitAttendanceSettings(silent = false) {
-        const form = document.getElementById('attendance-settings-form');
-        const formData = new FormData(form);
-        const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
-        
-        // Fix for checkbox arrays: if no checkboxes are checked, FormData won't have the field
-        // We need to explicitly send an empty array by appending a dummy entry
-        if (!formData.has('allowed_methods[]')) {
-            // Append an entry that will be interpreted as an empty array by the backend
-            formData.append('allowed_methods', '[]');
-        }
-        
-        // Show generic loading or small indicator if needed
-        // For now, we rely on the toast feedback
-        
-        fetch('{{ route('admin.attendance-settings.update') }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    console.error('Validation errors:', data.errors);
-                    throw new Error(data.message || 'Validation failed');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && !silent) {
-                showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error saving settings:', error);
-            // Even in silent mode, we might want to alert if save FAILED completely
-            if (!silent) {
-                showToast('{{ __("Failed to save settings. Please check console for details.") }}', 'error');
-            }
-        })
-        .finally(() => {
-            // Re-enable button if it was disabled
-            if (!silent && submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
-            }
-        });
-    }
-
-    function triggerAutoSave() {
-        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-            submitAttendanceSettings(true); // Call in silent mode
-        }, 800); // 800ms debounce
-    }
-
-    // Init
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleMethodSelectionMode();
-
-        const form = document.getElementById('attendance-settings-form');
-        if (form) {
-            // Standard form submit (Manual Save)
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                if (autoSaveTimeout) clearTimeout(autoSaveTimeout); // Cancel any pending auto-save
-                submitAttendanceSettings(false); // Explicit save with feedback
-            });
-
-            // Silent Auto-save on change
-            form.addEventListener('change', function(e) {
-                // Ignore elements that manage their own saving via onchange attribute (like toggles)
-                if (e.target.hasAttribute('onchange')) {
-                    return;
-                }
-                
-                triggerAutoSave();
-            });
-        }
-    });
 </script>
 @endpush
 
@@ -1841,60 +1686,6 @@
             window.autoSaveTimeout = null;
         }
 
-        window.submitAttendanceSettings = function(silent = false) {
-            const form = document.getElementById('attendance-settings-form');
-            if (!form) return;
-            const formData = new FormData(form);
-            const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
-            if (!formData.has('allowed_methods[]') && !formData.has('allowed_methods')) {
-                formData.append('allowed_methods', '[]');
-            }
-            if (!formData.has('working_days[]') && !formData.has('working_days')) {
-                formData.append('working_days', '[]');
-            }
-
-            // Explicitly handle unchecked checkboxes so they are sent as 'false'
-            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                if (cb.name && !cb.name.endsWith('[]') && !formData.has(cb.name)) {
-                    formData.append(cb.name, 'false');
-                }
-            });
-            if (!silent && submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="la la-spinner la-spin"></i> ' + '{{ __("Saving...") }}';
-            }
-            fetch('{{ route('admin.attendance-settings.update') }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && !silent) {
-                    showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving settings:', error);
-                if (!silent) showToast('Error saving settings', 'error');
-            })
-            .finally(() => {
-                if (!silent && submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="la la-save"></i> ' + '{{ __("Save Changes") }}';
-                }
-            });
-        }
-
-        window.triggerAutoSave = function() {
-            if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
-            window.autoSaveTimeout = setTimeout(() => {
-                submitAttendanceSettings(true);
-            }, 800);
-        }
-
         // --- LOGIC FROM SECOND BLOCK ---
         const getCheckedValue = (name) => {
             const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -2025,8 +1816,10 @@
 
         window.submitAttendanceSettings = function(silent = false) {
             const form = document.getElementById('attendance-settings-form');
-            if (!form) return;
-            const formData = new FormData(form);
+            if (!form) {
+                return;
+            }
+            let formData = new FormData(form);
             const submitBtn = document.querySelector('button[form="attendance-settings-form"]');
             
             if (!formData.has('allowed_methods[]') && !formData.has('allowed_methods')) {
@@ -2036,13 +1829,139 @@
                 formData.append('working_days', '[]');
             }
 
+            // Fields that belong to modals and should NOT be submitted with the main form
+            const modalFields = [
+                // Overtime Config Modal fields
+                'overtime_min_minutes', 'overtime_rate_normal', 'overtime_rate_night', 
+                'overtime_rate_dayoff', 'overtime_rate_holiday',
+                
+                // Manual Entry Config Modal fields
+                'manual_entry_permission_mode', 'manual_entry_allowed_roles',
+                'manual_entry_approval_policy', 'manual_entry_approval_structure',
+                'manual_entry_approver_entity', 'manual_entry_approver_role_id',
+                'manual_entry_approver_user_id', 'manual_entry_hierarchical_role_ids',
+                'manual_entry_hierarchical_user_ids', 'manual_entry_track_project',
+                'manual_entry_require_project', 'manual_entry_require_reason',
+                'manual_entry_max_days_back', 'manual_entry_allow_future',
+                
+                // Web Portal Config Modal fields
+                'web_portal_require_gps', 'web_portal_ip_whitelist',
+                'web_portal_allowed_hours_start', 'web_portal_allowed_hours_end',
+                
+                // Missing Punch Config Modal fields
+                'missing_punch_action', 'missing_punch_deduction_type',
+                'missing_punch_deduction_amount', 'missing_punch_auto_pair_threshold',
+                'missing_punch_backdate_limit_days', 'missing_punch_max_occurrences',
+                'missing_punch_auto_detect', 'missing_punch_auto_pair',
+                'missing_punch_notification_enabled', 'missing_punch_notify_employee',
+                'missing_punch_notify_supervisor', 'missing_punch_allow_backdated',
+                'missing_punch_require_reason', 'missing_punch_grace_period',
+                
+                // Late Arrival Config Modal fields
+                'late_arrival_grace_period', 'late_arrival_penalty_type',
+                'late_arrival_deduction_type', 'late_arrival_deduction_amount',
+                
+                // Early Checkout Config Modal fields
+                'early_checkout_grace_period', 'early_checkout_penalty_type',
+                'early_checkout_deduction_type', 'early_checkout_deduction_amount',
+                
+                // Missed Punch Approval Modal fields
+                'missed_punch_retroactive_limit', 'missed_punch_max_requests_per_month',
+                'missed_punch_require_reason', 'missed_punch_approval_mode',
+                
+                // Correction Config fields
+                'correction_retroactive_limit', 'correction_require_reason',
+                'correction_audit_trail_enabled',
+                
+                // Shift Config fields
+                'shift_mode'
+            ];
+
+            // Context-Aware Filtering (Smart Mode v2.2)
+            let cleanedFormData = new FormData();
+            let filteredCount = 0;
+
+            const activeModal = document.querySelector('.modal.show');
+            let allowedPrefixes = [];
+
+            if (activeModal) {
+                const id = activeModal.id;
+                
+                if (id === 'manualEntryConfigModal') allowedPrefixes.push('manual_entry_');
+                else if (id === 'missedPunchModal') allowedPrefixes.push('missed_punch_');
+                else if (id === 'overtimeModal') allowedPrefixes.push('overtime_');
+                else if (id === 'attendanceCorrectionsModal') allowedPrefixes.push('correction_');
+                // Assumed IDs for others based on pattern, can be adjusted if needed
+                else if (id === 'webPortalConfigModal') allowedPrefixes.push('web_portal_');
+                else if (id === 'lateArrivalConfigModal') allowedPrefixes.push('late_arrival_');
+                else if (id === 'earlyCheckoutConfigModal') allowedPrefixes.push('early_checkout_');
+            } else {
+            }
+
+            const modalPrefixes = [
+                'manual_entry_',
+                'overtime_',
+                'web_portal_',
+                'late_arrival_',
+                'early_checkout_',
+                'correction_',
+                'missed_punch_' // Added back for completeness
+            ];
+
+            for (let [key, value] of formData.entries()) {
+                const baseKey = key.endsWith('[]') ? key.slice(0, -2) : key;
+                let shouldFilter = false;
+                
+                // 1. Check if it is a known modal field (by list or prefix)
+                let isModalField = false;
+                if (modalFields.includes(key) || modalFields.includes(baseKey)) {
+                    isModalField = true;
+                } else {
+                    for (let prefix of modalPrefixes) {
+                        if (key.startsWith(prefix)) {
+                            isModalField = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isModalField) {
+                    // 2. If it IS a modal field, check if it is ALLOWED by current context
+                    let isAllowed = false;
+                    for (let allowed of allowedPrefixes) {
+                        if (key.startsWith(allowed)) {
+                            isAllowed = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isAllowed) {
+                        shouldFilter = true;
+                    }
+                }
+
+                if (!shouldFilter) {
+                    cleanedFormData.append(key, value);
+                    // console.log(`  ✅ Keeping: ${key}`);
+                } else {
+                    filteredCount++;
+                    // console.log(`  🚫 Filtered out: ${key}`);
+                }
+            }
+            formData = cleanedFormData;
+
             // Explicitly handle unchecked checkboxes so they are sent as 'false'
             form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                if (cb.name && !cb.name.endsWith('[]') && !formData.has(cb.name)) {
+                if (cb.name && !cb.name.endsWith('[]') && !formData.has(cb.name) && !modalFields.includes(cb.name)) {
                     formData.append(cb.name, 'false');
                 }
             });
-            
+
+            // Flag to tell the backend this is a partial update (so it doesn't try to validate missing fields)
+            // Appending at the end to ensure it's preserved
+            formData.append('is_partial', '1');
+
+
             if (!silent && submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="la la-spinner la-spin"></i> ' + '{{ __("Saving...") }}';
@@ -2055,16 +1974,23 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                return response.json();
+            })
             .then(data => {
                 if (data.success && !silent) {
                     showToast(data.message || '{{ __("Attendance settings updated successfully") }}', 'success');
                 } else if (!data.success && !silent) {
+                    if (data.errors) {
+                        // Show each validation error
+                        Object.entries(data.errors).forEach(([field, errors]) => {
+                            // Error logged for debugging
+                        });
+                    }
                     showToast(data.message || '{{ __("Failed to save settings") }}', 'error');
                 }
             })
             .catch(error => {
-                console.error('Error saving settings:', error);
                 if (!silent) showToast('Error saving settings', 'error');
             })
             .finally(() => {
@@ -2385,8 +2311,11 @@
 
         const form = document.getElementById('attendance-settings-form');
         if (form) {
+            console.log(' Attendance Settings Form: Event listener attached');
             form.addEventListener('submit', (e) => {
+                //console.log('🔵 Form submit event triggered');
                 e.preventDefault();
+                //console.log('🔵 Default prevented, calling submitAttendanceSettings');
                 if (window.autoSaveTimeout) clearTimeout(window.autoSaveTimeout);
                 submitAttendanceSettings(false);
             });
@@ -2397,6 +2326,8 @@
                 }
                 triggerAutoSave();
             });
+        } else {
+            console.error('❌ Attendance Settings Form: Form not found!');
         }
         toggleMethodSelectionMode();
     });

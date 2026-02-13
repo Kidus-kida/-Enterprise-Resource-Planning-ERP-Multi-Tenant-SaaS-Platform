@@ -82,7 +82,7 @@ class TimeOffTypeController extends Controller
             'leave_allowed_interval' => 'nullable|string',
 
             // Availability & Visibility
-            'max_date_allowed' => 'required|integer|min:0',
+
             
             // Notification
             'hr_notification_recipients' => 'nullable|array',
@@ -159,7 +159,7 @@ class TimeOffTypeController extends Controller
             'leave_allowed_interval' => 'nullable|string',
 
             // Availability & Visibility
-            'max_date_allowed' => 'required|integer|min:0',
+
             
             // Notification
             'hr_notification_recipients' => 'nullable|array',

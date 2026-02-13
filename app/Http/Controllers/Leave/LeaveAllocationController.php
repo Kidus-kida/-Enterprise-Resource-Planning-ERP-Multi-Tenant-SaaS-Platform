@@ -9,6 +9,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\LeaveAccrualPlan;
+use Carbon\Carbon;
+
+use Illuminate\Validation\Rule;
+
 class LeaveAllocationController extends Controller
 {
     /**
@@ -32,9 +37,9 @@ class LeaveAllocationController extends Controller
         // Filters
         if ($request->has('filter')) {
             if ($request->filter == 'current_year') {
-                $query->where('year', now()->year);
+                $query->whereYear('period_start', now()->year);
             } elseif ($request->filter == 'next_year') {
-                $query->where('year', now()->year + 1);
+                $query->whereYear('period_start', now()->year + 1);
             } elseif ($request->filter == 'pending') {
                 $query->where('status', 'pending');
             }
@@ -65,7 +70,8 @@ class LeaveAllocationController extends Controller
         $pageTitle = __('Allocate Leave (Manual)');
         $users = User::all(); // Should filter active
         $leaveTypes = LeaveType::all();
-        return view('leave.management.allocations.create', compact('pageTitle', 'users', 'leaveTypes'));
+        $accrualPlans = LeaveAccrualPlan::active()->get();
+        return view('leave.management.allocations.create', compact('pageTitle', 'users', 'leaveTypes', 'accrualPlans'));
     }
 
     // New: Form for Employees to Request Allocation
@@ -81,40 +87,31 @@ class LeaveAllocationController extends Controller
     public function storeRequest(Request $request)
     {
         $validated = $request->validate([
-            'leave_type_id' => 'required|exists:leave_types,id',
+            'leave_type_id' => ['required', Rule::exists(LeaveType::class, 'id')],
             'allocated_days' => 'required|numeric|min:0.5',
             'notes' => 'required|string|min:5',
-            'year' => 'nullable|integer', // Defaults to current if not set
+            'start_date' => 'required|date', // Changed from year
         ]);
 
-        // Prevent Duplicate Allocation (database has unique constraint on user_id, leave_type_id, year)
-    $year = $validated['year'] ?? now()->year;
-    $existingAllocation = LeaveAllocation::where('user_id', Auth::id())
-        ->where('leave_type_id', $validated['leave_type_id'])
-        ->where('year', $year)
-        ->first();
+        // Prevent Duplicate Allocation Check (Simplified since unique constraint removed)
+        $existingAllocation = LeaveAllocation::where('user_id', Auth::id())
+            ->where('leave_type_id', $validated['leave_type_id'])
+            ->where('period_start', $validated['start_date'])
+            ->first();
 
-    if ($existingAllocation) {
-        if ($existingAllocation->status === 'pending') {
-            return back()->with('error', __('You already have a pending allocation request for this leave type in :year.', ['year' => $year]));
-        } elseif ($existingAllocation->status === 'approved') {
-            return back()->with('error', __('You already have an approved allocation for this leave type in :year. Current allocation: :days days.', [
-                'year' => $year,
-                'days' => $existingAllocation->allocated_days
-            ]));
-        } elseif ($existingAllocation->status === 'rejected') {
-            return back()->with('error', __('Your previous allocation request for this leave type in :year was rejected. Reason: :reason', [
-                'year' => $year,
-                'reason' => $existingAllocation->rejection_reason ?? 'Not specified'
+        if ($existingAllocation) {
+             return back()->with('error', __('You already have an allocation request starting on :date. Status: :status', [
+                'date' => $validated['start_date'],
+                'status' => $existingAllocation->status
             ]));
         }
-    }    
 
         LeaveAllocation::create([
             'user_id' => Auth::id(),
             'leave_type_id' => $validated['leave_type_id'],
             'allocated_days' => $validated['allocated_days'],
-            'year' => $validated['year'] ?? now()->year,
+            'period_start' => $validated['start_date'],
+            'period_end' => null, // Default to no limit for requests
             'notes' => $validated['notes'],
             'allocation_type' => 'manual', // or 'request'
             'status' => 'pending',
@@ -129,36 +126,51 @@ class LeaveAllocationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'leave_type_id' => 'required|exists:leave_types,id',
+            'user_id' => ['required', Rule::exists(User::class, 'id')],
+            'leave_type_id' => ['required', Rule::exists(LeaveType::class, 'id')],
             'allocated_days' => 'required|numeric|min:0',
-            'year' => 'required|integer|min:2020|max:2030', // Adjust range as needed
+            'start_date' => 'required|date',
+            'allocation_type' => 'required|in:manual,accrual',
+            'accrual_plan_id' => [
+                'required_if:allocation_type,accrual',
+                'nullable',
+                Rule::exists(LeaveAccrualPlan::class, 'id')
+            ],
+            'run_until_option' => 'required|in:no_limit,date',
+            'run_until_date' => 'required_if:run_until_option,date|nullable|date|after:start_date',
             'notes' => 'nullable|string',
         ]);
 
-        // Check if allocation already exists for this user/type/year
-    $existingAllocation = LeaveAllocation::where('user_id', $validated['user_id'])
-        ->where('leave_type_id', $validated['leave_type_id'])
-        ->where('year', $validated['year'])
-        ->first();
+        // Check duplicate: Only warn if exact start date match for same user/type
+        $existingAllocation = LeaveAllocation::where('user_id', $validated['user_id'])
+            ->where('leave_type_id', $validated['leave_type_id'])
+            ->where('period_start', $validated['start_date'])
+            ->first();
 
-    if ($existingAllocation) {
-        return back()->withInput()->with('error', __(
-            'An allocation already exists for this user, leave type, and year. Status: :status, Allocated Days: :days',
-            [
-                'status' => ucfirst($existingAllocation->status),
-                'days' => $existingAllocation->allocated_days
-            ]
-        ));
-    }
+        if ($existingAllocation) {
+            return back()->withInput()->with('error', __(
+                'An allocation already exists for this user and leave type starting on :date.',
+                ['date' => $validated['start_date']]
+            ));
+        }
 
-    $validated['opening_balance'] = 0; 
-    $validated['available_days'] = $validated['allocated_days']; 
-    $validated['is_manual_allocation'] = true;
-    $validated['allocated_by'] = Auth::id();
-    $validated['status'] = 'approved'; // Admin created = auto approved
+        $data = [
+            'user_id' => $validated['user_id'],
+            'leave_type_id' => $validated['leave_type_id'],
+            'allocated_days' => $validated['allocated_days'],
+            'notes' => $validated['notes'] ?? null,
+            'allocation_type' => $validated['allocation_type'],
+            'is_manual_allocation' => $validated['allocation_type'] === 'manual',
+            'accrual_plan_id' => $validated['allocation_type'] === 'accrual' ? $validated['accrual_plan_id'] : null,
+            'period_start' => $validated['start_date'],
+            'period_end' => $validated['run_until_option'] === 'date' ? $validated['run_until_date'] : null,
+            'opening_balance' => 0,
+            'available_days' => $validated['allocated_days'],
+            'allocated_by' => Auth::id(),
+            'status' => 'approved',
+        ];
 
-        LeaveAllocation::create($validated);
+        LeaveAllocation::create($data);
 
         return redirect()->route('leave.management.allocations.index')
             ->with('success', __('Leave allocated successfully.'));
@@ -196,6 +208,15 @@ class LeaveAllocationController extends Controller
         // Standard Update
         $validated = $request->validate([
             'allocated_days' => 'required|numeric|min:0',
+            'start_date' => 'required|date',
+            'allocation_type' => 'required|in:manual,accrual',
+            'accrual_plan_id' => [
+                'required_if:allocation_type,accrual',
+                'nullable',
+                Rule::exists(LeaveAccrualPlan::class, 'id')
+            ],
+            'run_until_option' => 'required|in:no_limit,date',
+            'run_until_date' => 'required_if:run_until_option,date|nullable|date|after:start_date',
             'notes' => 'nullable|string',
         ]);
 
@@ -210,6 +231,12 @@ class LeaveAllocationController extends Controller
         
         $allocation->allocated_days = $validated['allocated_days'];
         $allocation->notes = $validated['notes'];
+        $allocation->period_start = $validated['start_date'];
+        $allocation->period_end = $validated['run_until_option'] === 'date' ? $validated['run_until_date'] : null;
+        $allocation->allocation_type = $validated['allocation_type'];
+        $allocation->is_manual_allocation = $validated['allocation_type'] === 'manual';
+        $allocation->accrual_plan_id = $validated['allocation_type'] === 'accrual' ? $validated['accrual_plan_id'] : null;
+
         $allocation->save();
 
         return redirect()->route('leave.management.allocations.index')

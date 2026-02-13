@@ -14,7 +14,6 @@ class LeaveAllocation extends TenantModel
         'user_id',
         'leave_type_id',
         'accrual_plan_id',
-        'year',
         'period_start',
         'period_end',
         'opening_balance',
@@ -77,11 +76,11 @@ class LeaveAllocation extends TenantModel
     }
 
     /**
-     * Scope for current year
+     * Scope for current year (based on period start)
      */
     public function scopeCurrentYear($query)
     {
-        return $query->where('year', now()->year);
+        return $query->whereYear('period_start', now()->year);
     }
 
     /**

@@ -15,17 +15,17 @@ return new class extends Migration {
             $table->unsignedBigInteger('company_id')->nullable()->index();
             $table->string('type_name');
             $table->string('description')->nullable();
-            
+
             // Time Off Logic
             $table->enum('duration_type', ['day', 'half_day', 'hours'])->default('day');
             $table->enum('count_as', ['absence', 'worked_time'])->default('absence');
             $table->string('leave_allowed_interval')->nullable(); // e.g. 'monthly', 'yearly'
-            
+
             // Availability & Visibility
-            $table->integer('max_date_allowed');
             $table->boolean('ignore_public_holidays')->default(false);
             $table->boolean('hide_on_dashboard')->default(false);
             $table->boolean('eligible_for_accrual')->default(false);
+            $table->unsignedBigInteger('default_accrual_plan_id')->nullable();
 
             // Notification
             $table->boolean('notify_hr')->default(false);
@@ -38,25 +38,25 @@ return new class extends Migration {
 
             // Leave Behavior (Requests)
             $table->boolean('requires_attachment')->default(false);
-            $table->integer('min_days_notice')->default(0); 
-            $table->integer('max_consecutive_days')->nullable(); 
+            $table->integer('min_days_notice')->default(0);
+            $table->integer('max_consecutive_days')->nullable();
             $table->boolean('allow_half_day')->default(true);
             $table->boolean('is_paid')->default(true);
 
             // Request Approval Settings
             $table->boolean('requires_approval')->default(true);
-            $table->integer('approval_levels')->default(1); 
+            $table->integer('approval_levels')->default(1);
             $table->boolean('auto_approve_if_balance')->default(false);
-            
+
             // Balance Settings
             $table->boolean('allow_negative_balance')->default(false); // Negative Cap
             $table->integer('max_negative_balance')->default(0);
             $table->boolean('can_carry_forward')->default(false);
-            $table->integer('max_carry_forward')->default(0); 
-            $table->integer('carry_forward_expiry')->nullable(); 
+            $table->integer('max_carry_forward')->default(0);
+            $table->integer('carry_forward_expiry')->nullable();
 
             // Display & Ordering
-            $table->string('color', 7)->default('#0d6efd'); 
+            $table->string('color', 7)->default('#0d6efd');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
 

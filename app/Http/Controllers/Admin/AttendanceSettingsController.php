@@ -63,11 +63,40 @@ class AttendanceSettingsController extends Controller
             $isEnablingNightShift = ($currentNightShift === false && $newNightShift === true);
             
             \Log::info('Attendance Settings Update Request:', $request->all());
+
+            // Prepare data and normalize array fields
+            $data = $request->except('_token', '_method', 'is_partial');
+            $arrayFields = [
+                'manual_entry_allowed_roles',
+                'manual_entry_hierarchical_role_ids',
+                'manual_entry_hierarchical_user_ids',
+                'working_days', 
+                'allowed_methods'
+            ];
+
+            foreach ($arrayFields as $field) {
+                if (isset($data[$field]) && !is_array($data[$field])) {
+                    // Try to decode JSON string first (e.g. "[\"1\",\"2\"]" or "[]")
+                    $decoded = json_decode($data[$field], true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $data[$field] = $decoded;
+                    } else {
+                        // If not valid JSON array, treat as single value and wrap
+                        // Handle explicit empty string if necessary, though usually null
+                        if ($data[$field] === '' || $data[$field] === null) {
+                            $data[$field] = [];
+                        } else {
+                            $data[$field] = [$data[$field]];
+                        }
+                    }
+                    \Log::info("Normalized field {$field} to array.");
+                }
+            }
         
             if ($request->has('is_partial')) {
-                $errors = AttendanceSetting::setPartial($request->except('_token', '_method', 'is_partial'));
+                $errors = AttendanceSetting::setPartial($data);
             } else {
-                $errors = AttendanceSetting::setMultiple($request->except('_token', '_method'));
+                $errors = AttendanceSetting::setMultiple($data);
             }
 
             \Log::info('Attendance Settings Update Result (Errors):', ['errors' => $errors]);
