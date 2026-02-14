@@ -26,6 +26,9 @@ class AccrualService
                 $query->whereYear('period_start', $today->year)
                     ->orWhereYear('period_end', $today->year);
             })
+
+            ->currentYear()
+j
             ->get();
 
         foreach ($allocations as $allocation) {
