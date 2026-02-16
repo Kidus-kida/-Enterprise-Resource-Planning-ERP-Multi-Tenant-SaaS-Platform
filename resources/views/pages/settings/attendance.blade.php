@@ -694,6 +694,49 @@
             else config.classList.add('d-none');
         }
     }
+    
+    function calculateMinimumHours() {
+        const startTime = document.querySelector('input[name="work_day_start_time"]');
+        const endTime = document.querySelector('input[name="work_day_end_time"]');
+        const minHoursInput = document.getElementById('minimum_work_hours');
+        
+        if (!startTime || !endTime || !minHoursInput) return;
+        if (!startTime.value || !endTime.value) return;
+        
+        // Parse times
+        const [startHour, startMin] = startTime.value.split(':').map(Number);
+        const [endHour, endMin] = endTime.value.split(':').map(Number);
+        
+        // Calculate minutes
+        let startMinutes = startHour * 60 + startMin;
+        let endMinutes = endHour * 60 + endMin;
+        
+        // Handle midnight crossing (e.g., 22:00 to 06:00)
+        if (endMinutes < startMinutes) {
+            endMinutes += 24 * 60; // Add 24 hours
+        }
+        
+        // Calculate difference in hours
+        const diffMinutes = endMinutes - startMinutes;
+        const hours = (diffMinutes / 60).toFixed(1);
+        
+        // Update the field
+        minHoursInput.value = hours;
+        
+        // Trigger auto-save
+        triggerAutoSave();
+    }
+    // Add listeners for automatic minimum hours calculation
+        const startTimeInput = document.querySelector('input[name="work_day_start_time"]');
+        const endTimeInput = document.querySelector('input[name="work_day_end_time"]');
+        
+        if (startTimeInput) {
+            startTimeInput.addEventListener('change', calculateMinimumHours);
+        }
+        
+        if (endTimeInput) {
+            endTimeInput.addEventListener('change', calculateMinimumHours);
+        }
 </script>
 @endpush
 
