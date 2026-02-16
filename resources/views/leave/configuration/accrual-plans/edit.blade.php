@@ -125,6 +125,19 @@
                             @include('leave.configuration.accrual-plans.partials.milestone_item', ['index' => $index, 'level' => $level])
                         @endforeach
                     </div>
+
+                    <div id="milestones_empty_state" class="text-center py-5"
+                        style="{{ $accrualPlan->levels->count() > 0 ? 'display: none;' : '' }}">
+                        <div class="mb-3">
+                            <i class="fa fa-layer-group fa-3x text-muted opacity-50"></i>
+                        </div>
+                        <h6 class="text-muted fw-bold">{{ __('No Milestones Defined') }}</h6>
+                        <p class="text-muted small mb-3">
+                            {{ __('Create milestones to define how leave is accrued over time.') }}</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMilestone()">
+                            <i class="fa fa-plus"></i> {{ __('Add First Milestone') }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -148,12 +161,16 @@
 
                 function addMilestone() {
                     const container = document.getElementById('milestones_container');
+                    const emptyState = document.getElementById('milestones_empty_state');
                     const template = document.getElementById('milestone-template').innerHTML;
                     const html = template.replace(/INDEX/g, milestoneIndex);
 
                     const div = document.createElement('div');
                     div.innerHTML = html;
                     container.appendChild(div.firstElementChild);
+
+                    // Hide empty state
+                    if (emptyState) emptyState.style.display = 'none';
 
                     updateMilestoneSequences();
                     milestoneIndex++;
@@ -162,19 +179,52 @@
                 window.addMilestone = addMilestone;
 
                 document.addEventListener('DOMContentLoaded', function () {
-                    // Only add if empty (helpful for Create page, less so for Edit but good for consistency)
-                    const container = document.getElementById('milestones_container');
-                    if (container && container.children.length === 0) {
-                        addMilestone();
-                    }
                     toggleWorkedTime();
                     toggleCarryOverDate();
                 });
 
                 function removeMilestone(btn) {
                     if (confirm('{{ __("Are you sure you want to remove this milestone?") }}')) {
-                        btn.closest('.milestone-item').remove();
-                        updateMilestoneSequences();
+                        const item = btn.closest('.milestone-item');
+                        const idInput = item.querySelector('input[name*="[id]"]');
+
+                        if (idInput && idInput.value) {
+                            // Existing level, delete via AJAX
+                            fetch(`{{ route('leave.config.accrual-levels.destroy', '') }}/${idInput.value}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json'
+                                }
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        item.remove();
+                                        updateMilestoneSequences();
+                                        checkEmptyState();
+                                    } else {
+                                        alert(data.message || 'Failed to delete milestone.');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('An error occurred while deleting the milestone.');
+                                });
+                        } else {
+                            // New level, just remove from DOM
+                            item.remove();
+                            updateMilestoneSequences();
+                            checkEmptyState();
+                        }
+                    }
+                }
+
+                function checkEmptyState() {
+                    const container = document.getElementById('milestones_container');
+                    const emptyState = document.getElementById('milestones_empty_state');
+                    if (container && container.children.length === 0) {
+                        if (emptyState) emptyState.style.display = 'block';
                     }
                 }
 

@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use App\Services\LeaveService;
+use Illuminate\Support\Facades\Schema;
 class LeaveRequestController extends Controller
 {
 
@@ -44,21 +45,28 @@ class LeaveRequestController extends Controller
      */
     public function create()
     {
-        $leavetypes = LeaveType::where('status', 'allowed')->get();
+        $leaveTypeConnection = (new LeaveType())->getConnectionName() ?? config('database.default');
+        $leaveTypeQuery = LeaveType::query();
+
+        if (Schema::connection($leaveTypeConnection)->hasColumn('leave_types', 'status')) {
+            $leaveTypeQuery->where('status', 'allowed');
+        }
+
+        $leavetypes = $leaveTypeQuery->get();
 
         // Fetch allocations grouped by leave type
         $rawAllocations = LeaveAllocation::where('user_id', Auth::id())
             ->where('available_days', '>', 0)
             ->with('leaveType')
             ->get();
-            
+
         $allocations = [];
         foreach ($rawAllocations as $alloc) {
             $name = $alloc->leaveType->type_name ?? 'Unknown';
             if (!isset($allocations[$name])) $allocations[$name] = 0;
             $allocations[$name] += $alloc->available_days;
         }
-        
+
         // Pass explicit null for legacy balance variable to avoid view errors
         $balance = null;
 
@@ -114,12 +122,12 @@ class LeaveRequestController extends Controller
                 $paths[] = $name;
             }
         }
-        
+
         // Determine Initial Status based on Workflow
         $status = 'pending'; // Default: Pending Manager Approval
         $currentLevel = 1;
         $requiredLevels = $leaveType->approval_levels ?? 1;
-        
+
         if (!$leaveType->requires_approval) {
              $status = 'approved';
              $currentLevel = $requiredLevels;
@@ -142,17 +150,17 @@ class LeaveRequestController extends Controller
             'required_approval_levels' => $requiredLevels,
                 'total_days' => $days,
             ]);
-            
+
             // If Auto-Approved, deduct balance immediately
             if ($status === 'approved') {
                 $leaveService->deductBalance(Auth::id(), $leaveType->id, $days);
             }
         });
 
-        $msg = $status === 'approved' 
-            ? __('Leave request auto-approved and balance deducted.') 
+        $msg = $status === 'approved'
+            ? __('Leave request auto-approved and balance deducted.')
             : __('Leave request submitted and is pending approval.');
-            
+
         return back()->with('success', $msg);
     }
 
@@ -175,17 +183,17 @@ class LeaveRequestController extends Controller
         ]);
 
         $leaveRequest = LeaveRequest::findOrFail($id);
-        
+
         if ($leaveRequest->status === 'approved') {
             return back()->with(notify(__('Request is already approved.')));
         }
 
         DB::transaction(function () use ($leaveRequest, $validated, $employee_id) {
-            
+
             if ($validated['status'] === 'rejected') {
                 // Determine who rejected
                 $rejectorRole = (Auth::user()->can('hr_access')) ? 'HR' : 'Manager'; // Simplistic role check
-                
+
                 $leaveRequest->update([
                     'attended_by' => Auth::id(),
                     'reject_reason' => html_entity_decode(strip_tags($validated['reject_reason'] ?? '')),
@@ -203,21 +211,21 @@ class LeaveRequestController extends Controller
 
                 // If multi-level approval is required and we aren't at the last level
                 if ($requiredLevels > 1 && $currentLevel < $requiredLevels) {
-                    
+
                     // Advance to next level (e.g., Manager -> HR)
                     $leaveRequest->update([
                         'current_approval_level' => $currentLevel + 1,
                         'status' => 'pending', // Keeps it pending for next approver
                         'admin_notes' => $leaveRequest->admin_notes . "\nLevel $currentLevel approved by " . Auth::user()->name,
                     ]);
-                    
+
                     // TODO: Notify next approver (HR) here
-                    
+
                 } else {
                     // Final Approval
                     $leaveService = app(LeaveService::class);
                     $days = $leaveRequest->total_days; // Use cached value or recalculate
-                    
+
                     if (!$leaveService->checkBalance($employee_id, $leaveRequest->leave_type_id, $days)) {
                          throw ValidationException::withMessages([
                             'status' => ['Insufficient leave allocation balance for this employee.'],
@@ -225,7 +233,7 @@ class LeaveRequestController extends Controller
                     }
 
                     $leaveService->deductBalance($employee_id, $leaveRequest->leave_type_id, $days);
-                    
+
                     $leaveRequest->update([
                         'status' => 'approved',
                         'attended_by' => Auth::id(),

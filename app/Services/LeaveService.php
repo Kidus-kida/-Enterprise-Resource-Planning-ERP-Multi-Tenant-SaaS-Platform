@@ -111,7 +111,7 @@ class LeaveService
             ->where('leave_type_id', $leaveTypeId)
             ->where('status', 'approved')
             ->where('available_days', '>', 0)
-            ->orderBy('year', 'asc')
+            ->orderBy('period_start', 'asc')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -142,14 +142,15 @@ class LeaveService
             // Find or create current year allocation to store the debt
             $currentYearAllocation = LeaveAllocation::where('user_id', $userId)
                 ->where('leave_type_id', $leaveTypeId)
-                ->where('year', Carbon::now()->year)
+                ->currentYear()
                 ->first();
 
             if (!$currentYearAllocation) {
                 $currentYearAllocation = LeaveAllocation::create([
                     'user_id' => $userId,
                     'leave_type_id' => $leaveTypeId,
-                    'year' => Carbon::now()->year,
+                    'period_start' => Carbon::now()->startOfYear(),
+                    'period_end' => null,
                     'allocation_type' => 'manual', // or adjustment
                     'status' => 'approved',
                     'available_days' => 0,
@@ -176,7 +177,7 @@ class LeaveService
          // Find latest allocation to dump credit back into
          $allocation = LeaveAllocation::where('user_id', $userId)
             ->where('leave_type_id', $leaveTypeId)
-            ->orderBy('year', 'desc')
+            ->orderBy('period_start', 'desc')
             ->first();
             
          if ($allocation) {

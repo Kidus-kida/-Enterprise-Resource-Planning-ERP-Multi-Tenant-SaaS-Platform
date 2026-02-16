@@ -44,7 +44,7 @@ class LeaveYearEndProcess extends Command
             $this->info("Processing User: {$user->name} ({$user->id})");
 
             $allocations = LeaveAllocation::where('user_id', $user->id)
-                ->where('year', $prevYear)
+                ->whereYear('period_start', $prevYear)
                 ->where('status', 'approved')
                 ->where('available_days', '>', 0)
                 ->get();
@@ -73,7 +73,7 @@ class LeaveYearEndProcess extends Command
                     // Check if already processed
                     $exists = LeaveAllocation::where('user_id', $user->id)
                         ->where('leave_type_id', $type->id)
-                        ->where('year', $targetYear)
+                        ->whereYear('period_start', $targetYear)
                         ->where('allocation_type', 'carryover')
                         ->exists();
 
@@ -86,7 +86,8 @@ class LeaveYearEndProcess extends Command
                     LeaveAllocation::create([
                         'user_id' => $user->id,
                         'leave_type_id' => $type->id,
-                        'year' => $targetYear,
+                        'period_start' => Carbon::create($targetYear, 1, 1),
+                        'period_end' => null,
                         'allocated_days' => 0, // Base allocation is 0
                         'available_days' => $carryOver,
                         'opening_balance' => $carryOver,

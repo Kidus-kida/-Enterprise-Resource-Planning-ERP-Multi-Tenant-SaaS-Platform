@@ -6,7 +6,6 @@ use App\Models\LeaveAllocation;
 use App\Models\LeaveAccrualPlan;
 use App\Models\LeaveAccrualLevel;
 use App\Models\User;
-use App\Models\Attendance;
 use App\Models\PayrollSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -14,28 +13,35 @@ use Illuminate\Support\Facades\Log;
 class AccrualService
 {
     /**
-     * Run accrual process for all eligible employees
+     * Run daily accruals for all eligible allocations
      */
     public function runDailyAccruals()
     {
         $today = Carbon::today();
 
-        // Find all allocations that are linked to an accrual plan
+        // Find all allocations linked to an active accrual plan, approved, and current period
         $allocations = LeaveAllocation::whereNotNull('accrual_plan_id')
             ->where('status', 'approved')
-            ->where('year', $today->year)
+            ->where(function ($query) use ($today) {
+                $query->whereYear('period_start', $today->year)
+                    ->orWhereYear('period_end', $today->year);
+            })
+
+            ->currentYear()
+j
             ->get();
 
         foreach ($allocations as $allocation) {
             /** @var LeaveAllocation $allocation */
             $plan = $allocation->accrualPlan;
-            if (!$plan || !$plan->is_active)
+            if (!$plan || !$plan->is_active) {
                 continue;
+            }
 
-            // 1. Process Accrual
+            // 1. Process accrual for today
             $this->processAllocationAccrual($allocation, $plan, $today);
 
-            // 2. Process Carry-over (if it's the right time)
+            // 2. Process carry-over if applicable
             $this->processCarryOverIfDue($allocation, $plan, $today);
         }
     }
@@ -69,10 +75,8 @@ class AccrualService
         if ($plan->is_based_on_worked_time) {
             $accrualAmount *= $this->getWorkedTimeModifier($user, $activeLevel, $date);
         }
-
         // Apply Gain Time logic (Odoo: accrue at start or end of period)
 // For simplicity in this initial implementation, we accrue on the date matched by isAccrualDate.
-
         // Enforce Yearly Cap (from Level)
         $currentAccrued = (float) $allocation->accrued_days;
         if ($activeLevel->yearly_cap > 0 && $currentAccrued >= (float) $activeLevel->yearly_cap) {
@@ -85,25 +89,25 @@ class AccrualService
             $canAccrue = (float) $activeLevel->yearly_cap - $currentAccrued;
         }
 
-        // Update allocation using helper if possible, but we need custom date
-        $allocation->accrued_days = (string) number_format($currentAccrued + $canAccrue, 2, '.', '');
-        $allocation->available_days = (string) number_format((float) $allocation->available_days + $canAccrue, 2, '.', '');
+        // Update allocation balances
+        $allocation->accrued_days = number_format($currentAccrued + $canAccrue, 2, '.', '');
+        $allocation->available_days = number_format((float) $allocation->available_days + $canAccrue, 2, '.', '');
 
-        // Enforce Cap (from Level)
+        // Enforce maximum cap on available_days
         if ($activeLevel->cap_accrued_time > 0 && (float) $allocation->available_days > (float) $activeLevel->cap_accrued_time) {
             $overflow = (float) $allocation->available_days - (float) $activeLevel->cap_accrued_time;
-            $allocation->accrued_days = (string) number_format((float) $allocation->accrued_days - $overflow, 2, '.', '');
-            $allocation->available_days = (string) number_format((float) $activeLevel->cap_accrued_time, 2, '.', '');
+            $allocation->accrued_days = number_format((float) $allocation->accrued_days - $overflow, 2, '.', '');
+            $allocation->available_days = number_format((float) $activeLevel->cap_accrued_time, 2, '.', '');
         }
 
-        $allocation->last_accrual_date = (string) $date->toDateString();
+        $allocation->last_accrual_date = $date->toDateString();
         $allocation->save();
 
-        Log::info("Accrued {$accrualAmount} days for User {$user->id} on Plan {$plan->name}");
+        Log::info("Accrued {$canAccrue} days for User {$user->id} on Plan {$plan->name}");
     }
 
     /**
-     * Get the active accrual level for the user based on tenure
+     * Determine the active accrual level for a user
      */
     public function getActiveLevel(User $user, LeaveAccrualPlan $plan, Carbon $date)
     {
@@ -121,24 +125,21 @@ class AccrualService
                 })->orWhere(function ($q) use ($tenureYears) {
                     $q->where('start_type', 'years')->where('start_count', '<=', $tenureYears);
                 });
-            })->orderBy('sequence', 'desc')
+            })
+            ->orderBy('sequence', 'desc')
             ->orderBy('start_count', 'desc')
             ->first();
     }
 
     /**
-     * Check if the given date is an accrual date for the frequency
+     * Determine if the current date is an accrual date
      */
     protected function isAccrualDate(
         LeaveAllocation $allocation,
         LeaveAccrualLevel $level,
-        LeaveAccrualPlan
-        $plan,
+        LeaveAccrualPlan $plan,
         Carbon $date
     ) {
-        // Simple logic: if frequency is monthly, accrue on the 1st of month (or same day as join)
-        // In Odoo, this depends on "Gain Time".
-
         $lastAccrual = $allocation->last_accrual_date ? Carbon::parse($allocation->last_accrual_date) : null;
 
         switch ($level->accrual_frequency) {
@@ -147,14 +148,11 @@ class AccrualService
             case 'weekly':
                 return $date->isSunday();
             case 'biweekly':
-                // Accrue every 14 days (approx)
                 return $date->isSunday() && $date->weekOfYear % 2 == 0;
             case 'monthly':
-                // Accrue on the same day of month as joined, or 1st if not set
-                $dayToAccrue = ($allocation->period_start) ? Carbon::parse($allocation->period_start)->day : 1;
+                $dayToAccrue = $allocation->period_start ? Carbon::parse($allocation->period_start)->day : 1;
                 return $date->day == $dayToAccrue && (!$lastAccrual || $lastAccrual->month != $date->month);
             case 'biyearly':
-                // Accrue twice a year (Jan 1 and July 1)
                 return ($date->month == 1 || $date->month == 7) && $date->day == 1 && (!$lastAccrual || $lastAccrual->month != $date->month);
             case 'yearly':
                 return $date->month == 1 && $date->day == 1 && (!$lastAccrual || $lastAccrual->year != $date->year);
@@ -164,7 +162,7 @@ class AccrualService
     }
 
     /**
-     * Process carry-over logic for an allocation
+     * Handle carry-over for an allocation if applicable
      */
     protected function processCarryOverIfDue(LeaveAllocation $allocation, LeaveAccrualPlan $plan, Carbon $date)
     {
@@ -188,7 +186,6 @@ class AccrualService
                 break;
             case 'maximum':
                 $maxCarry = (float) ($activeLevel->max_carryover ?? 0);
-                // Convert units if necessary (Carry-over is always stored as days in allocation)
                 if ($activeLevel->max_carryover_unit === 'hours') {
                     $workingHours = (float) PayrollSetting::get('working_hours_per_day', 8);
                     $maxCarry = $workingHours > 0 ? ($maxCarry / $workingHours) : ($maxCarry / 8);
@@ -200,19 +197,16 @@ class AccrualService
                 break;
         }
 
-        // Apply Carry-over
-        $allocation->carried_forward = (float) number_format($carryOver, 2, '.', '');
-
-        // Reset balances for the new period
+        $allocation->carried_forward = number_format($carryOver, 2, '.', '');
         $allocation->accrued_days = 0.0;
-        $allocation->available_days = (float) number_format($carryOver, 2, '.', '');
+        $allocation->available_days = number_format($carryOver, 2, '.', '');
         $allocation->save();
 
         Log::info("Processed carry-over for User {$user->id}. Carried forward {$carryOver} days.");
     }
 
     /**
-     * Determine if today is the carry-over date for the plan
+     * Determine if today is the carry-over date for a plan
      */
     protected function isCarryOverDate(LeaveAccrualPlan $plan, Carbon $date)
     {
@@ -229,10 +223,42 @@ class AccrualService
     }
 
     /**
-     * Calculate modifier based on worked time vs expected days (Odoo style)
+     * Placeholder for worked time modifier
      */
     protected function getWorkedTimeModifier(User $user, LeaveAccrualLevel $level, Carbon $date)
     {
         return 1.0;
+    }
+
+    /**
+     * Recalculate accruals for all allocations of a specific plan
+     */
+    public function recalculateForPlan(int $planId): int
+    {
+        $today = Carbon::today();
+        $year = $today->year;
+        $processed = 0;
+
+        $plan = LeaveAccrualPlan::find($planId);
+        if (!$plan || !$plan->is_active) {
+            return $processed;
+        }
+
+        $allocations = LeaveAllocation::where('accrual_plan_id', $planId)
+            ->where('status', 'approved')
+            ->where(function ($query) use ($year) {
+                $query->whereYear('period_start', $year)
+                    ->orWhereYear('period_end', $year);
+            })
+            ->get();
+
+        foreach ($allocations as $allocation) {
+            $this->processAllocationAccrual($allocation, $plan, $today);
+            $processed++;
+        }
+
+        Log::info("Recalculated accruals for plan #{$planId} ({$plan->name}). Processed {$processed} allocations.");
+
+        return $processed;
     }
 }
