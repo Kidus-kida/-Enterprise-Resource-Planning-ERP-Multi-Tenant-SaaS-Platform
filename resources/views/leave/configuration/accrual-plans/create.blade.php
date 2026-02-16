@@ -113,6 +113,19 @@
                             @endforeach
                         @endif
                     </div>
+
+                    <div id="milestones_empty_state" class="text-center py-5"
+                        style="{{ old('levels') ? 'display: none;' : '' }}">
+                        <div class="mb-3">
+                            <i class="fa fa-layer-group fa-3x text-muted opacity-50"></i>
+                        </div>
+                        <h6 class="text-muted fw-bold">{{ __('No Milestones Defined') }}</h6>
+                        <p class="text-muted small mb-3">
+                            {{ __('Create milestones to define how leave is accrued over time.') }}</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMilestone()">
+                            <i class="fa fa-plus"></i> {{ __('Add First Milestone') }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -136,12 +149,16 @@
 
                 function addMilestone() {
                     const container = document.getElementById('milestones_container');
+                    const emptyState = document.getElementById('milestones_empty_state');
                     const template = document.getElementById('milestone-template').innerHTML;
                     const html = template.replace(/INDEX/g, milestoneIndex).replace(/INDEX_PLUS/g, milestoneIndex + 1);
 
                     const div = document.createElement('div');
                     div.innerHTML = html;
                     container.appendChild(div.firstElementChild);
+
+                    // Hide empty state
+                    if (emptyState) emptyState.style.display = 'none';
 
                     updateMilestoneSequences();
                     milestoneIndex++;
@@ -153,6 +170,13 @@
                     if (confirm('{{ __("Are you sure you want to remove this milestone?") }}')) {
                         btn.closest('.milestone-item').remove();
                         updateMilestoneSequences();
+
+                        // Check if empty
+                        const container = document.getElementById('milestones_container');
+                        const emptyState = document.getElementById('milestones_empty_state');
+                        if (container.children.length === 0 && emptyState) {
+                            emptyState.style.display = 'block';
+                        }
                     }
                 }
 
@@ -265,10 +289,6 @@
 
                 // Initialize with one milestone if empty
                 document.addEventListener('DOMContentLoaded', function () {
-                    const container = document.getElementById('milestones_container');
-                    if (container && container.children.length === 0) {
-                        addMilestone();
-                    }
                     toggleWorkedTime();
                     toggleCarryOverDate();
                 });

@@ -180,7 +180,8 @@ class LeaveAllocationController extends Controller
     {
         $allocation = LeaveAllocation::findOrFail($id);
         $pageTitle = __('Edit Allocation');
-        return view('leave.management.allocations.edit', compact('allocation', 'pageTitle'));
+        $accrualPlans = LeaveAccrualPlan::active()->get();
+        return view('leave.management.allocations.edit', compact('allocation', 'pageTitle', 'accrualPlans'));
     }
 
     public function update(Request $request, string $id)

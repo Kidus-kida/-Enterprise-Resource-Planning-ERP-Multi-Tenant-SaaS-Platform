@@ -73,62 +73,76 @@
                         <h5 class="card-title mb-0">{{ __('Accrual Milestones') }}</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table custom-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>{{ __('Tenure') }}</th>
-                                        <th>{{ __('Accrual Rate') }}</th>
-                                        <th>{{ __('Frequency') }}</th>
-                                        <th>{{ __('Carry-over') }}</th>
-                                        <th>{{ __('Caps') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($accrualPlan->levels as $level)
+                        @if($accrualPlan->levels->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table custom-table mb-0">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>
-                                                @if($level->start_count == 0)
-                                                    <span class="text-primary fw-bold">{{ __('Immediate') }}</span>
-                                                @else
-                                                    {{ $level->start_count }} {{ ucfirst($level->start_type) }}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <span class="fw-bold">{{ $level->accrual_amount }}</span>
-                                                <small class="text-muted text-uppercase">{{ $level->accrual_unit }}</small>
-                                            </td>
-                                            <td class="text-capitalize">{{ $level->accrual_frequency }}</td>
-                                            <td>
-                                                @if($level->action_with_unused_accruals == 'lost')
-                                                    <span class="text-danger">{{ __('Lost') }}</span>
-                                                @else
-                                                    {{ __('Up to') }}
-                                                    {{ $level->max_carryover ?? __('Unlimited') }}
-                                                    @if($level->max_carryover)
-                                                        <small
-                                                            class="text-muted text-uppercase">{{ $level->max_carryover_unit }}</small>
-                                                    @endif
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($level->yearly_cap > 0)
-                                                    <div class="small">Y: {{ $level->yearly_cap }}</div>
-                                                @endif
-                                                @if($level->cap_accrued_time > 0)
-                                                    <div class="small">B: {{ $level->cap_accrued_time }}</div>
-                                                @endif
-                                                @if(!$level->yearly_cap && !$level->cap_accrued_time)
-                                                    <span class="text-muted">—</span>
-                                                @endif
-                                            </td>
+                                            <th>#</th>
+                                            <th>{{ __('Tenure') }}</th>
+                                            <th>{{ __('Accrual Rate') }}</th>
+                                            <th>{{ __('Frequency') }}</th>
+                                            <th>{{ __('Carry-over') }}</th>
+                                            <th>{{ __('Caps') }}</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($accrualPlan->levels as $level)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    @if($level->start_count == 0)
+                                                        <span class="text-primary fw-bold">{{ __('Immediate') }}</span>
+                                                    @else
+                                                        {{ $level->start_count }} {{ ucfirst($level->start_type) }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold">{{ $level->accrual_amount }}</span>
+                                                    <small class="text-muted text-uppercase">{{ $level->accrual_unit }}</small>
+                                                </td>
+                                                <td class="text-capitalize">{{ $level->accrual_frequency }}</td>
+                                                <td>
+                                                    @if($level->action_with_unused_accruals == 'lost')
+                                                        <span class="text-danger">{{ __('Lost') }}</span>
+                                                    @else
+                                                        {{ __('Up to') }}
+                                                        {{ $level->max_carryover ?? __('Unlimited') }}
+                                                        @if($level->max_carryover)
+                                                            <small
+                                                                class="text-muted text-uppercase">{{ $level->max_carryover_unit }}</small>
+                                                        @endif
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($level->yearly_cap > 0)
+                                                        <div class="small">Y: {{ $level->yearly_cap }}</div>
+                                                    @endif
+                                                    @if($level->cap_accrued_time > 0)
+                                                        <div class="small">B: {{ $level->cap_accrued_time }}</div>
+                                                    @endif
+                                                    @if(!$level->yearly_cap && !$level->cap_accrued_time)
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="fa fa-layer-group fa-3x text-muted opacity-50"></i>
+                                </div>
+                                <h6 class="text-muted fw-bold">{{ __('No Milestones Defined') }}</h6>
+                                <p class="text-muted small mb-3">{{ __('This accrual plan currently has no milestones.') }}</p>
+                                <a href="{{ route('leave.config.accrual-plans.edit', $accrualPlan->id) }}"
+                                    class="btn btn-outline-primary btn-sm">
+                                    <i class="fa fa-plus"></i> {{ __('Add Milestones') }}
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

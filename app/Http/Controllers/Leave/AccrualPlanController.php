@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Leave;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveAccrualPlan;
 use App\Models\LeaveType;
+use App\Services\Leave\AccrualService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class AccrualPlanController extends Controller
 {
+    protected AccrualService $accrualService;
+
+    public function __construct(AccrualService $accrualService)
+    {
+        $this->accrualService = $accrualService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -90,31 +98,40 @@ class AccrualPlanController extends Controller
             'odoo_name' => 'nullable|string|max:255', // Odoo field
 
             // Levels Validation
-            'levels' => 'required|array|min:1',
-            'levels.*.sequence' => 'required|integer',
-            'levels.*.start_count' => 'required|integer|min:0',
+            'levels' => 'nullable|array',
+            'levels.*.sequence' => 'required_with:levels|integer',
+            'levels.*.start_count' => 'required_with:levels|integer|min:0',
             'levels.*.start_type' => 'nullable|in:days,months,years',
-            'levels.*.accrual_amount' => 'required|numeric|min:0',
-            'levels.*.accrual_unit' => 'required|in:days,hours',
-            'levels.*.accrual_frequency' => 'required|in:hourly,daily,weekly,biweekly,monthly,biyearly,yearly',
+            'levels.*.accrual_amount' => 'required_with:levels|numeric|min:0',
+            'levels.*.accrual_unit' => 'required_with:levels|in:days,hours',
+            'levels.*.accrual_frequency' => 'required_with:levels|in:hourly,daily,weekly,biweekly,monthly,biyearly,yearly',
             'levels.*.yearly_cap' => 'nullable|numeric|min:0',
             'levels.*.yearly_cap_unit' => 'nullable|in:days,hours',
             'levels.*.cap_accrued_time' => 'nullable|numeric|min:0',
             'levels.*.balance_cap_unit' => 'nullable|in:days,hours',
-            'levels.*.action_with_unused_accruals' => 'required|in:lost,all,maximum',
+            'levels.*.action_with_unused_accruals' => 'required_with:levels|in:lost,all,maximum',
             'levels.*.max_carryover' => 'nullable|numeric|min:0',
             'levels.*.max_carryover_unit' => 'nullable|in:days,hours',
             'levels.*.carryover_validity_period' => 'nullable|integer|min:1',
             'levels.*.odoo_id' => 'nullable|integer',
         ]);
 
-        \DB::transaction(function () use ($validated) {
+        $plan = null;
+
+        \DB::transaction(function () use ($validated, &$plan) {
             $plan = LeaveAccrualPlan::create(\Arr::except($validated, ['levels']));
 
-            foreach ($validated['levels'] as $levelData) {
-                $plan->levels()->create($levelData);
+            if (!empty($validated['levels'])) {
+                foreach ($validated['levels'] as $levelData) {
+                    $plan->levels()->create($levelData);
+                }
             }
         });
+
+        // Trigger immediate recalculation for allocations linked to this plan
+        if ($plan) {
+            $this->accrualService->recalculateForPlan($plan->id);
+        }
 
         return redirect()->route('leave.config.accrual-plans.index')
             ->with('success', __('Accrual Plan created successfully.'));
@@ -151,22 +168,22 @@ class AccrualPlanController extends Controller
             'odoo_name' => 'nullable|string|max:255',
 
             // Levels Validation
-            'levels' => 'required|array|min:1',
+            'levels' => 'nullable|array',
             'levels.*.id' => [
                 'nullable',
                 Rule::exists(\App\Models\LeaveAccrualLevel::class, 'id')->where('leave_accrual_plan_id', $id)
             ],
-            'levels.*.sequence' => 'required|integer',
-            'levels.*.start_count' => 'required|integer|min:0',
+            'levels.*.sequence' => 'required_with:levels|integer',
+            'levels.*.start_count' => 'required_with:levels|integer|min:0',
             'levels.*.start_type' => 'nullable|in:days,months,years',
-            'levels.*.accrual_amount' => 'required|numeric|min:0',
-            'levels.*.accrual_unit' => 'required|in:days,hours',
-            'levels.*.accrual_frequency' => 'required|in:hourly,daily,weekly,biweekly,monthly,biyearly,yearly',
+            'levels.*.accrual_amount' => 'required_with:levels|numeric|min:0',
+            'levels.*.accrual_unit' => 'required_with:levels|in:days,hours',
+            'levels.*.accrual_frequency' => 'required_with:levels|in:hourly,daily,weekly,biweekly,monthly,biyearly,yearly',
             'levels.*.yearly_cap' => 'nullable|numeric|min:0',
             'levels.*.yearly_cap_unit' => 'nullable|in:days,hours',
             'levels.*.cap_accrued_time' => 'nullable|numeric|min:0',
             'levels.*.balance_cap_unit' => 'nullable|in:days,hours',
-            'levels.*.action_with_unused_accruals' => 'required|in:lost,all,maximum',
+            'levels.*.action_with_unused_accruals' => 'required_with:levels|in:lost,all,maximum',
             'levels.*.max_carryover' => 'nullable|numeric|min:0',
             'levels.*.max_carryover_unit' => 'nullable|in:days,hours',
             'levels.*.carryover_validity_period' => 'nullable|integer|min:1',
@@ -175,25 +192,33 @@ class AccrualPlanController extends Controller
         \DB::transaction(function () use ($accrualPlan, $validated) {
             $accrualPlan->update(\Arr::except($validated, ['levels']));
 
-            // Get IDs provided in the request
-            $providedIds = collect($validated['levels'])
-                ->pluck('id')
-                ->filter()
-                ->toArray();
-            
-            // Delete levels that are not in the request
-            $accrualPlan->levels()->whereNotIn('id', $providedIds)->delete();
+            if (empty($validated['levels'])) {
+                // If no levels provided, delete all existing levels
+                $accrualPlan->levels()->delete();
+            } else {
+                // Get IDs provided in the request
+                $providedIds = collect($validated['levels'])
+                    ->pluck('id')
+                    ->filter()
+                    ->toArray();
 
-            foreach ($validated['levels'] as $levelData) {
-                if (!empty($levelData['id'])) {
-                    // Update existing level
-                    $accrualPlan->levels()->where('id', $levelData['id'])->first()?->update($levelData);
-                } else {
-                    // Create new level
-                    $accrualPlan->levels()->create($levelData);
+                // Delete levels that are not in the request
+                $accrualPlan->levels()->whereNotIn('id', $providedIds)->delete();
+
+                foreach ($validated['levels'] as $levelData) {
+                    if (!empty($levelData['id'])) {
+                        // Update existing level
+                        $accrualPlan->levels()->where('id', $levelData['id'])->first()?->update($levelData);
+                    } else {
+                        // Create new level
+                        $accrualPlan->levels()->create($levelData);
+                    }
                 }
             }
         });
+
+        // Trigger immediate recalculation for allocations linked to this plan
+        $this->accrualService->recalculateForPlan($accrualPlan->id);
 
         return redirect()->route('leave.config.accrual-plans.index')
             ->with('success', __('Accrual Plan updated successfully.'));
@@ -209,6 +234,23 @@ class AccrualPlanController extends Controller
 
         return redirect()->route('leave.config.accrual-plans.index')
             ->with('success', __('Accrual Plan deleted successfully.'));
+    }
+    /**
+     * Remove the specified level from storage.
+     */
+    public function destroyLevel(string $id)
+    {
+        $level = \App\Models\LeaveAccrualLevel::findOrFail($id);
+
+        // Check authorization using the policy capable of handling the plan update
+        $this->authorize('update', $level->plan);
+
+        $level->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Milestone deleted successfully.')
+        ]);
     }
 }
 

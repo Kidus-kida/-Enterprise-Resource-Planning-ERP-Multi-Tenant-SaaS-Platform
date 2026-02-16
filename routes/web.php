@@ -42,13 +42,13 @@ Route::middleware(['auth'])->group(function () {
 
 
     // remove this code after production 
-    
+
     // Migration and Seeder routes
-    Route::get('/run-migrations', function() {
+    Route::get('/run-migrations', function () {
         try {
             Artisan::call('migrate', ['--force' => true]);
             $output = Artisan::output();
-            
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Migrations completed successfully',
@@ -79,7 +79,7 @@ Route::get('/clear-permission-cache', function () {
     try {
         // Clear Spatie permission cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Permission cache cleared! Please refresh the page.',
@@ -131,7 +131,7 @@ Route::get('/test-db-connection', function () {
 // Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
 
 // Simple test route to bypass middleware
-Route::get('/test-route', function() {
+Route::get('/test-route', function () {
     return response()->json([
         'status' => 'success',
         'message' => 'Route is working!',
@@ -141,11 +141,11 @@ Route::get('/test-route', function() {
 })->name('test.route');
 
 // Test dashboard without authentication
-Route::get('/test-dashboard', function() {
+Route::get('/test-dashboard', function () {
     try {
         // Test basic database queries
         $userCount = \App\Models\User::count();
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Dashboard test successful!',
@@ -163,7 +163,7 @@ Route::get('/test-dashboard', function() {
 })->name('test.dashboard');
 
 // Test login page (should redirect to login if not authenticated)
-Route::get('/test-auth', function() {
+Route::get('/test-auth', function () {
     try {
         if (auth()->check()) {
             return response()->json([
@@ -187,13 +187,13 @@ Route::get('/test-auth', function() {
 })->name('test.auth');
 
 // Test database tables
-Route::get('/test-tables', function() {
+Route::get('/test-tables', function () {
     try {
         $results = [];
-        
+
         // Test basic database connection
         $results['database_connection'] = 'OK';
-        
+
         // Test if users table exists
         try {
             $userCount = DB::table('users')->count();
@@ -201,7 +201,7 @@ Route::get('/test-tables', function() {
         } catch (\Exception $e) {
             $results['users_table'] = "ERROR: " . $e->getMessage();
         }
-        
+
         // Test if migrations table exists
         try {
             $migrationCount = DB::table('migrations')->count();
@@ -209,7 +209,7 @@ Route::get('/test-tables', function() {
         } catch (\Exception $e) {
             $results['migrations_table'] = "ERROR: " . $e->getMessage();
         }
-        
+
         // Test User model
         try {
             $userModelCount = \App\Models\User::count();
@@ -217,13 +217,13 @@ Route::get('/test-tables', function() {
         } catch (\Exception $e) {
             $results['user_model'] = "ERROR: " . $e->getMessage();
         }
-        
+
         return response()->json([
             'status' => 'success',
             'results' => $results,
             'timestamp' => now(),
         ]);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -234,7 +234,7 @@ Route::get('/test-tables', function() {
 })->name('test.tables');
 
 // Test login page access
-Route::get('/test-login-page', function() {
+Route::get('/test-login-page', function () {
     try {
         // Just try to load the login view without going through middleware
         return view('auth.login', ['pageTitle' => 'Test Login']);
@@ -248,24 +248,24 @@ Route::get('/test-login-page', function() {
 })->name('test.login.page');
 
 // Test middleware stack step by step
-Route::get('/test-middleware', function() {
+Route::get('/test-middleware', function () {
     try {
         $results = [];
-        
+
         // Test 1: Basic request info
         $results['request'] = [
             'url' => request()->url(),
             'method' => request()->method(),
             'ip' => request()->ip(),
         ];
-        
+
         // Test 2: Session
         $results['session'] = [
             'started' => session()->isStarted(),
             'id' => session()->getId(),
             'tenant_id' => session('current_tenant_id', 'not set'),
         ];
-        
+
         // Test 3: Auth system
         $results['auth'] = [
             'guard' => config('auth.defaults.guard'),
@@ -273,25 +273,25 @@ Route::get('/test-middleware', function() {
             'user_model' => config('auth.providers.users.model'),
             'check_works' => 'testing...',
         ];
-        
+
         try {
             $results['auth']['check_works'] = auth()->check() ? 'yes' : 'no';
             $results['auth']['user_id'] = auth()->id() ?? 'not logged in';
         } catch (\Exception $e) {
             $results['auth']['check_works'] = 'error: ' . $e->getMessage();
         }
-        
+
         // Test 4: Database connections
         $results['database'] = [
             'default_connection' => config('database.default'),
             'tenant_connection_configured' => !empty(config('database.connections.tenant')),
         ];
-        
+
         // Test 5: Modules
         $results['modules'] = [
             'function_exists' => function_exists('module'),
         ];
-        
+
         if (function_exists('module')) {
             try {
                 $results['modules']['project_enabled'] = module('Project') ? module('Project')->isEnabled() : 'not found';
@@ -300,13 +300,13 @@ Route::get('/test-middleware', function() {
                 $results['modules']['error'] = $e->getMessage();
             }
         }
-        
+
         return response()->json([
             'status' => 'success',
             'results' => $results,
             'timestamp' => now(),
         ]);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -318,7 +318,7 @@ Route::get('/test-middleware', function() {
 })->name('test.middleware');
 
 // Test dashboard controller directly (bypass auth middleware)
-Route::get('/test-dashboard-direct', function() {
+Route::get('/test-dashboard-direct', function () {
     try {
         // Create a fake authenticated user for testing
         $user = \App\Models\User::first();
@@ -328,16 +328,16 @@ Route::get('/test-dashboard-direct', function() {
                 'message' => 'No users found in database',
             ], 500);
         }
-        
+
         // Temporarily log in the user
         auth()->login($user);
-        
+
         // Try to instantiate the dashboard controller
         $controller = new \App\Http\Controllers\DashboardController();
-        
+
         // Try to call the index method
         $response = $controller->index();
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Dashboard controller works!',
@@ -345,7 +345,7 @@ Route::get('/test-dashboard-direct', function() {
             'user_id' => auth()->id(),
             'timestamp' => now(),
         ]);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -359,10 +359,10 @@ Route::get('/test-dashboard-direct', function() {
 })->name('test.dashboard.direct');
 
 // Test step-by-step dashboard components
-Route::get('/test-dashboard-parts', function() {
+Route::get('/test-dashboard-parts', function () {
     try {
         $results = [];
-        
+
         // Step 1: Test user authentication
         $user = \App\Models\User::first();
         if (!$user) {
@@ -370,23 +370,23 @@ Route::get('/test-dashboard-parts', function() {
         }
         auth()->login($user);
         $results['auth'] = 'OK - User logged in: ' . $user->email;
-        
+
         // Step 2: Test UserType enum
         $results['user_type'] = 'User type: ' . $user->type->value;
-        
+
         // Step 3: Test module function
         $results['module_function'] = function_exists('module') ? 'OK' : 'Missing';
-        
+
         // Step 4: Test specific modules
         if (function_exists('module')) {
             $results['project_module'] = module('Project') ? 'Found' : 'Not found';
             $results['sales_module'] = module('Sales') ? 'Found' : 'Not found';
             $results['accounting_module'] = module('Accounting') ? 'Found' : 'Not found';
         }
-        
+
         // Step 5: Test basic database queries
         $results['user_count'] = \App\Models\User::count();
-        
+
         // Step 6: Test if Ticket model exists
         try {
             $results['ticket_model'] = class_exists('App\Models\Ticket') ? 'Exists' : 'Missing';
@@ -396,17 +396,17 @@ Route::get('/test-dashboard-parts', function() {
         } catch (\Exception $e) {
             $results['ticket_error'] = $e->getMessage();
         }
-        
+
         // Step 7: Test view existence
         $results['dashboard_view'] = view()->exists('pages.dashboard') ? 'Exists' : 'Missing';
         $results['employee_dashboard_view'] = view()->exists('pages.employees.dashboard') ? 'Exists' : 'Missing';
-        
+
         return response()->json([
             'status' => 'success',
             'results' => $results,
             'timestamp' => now(),
         ]);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -426,7 +426,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class])->group(fun
 
 Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->group(function () {
     // Add a test route within the authenticated group to isolate the issue
-    Route::get('test-auth-middleware', function() {
+    Route::get('test-auth-middleware', function () {
         return response()->json([
             'status' => 'success',
             'message' => 'Auth middleware works!',
@@ -434,24 +434,24 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
             'timestamp' => now(),
         ]);
     })->name('test.auth.middleware');
-    
+
     // Simplified dashboard route for testing
-    Route::get('dashboard-simple', function() {
+    Route::get('dashboard-simple', function () {
         try {
             if (!auth()->check()) {
                 return redirect()->route('login');
             }
-            
+
             $user = auth()->user();
             $data = [
                 'pageTitle' => 'Dashboard',
                 'user' => $user,
                 'userCount' => \App\Models\User::count(),
             ];
-            
+
             // Try to return a simple view first
             return view('pages.dashboard-simple', $data);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Dashboard error: ' . $e->getMessage(),
@@ -460,10 +460,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
             ], 500);
         }
     })->name('dashboard.simple');
-    
+
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('home', [DashboardController::class, 'index'])->name('home');
-    
+
     // Utilities
     Route::get('backups', fn() => view('pages.backups', ['pageTitle' => __('Backups')]))->name('backups.index');
     Route::get('app-logs', fn() => redirect()->to('log-viewer'))->name('app.logs');
@@ -500,7 +500,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('client-list', [ClientsController::class, 'list'])->name('clients.list');
     })
 
-;
+    ;
 
     // Leave Management Module Routes
     Route::prefix('leave-management')->name('leave.')->middleware(['module.access:hr'])->group(function () {
@@ -511,22 +511,23 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('/management', [App\Http\Controllers\Leave\LeaveManagementController::class, 'management'])->name('management');
         Route::get('/reporting', [App\Http\Controllers\Leave\LeaveManagementController::class, 'reporting'])->name('reporting');
         Route::get('/configuration', [App\Http\Controllers\Leave\LeaveManagementController::class, 'configuration'])->name('configuration');
-        
+
         // Allocation Request Routes (Employee)
         Route::get('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'request'])->name('management.allocations.request');
         Route::post('allocations/request', [App\Http\Controllers\Leave\LeaveAllocationController::class, 'storeRequest'])->name('management.allocations.store-request');
 
         // Management Routes
         Route::resource('allocations', App\Http\Controllers\Leave\LeaveAllocationController::class)->names('management.allocations');
-        
+
         // Configuration routes
         Route::prefix('configuration')->name('config.')->group(function () {
             // Public Holidays (moved from HR module)
             // Configuration Resource Routes
             Route::resource('time-off-types', App\Http\Controllers\Leave\TimeOffTypeController::class);
             Route::resource('accrual-plans', App\Http\Controllers\Leave\AccrualPlanController::class);
+            Route::delete('accrual-levels/{id}', [App\Http\Controllers\Leave\AccrualPlanController::class, 'destroyLevel'])->name('accrual-levels.destroy');
             Route::resource('mandatory-days', App\Http\Controllers\Leave\MandatoryDayController::class);
-            
+
             // Public Holidays (Resource already defined as HolidaysController, let's keep it or alias it if needed)
             Route::resource('public-holidays', HolidaysController::class);
             Route::get('public-holidays-calendar', [HolidaysController::class, 'calendar'])->name('public-holidays.calendar');
@@ -538,19 +539,19 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::resource('employees', EmployeesController::class);
         Route::post('job-positions', [\App\Http\Controllers\Admin\JobPositionsController::class, 'store'])->name('job-positions.store');
         Route::get('employees-list', [EmployeesController::class, 'list'])->name('employees.list');
-        
+
         Route::resource('departments', DepartmentsController::class)->except(['show']);
         Route::resource('designations', DesignationsController::class)->except(['show']);
         // Holidays moved to Leave Management > Configuration > Public Holidays
         Route::resource('family-information', FamilyInfoController::class);
 
-        
-        
+
+
         Route::get('attendance', [AttendancesController::class, 'index'])->name('attendances.index');
         Route::get('attendance-details/{attendance}', [AttendancesController::class, 'attendanceDetails'])->name('attendance.details');
         Route::get('attendance/{user}/{date}/correct', [AttendancesController::class, 'edit'])->name('admin.attendances.edit');
         Route::post('attendance/correct', [AttendancesController::class, 'update'])->name('admin.attendances.update');
-        
+
         // Missed Punch Approvals (Admin Side)
         Route::get('missed-punches', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'index'])
             ->name('admin.missed-punches.index');
@@ -560,26 +561,26 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
             ->name('admin.missed-punches.reject');
         Route::delete('missed-punches/{missedPunchRequest}', [\App\Http\Controllers\Admin\MissedPunchRequestController::class, 'destroy'])
             ->name('admin.missed-punches.destroy');
-        
+
         // Manual Entry Routes
         Route::get('attendance/my', [AttendancesController::class, 'myAttendance'])->name('attendance.my');
-    // Draft Management
-    Route::post('/attendance/my/draft', [AttendancesController::class, 'saveDraft'])->name('attendance.my.draft.save');
-    Route::put('/attendance/my/draft/{draft}', [AttendancesController::class, 'updateDraft'])->name('attendance.my.draft.update');
-    Route::delete('/attendance/my/draft/{draft}', [AttendancesController::class, 'deleteDraft'])->name('attendance.my.draft.delete');
-    Route::post('/attendance/my/submit', [AttendancesController::class, 'submitDrafts'])->name('attendance.my.submit');
-    
-    // Approval Actions
-    Route::post('/attendance/approve/{draft}', [AttendancesController::class, 'approveDraft'])->name('attendance.approvals.approve');
-    Route::post('/attendance/reject/{draft}', [AttendancesController::class, 'rejectDraft'])->name('attendance.approvals.reject');
-    Route::post('/attendance/approve-batch', [AttendancesController::class, 'approveBatch'])->name('attendance.approvals.approve_batch');
-    Route::post('/attendance/reject-batch', [AttendancesController::class, 'rejectBatch'])->name('attendance.approvals.reject_batch');
-        
+        // Draft Management
+        Route::post('/attendance/my/draft', [AttendancesController::class, 'saveDraft'])->name('attendance.my.draft.save');
+        Route::put('/attendance/my/draft/{draft}', [AttendancesController::class, 'updateDraft'])->name('attendance.my.draft.update');
+        Route::delete('/attendance/my/draft/{draft}', [AttendancesController::class, 'deleteDraft'])->name('attendance.my.draft.delete');
+        Route::post('/attendance/my/submit', [AttendancesController::class, 'submitDrafts'])->name('attendance.my.submit');
+
+        // Approval Actions
+        Route::post('/attendance/approve/{draft}', [AttendancesController::class, 'approveDraft'])->name('attendance.approvals.approve');
+        Route::post('/attendance/reject/{draft}', [AttendancesController::class, 'rejectDraft'])->name('attendance.approvals.reject');
+        Route::post('/attendance/approve-batch', [AttendancesController::class, 'approveBatch'])->name('attendance.approvals.approve_batch');
+        Route::post('/attendance/reject-batch', [AttendancesController::class, 'rejectBatch'])->name('attendance.approvals.reject_batch');
+
         Route::get('attendance/enter', [AttendancesController::class, 'enterAttendance'])->name('attendance.enter');
         Route::post('attendance/enter', [AttendancesController::class, 'storeManualAttendance'])->name('attendance.storeManual');
         Route::post('attendance/submit-manual', [AttendancesController::class, 'submitManualDrafts'])->name('attendance.submitManual');
         Route::get('attendance/approvals', [AttendancesController::class, 'attendanceApprovals'])->name('attendance.approvals');
-        
+
 
         Route::resource('leavetypes', LeaveTypeController::class);
         Route::resource('leaverequests', LeaveRequestController::class);
@@ -679,10 +680,10 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         // Business Locations
         Route::get('location/{location}/activate-deactivate', [\App\Http\Controllers\BusinessLocationController::class, 'activateDeactivateLocation'])->name('settings.location.activate-deactivate');
         Route::resource('location', \App\Http\Controllers\BusinessLocationController::class)->names('settings.location');
-        
+
         // Stores
         Route::resource('stores', \App\Http\Controllers\StoreController::class)->names('settings.stores');
-        
+
         // Invoice Settings
         Route::get('invoice-schemes/{id}/set-default', [\App\Http\Controllers\InvoiceSchemeController::class, 'setDefault'])->name('settings.invoice-schemes.set-default');
         Route::resource('invoice-schemes', \App\Http\Controllers\InvoiceSchemeController::class)->names('settings.invoice-schemes');
@@ -705,7 +706,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::get('/{shift}/edit', [\App\Http\Controllers\ShiftsController::class, 'edit'])->name('shifts.edit');
         Route::put('/{shift}', [\App\Http\Controllers\ShiftsController::class, 'update'])->name('shifts.update');
         Route::delete('/{shift}', [\App\Http\Controllers\ShiftsController::class, 'destroy'])->name('shifts.destroy');
-        
+
         // Assignment
         Route::get('/assign', [\App\Http\Controllers\ShiftsController::class, 'assign'])->name('shifts.assign');
         Route::post('/assign', [\App\Http\Controllers\ShiftsController::class, 'storeAssignment'])->name('shifts.assign.store');
@@ -736,7 +737,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         // Missed Punch Configuration
         // Route::get('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'missedPunch'])->name('admin.attendance-settings.missed-punch');
         Route::post('/missed-punch', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateMissedPunch'])->name('admin.attendance-settings.missed-punch.update');
-        
+
         // Route::get('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'corrections'])->name('admin.attendance-settings.corrections');
         Route::post('/corrections', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateCorrections'])->name('admin.attendance-settings.corrections.update');
 
@@ -744,7 +745,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::post('/overtime-approval', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateOvertimeApproval'])->name('admin.attendance-settings.overtime-approval.update');
         // Late Arrival Configuration (Modal)
         Route::post('/late-arrival', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateLateArrival'])->name('admin.attendance-settings.late-arrival.update');
-        
+
         // Early Checkout Configuration (Modal)
         Route::post('/early-checkout', [\App\Http\Controllers\Admin\AttendanceSettingsController::class, 'updateEarlyCheckout'])->name('admin.attendance-settings.early-checkout.update');
 
@@ -768,7 +769,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::prefix('accounting-module')->name('accounting.')->middleware(['module.access:accounting'])->group(function () {
         Route::resource('accounts', \App\Http\Controllers\AccountController::class);
         Route::get('accounts/{id}/balance', [\App\Http\Controllers\AccountController::class, 'getBalance'])->name('accounts.balance');
-        
+
         Route::resource('account-types', \App\Http\Controllers\AccountTypeController::class);
         Route::resource('account-groups', \App\Http\Controllers\AccountGroupController::class);
     });
@@ -780,7 +781,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::resource('folders', FolderController::class);
         Route::get('/users/search', [FolderController::class, 'search'])->name('folder.users-search');
         Route::get('/users/preload', [FolderController::class, 'preload'])->name('folder.users-preload');
-        
+
         // Tickets
         Route::resource('tickets', TicketsController::class);
         Route::get('assigned-tickets', [TicketsController::class, 'assignedTickets'])->name('assigned-tickets');
@@ -791,7 +792,7 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
     Route::resource('awards', AwardController::class);
 
     // Notifications
-    Route::get('/notifications/clear', function() {
+    Route::get('/notifications/clear', function () {
         auth()->user()->unreadNotifications->markAsRead();
         return back();
     })->name('notifications.clear');
@@ -881,11 +882,11 @@ Route::group(['middleware' => ['auth', 'module.access:products']], function () {
 
 
 // Emergency DB Fix Route - FULL SCAN
-Route::get('/emergency-db-fix', function() {
+Route::get('/emergency-db-fix', function () {
     $results = [];
     $dbName = \DB::connection()->getDatabaseName();
     $results[] = "Connected to Database: " . $dbName;
-    
+
     // Get ALL tables dynamically
     $tables = [];
     try {
@@ -896,11 +897,11 @@ Route::get('/emergency-db-fix', function() {
     }
 
     $results[] = "Scanning " . count($tables) . " tables...";
-    
+
     foreach ($tables as $table) {
         if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
             $columns = \Illuminate\Support\Facades\Schema::getColumnListing($table);
-            
+
             // Skip tables that shouldn't have company_id
             if (in_array($table, ['migrations', 'password_resets', 'failed_jobs', 'jobs', 'sessions', 'cache', 'activity_log', 'notifications'])) {
                 continue;
@@ -908,10 +909,10 @@ Route::get('/emergency-db-fix', function() {
 
             if (!in_array('company_id', $columns)) {
                 $results[] = "MISSING company_id in: $table";
-                
+
                 // Check if 'id' column exists to determine placement
                 $placement = in_array('id', $columns) ? 'AFTER id' : '';
-                
+
                 try {
                     \DB::statement("ALTER TABLE $table ADD COLUMN company_id BIGINT UNSIGNED NULL $placement, ADD INDEX(company_id)");
                     $results[] = "SUCCESS: Added company_id to $table";
@@ -921,11 +922,11 @@ Route::get('/emergency-db-fix', function() {
             }
         }
     }
-    
+
     if (empty($results)) {
         $results[] = "All tables look good!";
     }
-    
+
     return response()->json($results);
 });
 

@@ -25,9 +25,10 @@ class LeaveManagementController extends Controller
         
         // Balances
         $allocations = \App\Models\LeaveAllocation::where('user_id', $user->id)
-            ->where('year', date('Y'))
+            ->whereYear('period_start', date('Y')) // filter allocations for the current year
             ->with(['leaveType'])
             ->get();
+
             
         // Recent Requests (last 5)
         $requests = \App\Models\LeaveRequest::where('employee_id', $user->id)
