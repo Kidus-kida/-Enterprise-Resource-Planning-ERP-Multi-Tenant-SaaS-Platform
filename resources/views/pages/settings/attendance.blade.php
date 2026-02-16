@@ -436,7 +436,7 @@
                     
                     <div id="auto_clockout_config" class="{{ $autoClockOut ? '' : 'd-none' }}">
                         <x-settings.row label="{{ __('Clock-Out Time') }}" indent>
-                            <input type="time" name="auto_clockout_time" class="form-control form-control-sm" value="{{ $autoClockOutTime }}" style="width: 100px;">
+                            <input type="time" name="auto_clockout_time" class="form-control form-control-sm" value="{{ $autoClockOutTime }}" style="width: 140px;">
                         </x-settings.row>
                     </div>
                     </div>
@@ -467,15 +467,15 @@
                     
                     <x-settings.row label="{{ __('Work Day Duration') }}" description="{{ __('Official start and end time') }}">
                         <div class="d-flex align-items-center gap-2">
-                            <input type="time" name="work_day_start_time" class="form-control form-control-sm" value="{{ $workDayStartTime }}" style="width: 100px;">
+                            <input type="time" name="work_day_start_time" class="form-control form-control-sm" value="{{ $workDayStartTime }}" style="width: 140px;">
                             <span class="text-muted">-</span>
-                            <input type="time" name="work_day_end_time" class="form-control form-control-sm" value="{{ $workDayEndTime }}" style="width: 100px;">
+                            <input type="time" name="work_day_end_time" class="form-control form-control-sm" value="{{ $workDayEndTime }}" style="width: 140px;">
                         </div>
                     </x-settings.row>
 
                     <x-settings.row label="{{ __('Minimum Hours') }}" description="{{ __('Required hours for full day') }}">
                          <div class="input-group input-group-sm" style="width: 120px;">
-                            <input type="number" name="minimum_work_hours" class="form-control" value="{{ $minWorkHours }}" step="0.5" min="0" max="24">
+                            <input type="number" id="minimum_work_hours" name="minimum_work_hours" class="form-control" value="{{ $minWorkHours }}" step="0.5" min="0" max="24">
                             <span class="input-group-text">{{ __('Hrs') }}</span>
                         </div>
                     </x-settings.row>
