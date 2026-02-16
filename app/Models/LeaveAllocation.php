@@ -25,6 +25,8 @@ class LeaveAllocation extends TenantModel
         'carried_forward',
         'last_accrual_date',
         'notes',
+        'allocation_type',
+        'status',
         'is_manual_allocation',
         'allocated_by',
     ];
