@@ -1796,10 +1796,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
+                    <!-- <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                         <button type="submit" class="btn btn-primary">{{ __('Save Changes') }}</button>
-                    </div>
+                    </div> -->
                 </form>
             </div>
         </div>
