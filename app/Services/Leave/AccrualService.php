@@ -28,7 +28,6 @@ class AccrualService
             })
 
             ->currentYear()
-j
             ->get();
 
         foreach ($allocations as $allocation) {

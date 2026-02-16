@@ -388,8 +388,11 @@
                     </div>
                     <div class="card-body">
 
-                        <p>To enable subdomain access (e.g., <code>{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code>), configure the following in cPanel:</p>
-                        
+                        <p>To enable subdomain access (e.g.,
+                            <code>{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code>),
+                            configure the following in cPanel:
+                        </p>
+
 
                         <h5>Instructions:</h5>
                         <ol>
@@ -407,9 +410,12 @@
                         <div class="alert alert-info">
                             <h6>Access URLs:</h6>
                             <ul class="mb-0">
-
-                                <li><strong>With Subdomain:</strong> <code>https://{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code></li>
-                                <li><strong>Without Subdomain:</strong> <code>{{ config('app.url') }}?tenant={{ $tenant->id }}</code></li
+                                <li><strong>With Subdomain:</strong>
+                                    <code>https://{{ $business->subdomain }}.{{ parse_url(config('app.url'), PHP_URL_HOST) }}</code>
+                                </li>
+                                <li><strong>Without Subdomain:</strong>
+                                    <code>{{ config('app.url') }}?tenant={{ $tenant->id }}</code>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -574,7 +580,7 @@
                 bottom: -60px;
                 left: 50%;
                 transform: translateX(-50%);
-                color: rgba(255, 255, 255, 0.9);
+                color: rgba(129, 126, 126, 0.9);
                 font-size: 14px;
                 letter-spacing: 3px;
                 text-transform: uppercase;
@@ -750,11 +756,45 @@
                     'Accept': 'application/json'
                 }
             })
-                .then(response => response.json())
+                .then(response => {
+                    // Check if response is OK/JSON
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error('Server returned non-JSON response: ' + text.substring(0, 100) + '...');
+                        });
+                    }
+                })
                 .then(data => {
                     clearInterval(interval);
                     // Remove safety warning
                     window.removeEventListener('beforeunload', onBeforeUnload);
+
+                    const logContainer = document.querySelector('.card-body .mt-4'); // Log container wrapper
+                    const terminal = document.querySelector('pre'); // Terminal pre element
+
+                    if (data.migration_output) {
+                        // Dynamically create log output if not present
+                        if (!terminal) {
+                            const newLogSection = document.createElement('div');
+                            newLogSection.className = 'mt-4';
+                            newLogSection.innerHTML = `
+                                                    <h5><i class="fa fa-terminal"></i> Human-Readable Migration Log</h5>
+                                                    <div class="bg-dark text-white p-3 rounded" style="max-height: 300px; overflow-y: auto; font-family: monospace;">
+                                                        <pre class="text-white mb-0"></pre>
+                                                    </div>
+                                                `;
+                            // FIX: Append to the card body containing the migration form
+                            const migrationCardBody = document.getElementById('migration-form').closest('.card-body');
+                            migrationCardBody.appendChild(newLogSection);
+
+                            newLogSection.querySelector('pre').textContent = data.migration_output;
+                        } else {
+                            terminal.textContent = data.migration_output;
+                        }
+                    }
 
                     if (data.success) {
                         // Complete the progress to 100%
@@ -763,25 +803,55 @@
 
                         // Slight delay to let user see 100%
                         setTimeout(() => {
-                            alert(data.message || 'Tenant database migration and seeding completed successfully.');
-                            window.location.reload();
-                        }, 500);
-                    } else {
-                        // Error handling
-                        overlay.style.display = 'none';
-                        alert(data.message || 'An error occurred during migration.');
-                    }
-                })
-                .catch(error => {
-                    clearInterval(interval);
-                    // Remove safety warning
-                    window.removeEventListener('beforeunload', onBeforeUnload);
+                            if (window.toastr) {
+                                toastr.success(data.message || 'Tenant database migrated successfully.');
+                            } else if (window.Toastify) {
+                                Toastify({
+                                    text: data.message || 'Tenant database migrated successfully.',
+                                    className: "success",
+                                }).showToast();
+                            }
 
-                    overlay.style.display = 'none';
-                    console.error('Error:', error);
-                    alert('An unexpected error occurred. Please check the logs and try again.');
-                });
-        }
-    </script>
+                            // HIDE OVERLAY
+                            overlay.style.display = 'none';
+
+                            }, 500);
+                        } else {
+                            // Error handling
+                            overlay.style.display = 'none';
+                            if (window.toastr) {
+                                toastr.error(data.message || 'Tenant migration failed. Please check logs.');
+                            } else if (window.Toastify) {
+                                Toastify({
+                                    text: data.message || 'Tenant migration failed. Please check logs.',
+                                    className: "danger",
+                                }).showToast();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        clearInterval(interval);
+                        // Remove safety warning
+                        window.removeEventListener('beforeunload', onBeforeUnload);
+
+                        overlay.style.display = 'none';
+                        console.error('Error:', error);
+                        let errorMessage = 'An unexpected error occurred. Please check the logs and try again.';
+
+                        if (error.message.includes('Server returned non-JSON response')) {
+                            errorMessage = 'Server Warning: ' + error.message;
+                        }
+
+                        if (window.toastr) {
+                            toastr.error(errorMessage);
+                        } else if (window.Toastify) {
+                            Toastify({
+                                text: errorMessage,
+                                className: "danger",
+                            }).showToast();
+                        }
+                    });
+            }
+        </script>
 
 @endsection

@@ -313,7 +313,8 @@ class TenantManagementController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Tenant database migration and seeding completed successfully.'
+                    'message' => 'Tenant database migration and seeding completed successfully.',
+                    'migration_output' => $output
                 ]);
             }
 
@@ -328,7 +329,8 @@ class TenantManagementController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Migration/Seeding failed: ' . $e->getMessage()
+                    'message' => 'Migration/Seeding failed: ' . $e->getMessage(),
+                    'migration_output' => $output
                 ], 500);
             }
 
