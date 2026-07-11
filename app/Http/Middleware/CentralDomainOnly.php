@@ -16,7 +16,13 @@ class CentralDomainOnly
      */
     public function handle(Request $request, Closure $next)
     {
-        $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
+        $centralDomain = env('CENTRAL_DOMAIN');
+        
+        // Fallback to APP_URL host if not specified
+        if (empty($centralDomain)) {
+            $centralDomain = parse_url(config('app.url'), PHP_URL_HOST);
+        }
+        
         $host = $request->getHost();
         
         // Allow if host matches central domain
@@ -24,7 +30,7 @@ class CentralDomainOnly
             return $next($request);
         }
         
-        // Allow localhost/IP for local dev if central domain is not set or matches
+        // Allow localhost/IP for local dev
         if ($host === 'localhost' || $host === '127.0.0.1') {
              return $next($request);
         }
