@@ -21,6 +21,7 @@ php_errors.log
 *.log
 
 # Environment Files
+.env
 .env.backup
 .env.production
 .env.local
