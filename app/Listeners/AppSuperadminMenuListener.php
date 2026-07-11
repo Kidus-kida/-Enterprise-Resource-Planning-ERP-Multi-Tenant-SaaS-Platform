@@ -115,7 +115,7 @@ class AppSuperadminMenuListener
         
         // Superadmin Settings
         $menu->add(
-            Link::toRoute('superadmin.settings.index', '<i class="la la-cog"></i> <span>' . __('Superadmin Settings') . '</span>')
+            Link::toRoute('superadmin.settings.index', '<i class="la la-cog"></i> <span>' . __('System Settings') . '</span>')
                 ->setActive(route_is(['superadmin.settings.*']))
                 ->setAttributes(['wire:navigate' => 'true'])
         );

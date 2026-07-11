@@ -183,12 +183,149 @@ document.addEventListener('DOMContentLoaded', () => {
                 radio.checked = true;
                 // Dispatch change event to trigger dependencies
                 radio.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Instant preview of theme presets
+                const val = radio.value;
+                const presets = {
+                    'default':   { primary: '#ff9b44', sidebar: '#2c3e50' },
+                    'blue':      { primary: '#0d6efd', sidebar: '#1a2035' },
+                    'dark':      { primary: '#6c757d', sidebar: '#121212' },
+                    'corporate': { primary: '#0f4c81', sidebar: '#1a3352' },
+                    'green':     { primary: '#198754', sidebar: '#1a3d2b' }
+                };
+                if (presets[val]) {
+                    document.documentElement.style.setProperty('--primary-color', presets[val].primary);
+                    document.documentElement.style.setProperty('--sidebar-bg', presets[val].sidebar);
+                    
+                    const prevPrimary = document.getElementById('prevPrimary');
+                    if (prevPrimary) prevPrimary.style.background = presets[val].primary;
+                    const prevSidebar = document.getElementById('prevSidebar');
+                    if (prevSidebar) prevSidebar.style.background = presets[val].sidebar;
+                } else if (val === 'custom') {
+                    // Revert to whatever is in the custom color pickers
+                    const primaryPicker = document.querySelector('.color-input-picker[data-key="appearance.primary_color"]');
+                    const sidebarPicker = document.querySelector('.color-input-picker[data-key="appearance.sidebar_color"]');
+                    if (primaryPicker) {
+                        document.documentElement.style.setProperty('--primary-color', primaryPicker.value);
+                        const prevPrimary = document.getElementById('prevPrimary');
+                        if (prevPrimary) prevPrimary.style.background = primaryPicker.value;
+                    }
+                    if (sidebarPicker) {
+                        document.documentElement.style.setProperty('--sidebar-bg', sidebarPicker.value);
+                        const prevSidebar = document.getElementById('prevSidebar');
+                        if (prevSidebar) prevSidebar.style.background = sidebarPicker.value;
+                    }
+                }
             }
         });
     });
 
     // ----------------------------------------------------
-    // 5. AJAX Form Saving (Unified)
+    // 5. CSS Variable Flush (zero-delay theme application)
+    // ----------------------------------------------------
+    const cssVarFlushMap = {
+        'appearance_primary_color':      '--primary-color',
+        'appearance_secondary_color':    '--secondary-color',
+        'appearance_accent_color':       '--accent-color',
+        'appearance_success_color':      '--success-color',
+        'appearance_danger_color':       '--danger-color',
+        'appearance_warning_color':      '--warning-color',
+        'appearance_info_color':         '--info-color',
+        'appearance_sidebar_color':      '--sidebar-bg',
+        'appearance_sidebar_text_color': '--sidebar-text',
+        'appearance_navbar_color':       '--navbar-bg',
+        'appearance_header_color':       '--header-bg',
+    };
+
+    function patchDOMColors(primaryColor, sidebarColor) {
+        // Patch sidebar background directly
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebarColor) sidebar.style.background = sidebarColor;
+
+        // Patch two-col-bar sidebar
+        const twoColSidebar = document.querySelector('.sidebar-twocol .sidebar-left');
+        if (twoColSidebar && sidebarColor) twoColSidebar.style.background = sidebarColor;
+
+        // Patch Bootstrap primary buttons
+        if (primaryColor) {
+            document.querySelectorAll('.btn-primary').forEach(btn => {
+                btn.style.backgroundColor = primaryColor;
+                btn.style.borderColor = primaryColor;
+            });
+
+            // Patch active nav links
+            document.querySelectorAll('.sidebar-menu .active > a').forEach(el => {
+                el.style.color = primaryColor;
+            });
+
+            // Patch progress bars and badges
+            document.querySelectorAll('.bg-primary').forEach(el => {
+                el.style.backgroundColor = primaryColor + ' !important';
+            });
+        }
+    }
+
+    function flushCSSVarsFromForm(form) {
+        if (!form) return;
+
+        let primaryColor = null;
+        let sidebarColor = null;
+
+        // Flush colour pickers
+        Object.entries(cssVarFlushMap).forEach(([name, cssVar]) => {
+            const el = form.querySelector(`[name="${name}"]`);
+            if (el && el.value) {
+                document.documentElement.style.setProperty(cssVar, el.value);
+                if (name === 'appearance_primary_color') primaryColor = el.value;
+                if (name === 'appearance_sidebar_color') sidebarColor = el.value;
+            }
+        });
+
+        // Flush border-radius
+        const br = form.querySelector('[name="appearance_border_radius"]');
+        if (br) document.documentElement.style.setProperty('--border-radius', br.value + 'px');
+
+        // Flush font-family
+        const ff = form.querySelector('[name="appearance_font_family"]');
+        if (ff) document.documentElement.style.setProperty('--font-family', ff.value);
+
+        // Flush font-size
+        const fs = form.querySelector('[name="appearance_font_size"]');
+        if (fs) document.documentElement.style.setProperty('--font-size', fs.value);
+
+        // Flush shadows
+        const sh = form.querySelector('[name="appearance_shadows"]');
+        if (sh) document.documentElement.style.setProperty('--card-shadow', sh.checked ? '0 0.15rem 1.75rem 0 rgba(58,59,69,.15)' : 'none');
+
+        // Flush animations
+        const anim = form.querySelector('[name="appearance_animations"]');
+        if (anim) document.documentElement.style.setProperty('--animation-speed', anim.checked ? '0.2s' : '0s');
+
+        // If a preset theme (not custom) is active, also push preset colors
+        const themeRadio = form.querySelector('.theme-radio:checked');
+        if (themeRadio && themeRadio.value !== 'custom') {
+            const presets = {
+                'default':   { primary: '#ff9b44', sidebar: '#2c3e50' },
+                'blue':      { primary: '#0d6efd', sidebar: '#1a2035' },
+                'dark':      { primary: '#6c757d', sidebar: '#121212' },
+                'corporate': { primary: '#0f4c81', sidebar: '#1a3352' },
+                'green':     { primary: '#198754', sidebar: '#1a3d2b' },
+            };
+            const preset = presets[themeRadio.value];
+            if (preset) {
+                primaryColor = preset.primary;
+                sidebarColor = preset.sidebar;
+                document.documentElement.style.setProperty('--primary-color', preset.primary);
+                document.documentElement.style.setProperty('--sidebar-bg', preset.sidebar);
+            }
+        }
+
+        // Direct DOM patch for elements that use compiled SCSS (not CSS vars)
+        patchDOMColors(primaryColor, sidebarColor);
+    }
+
+    // ----------------------------------------------------
+    // 6. AJAX Form Saving (Unified)
     // ----------------------------------------------------
     const settingsForm = document.getElementById('settingsForm');
     if (settingsForm) {
@@ -202,25 +339,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnTxt) btnTxt.classList.add('d-none');
             if (btnLoading) btnLoading.classList.remove('d-none');
 
-            const section = settingsForm.getAttribute('data-section');
-            const actionUrl = window.location.href; // Routes post to current path
+            const actionUrl = window.location.href;
             const formData = new FormData(settingsForm);
 
             fetch(actionUrl, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => {
-                if (!res.ok) {
-                    return res.json().then(err => { throw err; });
-                }
+                if (!res.ok) return res.json().then(err => { throw err; });
                 return res.json();
             })
             .then(data => {
                 showToast(data.message || 'Settings saved successfully.', true);
+                // ── Zero-delay: instantly push all CSS vars from saved form ──
+                flushCSSVarsFromForm(settingsForm);
             })
             .catch(err => {
                 console.error(err);

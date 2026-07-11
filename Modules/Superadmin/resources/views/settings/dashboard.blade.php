@@ -256,9 +256,12 @@ document.getElementById('saveDashboardBtn').addEventListener('click', async () =
         const data = await res.json();
         const toast = document.getElementById('settingsToast');
         if (toast) {
-            toast.querySelector('.toast-message').textContent = data.message || 'Saved!';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            const toastMsg = toast.querySelector('.toast-message');
+            const toastIcon = toast.querySelector('.toast-icon');
+            if (toastMsg) toastMsg.textContent = data.message || (data.success ? 'Dashboard layout saved!' : 'Save failed.');
+            if (toastIcon) toastIcon.className = 'fa-solid ' + (data.success !== false ? 'fa-circle-check toast-icon text-success' : 'fa-circle-xmark toast-icon text-danger');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3500);
         }
     } catch(e) {
         alert('Network error. Please try again.');

@@ -571,15 +571,23 @@ document.getElementById('saveMenuBtn').addEventListener('click', async () => {
             body: JSON.stringify({ structure: menuStructure })
         });
         const data = await res.json();
-        if (data.success) {
-            document.getElementById('settingsToast')?.querySelector('.toast-message')?.textContent && (document.getElementById('settingsToast').querySelector('.toast-message').textContent = 'Menu saved!');
-            const toast = document.getElementById('settingsToast');
-            if (toast) { toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
-        } else {
-            alert(data.message || 'Failed to save.');
+        const toast = document.getElementById('settingsToast');
+        const toastMsg = toast ? toast.querySelector('.toast-message') : null;
+        const toastIcon = toast ? toast.querySelector('.toast-icon') : null;
+        if (toastMsg) toastMsg.textContent = data.success ? 'Menu saved successfully!' : (data.message || 'Save failed.');
+        if (toastIcon) toastIcon.className = 'fa-solid ' + (data.success ? 'fa-circle-check toast-icon text-success' : 'fa-circle-xmark toast-icon text-danger');
+        if (toast) {
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3500);
         }
     } catch(e) {
-        alert('Network error. Please try again.');
+        const toast = document.getElementById('settingsToast');
+        if (toast) {
+            const msg = toast.querySelector('.toast-message');
+            if (msg) msg.textContent = 'Network error. Please try again.';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3500);
+        }
     } finally {
         btnText.classList.remove('d-none');
         loading.classList.add('d-none');
