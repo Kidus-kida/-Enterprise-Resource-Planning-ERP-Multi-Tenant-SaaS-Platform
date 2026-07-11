@@ -26,7 +26,9 @@ COPY . .
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+RUN php artisan package:discover --ansi || true
 
 RUN npm install && npm run build
 
