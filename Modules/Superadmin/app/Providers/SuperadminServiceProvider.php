@@ -4,6 +4,8 @@ namespace Modules\Superadmin\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Superadmin\Repositories\SettingsRepository;
+use Modules\Superadmin\Services\SettingsService;
 
 class SuperadminServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,12 @@ class SuperadminServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
+
+        // Load module helpers
+        $helpersPath = module_path($this->moduleName, 'app/helpers.php');
+        if (file_exists($helpersPath)) {
+            require_once $helpersPath;
+        }
     }
 
     /**
@@ -31,6 +39,16 @@ class SuperadminServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        // Register Settings engine
+        $this->app->singleton(SettingsRepository::class);
+
+        $this->app->singleton('settings', function ($app) {
+            return new SettingsService($app->make(SettingsRepository::class));
+        });
+
+        // Register Setting facade alias
+        $this->app->alias('settings', \Modules\Superadmin\Facades\Setting::class);
     }
 
     /**

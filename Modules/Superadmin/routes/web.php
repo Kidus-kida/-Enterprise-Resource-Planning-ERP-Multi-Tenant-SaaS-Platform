@@ -18,7 +18,7 @@ use Modules\Superadmin\Http\Controllers\AddonController;
 */
 
 Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin', 'central_domain']], function () {
-    
+
     // Dashboard
     Route::get('/', [SuperadminController::class, 'index'])->name('superadmin.dashboard');
 
@@ -56,7 +56,6 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin', '
         Route::delete('/{tenantId}', [TenantManagementController::class, 'destroy'])->name('destroy');
     });
 
-
     // Manual Payment Management
     Route::prefix('manual-payments')->name('superadmin.manual-payments.')->group(function () {
         Route::get('/', [ManualPaymentController::class, 'index'])->name('index');
@@ -66,7 +65,30 @@ Route::group(['prefix' => 'superadmin', 'middleware' => ['auth', 'superadmin', '
         Route::get('/{payment}', [ManualPaymentController::class, 'show'])->name('show');
     });
 
-    // Settings
-    Route::get('settings', [SuperadminSettingsController::class, 'index'])->name('superadmin.settings.index');
-    Route::post('settings', [SuperadminSettingsController::class, 'update'])->name('superadmin.settings.update');
+    Route::prefix('settings')->name('superadmin.settings.')->group(function () {
+
+        // Root — redirect to general
+        Route::get('/', [SuperadminSettingsController::class, 'index'])->name('index');
+
+        // Utility routes (must stay BEFORE the {section} wildcard)
+        Route::get('export', [SuperadminSettingsController::class, 'export'])->name('export');
+        Route::post('import', [SuperadminSettingsController::class, 'import'])->name('import');
+        Route::post('media/upload', [SuperadminSettingsController::class, 'uploadMedia'])->name('media.upload');
+        Route::get('search', [SuperadminSettingsController::class, 'search'])->name('search');
+        Route::get('logs/audit', [SuperadminSettingsController::class, 'auditLogs'])->name('audit-logs');
+        Route::post('email/test', [SuperadminSettingsController::class, 'testEmail'])->name('email.test');
+        Route::post('maintenance/artisan', [SuperadminSettingsController::class, 'runArtisan'])->name('maintenance.artisan');
+        Route::post('maintenance/clear-cache', [SuperadminSettingsController::class, 'clearCache'])->name('maintenance.clear-cache');
+
+        // Menu Builder — dedicated save endpoint
+        Route::post('menu/save', [SuperadminSettingsController::class, 'saveMenu'])->name('menu.save');
+
+        // Dashboard Builder — dedicated save endpoint
+        Route::post('dashboard/save', [SuperadminSettingsController::class, 'saveDashboard'])->name('dashboard.save');
+
+        // Section routes (wildcard — must be LAST)
+        Route::get('{section}', [SuperadminSettingsController::class, 'show'])->name('show');
+        Route::post('{section}', [SuperadminSettingsController::class, 'update'])->name('update');
+        Route::post('{section}/restore-defaults', [SuperadminSettingsController::class, 'restoreDefaults'])->name('restore-defaults');
+    });
 });

@@ -20,6 +20,31 @@
         </x-breadcrumb>
         <!-- /Page Header -->
 
+        <!-- Welcome Banner -->
+        @if(setting('whitelabel.dashboard_welcome_banner'))
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-1 text-white fw-bold">
+                                    {{ __('Welcome') }}{{ !empty(auth()->user()->username) ? ', ' . auth()->user()->username . '!' : '!' }}
+                                </h4>
+                                <p class="mb-0 text-white-50" style="font-size: 1.05rem;">
+                                    {{ setting('whitelabel.dashboard_welcome_banner') }}
+                                </p>
+                            </div>
+                            <div class="d-none d-md-block">
+                                <i class="fa fa-champagne-glasses fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         @superadmin
 
         <div class="row">

@@ -2,7 +2,7 @@
 
 @section('form')
     <h3 class="account-title">{{ __('Login') }}</h3>
-    <p class="account-subtitle">{{ __('Access to our dashboard') }}</p>
+    <p class="account-subtitle">{{ setting('whitelabel.welcome_message', __('Access to our dashboard')) }}</p>
     
     <!-- Account Form -->
     <form action="{{ route('login') }}" method="POST">

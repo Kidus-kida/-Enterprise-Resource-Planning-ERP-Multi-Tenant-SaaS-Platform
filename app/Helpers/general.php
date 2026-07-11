@@ -147,6 +147,141 @@ if(!function_exists('format_file_size')){
 if (!function_exists('renderAppMenu')) {
     function renderAppMenu()
     {
+        // Try getting custom menu structure
+        try {
+            $customMenu = setting('menu.structure');
+            if ($customMenu) {
+                $structure = is_string($customMenu) ? json_decode($customMenu, true) : $customMenu;
+                if (is_array($structure) && count($structure) > 0) {
+                    $menu = \Spatie\Menu\Laravel\Menu::new()->addClass('sidebar-vertical');
+                    $user = auth()->user();
+                    if ($user) {
+                        foreach ($structure as $item) {
+                            // Check visibility
+                            if (isset($item['is_visible']) && !$item['is_visible']) {
+                                continue;
+                            }
+                            if (isset($item['is_disabled']) && $item['is_disabled']) {
+                                continue;
+                            }
+                            if (isset($item['permissions']) && !empty($item['permissions'])) {
+                                if (!$user->canAny($item['permissions']) && $user->type !== \App\Enums\UserType::SUPERADMIN) {
+                                    continue;
+                                }
+                            }
+                            if (isset($item['roles']) && !empty($item['roles'])) {
+                                if (!$user->hasAnyRole($item['roles']) && $user->type !== \App\Enums\UserType::SUPERADMIN) {
+                                    continue;
+                                }
+                            }
+
+                            // Render menu item
+                            if (!empty($item['is_title'])) {
+                                $menu->html('<span>' . __($item['label']) . '</span>', ['class' => 'menu-title']);
+                            } elseif (!empty($item['children'])) {
+                                // Submenu
+                                $submenu = \Spatie\Menu\Laravel\Menu::new()->addParentClass('submenu');
+                                $active = false;
+                                foreach ($item['children'] as $child) {
+                                    if (isset($child['is_visible']) && !$child['is_visible']) {
+                                        continue;
+                                    }
+                                    if (isset($child['is_disabled']) && $child['is_disabled']) {
+                                        continue;
+                                    }
+                                    if (isset($child['permissions']) && !empty($child['permissions'])) {
+                                        if (!$user->canAny($child['permissions']) && $user->type !== \App\Enums\UserType::SUPERADMIN) {
+                                            continue;
+                                        }
+                                    }
+
+                                    $route = $child['url'] ?? $child['route'] ?? '#';
+                                    $isActiveChild = false;
+                                    if (!empty($route) && $route !== '#') {
+                                        try {
+                                            $routePattern = $child['route_pattern'] ?? $route;
+                                            $isActiveChild = route_is($routePattern);
+                                        } catch (\Throwable) {
+                                            $isActiveChild = false;
+                                        }
+                                    }
+                                    if ($isActiveChild) {
+                                        $active = true;
+                                    }
+                                    
+                                    $linkLabel = __($child['label']);
+                                    if (!empty($child['badge_count'])) {
+                                        $linkLabel .= ' <span class="badge rounded-pill bg-primary float-end">' . $child['badge_count'] . '</span>';
+                                    }
+                                    
+                                    if (!empty($child['is_external'])) {
+                                        $link = \Spatie\Menu\Laravel\Link::to($route, $linkLabel)
+                                            ->addClass($isActiveChild ? 'active' : '')
+                                            ->setAttribute('target', '_blank');
+                                    } else {
+                                        $link = \Spatie\Menu\Laravel\Link::toRoute($route, $linkLabel)
+                                            ->addClass($isActiveChild ? 'active' : '')
+                                            ->setAttributes(['wire:navigate' => 'true']);
+                                    }
+
+                                    if (isset($child['color'])) {
+                                        $link->setAttribute('style', 'color: ' . $child['color']);
+                                    }
+
+                                    $submenu->add($link);
+                                }
+                                // Only add submenu if it has items
+                                if ($submenu->setActive($active)->hasItems()) {
+                                    $iconClass = $item['icon'] ?? 'la la-folder';
+                                    $menuHtml = \Spatie\Menu\Laravel\Html::raw('<a href="#" class="' . ($active ? 'active' : '') . '" ' . (isset($item['color']) ? 'style="color: ' . $item['color'] . ';"' : '') . '><i class="' . $iconClass . '"></i> <span>' . __($item['label']) . '</span><span class="menu-arrow"></span></a>');
+                                    $menu->submenu($menuHtml, $submenu);
+                                }
+                            } else {
+                                // Standard root link
+                                $route = $item['url'] ?? $item['route'] ?? '#';
+                                $isActiveItem = false;
+                                if (!empty($route) && $route !== '#') {
+                                    try {
+                                        $routePattern = $item['route_pattern'] ?? $route;
+                                        $isActiveItem = route_is($routePattern);
+                                    } catch (\Throwable) {
+                                        $isActiveItem = false;
+                                    }
+                                }
+                                
+                                $iconHtml = '';
+                                if (!empty($item['icon'])) {
+                                    $iconHtml = '<i class="' . $item['icon'] . '"></i> ';
+                                }
+                                $linkLabel = $iconHtml . '<span>' . __($item['label']) . '</span>';
+                                if (!empty($item['badge_count'])) {
+                                    $linkLabel .= ' <span class="badge rounded-pill bg-primary float-end">' . $item['badge_count'] . '</span>';
+                                }
+
+                                if (!empty($item['is_external'])) {
+                                    $link = \Spatie\Menu\Laravel\Link::to($route, $linkLabel)
+                                        ->setActive($isActiveItem)
+                                        ->setAttribute('target', '_blank');
+                                } else {
+                                    $link = \Spatie\Menu\Laravel\Link::toRoute($route, $linkLabel)
+                                        ->setActive($isActiveItem)
+                                        ->setAttributes(['wire:navigate' => 'true']);
+                                }
+
+                                if (isset($item['color'])) {
+                                    $link->setAttribute('style', 'color: ' . $item['color']);
+                                }
+                                $menu->add($link);
+                            }
+                        }
+                    }
+                    return $menu->render();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log or fallback
+        }
+
         $appMenu = new AppMenu();
         
         // Check if we are in Superadmin mode (superadmin routes)

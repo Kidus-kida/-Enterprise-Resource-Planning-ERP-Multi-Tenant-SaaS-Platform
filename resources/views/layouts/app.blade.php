@@ -13,16 +13,28 @@
     <!-- /Sidebar -->
     <!-- Page Wrapper -->
     <div class="page-wrapper">
+        @if(setting('whitelabel.loading_screen', '1') !== '0')
         <div id="loader-wrapper">
             <div id="loader">
+              @php $anim = setting('whitelabel.loading_animation', 'ellipse'); @endphp
+              @if($anim === 'double-bounce')
+              <div class="loader-double-bounce">
+                <div class="double-bounce1"></div>
+                <div class="double-bounce2"></div>
+              </div>
+              @elseif($anim === 'spinner')
+              <div class="loader-spinner-ring"></div>
+              @else
               <div class="loader-ellips">
                 <span class="loader-ellips__dot"></span>
                 <span class="loader-ellips__dot"></span>
                 <span class="loader-ellips__dot"></span>
                 <span class="loader-ellips__dot"></span>
               </div>
+              @endif
             </div>
         </div>
+        @endif
         <!-- Page Content -->
         @yield('page-content')
         <!-- /Page Content -->
