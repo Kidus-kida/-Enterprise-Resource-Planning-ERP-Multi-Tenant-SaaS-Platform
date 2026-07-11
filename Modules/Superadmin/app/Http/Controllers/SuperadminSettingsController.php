@@ -14,7 +14,7 @@ class SuperadminSettingsController extends Controller
      */
     public function index()
     {
-        return view('superadmin::index');
+        return redirect()->route('superadmin.dashboard');
     }
 
     /**
