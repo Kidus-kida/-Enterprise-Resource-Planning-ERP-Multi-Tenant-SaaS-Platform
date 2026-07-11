@@ -1,6 +1,6 @@
-$__primarycolor:#ff9b44;
-$__primarycolor-hover: #fd8e2d;
-$__secondarycolor:#1f1f1f;
+$__primarycolor: var(--primary-color, #ff9b44);
+$__primarycolor-hover: var(--primary-hover-color, #fd8e2d);
+$__secondarycolor: var(--font-color, #1f1f1f);
 $__whitecolor:#fff;
 $__orangecolor:#fbc418;
 $__deep__skyblue: #42c0fb;

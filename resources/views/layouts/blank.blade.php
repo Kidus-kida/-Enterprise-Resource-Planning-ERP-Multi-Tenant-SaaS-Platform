@@ -18,6 +18,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="csrf-param" content="_token" />
     <title>{{ $pageTitle ?? '' }} - {{ !empty(Theme('name')) ? Theme('name') : config('app.name') }}</title>
+    <style>
+        :root {
+            --primary-color: {{ Theme('primary_color') ?? '#ff9b44' }};
+            --primary-hover-color: color-mix(in srgb, var(--primary-color) 85%, black);
+            --font-color: {{ Theme('font_color') ?? '#1f1f1f' }};
+        }
+    </style>
     @include('partials.styles')
 </head>
 

@@ -84,6 +84,18 @@
             </div> --}}
             <div class="col-sm-6">
                 <x-form.input-block>
+                    <x-form.label class="col-form-label">{{ __('Primary Theme Color') }}</x-form.label>
+                    <input type="color" class="form-control form-control-color w-100" name="primary_color" value="{{ $settings->primary_color ?? '#ff9b44' }}" title="{{ __('Choose primary color') }}">
+                </x-form.input-block>
+            </div>
+            <div class="col-sm-6">
+                <x-form.input-block>
+                    <x-form.label class="col-form-label">{{ __('Font / Text Color') }}</x-form.label>
+                    <input type="color" class="form-control form-control-color w-100" name="font_color" value="{{ $settings->font_color ?? '#1f1f1f' }}" title="{{ __('Choose font color') }}">
+                </x-form.input-block>
+            </div>
+            <div class="col-sm-6">
+                <x-form.input-block>
                     <x-form.label class="col-form-label">Layout</x-form.label>
                     <select class="select" name="layout">
                         <option {{ $settings->layout === 'vertical' ? 'selected' : '' }} value="vertical">Vertical

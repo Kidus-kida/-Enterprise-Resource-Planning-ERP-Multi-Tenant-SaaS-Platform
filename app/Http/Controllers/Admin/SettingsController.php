@@ -121,6 +121,8 @@ class SettingsController extends Controller
         $settings->logo_light = $logo_light;
         $settings->logo_dark = $logo_dark;
         $settings->favicon = $favicon;
+        $settings->primary_color = $request->primary_color ?? $settings->primary_color;
+        $settings->font_color = $request->font_color ?? $settings->font_color;
         $settings->theme = $request->theme ?? $settings->theme;
         $settings->layout = $request->layout ?? $settings->layout;
         $settings->color_scheme = $request->color_scheme ?? $settings->color_scheme;
