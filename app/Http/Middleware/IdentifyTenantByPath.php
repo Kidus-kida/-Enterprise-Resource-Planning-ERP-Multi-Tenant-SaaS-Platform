@@ -40,6 +40,8 @@ class IdentifyTenantByPath
             ?? Tenant::whereIn('database_name', $possibleDatabaseNames)->first();
 
         if (!$tenant) {
+            $centralConnection = config('database.connections.mysql');
+
             return response()->json([
                 'message' => 'Tenant not found',
                 'requested_slug' => $tenantSlug,
@@ -47,7 +49,12 @@ class IdentifyTenantByPath
                     'ids' => $possibleIds,
                     'database_names' => $possibleDatabaseNames,
                 ],
-                'central_database' => config('database.connections.mysql.database') ?? null,
+                'central_database' => $centralConnection['database'] ?? null,
+                'central_connection' => [
+                    'host' => $centralConnection['host'] ?? null,
+                    'port' => $centralConnection['port'] ?? null,
+                    'database' => $centralConnection['database'] ?? null,
+                ],
             ], 404);
         }
 
