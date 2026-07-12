@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Modules\Superadmin\Models\Tenant;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -11,23 +12,40 @@ class IdentifyTenantByPath
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('tenant-debug*')) {
+            return $next($request);
+        }
+
         $tenantSlug = $request->route('tenant');
 
         if (!$tenantSlug) {
             return $next($request);
         }
 
-        $tenant = Tenant::where('id', 'tenant_' . $tenantSlug)
-            ->orWhere('database_name', $tenantSlug)
-            ->first();
+        $possibleIds = array_values(array_unique([
+            $tenantSlug,
+            'tenant_' . $tenantSlug,
+            'tenant' . $tenantSlug,
+            Str::slug($tenantSlug),
+        ]));
+
+        $possibleDatabaseNames = array_values(array_unique([
+            $tenantSlug,
+            'tenant_' . $tenantSlug,
+            'tenant' . $tenantSlug,
+            Str::slug($tenantSlug),
+        ]));
+
+        $tenant = Tenant::whereIn('id', $possibleIds)->first()
+            ?? Tenant::whereIn('database_name', $possibleDatabaseNames)->first();
 
         if (!$tenant) {
             return response()->json([
                 'message' => 'Tenant not found',
                 'requested_slug' => $tenantSlug,
                 'checked_lookup' => [
-                    'id' => 'tenant_' . $tenantSlug,
-                    'database_name' => $tenantSlug,
+                    'ids' => $possibleIds,
+                    'database_names' => $possibleDatabaseNames,
                 ],
                 'central_database' => config('database.connections.mysql.database') ?? null,
             ], 404);
