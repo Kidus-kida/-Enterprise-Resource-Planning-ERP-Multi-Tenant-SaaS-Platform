@@ -19,13 +19,27 @@ class AuthController extends BaseController
         // Check query param first, then sticky session
         $tenantId = request()->query('tenant') ?? session('sticky_tenant_id');
         
+        // Only redirect if authenticated AND database connection is working
         if (Auth::check()) {
-            // Type-based redirect: Superadmins go to /superadmin, others to /dashboard
-            if (Auth::user()->type === \App\Enums\UserType::SUPERADMIN) {
-                return redirect()->route('superadmin.dashboard');
+            try {
+                // Test database connection before redirecting
+                \Illuminate\Support\Facades\DB::connection()->getPdo();
+                
+                // Type-based redirect: Superadmins go to /superadmin, others to /dashboard
+                if (Auth::user()->type === \App\Enums\UserType::SUPERADMIN) {
+                    return redirect()->route('superadmin.dashboard');
+                }
+                return redirect()->route('dashboard');
+            } catch (\Exception $e) {
+                // Database connection failed - log out user and show login page
+                \Log::warning('Database connection failed on login redirect, logging out user: ' . $e->getMessage());
+                Auth::logout();
+                request()->session()->invalidate();
+                request()->session()->regenerateToken();
+                session()->flash('error', 'Database connection issue. Please login again.');
             }
-            return redirect()->route('dashboard');
         }
+        
         $this->data['pageTitle'] = __('Login');
         $this->data['tenant_id'] = $tenantId;
         return view('auth.login', $this->data);

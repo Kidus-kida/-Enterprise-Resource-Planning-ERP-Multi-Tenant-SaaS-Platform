@@ -19,8 +19,8 @@ class SwitchTenantDatabase
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip for Superadmin, Diagnostic, and Logout routes to prevent Session Pollution/Connection Errors
-        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout')) {
+        // Skip for Superadmin, Diagnostic, Logout, and Auth routes to prevent Session Pollution/Connection Errors
+        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout') || $request->is('login*') || $request->is('register*') || $request->is('forgot-password*') || $request->is('reset-password*')) {
             return $next($request);
         }
 
