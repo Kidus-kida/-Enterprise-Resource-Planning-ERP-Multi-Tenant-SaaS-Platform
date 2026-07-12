@@ -710,7 +710,17 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
         Route::resource('location', \App\Http\Controllers\BusinessLocationController::class)->names('settings.location');
 
         // Stores
-        Route::resource('stores', \App\Http\Controllers\StoreController::class)->names('settings.stores');
+        Route::get('stores', function () {
+            return response()->json([
+                'message' => 'Stores module is temporarily unavailable while the controller is being restored.',
+            ], 503);
+        })->name('settings.stores.index');
+
+        Route::post('stores', function () {
+            return response()->json([
+                'message' => 'Stores module is temporarily unavailable while the controller is being restored.',
+            ], 503);
+        })->name('settings.stores.store');
 
         // Invoice Settings
         Route::get('invoice-schemes/{id}/set-default', [\App\Http\Controllers\InvoiceSchemeController::class, 'setDefault'])->name('settings.invoice-schemes.set-default');
@@ -787,9 +797,15 @@ Route::middleware([\App\Http\Middleware\SwitchTenantDatabase::class, 'auth'])->g
 
     // Audit Logs
     Route::prefix('admin/audit-logs')->middleware('auth')->name('admin.audit-logs.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AuditLogsController::class, 'index'])->name('index');
-        Route::get('/export', [\App\Http\Controllers\Admin\AuditLogsController::class, 'export'])->name('export');
-        Route::get('/{log}', [\App\Http\Controllers\Admin\AuditLogsController::class, 'show'])->name('show');
+        Route::get('/', function () {
+            return response()->json(['message' => 'Audit logs module is temporarily unavailable while the controller is being restored.'], 503);
+        })->name('index');
+        Route::get('/export', function () {
+            return response()->json(['message' => 'Audit logs module is temporarily unavailable while the controller is being restored.'], 503);
+        })->name('export');
+        Route::get('/{log}', function () {
+            return response()->json(['message' => 'Audit logs module is temporarily unavailable while the controller is being restored.'], 503);
+        })->name('show');
     });
 
 
