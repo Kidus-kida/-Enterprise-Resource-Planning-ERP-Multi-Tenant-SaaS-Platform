@@ -74,6 +74,25 @@ Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
 
+Route::get('/tenant-debug/{tenant}', function (string $tenant) {
+    $tenantModel = \Modules\Superadmin\Models\Tenant::query()
+        ->where('id', 'tenant_' . $tenant)
+        ->orWhere('database_name', $tenant)
+        ->first();
+
+    return response()->json([
+        'requested_slug' => $tenant,
+        'found' => (bool) $tenantModel,
+        'tenant' => $tenantModel ? [
+            'id' => $tenantModel->id,
+            'database_name' => $tenantModel->database_name,
+            'business_id' => $tenantModel->business_id,
+            'data' => $tenantModel->data,
+        ] : null,
+        'central_database' => config('database.connections.mysql.database') ?? null,
+    ]);
+})->name('tenant.debug');
+
 Route::prefix('tenant/{tenant}')
     ->middleware([
         'web',

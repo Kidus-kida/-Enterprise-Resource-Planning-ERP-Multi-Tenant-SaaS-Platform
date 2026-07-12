@@ -22,7 +22,15 @@ class IdentifyTenantByPath
             ->first();
 
         if (!$tenant) {
-            abort(404, 'Tenant not found');
+            return response()->json([
+                'message' => 'Tenant not found',
+                'requested_slug' => $tenantSlug,
+                'checked_lookup' => [
+                    'id' => 'tenant_' . $tenantSlug,
+                    'database_name' => $tenantSlug,
+                ],
+                'central_database' => config('database.connections.mysql.database') ?? null,
+            ], 404);
         }
 
         session([
