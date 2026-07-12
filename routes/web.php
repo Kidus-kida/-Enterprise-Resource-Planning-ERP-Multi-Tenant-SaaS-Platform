@@ -74,6 +74,15 @@ Route::view('/services', 'landing.services')->name('landing.services');
 Route::view('/resources', 'landing.resources')->name('landing.resources');
 Route::view('/test-alpine', 'test-alpine');
 
+Route::prefix('tenant/{tenant}')
+    ->middleware([
+        'web',
+        'tenant.path'
+    ])
+    ->group(function () {
+        require __DIR__ . '/tenant.php';
+    });
+
 // Clear permission cache - access from TENANT subdomain to fix missing menus
 Route::get('/clear-permission-cache', function () {
     try {

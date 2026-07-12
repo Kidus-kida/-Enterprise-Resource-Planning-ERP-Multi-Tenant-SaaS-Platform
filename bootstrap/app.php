@@ -42,10 +42,11 @@ return Application::configure(basePath: dirname(__DIR__))
             
             // Domain restriction
             'central_domain' => \App\Http\Middleware\CentralDomainOnly::class,
+            'tenant.path' => \App\Http\Middleware\IdentifyTenantByPath::class,
         ]);
         
         $middleware->web(append: [
-            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
+            \App\Http\Middleware\IdentifyTenantByPath::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
         ]);
         
@@ -62,7 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
          * Order:
          * 1. StartSession - Session must be available to read/store tenant ID
          * 2. ShareErrorsFromSession - For validation error display
-         * 3. IdentifyTenantBySubdomain - Extracts tenant from subdomain (e.g., tenant.ettech.et)
+         * 3. IdentifyTenantByPath - Extracts tenant from the route path (e.g., /tenant/sample)
          * 4. SwitchTenantDatabase - Configures tenant database connection from session
          * 5. Authenticate - Now correctly validates user against tenant database
          * 
@@ -71,7 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->priority([
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
+            \App\Http\Middleware\IdentifyTenantByPath::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
             \Illuminate\Auth\Middleware\Authenticate::class,
         ]);

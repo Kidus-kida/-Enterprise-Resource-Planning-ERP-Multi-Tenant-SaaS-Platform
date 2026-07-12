@@ -58,7 +58,7 @@ class AuthController extends BaseController
             'password' => 'required'
         ]);
         
-        // Check for tenant from BOTH query parameter AND subdomain (set by middleware)
+        // Check for tenant from both the query string and the path-based tenant middleware
         $tenantId = $request->query('tenant') ?? $request->input('tenant') ?? session('current_tenant_id');
         
         \Log::info("AuthController: loginAuth - Tenant ID: " . ($tenantId ?? 'NONE') . ", Email: " . $request->email);
