@@ -9,7 +9,7 @@
         <x-form.input-block>
             <x-form.label>{{ __('Email Address') }}</x-form.label>
             <x-form.input type="email" name="email" tabindex="1" value="{{ old('email') }}"
-                placeholder="example@smarthr.com" />
+                placeholder="example@mdcodeinc.com" />
         </x-form.input-block>
 
         <x-form.input-block class="text-center">

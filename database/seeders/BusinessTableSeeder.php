@@ -16,7 +16,7 @@ class BusinessTableSeeder extends Seeder
         DB::table('business')->updateOrInsert(
             ['id' => 1],
             [
-                'name' => 'Tewos Company',
+                'name' => 'MD Code Inc.',
                 'currency_id' => 1,
                 'start_date' => '2024-01-01',
                 'default_profit_percent' => 25,

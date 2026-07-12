@@ -13,11 +13,11 @@
         {{-- Logo --}}
         <a href="{{ route('landing.home') }}" class="flex items-center gap-2 group">
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform">
-                T
+                M
             </div>
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold tracking-tight text-slate-900">
-                    Tewos<span class="text-brand">HR</span>
+                    MD Code Inc. <span class="text-brand">ERP</span>
                 </span>
             </div>
         </a>

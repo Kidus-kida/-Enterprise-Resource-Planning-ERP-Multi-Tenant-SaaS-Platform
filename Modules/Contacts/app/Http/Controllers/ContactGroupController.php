@@ -55,7 +55,7 @@ class ContactGroupController extends Controller
             // source logic typically formats amount, assuming input is valid number here
             $input['amount'] = !empty($input['amount']) ? $input['amount'] : 0;
 
-            // Missing fields in tewoshr DB?
+            // Missing fields in database?
             // $input['price_type'] = $request->price_calculation_type;
             // $input['supplier_group_id'] = $request->selling_price_group_id;
 

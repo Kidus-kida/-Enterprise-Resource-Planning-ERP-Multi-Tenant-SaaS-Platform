@@ -29,7 +29,7 @@ class AccountGroup extends \App\Models\TenantModel
     {
         // $business_id = request()->session()->get('user.business_id');
         // $group = AccountGroup::where('business_id', $business_id)->where('name', $name)->first();
-        // TewosHR schema does not have business_id in account_groups
+        // Database schema does not have business_id in account_groups
         $group = AccountGroup::where('name', $name)->first();
         if ($get_only_id) {
             if (!empty($group)) {

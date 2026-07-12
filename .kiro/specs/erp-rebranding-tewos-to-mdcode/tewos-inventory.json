@@ -1,0 +1,384 @@
+{
+  "metadata": {
+    "generated_at": "2025-01-22T00:00:00Z",
+    "total_files": 17,
+    "total_occurrences": 45,
+    "search_exclusions": [
+      "vendor/",
+      "node_modules/",
+      ".git/",
+      "storage/",
+      "bootstrap/cache/",
+      ".kiro/"
+    ]
+  },
+  "summary": {
+    "by_category": {
+      "views": 2,
+      "code": 11,
+      "seeders": 3,
+      "comments": 1
+    },
+    "by_file_type": {
+      "blade.php": 2,
+      "php": 15
+    }
+  },
+  "files": [
+    {
+      "path": "resources/views/landing/partials/header.blade.php",
+      "category": "views",
+      "type": "blade.php",
+      "occurrences": 2,
+      "lines": [
+        {
+          "line_number": 20,
+          "content": "Tewos<span class=\"text-brand\">HR</span>",
+          "context": "Logo branding text"
+        },
+        {
+          "line_number": 20,
+          "content": "TewosHR",
+          "context": "Logo branding HTML span combination"
+        }
+      ],
+      "replacement_strategy": "Replace with 'MD Code Inc. <span class=\"text-brand\">ERP</span>'"
+    },
+    {
+      "path": "resources/views/landing/partials/footer.blade.php",
+      "category": "views",
+      "type": "blade.php",
+      "occurrences": 3,
+      "lines": [
+        {
+          "line_number": 13,
+          "content": "Tewos<span class=\"text-brand\">HR</span>",
+          "context": "Footer logo branding text"
+        },
+        {
+          "line_number": 13,
+          "content": "TewosHR",
+          "context": "Footer logo HTML span combination"
+        },
+        {
+          "line_number": 53,
+          "content": "© {{ $year }} TewosHR. All rights reserved.",
+          "context": "Copyright notice"
+        }
+      ],
+      "replacement_strategy": "Replace with 'MD Code Inc. <span class=\"text-brand\">ERP</span>' and copyright to '© 2026 MD Code Inc. All Rights Reserved.'"
+    },
+    {
+      "path": "Modules/Superadmin/app/Services/TenantService.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 16,
+          "content": "$databaseName = config('tenancy.database.prefix', 'tewoserp_tenant_') . Str::slug($subdomain);",
+          "context": "Database prefix default value"
+        }
+      ],
+      "replacement_strategy": "KEEP FUNCTIONAL - Update comment only, not the actual database prefix value for backward compatibility"
+    },
+    {
+      "path": "Modules/Superadmin/app/Http/Controllers/TenantManagementController.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 274,
+          "content": "['group' => 'theme', 'name' => 'name', 'payload' => json_encode('Tewos HR')],",
+          "context": "Default theme name setting for new tenants"
+        }
+      ],
+      "replacement_strategy": "Replace 'Tewos HR' with 'MD Code Inc. ERP'"
+    },
+    {
+      "path": "Modules/Products/app/Http/Controllers/VariationTransferController.php",
+      "category": "comments",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 154,
+          "content": "// Actually, `tewoshr/Modules/Products/resources/views/variation/index.blade.php` (Step 492)",
+          "context": "Technical comment referencing file path"
+        }
+      ],
+      "replacement_strategy": "PRESERVE - Technical comment for developer reference, can be updated but low priority"
+    },
+    {
+      "path": "Modules/Contacts/app/Http/Controllers/ContactGroupController.php",
+      "category": "comments",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 58,
+          "content": "// Missing fields in tewoshr DB?",
+          "context": "Developer comment about database schema"
+        }
+      ],
+      "replacement_strategy": "PRESERVE or update to 'Missing fields in database schema?' - low priority technical comment"
+    },
+    {
+      "path": "Modules/Contacts/app/Http/Controllers/CustomerStatementController.php",
+      "category": "comments",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 137,
+          "content": "// Adjusted logic to match standard TewosHR/ERP structure",
+          "context": "Developer comment about code structure"
+        }
+      ],
+      "replacement_strategy": "Replace with 'Adjusted logic to match standard ERP structure'"
+    },
+    {
+      "path": "Modules/Contacts/app/Http/Controllers/CustomerReferenceController.php",
+      "category": "comments",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 12,
+          "content": "// use Modules\\Superadmin\\Entities\\HelpExplanation; // Might not exist in TewosHR yet",
+          "context": "Commented code with note about missing feature"
+        }
+      ],
+      "replacement_strategy": "Update to 'Might not exist yet' or 'Might not exist in current version'"
+    },
+    {
+      "path": "database/seeders/BusinessTableSeeder.php",
+      "category": "seeders",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 19,
+          "content": "'name' => 'Tewos Company',",
+          "context": "Default business name in seeder"
+        }
+      ],
+      "replacement_strategy": "Replace 'Tewos Company' with 'MD Code Inc.'"
+    },
+    {
+      "path": "database/seeders/BusinessSeeder.php",
+      "category": "seeders",
+      "type": "php",
+      "occurrences": 6,
+      "lines": [
+        {
+          "line_number": 69,
+          "content": "'name' => 'Tewos Support',",
+          "context": "Default business name"
+        },
+        {
+          "line_number": 70,
+          "content": "'subdomain' => 'tewos-support',",
+          "context": "Subdomain for demo/support tenant"
+        },
+        {
+          "line_number": 114,
+          "content": "$tenantId = 'tewos_support';",
+          "context": "Tenant ID variable"
+        },
+        {
+          "line_number": 115,
+          "content": "$dbName = env('TENANT_DB_DATABASE', 'tewos_hr_tenant_test');",
+          "context": "Database name default"
+        },
+        {
+          "line_number": 151,
+          "content": "'domain' => 'tewos-support.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),",
+          "context": "Domain for tenant subdomain access"
+        }
+      ],
+      "replacement_strategy": "Replace 'Tewos Support' with 'MD Code Inc.', 'tewos-support' with 'mdcode-demo', keep functional database names or update defaults cautiously"
+    },
+    {
+      "path": "app/AccountGroup.php",
+      "category": "comments",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 32,
+          "content": "// TewosHR schema does not have business_id in account_groups",
+          "context": "Technical comment about database schema"
+        }
+      ],
+      "replacement_strategy": "PRESERVE - Technical schema reference for developer clarity, can remain or update to 'Database schema note'"
+    },
+    {
+      "path": "database/seeders/TenantSetupSeeder.php",
+      "category": "seeders",
+      "type": "php",
+      "occurrences": 2,
+      "lines": [
+        {
+          "line_number": 43,
+          "content": "DB::connection('mysql')->table('tewos_hr_tenant_test.users')->updateOrInsert(",
+          "context": "Hardcoded database name in seeder - FUNCTIONAL"
+        },
+        {
+          "line_number": 60,
+          "content": "$tenantUserId = DB::connection('mysql')->table('tewos_hr_tenant_test.users')",
+          "context": "Hardcoded database name query - FUNCTIONAL"
+        }
+      ],
+      "replacement_strategy": "KEEP FUNCTIONAL - These are hardcoded database names for test/demo setup. Update comments to explain or leave as-is for backward compatibility"
+    },
+    {
+      "path": "app/Jobs/ResolveAttendanceLocation.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 2,
+      "lines": [
+        {
+          "line_number": 119,
+          "content": "'User-Agent' => 'TewosSmartHR/1.0 (https://smarthr.tewostechsolutions.com)'",
+          "context": "HTTP User-Agent string for OpenStreetMap API"
+        }
+      ],
+      "replacement_strategy": "Replace with 'User-Agent' => 'MD Code Inc. ERP/1.0 (https://mdcodeinc.com)'"
+    },
+    {
+      "path": "app/Livewire/EmployeeAttendance.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 2,
+      "lines": [
+        {
+          "line_number": 46,
+          "content": "'User-Agent' => 'TewosSmartHR/1.0 (https://smarthr.tewostechsolutions.com)'",
+          "context": "HTTP User-Agent string for OpenStreetMap API"
+        }
+      ],
+      "replacement_strategy": "Replace with 'User-Agent' => 'MD Code Inc. ERP/1.0 (https://mdcodeinc.com)'"
+    },
+    {
+      "path": "app/Http/Controllers/PayrollProcessingController.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 1,
+      "lines": [
+        {
+          "line_number": 197,
+          "content": "$sheet->setCellValue('A1', 'TEWOS HR - Payroll Report');",
+          "context": "Excel report title"
+        }
+      ],
+      "replacement_strategy": "Replace 'TEWOS HR' with 'MD Code Inc. ERP'"
+    },
+    {
+      "path": "app/Http/Controllers/EmployeeAttendanceController.php",
+      "category": "code",
+      "type": "php",
+      "occurrences": 2,
+      "lines": [
+        {
+          "line_number": 265,
+          "content": "'User-Agent' => 'TewosSmartHR/1.0 (https://smarthr.tewostechsolutions.com)'",
+          "context": "HTTP User-Agent string for OpenStreetMap API"
+        }
+      ],
+      "replacement_strategy": "Replace with 'User-Agent' => 'MD Code Inc. ERP/1.0 (https://mdcodeinc.com)'"
+    }
+  ],
+  "replacement_rules": {
+    "text_replacements": [
+      {
+        "from": "Tewos",
+        "to": "MD Code Inc.",
+        "notes": "Base brand name"
+      },
+      {
+        "from": "TewosHR",
+        "to": "MD Code Inc. ERP",
+        "notes": "Full product name"
+      },
+      {
+        "from": "Tewos ERP",
+        "to": "MD Code Inc. ERP",
+        "notes": "Alternative product name"
+      },
+      {
+        "from": "TewosSmartHR",
+        "to": "MD Code Inc. ERP",
+        "notes": "Legacy product name variant"
+      },
+      {
+        "from": "TEWOS HR",
+        "to": "MD Code Inc. ERP",
+        "notes": "Uppercase variant"
+      },
+      {
+        "from": "Tewos Technologies",
+        "to": "MD Code Inc.",
+        "notes": "Full company name"
+      },
+      {
+        "from": "Tewos Technology",
+        "to": "MD Code Inc.",
+        "notes": "Company name singular"
+      },
+      {
+        "from": "Tewos Support",
+        "to": "MD Code Inc.",
+        "notes": "Support business name"
+      },
+      {
+        "from": "Tewos Company",
+        "to": "MD Code Inc.",
+        "notes": "Demo/default company name"
+      },
+      {
+        "from": "© {{ $year }} TewosHR",
+        "to": "© 2026 MD Code Inc.",
+        "notes": "Copyright in footer"
+      },
+      {
+        "from": "tewos-support",
+        "to": "mdcode-demo",
+        "notes": "Demo subdomain (non-functional)"
+      }
+    ],
+    "preserve_patterns": [
+      {
+        "pattern": "tewoserp_tenant_",
+        "reason": "Database prefix - functional value for backward compatibility",
+        "action": "Update comment only, not the value"
+      },
+      {
+        "pattern": "tewos_hr_tenant_test",
+        "reason": "Hardcoded test database name - functional",
+        "action": "Keep as-is or update with caution in test environments only"
+      },
+      {
+        "pattern": "tewos_support (tenant_id)",
+        "reason": "Existing tenant ID in database",
+        "action": "Keep for existing tenants, update default for new tenants"
+      },
+      {
+        "pattern": "TewosHR schema",
+        "reason": "Technical comment about database structure",
+        "action": "Optional update or preserve for developer reference"
+      }
+    ]
+  },
+  "notes": [
+    "Total of 17 files contain Tewos references",
+    "Most references are in user-facing views (2 files) and code files (11 files)",
+    "3 seeder files contain default data that should be updated for new installations",
+    "Several technical comments reference 'TewosHR' - these can be preserved or updated as low priority",
+    "HTTP User-Agent strings appear in 3 files and should be updated for API compliance",
+    "Database-related functional values (prefixes, table names) should be handled carefully to maintain backward compatibility",
+    "No Tewos references found in JavaScript, CSS, JSON, or environment files",
+    "Spec files (.kiro directory) excluded from inventory as expected"
+  ]
+}

@@ -39,7 +39,8 @@ class TenantSetupSeeder extends Seeder
         // Generate UUID for the user
         $tenantUserUuid = Str::uuid();
 
-        // Create or update admin user in tenant database (HARDCODED DB NAME)
+        // Create or update admin user in tenant database
+        // Note: Using hardcoded test tenant database name for development purposes
         DB::connection('mysql')->table('tewos_hr_tenant_test.users')->updateOrInsert(
             ['email' => 'owner@example.com'],
             [

@@ -64,6 +64,7 @@ class SettingsAuditLog extends Model
 
     /**
      * Create an audit record from the current request context.
+     * Automatically masks sensitive setting values.
      */
     public static function record(
         string $key,
@@ -72,11 +73,19 @@ class SettingsAuditLog extends Model
         string $requestId
     ): self {
         $userAgent = request()->userAgent() ?? '';
+        
+        // Check if this setting is sensitive
+        $setting = SystemSetting::where('key', $key)->first();
+        $isSensitive = $setting && $setting->is_sensitive;
+        
+        // Mask sensitive values
+        $maskedOldValue = $isSensitive && !empty($oldValue) ? '••••••••' : $oldValue;
+        $maskedNewValue = $isSensitive && !empty($newValue) ? '••••••••' : $newValue;
 
         return static::create([
             'key'        => $key,
-            'old_value'  => is_array($oldValue) ? json_encode($oldValue) : (string) $oldValue,
-            'new_value'  => is_array($newValue) ? json_encode($newValue) : (string) $newValue,
+            'old_value'  => is_array($maskedOldValue) ? json_encode($maskedOldValue) : (string) $maskedOldValue,
+            'new_value'  => is_array($maskedNewValue) ? json_encode($maskedNewValue) : (string) $maskedNewValue,
             'user_id'    => auth()->id(),
             'ip_address' => request()->ip(),
             'user_agent' => $userAgent,

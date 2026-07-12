@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Milon\Barcode\DNS2D;
 use Yajra\DataTables\DataTables;
-// use Modules\Superadmin\Entities\HelpExplanation; // Might not exist in TewosHR yet
+// use Modules\Superadmin\Entities\HelpExplanation; // Might not exist yet
 // use App\new_vehicle; // Might not exist
 
 class CustomerReferenceController extends Controller

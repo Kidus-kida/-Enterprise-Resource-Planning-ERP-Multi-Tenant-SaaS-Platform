@@ -137,4 +137,111 @@ class SettingsRepository
         ->limit(30)
         ->get();
     }
+
+    /**
+     * Get settings with their dependencies resolved.
+     * Returns only visible settings based on dependency conditions.
+     */
+    public function getWithDependencies(string $category): Collection
+    {
+        $settings = $this->getByCategory($category);
+        $allSettings = $this->getAllAsKeyValue();
+
+        return $settings->filter(function ($setting) use ($allSettings) {
+            return $this->isDependencySatisfied($setting, $allSettings);
+        });
+    }
+
+    /**
+     * Check if a setting's dependency condition is satisfied.
+     */
+    private function isDependencySatisfied(SystemSetting $setting, array $allSettings): bool
+    {
+        if (!$setting->depends_on) {
+            return true;
+        }
+
+        // Parse dependency: "key:expected_value"
+        if (!str_contains($setting->depends_on, ':')) {
+            return true;
+        }
+
+        [$dependentKey, $expectedValue] = explode(':', $setting->depends_on, 2);
+        $actualValue = $allSettings[$dependentKey] ?? null;
+
+        return (string) $actualValue === (string) $expectedValue;
+    }
+
+    /**
+     * Bulk update multiple settings in a transaction.
+     * All-or-nothing: if any setting fails, all are rolled back.
+     */
+    public function bulkUpdate(array $settings): bool
+    {
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            foreach ($settings as $key => $value) {
+                $this->set($key, $value);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Bulk settings update failed', [
+                'error' => $e->getMessage(),
+                'settings' => array_keys($settings),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Get settings by section within category.
+     */
+    public function getBySection(string $category, string $section): Collection
+    {
+        return SystemSetting::byCategory($category)
+            ->bySection($section)
+            ->ordered()
+            ->get();
+    }
+
+    /**
+     * Check if setting is editable by current user.
+     * This is a placeholder for more complex permission logic.
+     */
+    public function isEditable(string $key): bool
+    {
+        $setting = $this->find($key);
+        
+        if (!$setting) {
+            return false;
+        }
+
+        // System settings are never editable
+        if ($setting->is_system) {
+            return false;
+        }
+
+        // Check if marked as editable
+        if (!$setting->is_editable) {
+            return false;
+        }
+
+        // Additional permission checks could go here
+        // e.g., check if user has 'manage_system_settings' permission
+        
+        return true;
+    }
+
+    /**
+     * Get default value for a setting.
+     */
+    public function getDefault(string $key): mixed
+    {
+        $setting = $this->find($key);
+        return $setting?->default_value;
+    }
 }

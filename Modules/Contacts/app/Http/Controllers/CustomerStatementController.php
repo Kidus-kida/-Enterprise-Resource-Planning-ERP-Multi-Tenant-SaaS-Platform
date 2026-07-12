@@ -134,7 +134,7 @@ class CustomerStatementController extends Controller
     protected function __getStatement($business_id, $customer_id, $date_from, $date_to)
     {
         // Fetch transactions
-        // Adjusted logic to match standard TewosHR/ERP structure
+        // Adjusted logic to match standard ERP structure
         $query = Transaction::where('transactions.business_id', $business_id)
                     ->where('contacts.id', $customer_id)
                     ->leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')

@@ -271,7 +271,7 @@ class TenantManagementController extends Controller
             $now = now();
             $settings = [
                 // Theme Settings
-                ['group' => 'theme', 'name' => 'name', 'payload' => json_encode('Tewos HR')],
+                ['group' => 'theme', 'name' => 'name', 'payload' => json_encode('MD Code Inc. ERP')],
                 ['group' => 'theme', 'name' => 'theme', 'payload' => json_encode('light')],
                 ['group' => 'theme', 'name' => 'layout', 'payload' => json_encode('vertical')],
                 ['group' => 'theme', 'name' => 'color_scheme', 'payload' => json_encode('light')],

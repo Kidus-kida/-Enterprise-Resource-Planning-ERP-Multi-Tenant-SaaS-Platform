@@ -13,6 +13,8 @@ class TenantService
     public function createTenantRecord(Business $business, string $subdomain)
     {
         $tenantId = 'tenant_' . Str::slug($subdomain);
+        // Database prefix for tenant databases - configured in tenancy.database.prefix
+        // Default value maintained for backward compatibility with existing tenant databases
         $databaseName = config('tenancy.database.prefix', 'tewoserp_tenant_') . Str::slug($subdomain);
 
         $tenant = Tenant::create([

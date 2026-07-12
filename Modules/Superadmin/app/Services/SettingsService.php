@@ -4,6 +4,7 @@ namespace Modules\Superadmin\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Superadmin\Models\SettingsAuditLog;
 use Modules\Superadmin\Models\SystemSetting;
@@ -106,10 +107,20 @@ class SettingsService
 
     /**
      * Set a single setting value.
-     * Automatically encrypts sensitive settings and clears cache.
+     * Validates, encrypts sensitive settings, and clears cache.
+     * 
+     * @throws \InvalidArgumentException if validation fails
      */
     public function set(string $key, mixed $value): SystemSetting
     {
+        // Validate before saving
+        $errors = $this->validate($key, $value);
+        if (!empty($errors)) {
+            throw new \InvalidArgumentException(
+                "Validation failed for {$key}: " . implode(', ', $errors)
+            );
+        }
+
         // Capture old value for audit
         $oldValue = $this->get($key);
 
@@ -120,6 +131,9 @@ class SettingsService
 
         // Bust cache
         $this->clearCache();
+        
+        // Broadcast change for real-time updates
+        $this->broadcastChange($key, $value);
 
         return $setting;
     }
@@ -127,31 +141,71 @@ class SettingsService
     /**
      * Save multiple settings at once (e.g. from a form).
      * Only saves keys that exist in the database (security filter).
+     * Validates all settings before saving any.
+     * All-or-nothing transaction: if any setting fails validation, none are saved.
+     * 
+     * @throws \Illuminate\Validation\ValidationException if validation fails
      */
     public function setMany(array $data): void
     {
-        $oldAll = $this->loadCache();
-        $changed = [];
-
+        // First pass: validate all settings
+        $validationErrors = [];
         foreach ($data as $key => $value) {
             $setting = $this->repo->find($key);
 
-            if (!$setting) {
-                continue; // Do not create arbitrary settings from POSTs
+            if (!$setting || !$setting->is_editable) {
+                continue;
             }
 
-            if (!$setting->is_editable) {
-                continue; // Non-editable settings are protected
+            $errors = $this->validate($key, $value);
+            if (!empty($errors)) {
+                $validationErrors[$key] = $errors;
             }
-
-            $oldValue = $oldAll[$key] ?? null;
-            $this->repo->set($key, $value);
-            $this->audit($key, $oldValue, $value);
-            $changed[] = $key;
         }
 
-        if (!empty($changed)) {
-            $this->clearCache();
+        // If any validation errors, throw exception before saving anything
+        if (!empty($validationErrors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($validationErrors);
+        }
+
+        // Second pass: save all settings in a transaction (all-or-nothing)
+        DB::beginTransaction();
+        
+        try {
+            $oldAll = $this->loadCache();
+            $changed = [];
+
+            foreach ($data as $key => $value) {
+                $setting = $this->repo->find($key);
+
+                if (!$setting || !$setting->is_editable) {
+                    continue;
+                }
+
+                $oldValue = $oldAll[$key] ?? null;
+                $this->repo->set($key, $value);
+                $this->audit($key, $oldValue, $value);
+                $changed[] = $key;
+                
+                // Broadcast change for real-time updates
+                $this->broadcastChange($key, $value);
+            }
+
+            DB::commit();
+
+            if (!empty($changed)) {
+                $this->clearCache();
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            
+            \Illuminate\Support\Facades\Log::error('Batch settings save failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'keys' => array_keys($data),
+            ]);
+            
+            throw $e;
         }
     }
 
@@ -181,25 +235,73 @@ class SettingsService
     }
 
     /**
+     * Load settings for a specific category into cache (or retrieve from cache).
+     */
+    private function loadCategoryCache(string $category): array
+    {
+        $cacheKey = self::CACHE_KEY . '_' . $category;
+        
+        return Cache::rememberForever($cacheKey, function () use ($category) {
+            return $this->repo->getByCategory($category)
+                ->mapWithKeys(fn($s) => [$s->key => $s->typed_value])
+                ->all();
+        });
+    }
+
+    /**
      * Force-clear the settings cache. Called after any write.
+     * Clears both global cache and all category-specific caches.
      */
     public function clearCache(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        try {
+            // Clear global cache
+            Cache::forget(self::CACHE_KEY);
 
-        // Also clear per-category caches
-        foreach (SettingCategory::ALL as $category) {
+            // Clear per-category caches
+            foreach (SettingCategory::ALL as $category) {
+                Cache::forget(self::CACHE_KEY . '_' . $category);
+            }
+        } catch (\Throwable $e) {
+            // Log cache errors but don't fail the request
+            \Illuminate\Support\Facades\Log::warning('Cache clear failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Clear cache for a specific category only.
+     */
+    public function clearCategoryCache(string $category): void
+    {
+        try {
             Cache::forget(self::CACHE_KEY . '_' . $category);
+            
+            // Also clear global cache since it contains this category
+            Cache::forget(self::CACHE_KEY);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Category cache clear failed for {$category}", [
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Warm the cache (call during deployment/artisan optimize).
+     * Pre-loads all settings into cache to avoid cold start performance hit.
      */
     public function warmCache(): void
     {
         $this->clearCache();
+        
+        // Load global cache
         $this->loadCache();
+        
+        // Pre-warm category-specific caches
+        foreach (SettingCategory::ALL as $category) {
+            $this->loadCategoryCache($category);
+        }
     }
 
     // =========================================================================
@@ -245,6 +347,303 @@ class SettingsService
         }
 
         return ['updated' => $updated, 'skipped' => $skipped];
+    }
+
+    // =========================================================================
+    // Validation
+    // =========================================================================
+
+    /**
+     * Validate setting value against rules before save.
+     * Returns empty array if valid, or array of error messages if invalid.
+     */
+    public function validate(string $key, mixed $value): array
+    {
+        $setting = $this->repo->find($key);
+        
+        if (!$setting || !$setting->validation_rules) {
+            return [];
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            [$key => $value],
+            [$key => $setting->validation_rules]
+        );
+
+        return $validator->fails() ? $validator->errors()->get($key) : [];
+    }
+
+    /**
+     * Get settings grouped by category and section for display.
+     */
+    public function getCategorizedSettings(string $category): Collection
+    {
+        return $this->repo->getByCategory($category)
+            ->groupBy('section')
+            ->map(function ($sectionSettings) {
+                return $sectionSettings->sortBy('sort_order');
+            });
+    }
+
+    // =========================================================================
+    // CSS Variable Generation
+    // =========================================================================
+
+    /**
+     * Generate CSS variables from appearance settings.
+     * Returns a string ready to be injected into a <style> tag.
+     */
+    public function generateCssVariables(): string
+    {
+        $colors = $this->group('appearance.colors');
+        
+        $css = ":root {\n";
+        
+        foreach ($colors as $key => $value) {
+            // Extract color name from key (e.g., appearance.colors.primary -> primary)
+            $colorName = str_replace('appearance.colors.', '', $key);
+            
+            // Base color
+            $css .= "    --{$colorName}-color: {$value};\n";
+            
+            // Generate shade variations
+            if ($this->isHexColor($value)) {
+                $shades = $this->generateColorShades($value);
+                foreach ($shades as $shade => $shadeValue) {
+                    $css .= "    --{$colorName}-{$shade}: {$shadeValue};\n";
+                }
+            }
+        }
+        
+        $css .= "}\n";
+        
+        return $css;
+    }
+
+    /**
+     * Check if a value is a valid hex color.
+     */
+    private function isHexColor(string $value): bool
+    {
+        return (bool) preg_match('/^#[0-9A-Fa-f]{6}$/', $value);
+    }
+
+    /**
+     * Generate color shade variations (lighter, light, dark, darker).
+     */
+    private function generateColorShades(string $hex): array
+    {
+        // Convert hex to RGB
+        $hex = ltrim($hex, '#');
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        return [
+            'lighter' => $this->rgbToHex(
+                min(255, $r + 60),
+                min(255, $g + 60),
+                min(255, $b + 60)
+            ),
+            'light' => $this->rgbToHex(
+                min(255, $r + 30),
+                min(255, $g + 30),
+                min(255, $b + 30)
+            ),
+            'dark' => $this->rgbToHex(
+                max(0, $r - 30),
+                max(0, $g - 30),
+                max(0, $b - 30)
+            ),
+            'darker' => $this->rgbToHex(
+                max(0, $r - 60),
+                max(0, $g - 60),
+                max(0, $b - 60)
+            ),
+        ];
+    }
+
+    /**
+     * Convert RGB values to hex color string.
+     */
+    private function rgbToHex(int $r, int $g, int $b): string
+    {
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    // =========================================================================
+    // Integration Testing
+    // =========================================================================
+
+    /**
+     * Test email configuration by sending a test email.
+     */
+    public function testEmailConfig(array $config, string $testRecipient): bool
+    {
+        try {
+            // Temporarily configure mail settings
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp' => [
+                    'transport' => 'smtp',
+                    'host' => $config['host'] ?? '',
+                    'port' => $config['port'] ?? 587,
+                    'encryption' => $config['encryption'] ?? 'tls',
+                    'username' => $config['username'] ?? '',
+                    'password' => $config['password'] ?? '',
+                ],
+                'mail.from' => [
+                    'address' => $config['from_address'] ?? 'test@example.com',
+                    'name' => $config['from_name'] ?? 'Test',
+                ],
+            ]);
+
+            // Send test email
+            \Illuminate\Support\Facades\Mail::raw(
+                'This is a test email from your system settings configuration.',
+                function ($message) use ($testRecipient) {
+                    $message->to($testRecipient)
+                            ->subject('Test Email Configuration');
+                }
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Email test failed', [
+                'error' => $e->getMessage(),
+                'config' => array_diff_key($config, ['password' => '']),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Test storage connection.
+     */
+    public function testStorageConnection(string $driver, array $config): bool
+    {
+        try {
+            // Temporarily configure storage
+            $diskConfig = match($driver) {
+                's3' => [
+                    'driver' => 's3',
+                    'key' => $config['key'] ?? '',
+                    'secret' => $config['secret'] ?? '',
+                    'region' => $config['region'] ?? '',
+                    'bucket' => $config['bucket'] ?? '',
+                    'endpoint' => $config['endpoint'] ?? null,
+                ],
+                'ftp' => [
+                    'driver' => 'ftp',
+                    'host' => $config['host'] ?? '',
+                    'username' => $config['username'] ?? '',
+                    'password' => $config['password'] ?? '',
+                    'port' => $config['port'] ?? 21,
+                    'root' => $config['root'] ?? '',
+                ],
+                default => throw new \Exception("Unsupported storage driver: {$driver}")
+            };
+
+            config(["filesystems.disks.test_{$driver}" => $diskConfig]);
+            
+            // Test by trying to write and read a test file
+            $disk = \Illuminate\Support\Facades\Storage::disk("test_{$driver}");
+            $testFile = 'test_connection_' . time() . '.txt';
+            $disk->put($testFile, 'test');
+            $disk->delete($testFile);
+
+            return true;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("Storage test failed for {$driver}", [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Test third-party integration connection.
+     */
+    public function testIntegration(string $integration, array $credentials): bool
+    {
+        return match($integration) {
+            'google_oauth' => $this->testGoogleOAuth($credentials),
+            'stripe' => $this->testStripe($credentials),
+            'paypal' => $this->testPayPal($credentials),
+            default => throw new \Exception("Unsupported integration: {$integration}")
+        };
+    }
+
+    private function testGoogleOAuth(array $credentials): bool
+    {
+        // Placeholder for Google OAuth test
+        // In production, this would verify client ID and secret with Google API
+        if (empty($credentials['client_id']) || empty($credentials['client_secret'])) {
+            throw new \Exception('Google OAuth credentials are incomplete');
+        }
+        return true;
+    }
+
+    private function testStripe(array $credentials): bool
+    {
+        // Placeholder for Stripe test
+        // In production, this would make a test API call to Stripe
+        if (empty($credentials['api_key'])) {
+            throw new \Exception('Stripe API key is missing');
+        }
+        return true;
+    }
+
+    private function testPayPal(array $credentials): bool
+    {
+        // Placeholder for PayPal test
+        // In production, this would verify credentials with PayPal API
+        if (empty($credentials['client_id']) || empty($credentials['secret'])) {
+            throw new \Exception('PayPal credentials are incomplete');
+        }
+        return true;
+    }
+
+    /**
+     * Get settings diff between current and defaults for a category.
+     */
+    public function getDiff(string $category): array
+    {
+        $settings = $this->repo->getByCategory($category);
+        $diff = [];
+
+        foreach ($settings as $setting) {
+            if ($setting->value !== $setting->default_value) {
+                $diff[$setting->key] = [
+                    'current' => $setting->typed_value,
+                    'default' => $setting->default_value,
+                ];
+            }
+        }
+
+        return $diff;
+    }
+
+    // =========================================================================
+    // Broadcasting (for real-time updates)
+    // =========================================================================
+
+    /**
+     * Broadcast setting change via WebSocket.
+     */
+    private function broadcastChange(string $key, mixed $value): void
+    {
+        try {
+            // Only broadcast if broadcasting is enabled
+            if (config('broadcasting.default') !== 'null') {
+                event(new \Modules\Superadmin\Events\SettingChanged($key, $value));
+            }
+        } catch (\Throwable $e) {
+            // Never let broadcast failure break a settings save
+            \Illuminate\Support\Facades\Log::debug('Setting broadcast failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     // =========================================================================

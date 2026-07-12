@@ -105,6 +105,39 @@ class SystemSetting extends Model
         return (string) ($this->type === 'image' ? $this->typed_value : $this->value);
     }
 
+    /**
+     * Get dependency metadata as array.
+     * Returns null if no dependency, otherwise ['key' => 'setting.key', 'value' => 'expected_value']
+     */
+    public function getDependencyMetAttribute(): ?array
+    {
+        if (!$this->depends_on || !str_contains($this->depends_on, ':')) {
+            return null;
+        }
+        
+        [$key, $expectedValue] = explode(':', $this->depends_on, 2);
+        return ['key' => $key, 'value' => $expectedValue];
+    }
+
+    /**
+     * Check if dependency condition is satisfied.
+     * Returns true if no dependency or if dependency is met.
+     */
+    public function isDependencySatisfied(): bool
+    {
+        $dep = $this->dependency_met;
+        
+        if (!$dep) {
+            return true;
+        }
+        
+        // Get actual value of the dependent setting
+        $actualValue = app(\Modules\Superadmin\Services\SettingsService::class)
+            ->get($dep['key']);
+        
+        return (string) $actualValue === (string) $dep['value'];
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------

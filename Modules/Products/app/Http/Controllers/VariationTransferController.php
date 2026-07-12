@@ -151,7 +151,7 @@ class VariationTransferController extends Controller
         // So `index()` might be called by AJAX DataTable.
         // But what about the View?
         // In `erp.ettech.et`, `variation_transfer` tab likely calls this?
-        // Actually, `tewoshr/Modules/Products/resources/views/variation/index.blade.php` (Step 492)
+        // Actually, `Modules/Products/resources/views/variation/index.blade.php` (Step 492)
         // includes `products::variation_transfer.index`.
         // That partial likely has the DataTable definition.
         // And that DataTable ajax url points to `VariationTransferController@index`.

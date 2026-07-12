@@ -43,7 +43,7 @@ class EmployeeAttendance extends Component
     public function getLocationNameFromCoords($lat, $lng)
     {
         $response = Http::withHeaders([
-            'User-Agent' => 'TewosSmartHR/1.0 (https://smarthr.tewostechsolutions.com)' 
+            'User-Agent' => 'MD Code Inc. ERP/1.0' 
         ])->get("https://nominatim.openstreetmap.org/reverse", [
             'format' => 'json',
             'lat' => $lat,

@@ -7,10 +7,10 @@
         <div class="space-y-4">
              <div class="flex items-center gap-2">
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-accent text-white font-bold text-sm shadow-md">
-                    T
+                    M
                 </div>
                 <span class="text-lg font-bold tracking-tight text-slate-900">
-                    Tewos<span class="text-brand">HR</span>
+                    MD Code Inc. <span class="text-brand">ERP</span>
                 </span>
             </div>
             <p class="text-sm text-slate-500 leading-relaxed">
@@ -50,7 +50,7 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400">
-        <p>© {{ $year }} TewosHR. All rights reserved.</p>
+        <p>© 2026 MD Code Inc. All Rights Reserved.</p>
         <div class="flex gap-4 mt-4 md:mt-0">
             <a href="#" class="hover:text-slate-600">Privacy Policy</a>
             <a href="#" class="hover:text-slate-600">Terms of Service</a>

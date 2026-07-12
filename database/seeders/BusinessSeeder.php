@@ -66,8 +66,8 @@ class BusinessSeeder extends Seeder
         $business = DB::table('businesses')->where('owner_id', $owner->id)->first();
         if (!$business) {
             $businessId = DB::table('businesses')->insertGetId([
-                'name' => 'Tewos Support',
-                'subdomain' => 'tewos-support',
+                'name' => 'MD Code Inc.',
+                'subdomain' => 'mdcode-demo',
                 'tenant_id' => 1,
                 'package_id' => $enterprisePackageId,
                 'currency_id' => $currency->id,
@@ -111,7 +111,7 @@ class BusinessSeeder extends Seeder
         );
 
         // Create Tenant Record (migration will be done manually from UI)
-        $tenantId = 'tewos_support';
+        $tenantId = 'mdcode_demo';
         $dbName = env('TENANT_DB_DATABASE', 'tewos_hr_tenant_test'); 
         $dbUser = env('DB_USERNAME', 'root');
         $dbPass = env('DB_PASSWORD', '');
@@ -148,7 +148,7 @@ class BusinessSeeder extends Seeder
         DB::table('domains')->updateOrInsert(
             ['tenant_id' => $tenantId],
             [
-                'domain' => 'tewos-support.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+                'domain' => 'mdcode-demo.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]

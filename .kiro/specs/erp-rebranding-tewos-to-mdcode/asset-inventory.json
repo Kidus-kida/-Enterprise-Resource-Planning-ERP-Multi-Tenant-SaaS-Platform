@@ -1,0 +1,429 @@
+{
+  "metadata": {
+    "created_at": "2025-01-07",
+    "description": "Visual asset inventory for ERP rebranding from Tewos to MD Code Inc.",
+    "total_logo_files": 9,
+    "total_favicon_files": 4,
+    "total_icon_files": 5,
+    "total_tewos_branded_files": 1,
+    "total_template_references": 28
+  },
+  "logo_files": [
+    {
+      "path": "public/images/logo.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Main logo file in public directory",
+      "referenced_in": [
+        "resources/views/components/logo.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/logo.svg",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "SVG logo file in public directory",
+      "referenced_in": []
+    },
+    {
+      "path": "public/images/logo2.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Secondary logo file (dark theme)",
+      "referenced_in": [
+        "resources/views/components/logo.blade.php",
+        "resources/views/pages/settings/theme.blade.php",
+        "resources/views/pages/settings/invoice.blade.php",
+        "resources/views/layouts/auth.blade.php",
+        "resources/views/errors/404.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/logo3.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Tertiary logo file",
+      "referenced_in": []
+    },
+    {
+      "path": "public/images/main-logo.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Main logo alternative",
+      "referenced_in": []
+    },
+    {
+      "path": "resources/assets/img/logo.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Logo in resources/assets directory",
+      "referenced_in": []
+    },
+    {
+      "path": "resources/assets/img/logo.svg",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "SVG logo in resources/assets directory",
+      "referenced_in": []
+    },
+    {
+      "path": "resources/assets/img/logo2.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Secondary logo in resources/assets directory",
+      "referenced_in": []
+    },
+    {
+      "path": "resources/assets/img/logo3.png",
+      "type": "logo",
+      "action": "replace_or_remove",
+      "description": "Tertiary logo in resources/assets directory",
+      "referenced_in": []
+    }
+  ],
+  "favicon_files": [
+    {
+      "path": "public/favicon.ico",
+      "type": "favicon",
+      "action": "replace_or_remove",
+      "description": "Main favicon file in public root",
+      "referenced_in": []
+    },
+    {
+      "path": "public/images/favicon.png",
+      "type": "favicon",
+      "action": "replace_or_remove",
+      "description": "Favicon PNG in public/images",
+      "referenced_in": []
+    },
+    {
+      "path": "resources/assets/img/favicon.png",
+      "type": "favicon",
+      "action": "replace_or_remove",
+      "description": "Favicon PNG in resources/assets/img",
+      "referenced_in": [
+        "resources/views/vendor/log-viewer/index.blade.php",
+        "resources/views/partials/styles.blade.php"
+      ]
+    },
+    {
+      "path": "public/build/assets/favicon-4kPoRrh4.png",
+      "type": "favicon",
+      "action": "replace_or_remove",
+      "description": "Compiled favicon in build directory",
+      "referenced_in": []
+    }
+  ],
+  "icon_files": [
+    {
+      "path": "public/images/icons/eye.svg",
+      "type": "icon",
+      "action": "keep",
+      "description": "Eye icon for UI elements",
+      "referenced_in": [
+        "resources/views/livewire/employee-asset.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/icons/icon-01.svg",
+      "type": "icon",
+      "action": "keep",
+      "description": "Generic icon 01",
+      "referenced_in": [
+        "resources/views/livewire/employee-asset.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/icons/icon-02.svg",
+      "type": "icon",
+      "action": "keep",
+      "description": "Generic icon 02",
+      "referenced_in": [
+        "resources/views/livewire/employee-asset.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/icons/icon-04.svg",
+      "type": "icon",
+      "action": "keep",
+      "description": "Generic icon 04",
+      "referenced_in": [
+        "resources/views/livewire/employee-asset.blade.php"
+      ]
+    },
+    {
+      "path": "public/images/icons/icon-05.svg",
+      "type": "icon",
+      "action": "keep",
+      "description": "Generic icon 05",
+      "referenced_in": [
+        "resources/views/livewire/employee-asset.blade.php"
+      ]
+    }
+  ],
+  "tewos_branded_files": [
+    {
+      "path": "public/images/tewos11_1_100x100.jpg",
+      "type": "tewos_branded_image",
+      "action": "remove",
+      "description": "Tewos branded image file - to be removed",
+      "referenced_in": []
+    }
+  ],
+  "compiled_assets": [
+    {
+      "path": "public/build/assets/logo2-C-38LGwc.png",
+      "type": "logo",
+      "action": "rebuild_after_source_replacement",
+      "description": "Compiled logo2, will be regenerated after source replacement"
+    },
+    {
+      "path": "public/build/assets/logo3-CsmmCuAg.png",
+      "type": "logo",
+      "action": "rebuild_after_source_replacement",
+      "description": "Compiled logo3, will be regenerated after source replacement"
+    }
+  ],
+  "template_references": [
+    {
+      "file": "resources/views/components/logo.blade.php",
+      "line_numbers": [7, 14],
+      "assets_referenced": ["images/logo.png", "images/logo2.png"],
+      "reference_type": "img_tag",
+      "action": "update_to_text_or_new_asset",
+      "notes": "Main logo component used in header"
+    },
+    {
+      "file": "resources/views/layouts/auth.blade.php",
+      "line_numbers": [11, 13],
+      "assets_referenced": ["images/logo2.png"],
+      "reference_type": "img_tag",
+      "action": "update_to_text_or_new_asset",
+      "notes": "Login page logo"
+    },
+    {
+      "file": "resources/views/errors/404.blade.php",
+      "line_numbers": [21, 23],
+      "assets_referenced": ["images/logo2.png"],
+      "reference_type": "img_tag",
+      "action": "update_to_text_or_new_asset",
+      "notes": "404 error page logo"
+    },
+    {
+      "file": "resources/views/pages/settings/theme.blade.php",
+      "line_numbers": [31, 46, 62, 79],
+      "assets_referenced": ["images/logo2.png"],
+      "reference_type": "img_tag",
+      "action": "update_default_fallback",
+      "notes": "Theme settings page - default fallback logos"
+    },
+    {
+      "file": "resources/views/pages/settings/invoice.blade.php",
+      "line_numbers": [36],
+      "assets_referenced": ["images/logo2.png"],
+      "reference_type": "img_tag",
+      "action": "update_default_fallback",
+      "notes": "Invoice settings page - default fallback logo"
+    },
+    {
+      "file": "resources/views/pages/payroll/processing/show.blade.php",
+      "line_numbers": [81],
+      "assets_referenced": ["appLogo()"],
+      "reference_type": "helper_function",
+      "action": "verify_helper_function",
+      "notes": "Uses appLogo() helper function"
+    },
+    {
+      "file": "resources/views/pages/payroll/payslips/show.blade.php",
+      "line_numbers": [78],
+      "assets_referenced": ["appLogo()"],
+      "reference_type": "helper_function",
+      "action": "verify_helper_function",
+      "notes": "Uses appLogo() helper function"
+    },
+    {
+      "file": "Modules/Sales/resources/views/components/invoice-card.blade.php",
+      "line_numbers": [9],
+      "assets_referenced": ["appLogo()"],
+      "reference_type": "helper_function",
+      "action": "verify_helper_function",
+      "notes": "Uses appLogo() helper function"
+    },
+    {
+      "file": "Modules/Sales/resources/views/components/estimate-card.blade.php",
+      "line_numbers": [9],
+      "assets_referenced": ["appLogo()"],
+      "reference_type": "helper_function",
+      "action": "verify_helper_function",
+      "notes": "Uses appLogo() helper function"
+    },
+    {
+      "file": "resources/views/partials/styles.blade.php",
+      "line_numbers": [2],
+      "assets_referenced": ["resources/assets/img/favicon.png"],
+      "reference_type": "link_tag",
+      "action": "update_to_new_favicon",
+      "notes": "Favicon reference using Vite::asset()"
+    },
+    {
+      "file": "resources/views/vendor/log-viewer/index.blade.php",
+      "line_numbers": [9],
+      "assets_referenced": ["resources/assets/img/favicon.png"],
+      "reference_type": "link_tag",
+      "action": "update_to_new_favicon",
+      "notes": "Favicon reference in log viewer"
+    },
+    {
+      "file": "resources/views/layouts/blank.blade.php",
+      "line_numbers": [22, 24],
+      "assets_referenced": ["assets/img/favicon.png"],
+      "reference_type": "link_tag",
+      "action": "update_to_new_favicon",
+      "notes": "Favicon reference with whitelabel support"
+    },
+    {
+      "file": "resources/views/vendor/mail/html/header.blade.php",
+      "line_numbers": [6],
+      "assets_referenced": ["https://laravel.com/img/notification-logo.png"],
+      "reference_type": "img_tag",
+      "action": "no_action_required",
+      "notes": "Laravel default email header - leave as is or customize"
+    },
+    {
+      "file": "resources/views/settings/partials/settings_upload_images.blade.php",
+      "line_numbers": [11],
+      "assets_referenced": ["uploads/business_logos/"],
+      "reference_type": "img_tag",
+      "action": "no_action_required",
+      "notes": "User-uploaded business logo - dynamic content"
+    },
+    {
+      "file": "Modules/Sales/resources/views/pos/receipts/classic.blade.php",
+      "line_numbers": [21],
+      "assets_referenced": ["dynamic receipt logo"],
+      "reference_type": "img_tag",
+      "action": "no_action_required",
+      "notes": "POS receipt dynamic logo - user configuration"
+    }
+  ],
+  "helper_functions": [
+    {
+      "function_name": "appLogo()",
+      "defined_in": "app/Helpers/general.php",
+      "line_numbers": [30, 33],
+      "description": "Returns the application logo URL based on theme settings",
+      "action": "verify_no_hardcoded_tewos_paths",
+      "notes": "This helper function determines which logo to display based on color scheme"
+    }
+  ],
+  "whitelabel_settings": [
+    {
+      "setting_key": "whitelabel.logo",
+      "description": "Main logo (light theme)",
+      "storage_path": "storage/settings/whitelabel/",
+      "action": "no_action_required",
+      "notes": "User-configurable setting"
+    },
+    {
+      "setting_key": "whitelabel.logo_dark",
+      "description": "Dark theme logo",
+      "storage_path": "storage/settings/whitelabel/",
+      "action": "no_action_required",
+      "notes": "User-configurable setting"
+    },
+    {
+      "setting_key": "whitelabel.login_logo",
+      "description": "Login page logo",
+      "storage_path": "storage/settings/whitelabel/",
+      "action": "no_action_required",
+      "notes": "User-configurable setting"
+    },
+    {
+      "setting_key": "whitelabel.404_logo",
+      "description": "404 error page logo",
+      "storage_path": "storage/settings/whitelabel/",
+      "action": "no_action_required",
+      "notes": "User-configurable setting"
+    },
+    {
+      "setting_key": "whitelabel.favicon",
+      "description": "Custom favicon",
+      "storage_path": "storage/settings/whitelabel/",
+      "action": "no_action_required",
+      "notes": "User-configurable setting"
+    }
+  ],
+  "theme_settings": [
+    {
+      "setting_key": "theme.logo_light",
+      "description": "Light theme logo",
+      "storage_path": "storage/settings/theme/",
+      "default_fallback": "images/logo2.png",
+      "action": "update_default_fallback",
+      "notes": "Defined in database/settings/2024_06_22_083014_create_theme_settings.php"
+    },
+    {
+      "setting_key": "theme.logo_dark",
+      "description": "Dark theme logo",
+      "storage_path": "storage/settings/theme/",
+      "default_fallback": "images/logo2.png",
+      "action": "update_default_fallback",
+      "notes": "Defined in database/settings/2024_06_22_083014_create_theme_settings.php"
+    },
+    {
+      "setting_key": "theme.favicon",
+      "description": "Theme favicon",
+      "storage_path": "storage/settings/theme/",
+      "default_fallback": "images/logo2.png",
+      "action": "update_default_fallback",
+      "notes": "Defined in database/settings/2024_06_22_083014_create_theme_settings.php"
+    },
+    {
+      "setting_key": "theme.sidebar_img",
+      "description": "Sidebar image",
+      "storage_path": "storage/settings/theme/",
+      "default_fallback": "images/logo2.png",
+      "action": "update_default_fallback",
+      "notes": "Defined in database/settings/2024_06_22_083014_create_theme_settings.php"
+    }
+  ],
+  "directories_searched": [
+    "public/",
+    "public/images/",
+    "public/images/icons/",
+    "public/build/assets/",
+    "resources/assets/",
+    "resources/assets/img/",
+    "resources/assets/img/icons/",
+    "Modules/*/public/",
+    "Modules/*/resources/assets/"
+  ],
+  "summary": {
+    "total_assets_found": 19,
+    "assets_to_replace": 9,
+    "assets_to_remove": 1,
+    "assets_to_keep": 5,
+    "compiled_assets_to_rebuild": 2,
+    "template_files_to_update": 15,
+    "helper_functions_to_verify": 1,
+    "notes": [
+      "The system uses a whitelabel configuration that allows tenant-specific branding",
+      "Default fallback logos (logo2.png, etc.) should be replaced with MD Code Inc. assets",
+      "The appLogo() helper function determines which logo to display based on theme settings",
+      "Compiled assets in public/build/ will be regenerated after source files are updated",
+      "Icon files (icon-01.svg, eye.svg, etc.) are generic UI icons and should be kept",
+      "The tewos11_1_100x100.jpg file is clearly Tewos-branded and should be removed",
+      "User-uploaded logos (whitelabel settings, business logos) should not be modified"
+    ]
+  },
+  "next_steps": [
+    "Remove public/images/tewos11_1_100x100.jpg",
+    "Replace or remove logo files (logo.png, logo2.png, logo3.png, main-logo.png)",
+    "Replace or remove favicon files",
+    "Update template references to use text-based branding if no MD Code Inc. assets provided",
+    "Update default fallback paths in theme settings templates",
+    "Verify appLogo() helper function has no hardcoded Tewos references",
+    "Run Vite build to regenerate compiled assets after source updates",
+    "Update alt text in img tags from 'Tewos' to 'MD Code Inc.' or 'ERP Logo'"
+  ]
+}

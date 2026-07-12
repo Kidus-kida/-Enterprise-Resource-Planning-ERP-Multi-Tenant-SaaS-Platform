@@ -56,8 +56,12 @@ class SystemSettingsSeeder extends Seeder
             $this->modulesSettings(),
             $this->integrationSettings(),
             $this->maintenanceSettings(),
+            $this->logsSettings(),
             $this->licenseSettings(),
+            $this->advancedSettings(),
             $this->whitelabelSettings(),
+            $this->dashboardSettings(),
+            $this->menuSettings(),
         );
     }
 
@@ -425,6 +429,96 @@ class SystemSettingsSeeder extends Seeder
             
             // Dashboard
             ['category'=>$c,'section'=>'dashboard','key'=>'whitelabel.dashboard_welcome_banner','label'=>'Dashboard Welcome Banner Text','value'=>'Explore analytics, workflows, and operations.','type'=>'string','input_type'=>'text','is_public'=>true],
+        ];
+    }
+
+    // =========================================================================
+    // 14. LOGS
+    // =========================================================================
+    private function logsSettings(): array
+    {
+        $c = SettingCategory::LOGS;
+        return [
+            ['category'=>$c,'section'=>'general','key'=>'logs.enabled',                'label'=>'Enable Logging',        'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'general','key'=>'logs.level',                  'label'=>'Log Level',             'value'=>'debug','type'=>'string','input_type'=>'select','options'=>[['label'=>'Debug','value'=>'debug'],['label'=>'Info','value'=>'info'],['label'=>'Notice','value'=>'notice'],['label'=>'Warning','value'=>'warning'],['label'=>'Error','value'=>'error'],['label'=>'Critical','value'=>'critical']]],
+            ['category'=>$c,'section'=>'general','key'=>'logs.channel',                'label'=>'Default Log Channel',   'value'=>'stack','type'=>'string','input_type'=>'select','options'=>[['label'=>'Stack (Multiple)','value'=>'stack'],['label'=>'Single File','value'=>'single'],['label'=>'Daily Files','value'=>'daily'],['label'=>'Syslog','value'=>'syslog']]],
+            ['category'=>$c,'section'=>'rotation','key'=>'logs.max_files',             'label'=>'Max Log Files',         'value'=>'14','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:365','description'=>'For daily log channel'],
+            ['category'=>$c,'section'=>'rotation','key'=>'logs.max_file_size',         'label'=>'Max File Size (MB)',    'value'=>'10','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:100'],
+            ['category'=>$c,'section'=>'audit',  'key'=>'logs.audit_enabled',          'label'=>'Enable Audit Logs',     'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'audit',  'key'=>'logs.audit_retention_days',   'label'=>'Audit Retention (days)','value'=>'90','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:3650'],
+            ['category'=>$c,'section'=>'audit',  'key'=>'logs.log_queries',            'label'=>'Log Database Queries',  'value'=>'0','type'=>'boolean','input_type'=>'switch','description'=>'Warning: Can generate large logs'],
+            ['category'=>$c,'section'=>'audit',  'key'=>'logs.log_slow_queries',       'label'=>'Log Slow Queries (ms)', 'value'=>'1000','type'=>'integer','input_type'=>'number','description'=>'Log queries slower than this threshold'],
+            ['category'=>$c,'section'=>'errors', 'key'=>'logs.error_reporting',        'label'=>'Error Reporting',       'value'=>'all','type'=>'string','input_type'=>'select','options'=>[['label'=>'All','value'=>'all'],['label'=>'Errors & Warnings','value'=>'errors'],['label'=>'Errors Only','value'=>'errors_only'],['label'=>'None','value'=>'none']]],
+            ['category'=>$c,'section'=>'errors', 'key'=>'logs.display_errors',         'label'=>'Display Errors',        'value'=>'0','type'=>'boolean','input_type'=>'switch','description'=>'Should be disabled in production'],
+        ];
+    }
+
+    // =========================================================================
+    // 16. ADVANCED
+    // =========================================================================
+    private function advancedSettings(): array
+    {
+        $c = SettingCategory::ADVANCED;
+        return [
+            ['category'=>$c,'section'=>'system','key'=>'advanced.debug_mode',          'label'=>'Debug Mode',            'value'=>'0','type'=>'boolean','input_type'=>'switch','description'=>'Should be disabled in production'],
+            ['category'=>$c,'section'=>'system','key'=>'advanced.app_env',             'label'=>'Application Environment','value'=>'production','type'=>'string','input_type'=>'select','options'=>[['label'=>'Production','value'=>'production'],['label'=>'Staging','value'=>'staging'],['label'=>'Development','value'=>'development'],['label'=>'Local','value'=>'local']]],
+            ['category'=>$c,'section'=>'system','key'=>'advanced.system_info',         'label'=>'Show System Info',      'value'=>'0','type'=>'boolean','input_type'=>'switch','description'=>'Display PHP/server info to admins'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.cache_enabled',  'label'=>'Enable Caching',        'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.cache_lifetime', 'label'=>'Cache Lifetime (min)',  'value'=>'60','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:1440'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.minify_html',    'label'=>'Minify HTML',           'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.minify_css',     'label'=>'Minify CSS',            'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.minify_js',      'label'=>'Minify JavaScript',     'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'performance','key'=>'advanced.lazy_loading',   'label'=>'Lazy Load Images',      'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'api',     'key'=>'advanced.api_enabled',       'label'=>'Enable REST API',       'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'api',     'key'=>'advanced.api_rate_limit',    'label'=>'API Rate Limit',        'value'=>'60','type'=>'integer','input_type'=>'number','description'=>'Requests per minute per IP'],
+            ['category'=>$c,'section'=>'api',     'key'=>'advanced.api_throttle',      'label'=>'API Throttle (sec)',    'value'=>'1','type'=>'integer','input_type'=>'number','description'=>'Minimum seconds between requests'],
+            ['category'=>$c,'section'=>'developer','key'=>'advanced.telescope_enabled','label'=>'Enable Laravel Telescope','value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'developer','key'=>'advanced.query_log',        'label'=>'Query Logging',         'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'developer','key'=>'advanced.route_cache',      'label'=>'Route Caching',         'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'developer','key'=>'advanced.config_cache',     'label'=>'Config Caching',        'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'developer','key'=>'advanced.view_cache',       'label'=>'View Caching',          'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+        ];
+    }
+
+    // =========================================================================
+    // 17. DASHBOARD
+    // =========================================================================
+    private function dashboardSettings(): array
+    {
+        $c = SettingCategory::DASHBOARD;
+        return [
+            ['category'=>$c,'section'=>'layout','key'=>'dashboard.layout',             'label'=>'Dashboard Layout',      'value'=>'grid','type'=>'string','input_type'=>'select','options'=>[['label'=>'Grid Layout','value'=>'grid'],['label'=>'Masonry Layout','value'=>'masonry'],['label'=>'List Layout','value'=>'list']]],
+            ['category'=>$c,'section'=>'layout','key'=>'dashboard.columns',            'label'=>'Grid Columns',          'value'=>'3','type'=>'integer','input_type'=>'select','options'=>[['label'=>'2 Columns','value'=>'2'],['label'=>'3 Columns','value'=>'3'],['label'=>'4 Columns','value'=>'4']]],
+            ['category'=>$c,'section'=>'widgets','key'=>'dashboard.widgets_enabled',   'label'=>'Enable Widgets',        'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'widgets','key'=>'dashboard.draggable_widgets', 'label'=>'Draggable Widgets',     'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'widgets','key'=>'dashboard.widget_refresh',    'label'=>'Auto Refresh (sec)',    'value'=>'300','type'=>'integer','input_type'=>'number','description'=>'0 = disabled'],
+            ['category'=>$c,'section'=>'widgets','key'=>'dashboard.default_widgets',   'label'=>'Default Widgets',       'value'=>'stats,recent_activity,charts','type'=>'string','input_type'=>'text','description'=>'Comma-separated widget IDs'],
+            ['category'=>$c,'section'=>'display','key'=>'dashboard.show_welcome',      'label'=>'Show Welcome Banner',   'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'display','key'=>'dashboard.show_quick_actions','label'=>'Show Quick Actions',   'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'display','key'=>'dashboard.show_notifications','label'=>'Show Notifications',   'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'display','key'=>'dashboard.items_per_widget',  'label'=>'Items Per Widget',      'value'=>'5','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:20'],
+        ];
+    }
+
+    // =========================================================================
+    // 18. MENU
+    // =========================================================================
+    private function menuSettings(): array
+    {
+        $c = SettingCategory::MENU;
+        return [
+            ['category'=>$c,'section'=>'layout','key'=>'menu.position',                'label'=>'Menu Position',         'value'=>'left','type'=>'string','input_type'=>'select','options'=>[['label'=>'Left Sidebar','value'=>'left'],['label'=>'Right Sidebar','value'=>'right'],['label'=>'Top Horizontal','value'=>'top']],'is_public'=>true],
+            ['category'=>$c,'section'=>'layout','key'=>'menu.collapsible',             'label'=>'Collapsible Menu',      'value'=>'1','type'=>'boolean','input_type'=>'switch','is_public'=>true],
+            ['category'=>$c,'section'=>'layout','key'=>'menu.auto_collapse',           'label'=>'Auto Collapse Submenu', 'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'layout','key'=>'menu.remember_state',          'label'=>'Remember Menu State',   'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'style',  'key'=>'menu.icon_style',             'label'=>'Icon Style',            'value'=>'solid','type'=>'string','input_type'=>'select','options'=>[['label'=>'Solid','value'=>'solid'],['label'=>'Regular','value'=>'regular'],['label'=>'Light','value'=>'light']]],
+            ['category'=>$c,'section'=>'style',  'key'=>'menu.show_icons',             'label'=>'Show Menu Icons',       'value'=>'1','type'=>'boolean','input_type'=>'switch','is_public'=>true],
+            ['category'=>$c,'section'=>'style',  'key'=>'menu.show_badges',            'label'=>'Show Badges/Counts',    'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'style',  'key'=>'menu.compact_mode',           'label'=>'Compact Menu',          'value'=>'0','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'builder','key'=>'menu.builder_enabled',        'label'=>'Enable Menu Builder',   'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'builder','key'=>'menu.max_depth',              'label'=>'Max Nesting Depth',     'value'=>'3','type'=>'integer','input_type'=>'number','validation_rules'=>'nullable|integer|min:1|max:5'],
+            ['category'=>$c,'section'=>'search', 'key'=>'menu.search_enabled',         'label'=>'Enable Menu Search',    'value'=>'1','type'=>'boolean','input_type'=>'switch'],
+            ['category'=>$c,'section'=>'search', 'key'=>'menu.search_placeholder',     'label'=>'Search Placeholder',    'value'=>'Search menu...','type'=>'string','input_type'=>'text'],
         ];
     }
 

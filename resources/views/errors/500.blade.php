@@ -19,6 +19,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="brand-logo" style="font-size: 28px; font-weight: 700; color: #333; margin-bottom: 20px;">
+            MD Code Inc.
+        </div>
         <div class="error-icon">⚠️</div>
         <h1>Server Error (500)</h1>
         <p>Something went wrong on our end.</p>

@@ -18,9 +18,11 @@
 <body>
     <div class="container">
         @if(setting('whitelabel.404_logo'))
-            <img class="logo-img" src="{{ Storage::url(setting('whitelabel.404_logo')) }}" alt="Logo">
+            <img class="logo-img" src="{{ Storage::url(setting('whitelabel.404_logo')) }}" alt="MD Code Inc. Logo">
         @else
-            <img class="logo-img" src="{{ asset('images/logo2.png') }}" alt="Logo">
+            <div class="brand-logo" style="font-size: 32px; font-weight: 700; color: var(--primary-color, #ff9b44); margin-bottom: 30px;">
+                MD Code Inc.
+            </div>
         @endif
         
         <div class="error-code">404</div>
