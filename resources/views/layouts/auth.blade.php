@@ -4,17 +4,7 @@
     <div class="account-content">
         <div class="container">
 
-            <!-- Account Logo -->
-            <div class="account-logo">
-                <a href="{{ url('/') }}">
-                    @if(setting('whitelabel.login_logo'))
-                        <img src="{{ Storage::url(setting('whitelabel.login_logo')) }}" alt="MD Code Inc. ERP Logo">
-                    @else
-                        <img src="{{ asset('images/logo2.png') }}" alt="MD Code Inc. ERP Logo">
-                    @endif
-                </a>
-            </div>
-            <!-- /Account Logo -->
+
 
             @if(setting('whitelabel.login_background'))
             <style>

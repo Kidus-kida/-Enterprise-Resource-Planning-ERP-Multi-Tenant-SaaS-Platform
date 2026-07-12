@@ -158,7 +158,7 @@ This implementation plan provides a systematic approach to rebrand the entire ER
 - [ ] 9. Update PDF templates and controllers
   - [x] 9.1 Update PDF generation controllers
     - Update `app/Http/Controllers/PayrollProcessingController.php`
-    - Change report title from "TEWOS HR - Payroll Report" to "MD Code Inc. - Payroll Report"
+    - Change report title from "TEWOS HR - Payroll Report" to "MD Code Inc. -  Payroll Report"
     - Search for other controllers generating PDFs (Invoice, Certificate, etc.)
     - _Requirements: 6.1, 6.6_
 

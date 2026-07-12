@@ -31,7 +31,7 @@ return new class extends Migration {
             $table->string('country_code')->nullable();
             $table->string('dial_code')->nullable();
             $table->integer('created_by')->nullable();
-            $table->boolean('is_active')->nullable()->default(false);
+            $table->boolean('is_active')->nullable()->default(true);
             $table->boolean('is_online')->nullable()->default(false);
             $table->string('lang')->nullable();
             $table->string('layout')->nullable();
