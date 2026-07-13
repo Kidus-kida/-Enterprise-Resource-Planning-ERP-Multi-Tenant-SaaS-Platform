@@ -137,6 +137,53 @@ class Business extends Model
     }
 
     /**
+     * Resolve the enabled modules for this business from the active subscription
+     * when the business-level module list has not been populated yet.
+     */
+    public function resolveEnabledModules(): array
+    {
+        $enabledModules = $this->enabled_modules ?? [];
+
+        if (is_string($enabledModules)) {
+            $enabledModules = json_decode($enabledModules, true) ?: [];
+        }
+
+        if (!is_array($enabledModules)) {
+            $enabledModules = [];
+        }
+
+        if (!empty($enabledModules)) {
+            return array_values(array_unique(array_filter($enabledModules)));
+        }
+
+        $subscription = $this->subscriptions()
+            ->where('status', 'approved')
+            ->where(function ($query) {
+                $query->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->latest()
+            ->first();
+
+        if ($subscription) {
+            $permissions = is_array($subscription->module_activation_details) ? $subscription->module_activation_details : [];
+
+            if (empty($permissions) && $subscription->package) {
+                $permissions = is_array($subscription->package->custom_permissions) ? $subscription->package->custom_permissions : [];
+            }
+
+            $enabledModules = array_keys(array_filter($permissions));
+        }
+
+        $enabledModules = array_values(array_unique(array_filter($enabledModules)));
+
+        if (!empty($enabledModules)) {
+            $this->forceFill(['enabled_modules' => $enabledModules])->saveQuietly();
+        }
+
+        return $enabledModules;
+    }
+
+    /**
      * Get the companies for the business.
      */
     public function companies()

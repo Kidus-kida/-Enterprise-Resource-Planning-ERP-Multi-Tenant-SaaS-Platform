@@ -28,7 +28,7 @@ Route::get('/dashboard', function () {
             ->first();
 
         if ($tenantModel && $tenantModel->business) {
-            $enabledModules = $tenantModel->business->enabled_modules ?? [];
+            $enabledModules = $tenantModel->business->resolveEnabledModules();
         }
     } catch (\Throwable $e) {
         $enabledModules = [];
