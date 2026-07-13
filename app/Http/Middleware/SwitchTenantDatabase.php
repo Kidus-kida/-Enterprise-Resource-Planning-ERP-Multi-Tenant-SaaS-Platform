@@ -15,7 +15,7 @@ class SwitchTenantDatabase
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout') || $request->is('login*') || $request->is('register*') || $request->is('forgot-password*') || $request->is('reset-password*')) {
+        if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout') || $request->is('login*') || $request->is('register*') || $request->is('forgot-password*') || $request->is('reset-password*') || $request->is('tenant-debug*') || $request->path() === 'tenant-debug' || \Illuminate\Support\Str::startsWith($request->path(), 'tenant-debug/')) {
             return $next($request);
         }
 

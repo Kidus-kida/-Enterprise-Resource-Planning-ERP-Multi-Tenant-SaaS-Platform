@@ -138,6 +138,13 @@ Route::get('/test-db-connection', function () {
 // Route::post('/diagnostic/run-migrations', [\App\Http\Controllers\DiagnosticController::class, 'runMigrations'])->name('diagnostic.run-migrations');
 
 // Simple test route to bypass middleware
+Route::get('/tenant-debug/{tenant}', function ($tenant) {
+    return response()->json([
+        'message' => 'Tenant debug route reached',
+        'tenant' => $tenant,
+        'app_env' => env('APP_ENV'),
+    ]);
+})->name('tenant.debug');
 Route::get('/test-route', function () {
     return response()->json([
         'status' => 'success',

@@ -18,7 +18,7 @@ class IdentifyTenantByPath
     {
         $tenantSlug = $request->route('tenant');
 
-        if (!$tenantSlug || $request->is('tenant-debug*')) {
+        if (!$tenantSlug || $request->is('tenant-debug*') || $request->path() === 'tenant-debug' || Str::startsWith($request->path(), 'tenant-debug/')) {
             return $next($request);
         }
 
