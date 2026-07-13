@@ -7,9 +7,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Superadmin\Models\Module;
+use Modules\Superadmin\Services\ModuleManagementService;
 
 class ModuleController extends Controller
 {
+    protected ModuleManagementService $moduleManagementService;
+
+    public function __construct(ModuleManagementService $moduleManagementService)
+    {
+        $this->moduleManagementService = $moduleManagementService;
+    }
+
     public function index()
     {
         $modules = Module::orderBy('sort_order')->paginate(20);
@@ -50,6 +58,7 @@ class ModuleController extends Controller
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
         Module::create($validated);
+        $this->moduleManagementService->syncModulesToSuperadmin();
 
         return redirect()->route('superadmin.modules.index')
             ->with('success', 'Module created successfully!');
@@ -96,6 +105,7 @@ class ModuleController extends Controller
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
         $module->update($validated);
+        $this->moduleManagementService->syncModulesToSuperadmin();
 
         return redirect()->route('superadmin.modules.show', $id)
             ->with('success', 'Module updated successfully!');
@@ -132,6 +142,7 @@ class ModuleController extends Controller
         try {
             $module = Module::findOrFail($id);
             $module->update(['is_active' => !$module->is_active]);
+            $this->moduleManagementService->syncModulesToSuperadmin();
             
             $status = $module->is_active ? 'activated' : 'deactivated';
             return redirect()->back()
