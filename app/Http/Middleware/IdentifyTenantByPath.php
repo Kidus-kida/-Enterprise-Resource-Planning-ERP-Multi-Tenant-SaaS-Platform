@@ -27,6 +27,8 @@ class IdentifyTenantByPath
             'tenant_' . $tenantSlug,
             'tenant' . $tenantSlug,
             Str::slug($tenantSlug),
+            Str::snake($tenantSlug),
+            Str::studly($tenantSlug),
         ]));
 
         $possibleDatabaseNames = array_values(array_unique([
@@ -34,6 +36,11 @@ class IdentifyTenantByPath
             'tenant_' . $tenantSlug,
             'tenant' . $tenantSlug,
             Str::slug($tenantSlug),
+            Str::snake($tenantSlug),
+            Str::studly($tenantSlug),
+            $tenantSlug . '_db',
+            $tenantSlug . '_database',
+            'tenant_' . Str::slug($tenantSlug),
         ]));
 
         $lookupConnectionName = config('database.default', env('DB_CONNECTION', 'mysql'));
@@ -147,11 +154,37 @@ class IdentifyTenantByPath
 
     private function buildTenantLookupQuery(string $tenantSlug, string $lookupConnectionName): \Illuminate\Database\Eloquent\Builder
     {
+        $possibleIds = array_values(array_unique([
+            $tenantSlug,
+            'tenant_' . $tenantSlug,
+            'tenant' . $tenantSlug,
+            Str::slug($tenantSlug),
+            Str::snake($tenantSlug),
+            Str::studly($tenantSlug),
+        ]));
+
+        $possibleDatabaseNames = array_values(array_unique([
+            $tenantSlug,
+            'tenant_' . $tenantSlug,
+            'tenant' . $tenantSlug,
+            Str::slug($tenantSlug),
+            Str::snake($tenantSlug),
+            Str::studly($tenantSlug),
+            $tenantSlug . '_db',
+            $tenantSlug . '_database',
+            'tenant_' . Str::slug($tenantSlug),
+        ]));
+
         return Tenant::on($lookupConnectionName)
             ->newQuery()
-            ->where(function ($query) use ($tenantSlug) {
-                $query->where('id', 'tenant_' . $tenantSlug)
-                    ->orWhere('database_name', $tenantSlug);
+            ->where(function ($query) use ($tenantSlug, $possibleIds, $possibleDatabaseNames) {
+                $query->whereIn('id', $possibleIds)
+                    ->orWhereIn('database_name', $possibleDatabaseNames)
+                    ->orWhere(function ($nested) use ($tenantSlug) {
+                        $nested->where('id', $tenantSlug)
+                            ->orWhere('id', 'tenant_' . $tenantSlug)
+                            ->orWhere('id', 'tenant' . $tenantSlug);
+                    });
             });
     }
 
