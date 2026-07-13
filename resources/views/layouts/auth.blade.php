@@ -20,7 +20,23 @@
 
             <div class="account-box">
                 <div class="account-wrapper">
+                    @php
+                        $brandName = brand('name');
+                        $loginLogo = brand('login_logo');
+                    @endphp
+                    <div class="text-center mb-4">
+                        <a href="{{ route('login') }}" class="d-inline-flex align-items-center justify-content-center" style="text-decoration: none;">
+                            @if($loginLogo)
+                                <img src="{{ $loginLogo }}" alt="{{ $brandName }}" style="max-height: 48px; max-width: 220px; object-fit: contain;">
+                            @else
+                                <span class="fw-bold fs-4 text-dark">{{ $brandName }}</span>
+                            @endif
+                        </a>
+                    </div>
                     @yield('form')
+                    <div class="text-center mt-4 small text-muted">
+                        {{ __('Powered by') }} {{ $brandName }}
+                    </div>
                 </div>
             </div>
         </div>

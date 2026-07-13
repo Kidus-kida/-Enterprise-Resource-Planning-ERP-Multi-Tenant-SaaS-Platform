@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Error</title>
+    <title>Dashboard Error - {{ appBrandName() }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; }
         .container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
@@ -20,7 +20,7 @@
 <body>
     <div class="container">
         <div class="brand-logo" style="font-size: 28px; font-weight: 700; color: #333; margin-bottom: 20px;">
-            MD Code Inc.
+            {{ appBrandName() }}
         </div>
         <div class="error-icon">⚠️</div>
         <h1>Dashboard Temporarily Unavailable</h1>

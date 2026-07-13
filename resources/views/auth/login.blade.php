@@ -1,8 +1,12 @@
 @extends('layouts.auth')
 
 @section('form')
-    <h3 class="account-title">{{ __('Login') }}</h3>
-    <p class="account-subtitle">{{ setting('whitelabel.welcome_message', __('Access to our dashboard')) }}</p>
+    @php
+        $loginTitle = setting('appearance.login_title', __('Login'));
+        $loginSubtitle = setting('appearance.login_subtitle', setting('whitelabel.welcome_message', __('Access to our dashboard')));
+    @endphp
+    <h3 class="account-title">{{ __($loginTitle) }}</h3>
+    <p class="account-subtitle">{{ __($loginSubtitle) }}</p>
     
     <!-- Account Form -->
     @php

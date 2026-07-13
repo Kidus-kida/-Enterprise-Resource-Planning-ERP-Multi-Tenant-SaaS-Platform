@@ -116,7 +116,7 @@ class ResolveAttendanceLocation implements ShouldQueue
     {
         $response = Http::timeout(10)
             ->withHeaders([
-                'User-Agent' => 'MD Code Inc. ERP/1.0 (https://mdcodeinc.com)'
+                'User-Agent' => config('app.name', 'ERP') . '/1.0'
             ])
             ->get("https://nominatim.openstreetmap.org/reverse", [
                 'format' => 'json',

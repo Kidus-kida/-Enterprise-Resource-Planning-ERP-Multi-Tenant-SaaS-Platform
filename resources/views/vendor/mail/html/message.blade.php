@@ -21,7 +21,7 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© 2026 MD Code Inc. All Rights Reserved.
+© {{ now()->year }} {{ appBrandName() }}. All Rights Reserved.
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

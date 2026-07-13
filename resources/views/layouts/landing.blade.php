@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $pageTitle ?? 'Business Suite' }}</title>
+    <title>{{ $pageTitle ?? appBrandName() }}</title>
+    @php $faviconUrl = brand('favicon'); @endphp
+    @if($faviconUrl)
+        <link rel="icon" href="{{ $faviconUrl }}">
+    @endif
 
     {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

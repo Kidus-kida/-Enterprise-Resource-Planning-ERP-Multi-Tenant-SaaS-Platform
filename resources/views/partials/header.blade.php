@@ -16,7 +16,7 @@
 
     <!-- Header Title -->
     <div class="page-title-box" style="height: 45px !important; line-height: 45px !important; transform: translateY(-8px);">
-        <h3>{{ Theme('name') ?? config('app.name') }}</h3>
+        <h3>{{ appBrandName() }}</h3>
     </div>
     <!-- /Header Title -->
 

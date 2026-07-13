@@ -16,9 +16,16 @@
     {{-- Identity & Branding --}}
     <div class="settings-card">
         <div class="settings-card-header">
-            <i class="fa-solid fa-fingerprint"></i> Identity & Branding
+            <i class="fa-solid fa-fingerprint"></i> Quick Branding
         </div>
         <div class="settings-card-body">
+            <div class="alert alert-info d-flex align-items-start gap-2 mb-3" role="alert">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <div>
+                    <strong>Instant branding</strong><br>
+                    Set the company name, logo, dark logo, favicon, and login branding here. These values are used across the ERP automatically.
+                </div>
+            </div>
             <div class="settings-grid-2">
                 @foreach($settings->get('identity', collect()) as $setting)
                     @include('superadmin::settings.partials._field', ['setting' => $setting])

@@ -146,9 +146,16 @@
     {{-- Backgrounds --}}
     <div class="settings-card">
         <div class="settings-card-header">
-            <i class="fa-solid fa-image"></i> Backgrounds
+            <i class="fa-solid fa-image"></i> Branding & Backgrounds
         </div>
         <div class="settings-card-body">
+            <div class="alert alert-info d-flex align-items-start gap-2 mb-3" role="alert">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <div>
+                    <strong>Login and app branding</strong><br>
+                    Set the login background, app background, and login-page text here. These values are picked up by the ERP immediately.
+                </div>
+            </div>
             <div class="settings-grid-2">
                 @foreach($settings->get('backgrounds', collect()) as $setting)
                     @include('superadmin::settings.partials._field', ['setting' => $setting])

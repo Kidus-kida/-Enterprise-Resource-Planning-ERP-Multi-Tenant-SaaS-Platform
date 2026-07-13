@@ -1,8 +1,8 @@
 @php
     $brandName = appBrandName();
     $brandShortName = setting('whitelabel.short_name', $brandName);
-    $logoUrl = brandingAsset('logo');
-    $darkLogoUrl = brandingAsset('logo_dark');
+    $logoUrl = brand('logo');
+    $darkLogoUrl = brand('dark_logo');
     $logoAlt = $brandName;
 @endphp
 <!-- Logo -->

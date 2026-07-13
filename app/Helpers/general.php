@@ -6,6 +6,7 @@ use App\Helpers\AppMenu;
 use App\Settings\ThemeSettings;
 use App\Settings\LocalizationSettings;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Nwidart\Modules\Facades\Module;
 use Spatie\Menu\Laravel\Link;
 use Spatie\Menu\Laravel\Menu;
@@ -21,16 +22,47 @@ if (!function_exists('route_is')) {
     }
 }
 
+if (!function_exists('resolveBrandAssetUrl')) {
+    function resolveBrandAssetUrl($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if (is_string($value) && preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        if (is_string($value) && str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        if (is_string($value) && str_contains($value, 'storage/')) {
+            return Storage::url($value);
+        }
+
+        if (is_string($value) && file_exists(public_path($value))) {
+            return asset($value);
+        }
+
+        if (is_string($value) && Storage::disk('public')->exists($value)) {
+            return Storage::disk('public')->url($value);
+        }
+
+        return is_string($value) ? asset($value) : null;
+    }
+}
+
 if(!function_exists('brandingAsset')){
     function brandingAsset(string $key = 'logo', ?string $fallback = null): ?string
     {
         $settingKeys = match ($key) {
-            'logo' => ['company.logo', 'whitelabel.logo'],
-            'logo_dark' => ['company.dark_logo', 'whitelabel.logo_dark'],
-            'login_logo' => ['company.login_logo', 'whitelabel.login_logo'],
-            'favicon' => ['company.favicon', 'whitelabel.favicon'],
-            'login_background' => ['appearance.login_background', 'whitelabel.login_background'],
-            'app_background' => ['appearance.app_background', 'whitelabel.app_background'],
+            'logo' => ['company_logo', 'company.logo', 'whitelabel.logo', 'company.logo_light'],
+            'dark_logo', 'logo_dark' => ['dark_logo', 'company.dark_logo', 'whitelabel.logo_dark'],
+            'login_logo' => ['login_logo', 'company.login_logo', 'appearance.login_logo', 'whitelabel.login_logo'],
+            'favicon' => ['favicon', 'company.favicon', 'whitelabel.favicon'],
+            'login_background' => ['login_background', 'appearance.login_background', 'whitelabel.login_background'],
+            'app_background' => ['app_background', 'appearance.app_background', 'whitelabel.app_background'],
             'sidebar_logo' => ['company.sidebar_logo', 'whitelabel.sidebar_logo'],
             default => ['whitelabel.' . $key],
         };
@@ -38,30 +70,55 @@ if(!function_exists('brandingAsset')){
         foreach ($settingKeys as $settingKey) {
             $configured = setting($settingKey);
             if (!empty($configured)) {
-                return Storage::url($configured);
+                return resolveBrandAssetUrl($configured);
             }
         }
 
-        $publicFallbacks = [
-            'logo' => 'images/main-logo.png',
-            'logo_dark' => 'images/main-logo.png',
-            'login_logo' => 'images/main-logo.png',
-            'favicon' => 'favicon.ico',
-            'login_background' => 'images/placeholder.jpg',
-            'app_background' => 'images/placeholder.jpg',
-            'sidebar_logo' => 'images/main-logo.png',
-        ];
+        $publicFallbacks = match ($key) {
+            'logo' => ['images/logo.png', 'images/logo.svg', 'images/main-logo.png', 'images/logo.jpg', 'storage/settings/logo.png', 'storage/settings/logo.svg'],
+            'dark_logo', 'logo_dark' => ['images/logo-dark.png', 'images/logo-light.png', 'images/logo.png', 'images/logo.svg', 'images/main-logo.png'],
+            'login_logo' => ['images/logo.png', 'images/login-logo.png', 'images/brand-logo.png', 'images/main-logo.png', 'storage/settings/login-logo.png'],
+            'favicon' => ['favicon.ico', 'images/favicon.ico', 'images/favicon.png', 'images/logo.png'],
+            'login_background' => ['images/placeholder.jpg', 'images/laptop.png'],
+            'app_background' => ['images/placeholder.jpg', 'images/laptop.png'],
+            'sidebar_logo' => ['images/main-logo.png', 'images/logo.png'],
+            default => [],
+        };
 
-        $fallbackPath = $fallback ?? ($publicFallbacks[$key] ?? null);
+        foreach ($publicFallbacks as $candidate) {
+            if (!empty($candidate) && file_exists(public_path($candidate))) {
+                return asset($candidate);
+            }
+        }
+
+        $fallbackPath = $fallback ?? null;
 
         return $fallbackPath ? asset($fallbackPath) : null;
+    }
+}
+
+if (!function_exists('brand')) {
+    function brand(string $key, $default = null)
+    {
+        if ($key === 'name') {
+            foreach (['company_name', 'company.name', 'whitelabel.app_name', 'whitelabel.name', 'company.name'] as $settingKey) {
+                $value = setting($settingKey);
+                if (!empty($value)) {
+                    return (string) $value;
+                }
+            }
+
+            return $default ?? 'MD Code Inc.';
+        }
+
+        return brandingAsset($key, $default);
     }
 }
 
 if(!function_exists('appBrandName')){
     function appBrandName(): string
     {
-        return setting('whitelabel.app_name', setting('company.company_name', setting('company.name', config('app.name', 'ERP'))));
+        return brand('name', config('app.name', 'MD Code Inc.'));
     }
 }
 

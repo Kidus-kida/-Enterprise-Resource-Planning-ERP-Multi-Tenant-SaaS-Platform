@@ -17,8 +17,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="csrf-param" content="_token" />
-    <title>{{ $pageTitle ?? '' }} - {{ setting('whitelabel.browser_title', !empty(Theme('name')) ? Theme('name') : config('app.name')) }}</title>
-    @php $faviconUrl = brandingAsset('favicon'); @endphp
+    @php
+        $browserTitle = $pageTitle ?? brand('name');
+        $faviconUrl = brand('favicon');
+    @endphp
+    <title>{{ $browserTitle }}</title>
     @if($faviconUrl)
         <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}">
     @endif

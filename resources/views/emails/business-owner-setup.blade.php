@@ -17,5 +17,5 @@ Set Up My Password
 This password setup link will expire in 24 hours. If you didn't request this or have any questions, please contact our support team.
 
 Thanks,<br>
-{{ config('app.name') }} Team
+{{ appBrandName() }} Team
 @endcomponent

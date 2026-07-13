@@ -1,5 +1,5 @@
 <!-- Favicon -->
-@php $faviconUrl = brandingAsset('favicon'); @endphp
+@php $faviconUrl = brand('favicon'); @endphp
 @if($faviconUrl)
 <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}">
 @endif

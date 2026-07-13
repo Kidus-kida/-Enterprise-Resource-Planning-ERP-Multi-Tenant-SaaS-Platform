@@ -6,20 +6,27 @@
         ['label' => 'Services', 'route' => 'landing.services'],
         ['label' => 'Resources', 'route' => 'landing.resources'],
     ];
+    $brandName = appBrandName();
+    $brandShort = setting('whitelabel.short_name', $brandName);
+    $brandLogo = brand('logo');
 @endphp
 
 <header class="sticky top-0 z-50 transition-all duration-300 backdrop-blur-md bg-white/70 border-b border-white/20">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
         {{-- Logo --}}
         <a href="{{ route('landing.home') }}" class="flex items-center gap-2 group">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform">
-                M
-            </div>
-            <div class="flex flex-col leading-tight">
-                <span class="text-xl font-bold tracking-tight text-slate-900">
-                    MD Code Inc. <span class="text-brand">ERP</span>
-                </span>
-            </div>
+            @if($brandLogo)
+                <img src="{{ $brandLogo }}" alt="{{ $brandName }}" class="h-10 w-auto max-w-[180px] object-contain">
+            @else
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform">
+                    M
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-xl font-bold tracking-tight text-slate-900">
+                        {{ $brandName }} <span class="text-brand">{{ $brandShort }}</span>
+                    </span>
+                </div>
+            @endif
         </a>
 
         {{-- Desktop Nav --}}

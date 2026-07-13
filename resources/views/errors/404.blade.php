@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Not Found - {{ setting('whitelabel.browser_title', config('app.name')) }}</title>
+    <title>Page Not Found - {{ appBrandName() }}</title>
     <style>
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #333; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .container { max-width: 600px; width: 100%; bg: white; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); text-align: center; }
@@ -17,11 +17,12 @@
 </head>
 <body>
     <div class="container">
-        @if(setting('whitelabel.404_logo'))
-            <img class="logo-img" src="{{ Storage::url(setting('whitelabel.404_logo')) }}" alt="MD Code Inc. Logo">
+        @php $errorLogo = brand('logo'); @endphp
+        @if($errorLogo)
+            <img class="logo-img" src="{{ $errorLogo }}" alt="{{ appBrandName() }} Logo">
         @else
             <div class="brand-logo" style="font-size: 32px; font-weight: 700; color: var(--primary-color, #ff9b44); margin-bottom: 30px;">
-                MD Code Inc.
+                {{ appBrandName() }}
             </div>
         @endif
         

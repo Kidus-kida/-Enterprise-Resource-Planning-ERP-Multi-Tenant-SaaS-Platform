@@ -194,7 +194,7 @@ class PayrollProcessingController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         // Set title
-        $sheet->setCellValue('A1', 'MD Code Inc. ERP - Payroll Report');
+        $sheet->setCellValue('A1', config('app.name', 'ERP') . ' - Payroll Report');
         $sheet->mergeCells('A1:O1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
