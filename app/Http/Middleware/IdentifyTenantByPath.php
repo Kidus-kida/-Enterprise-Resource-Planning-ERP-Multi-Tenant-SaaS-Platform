@@ -227,9 +227,11 @@ class IdentifyTenantByPath
         try {
             DB::purge($tenantConnectionName);
             DB::reconnect($tenantConnectionName);
-            $selectedDatabase = DB::connection($tenantConnectionName)->getDatabaseName();
-            $tables = DB::connection($tenantConnectionName)->select('SHOW TABLES LIMIT 5');
-            $userCount = DB::connection($tenantConnectionName)->selectOne('SELECT COUNT(*) as count FROM users');
+            $connection = DB::connection($tenantConnectionName);
+            $selectedDatabase = $connection->getDatabaseName();
+            $tables = $connection->select('SHOW TABLES');
+            $tables = array_slice($tables, 0, 5);
+            $userCount = $connection->selectOne('SELECT COUNT(*) as count FROM users');
 
             Log::info('Tenant database connection probe succeeded', [
                 'connection_name' => $tenantConnectionName,
