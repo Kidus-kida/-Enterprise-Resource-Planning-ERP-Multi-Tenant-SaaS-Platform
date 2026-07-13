@@ -1,13 +1,22 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    if (!Auth::check()) {
+        return redirect()->route('tenant.login', ['tenant' => request()->route('tenant')]);
+    }
+
     return view('dashboard');
 });
 
 Route::get('/dashboard', function () {
+    if (!Auth::check()) {
+        return redirect()->route('tenant.login', ['tenant' => request()->route('tenant')]);
+    }
+
     return 'Tenant dashboard';
 })->name('tenant.dashboard');
 
