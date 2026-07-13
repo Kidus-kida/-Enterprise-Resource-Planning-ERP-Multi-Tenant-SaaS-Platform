@@ -89,34 +89,63 @@
                 </div>
             </div>
 
-            {{-- Floating Apps Grid --}}
-            <div class="relative h-[600px] w-full hidden lg:block perspective-1000">
-                <div class="absolute inset-0 bg-gradient-to-tr from-brand-50/50 to-transparent rounded-full blur-3xl"></div>
-                
-                {{-- Central Hub Circle --}}
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white rounded-3xl shadow-2xl flex items-center justify-center z-20 animate-pulse-slow">
-                    <span class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand to-accent">T</span>
-                </div>
-
-                {{-- Orbiting Icons --}}
-                @foreach($heroIcons as $index => $icon)
-                    @php
-                        // Calculate positions for a circular layout
-                        $angle = ($index * (360 / count($heroIcons))) - 90;
-                        $radius = 200; // Distance from center
-                        $x = $radius * cos(deg2rad($angle));
-                        $y = $radius * sin(deg2rad($angle));
-                        $delay = $index * 1; // Staggered animation
-                    @endphp
-                    <div class="glass-card absolute p-4 rounded-2xl shadow-lg flex flex-col items-center gap-2 w-28 animate-float" 
-                         style="top: calc(50% + {{ $y }}px); left: calc(50% + {{ $x }}px); transform: translate(-50%, -50%); animation-delay: {{ $delay }}s;">
-                        <div class="w-12 h-12 rounded-xl {{ $icon['bg'] }} flex items-center justify-center text-xl {{ $icon['color'] }}">
-                             {{-- Placeholder for FontAwesome icon, using text for now if not available --}}
-                             <span class="font-bold">{{ substr($icon['label'], 0, 1) }}</span>
+            {{-- ERP Preview Card --}}
+            <div class="relative mx-auto hidden h-[560px] w-full max-w-[520px] items-center justify-center lg:flex">
+                <div class="absolute inset-8 rounded-[2.5rem] bg-gradient-to-br from-brand/15 via-white to-accent/10 blur-3xl"></div>
+                <div class="relative w-full rounded-[2rem] border border-slate-200/70 bg-white/80 p-4 shadow-[0_35px_90px_-20px_rgba(15,23,42,0.25)] backdrop-blur-xl">
+                    <div class="rounded-[1.6rem] bg-slate-950 p-5 text-white">
+                        <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                            <span>Unified ERP workspace</span>
+                            <span class="rounded-full bg-emerald-500/20 px-2 py-1 text-emerald-300">Live</span>
                         </div>
-                        <span class="text-xs font-bold text-slate-700">{{ $icon['label'] }}</span>
+
+                        <div class="mt-5 grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+                            <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-[11px] uppercase tracking-[0.25em] text-slate-400">Today</p>
+                                        <p class="mt-2 text-xl font-semibold">Revenue overview</p>
+                                    </div>
+                                    <span class="rounded-full bg-brand/20 px-3 py-1 text-sm font-semibold text-brand-200">+$24k</span>
+                                </div>
+
+                                <div class="mt-4 h-24 rounded-2xl bg-gradient-to-br from-brand/40 to-accent/30 p-3">
+                                    <div class="flex h-full items-end justify-between gap-2">
+                                        <div class="w-full rounded-t-xl bg-white/80" style="height: 35%"></div>
+                                        <div class="w-full rounded-t-xl bg-white/80" style="height: 72%"></div>
+                                        <div class="w-full rounded-t-xl bg-white/80" style="height: 56%"></div>
+                                        <div class="w-full rounded-t-xl bg-white/80" style="height: 82%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                @foreach($heroIcons as $icon)
+                                    <div class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-3">
+                                        <div class="flex h-11 w-11 items-center justify-center rounded-xl {{ $icon['bg'] }} {{ $icon['color'] }} text-lg font-bold">
+                                            {{ substr($icon['label'], 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-white">{{ $icon['label'] }}</p>
+                                            <p class="text-xs text-slate-400">Connected module</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                @endforeach
+
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-sm font-semibold text-slate-900">Automations</p>
+                            <p class="mt-1 text-sm text-slate-500">Alerts, approvals, and updates in one place.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-sm font-semibold text-slate-900">Multi-entity ready</p>
+                            <p class="mt-1 text-sm text-slate-500">Scale across locations and teams without friction.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
