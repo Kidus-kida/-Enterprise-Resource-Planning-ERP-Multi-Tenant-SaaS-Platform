@@ -145,6 +145,14 @@ Route::get('/tenant-debug/{tenant}', function ($tenant) {
         'app_env' => env('APP_ENV'),
     ]);
 })->name('tenant.debug');
+
+Route::get('/tenant-debug/{tenant}/login', function ($tenant) {
+    return response()->json([
+        'message' => 'Tenant debug login route reached',
+        'tenant' => $tenant,
+        'app_env' => env('APP_ENV'),
+    ]);
+})->name('tenant.debug.login');
 Route::get('/test-route', function () {
     return response()->json([
         'status' => 'success',
