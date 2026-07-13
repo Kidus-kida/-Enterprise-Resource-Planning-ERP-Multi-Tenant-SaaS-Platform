@@ -22,7 +22,10 @@ class AppMenuListener
      */
     public function handle(AppMenuEvent $event): void
     {
-        
+        if (request()->routeIs('tenant.dashboard')) {
+            return;
+        }
+
         if(auth()->user()->canAny(['view-tldraw','view-excalidraw'])){
             $menu = $event->menu;
             $menu->html('<span>'.__('Apps').'</span>', ['class' => 'menu-title']);

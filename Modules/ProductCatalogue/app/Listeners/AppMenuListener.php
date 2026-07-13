@@ -22,6 +22,10 @@ class AppMenuListener
      */
     public function handle(AppMenuEvent $event): void
     {
+        if (request()->routeIs('tenant.dashboard')) {
+            return;
+        }
+
         $menu = $event->menu;
 
         // Add ProductCatalogue menu item

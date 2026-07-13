@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Modules\Superadmin\Models\Tenant;
 
 Route::get('/', function () {
     if (!Auth::check()) {
@@ -17,7 +18,23 @@ Route::get('/dashboard', function () {
         return redirect()->route('tenant.login', ['tenant' => request()->route('tenant')]);
     }
 
-    return 'Tenant dashboard';
+    $tenantSlug = request()->route('tenant');
+    $tenantModel = null;
+    $enabledModules = [];
+
+    try {
+        $tenantModel = Tenant::where('id', $tenantSlug)
+            ->orWhere('database_name', $tenantSlug)
+            ->first();
+
+        if ($tenantModel && $tenantModel->business) {
+            $enabledModules = $tenantModel->business->enabled_modules ?? [];
+        }
+    } catch (\Throwable $e) {
+        $enabledModules = [];
+    }
+
+    return view('tenant.dashboard', compact('tenantSlug', 'tenantModel', 'enabledModules'));
 })->name('tenant.dashboard');
 
 Route::controller(AuthController::class)->group(function () {

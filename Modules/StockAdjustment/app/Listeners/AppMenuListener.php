@@ -21,8 +21,10 @@ class AppMenuListener
      */
     public function handle(AppMenuEvent $event): void
     {
-       $menu = $event->menu;
-        
+        if (request()->routeIs('tenant.dashboard')) {
+            return;
+        }
+
         // Check if user is authenticated
         if(!auth()->check()) {
             return;

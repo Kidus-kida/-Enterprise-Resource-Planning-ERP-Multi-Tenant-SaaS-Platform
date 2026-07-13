@@ -22,6 +22,10 @@ class AppMenuListener
      */
     public function handle(AppMenuEvent $event): void
     {
+        if (request()->routeIs('tenant.dashboard')) {
+            return;
+        }
+
         $menu = $event->menu;
         $activeClass = route_is(['contacts.*', 'customer-loans.*', 'supplier-mappings.*', 'contact-groups.*', 'customer-statements.*', 'customer-payments.*']) ? "active" : "";
 

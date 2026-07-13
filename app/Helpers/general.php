@@ -238,6 +238,10 @@ if(!function_exists('format_file_size')){
 if (!function_exists('renderAppMenu')) {
     function renderAppMenu()
     {
+        if (request()->routeIs('tenant.dashboard')) {
+            return '';
+        }
+
         // Try getting custom menu structure
         try {
             $customMenu = setting('menu.structure');
@@ -404,7 +408,38 @@ if (!function_exists('getSetting')) {
 if (!function_exists('Theme')) {
     function Theme($property = null)
     {
-        return !empty($property) ? app(ThemeSettings::class)->$property : app(ThemeSettings::class);
+        try {
+            $settings = app(ThemeSettings::class);
+
+            if (!empty($property)) {
+                return $settings->$property ?? null;
+            }
+
+            return $settings;
+        } catch (\Throwable $e) {
+            $fallbacks = [
+                'layout' => 'vertical',
+                'color_scheme' => 'orange',
+                'layout_width' => 'fluid',
+                'layout_position' => 'fluid',
+                'topbar_color' => 'default',
+                'sidebar_view' => 'default',
+                'sidebar_color' => 'dark',
+                'sidebar_size' => 'lg',
+                'font_color' => '#1f1f1f',
+            ];
+
+            if (!empty($property)) {
+                return $fallbacks[$property] ?? null;
+            }
+
+            return new class {
+                public function __get($name)
+                {
+                    return null;
+                }
+            };
+        }
     }
 }
 
@@ -415,7 +450,32 @@ if (!function_exists('Theme')) {
 if (!function_exists('LocaleSettings')) {
     function LocaleSettings($property = null)
     {
-        return !empty($property) ? app(LocalizationSettings::class)->$property : app(LocalizationSettings::class);
+        try {
+            $settings = app(LocalizationSettings::class);
+
+            if (!empty($property)) {
+                return $settings->$property ?? null;
+            }
+
+            return $settings;
+        } catch (\Throwable $e) {
+            $fallbacks = [
+                'lang' => 'en',
+                'date_format' => 'Y-m-d',
+                'time_format' => 'H:i:s',
+            ];
+
+            if (!empty($property)) {
+                return $fallbacks[$property] ?? null;
+            }
+
+            return new class {
+                public function __get($name)
+                {
+                    return null;
+                }
+            };
+        }
     }
 }
 

@@ -30,7 +30,14 @@
             @php
                 // Simplified: Show company switcher for tenant owners OR users with business settings access
                 // No need to check subscription limits here - if they can access tenant, they can manage companies
-                $hasCompanyAccess = auth()->user()->isTenantOwner() || auth()->user()->can('business_settings.access');
+                $hasCompanyAccess = auth()->user()->isTenantOwner();
+                if (!$hasCompanyAccess) {
+                    try {
+                        $hasCompanyAccess = auth()->user()->can('business_settings.access');
+                    } catch (\Throwable $e) {
+                        $hasCompanyAccess = false;
+                    }
+                }
                 
                 // In tenant DB, we trust isolation. Get all companies.
                 $my_companies = \App\Company::where('is_active', 1)->get();
@@ -104,45 +111,78 @@
                     </div>
                 </li>
             @endif
-        @elseif(auth()->check() && (auth()->user()->isTenantOwner() || auth()->user()->can('business_settings.access')) && !auth()->user()->isSystemOwner())
+        @elseif(auth()->check() && !auth()->user()->isSystemOwner())
              {{-- Fallback for logic where business_id might not be set in session but user has access (edge case) --}}
              {{-- AND explicitly hide from System Owner here too --}}
              @php
+                 $showCompanySwitcher = false;
+                 try {
+                     $showCompanySwitcher = auth()->user()->isTenantOwner();
+                 } catch (\Throwable $e) {
+                     $showCompanySwitcher = false;
+                 }
+
+                 if (!$showCompanySwitcher) {
+                     try {
+                         $showCompanySwitcher = auth()->user()->can('business_settings.access');
+                     } catch (\Throwable $e) {
+                         $showCompanySwitcher = false;
+                     }
+                 }
+
                  // If we are here, likely business_id missing in session. 
                  // We can try to display simple switcher if companies exist.
                  // But since we rely on business_id mainly, this might be redundant.
                  // Let's keep it safe.
                  $display_name = 'Companies'; 
-                 $my_companies = \App\Company::where('is_active', 1)->get();
+                 $my_companies = collect();
+                 try {
+                     $my_companies = \App\Company::where('is_active', 1)->get();
+                 } catch (\Throwable $e) {
+                     $my_companies = collect();
+                 }
              @endphp
-             <li class="nav-item dropdown has-arrow main-drop">
-                    <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
-                        <span><i class="fa fa-building"></i> {{ $display_name }}</span>
-                    </a>
-                    <div class="dropdown-menu">
-                         @if($my_companies->count() > 0)
-                            @foreach($my_companies as $comp)
-                                <a class="dropdown-item" href="{{ route('multi-companies.switch', [$comp->id]) }}">{{ $comp->name }}</a>
-                            @endforeach
-                        @else
-                            <div style="padding: 15px; text-align: center;">
-                                <p class="text-muted" style="margin-bottom: 10px;">No companies created yet</p>
-                                <a href="{{ route('multi-companies.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="fa fa-plus"></i> Create Company
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-             </li>
+             @if($showCompanySwitcher)
+                 <li class="nav-item dropdown has-arrow main-drop">
+                        <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
+                            <span><i class="fa fa-building"></i> {{ $display_name }}</span>
+                        </a>
+                        <div class="dropdown-menu">
+                             @if($my_companies->count() > 0)
+                                @foreach($my_companies as $comp)
+                                    <a class="dropdown-item" href="{{ route('multi-companies.switch', [$comp->id]) }}">{{ $comp->name }}</a>
+                                @endforeach
+                            @else
+                                <div style="padding: 15px; text-align: center;">
+                                    <p class="text-muted" style="margin-bottom: 10px;">No companies created yet</p>
+                                    <a href="{{ route('multi-companies.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-plus"></i> Create Company
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                 </li>
+             @endif
         @endif
 
 
         <!-- Notifications -->
+        @php
+            $notifications = collect();
+            $unreadNotificationCount = 0;
+            try {
+                $notifications = auth()->user()->notifications()->latest()->take(5)->get();
+                $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
+            } catch (\Throwable $e) {
+                $notifications = collect();
+                $unreadNotificationCount = 0;
+            }
+        @endphp
         <li class="nav-item dropdown has-arrow main-drop">
             <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" style="line-height: 45px !important; height: 45px !important;">
                 <i class="fa-regular fa-bell"></i>
-                @if(auth()->user()->unreadNotifications->count() > 0)
-                    <span class="badge rounded-pill bg-primary">{{ auth()->user()->unreadNotifications->count() }}</span>
+                @if($unreadNotificationCount > 0)
+                    <span class="badge rounded-pill bg-primary">{{ $unreadNotificationCount }}</span>
                 @endif
             </a>
             <div class="dropdown-menu dropdown-menu-right notifications" style="min-width: 300px;">
@@ -152,7 +192,7 @@
                 </div>
                 <div class="noti-content">
                     <ul class="notification-list" style="list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto;">
-                        @forelse(auth()->user()->notifications->take(5) as $notification)
+                        @forelse($notifications as $notification)
                             <li class="notification-message" style="border-bottom: 1px solid #f5f5f5;">
                                 <a href="{{ $notification->data['action_url'] ?? '#' }}" style="display: block; padding: 10px; color: #333;">
                                     <div class="media d-flex">

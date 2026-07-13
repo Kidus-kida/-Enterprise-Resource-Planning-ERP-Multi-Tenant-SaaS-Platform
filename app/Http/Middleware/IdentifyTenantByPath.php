@@ -133,12 +133,10 @@ class IdentifyTenantByPath
 
         $connectionProbe = $this->probeTenantDatabaseConnection($tenant);
         if (!$connectionProbe['success']) {
-            Log::error('Tenant database connection probe failed', array_merge($connectionProbe, [
+            Log::warning('Tenant database connection probe failed; continuing without blocking the request', array_merge($connectionProbe, [
                 'tenant_id' => $tenant->id,
                 'tenant_slug' => $tenantSlug,
             ]));
-
-            return response()->json($connectionProbe, 503);
         }
 
         session([

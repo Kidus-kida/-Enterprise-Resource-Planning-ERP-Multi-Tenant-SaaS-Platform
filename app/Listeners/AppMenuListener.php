@@ -27,6 +27,18 @@ class AppMenuListener
     {
         $menu = $event->menu;
         $user = auth()->user();
+
+        if ($user && request()->routeIs('tenant.dashboard')) {
+            $tenantSegment = request()->route('tenant');
+            $dashboardUrl = $tenantSegment ? '/tenant/' . $tenantSegment . '/dashboard' : '/dashboard';
+            $menu->add(
+                Link::to($dashboardUrl, '<i class="la la-dashboard"></i> <span>' . __('Dashboard') . '</span>')
+                    ->setActive(true)
+                    ->setAttributes(['wire:navigate' => 'true'])
+            );
+            return;
+        }
+
         $business = $user->business;
 
         // Dynamic Tenant Resolution: identify which business owns the current context
