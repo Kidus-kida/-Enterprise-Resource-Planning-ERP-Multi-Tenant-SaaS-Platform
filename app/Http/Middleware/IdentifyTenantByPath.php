@@ -55,10 +55,7 @@ class IdentifyTenantByPath
         ]);
 
         try {
-            $tenantQuery = Tenant::on($lookupConnectionName)->query()->where(function ($query) use ($tenantSlug) {
-                $query->where('id', 'tenant_' . $tenantSlug)
-                    ->orWhere('database_name', $tenantSlug);
-            });
+            $tenantQuery = $this->buildTenantLookupQuery($tenantSlug, $lookupConnectionName);
 
             Log::info('Tenant bootstrap lookup SQL', [
                 'sql' => $tenantQuery->toSql(),
@@ -146,6 +143,16 @@ class IdentifyTenantByPath
         $request->merge(['tenant' => $tenant->id]);
 
         return $next($request);
+    }
+
+    private function buildTenantLookupQuery(string $tenantSlug, string $lookupConnectionName): \Illuminate\Database\Eloquent\Builder
+    {
+        return Tenant::on($lookupConnectionName)
+            ->newQuery()
+            ->where(function ($query) use ($tenantSlug) {
+                $query->where('id', 'tenant_' . $tenantSlug)
+                    ->orWhere('database_name', $tenantSlug);
+            });
     }
 
     private function probeTenantDatabaseConnection($tenant): array
