@@ -1,5 +1,8 @@
 <!-- Favicon -->
-<link rel="shortcut icon" type="image/x-icon" href="{{ Vite::asset('resources/assets/img/favicon.png') }}">
+@php $faviconUrl = brandingAsset('favicon'); @endphp
+@if($faviconUrl)
+<link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}">
+@endif
 
 <!-- DataTables CSS -->
 <!-- CSS moved to resources/css/app.scss bundle -->

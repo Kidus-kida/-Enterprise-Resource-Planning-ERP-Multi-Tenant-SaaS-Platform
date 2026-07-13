@@ -4,36 +4,27 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Modules\Superadmin\Models\Tenant;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Modules\Superadmin\Models\Tenant;
 use Symfony\Component\HttpFoundation\Response;
 
 class SwitchTenantDatabase
 {
-    /**
-     * Handle an incoming request.
-     * Switches database connection to tenant if tenant ID is provided via query param or session.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip for Superadmin, Diagnostic, Logout, and Auth routes to prevent Session Pollution/Connection Errors
         if ($request->is('superadmin*') || $request->is('diagnostic*') || $request->is('logout') || $request->is('login*') || $request->is('register*') || $request->is('forgot-password*') || $request->is('reset-password*')) {
             return $next($request);
         }
 
-
-
         try {
             $tenantId = $request->query('tenant');
-            
-            // Store tenant ID in session if provided via query
+
             if ($tenantId) {
                 session(['current_tenant_id' => $tenantId]);
             } else {
-                // If on Central Domain and NO query param, ignore sticky session to prevent "Stuck in Tenant" mode
                 $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
                 if ($request->getHost() === $centralDomain) {
                     session()->forget('current_tenant_id');
@@ -42,28 +33,23 @@ class SwitchTenantDatabase
                 }
             }
 
-            // If no tenant ID found, try to detect via Subdomain (Cached)
             if (!$tenantId) {
                 $host = $request->getHost();
-                
-                $tenantId = \Illuminate\Support\Facades\Cache::remember("tenant_id_for_{$host}", now()->addHours(12), function() use ($host) {
-                    // 1. Try exact domain match
+                $tenantId = Cache::remember("tenant_id_for_{$host}", now()->addHours(12), function () use ($host) {
                     $domainRecord = \Modules\Superadmin\Models\Domain::where('domain', $host)->first();
                     if ($domainRecord) {
                         return $domainRecord->tenant_id;
                     }
-                    
-                    // 2. Try subdomain match against Business
-                    $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et'); 
-                    
+
+                    $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
                     if (\Illuminate\Support\Str::endsWith($host, '.' . $centralDomain)) {
                         $subdomain = substr($host, 0, -strlen('.' . $centralDomain));
-                        
                         $business = \App\Business::where('subdomain', $subdomain)->first();
                         if ($business && $business->tenant_id) {
                             return $business->tenant_id;
                         }
                     }
+
                     return null;
                 });
 
@@ -72,26 +58,35 @@ class SwitchTenantDatabase
                 }
             }
 
-            // Switch to tenant database if we have a tenant ID
             if ($tenantId) {
                 $this->switchToTenant($tenantId);
             }
-        } catch (\Exception $e) {
-            // Log error but don't crash - continue with default connection
-            \Log::error("SwitchTenantDatabase Error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('SwitchTenantDatabase failed', [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Tenant database switch failed',
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'stack_trace' => $e->getTraceAsString(),
+            ], 503);
         }
 
-        // Auto-set active company for company users & Tenant Owners
         if (auth()->check()) {
             if (auth()->user()->company_id) {
-                // For assigned company users, lock them to their company
                 session(['user.company_id' => auth()->user()->company_id]);
                 session(['user.active_company_ids' => [auth()->user()->company_id]]);
             } elseif (auth()->user()->isTenantOwner()) {
-                // For Tenant Owners, if no active company set, try to set default
                 if (!session()->has('user.active_company_ids') || !session()->has('user.company_id')) {
                     try {
-                        // Connection should be switched by now
                         $default = \App\Company::where('is_default', 1)->first() ?? \App\Company::first();
                         if ($default) {
                             if (!session()->has('user.company_id')) {
@@ -101,69 +96,56 @@ class SwitchTenantDatabase
                                 session(['user.active_company_ids' => [$default->id]]);
                             }
                         }
-                    } catch (\Exception $e) {
-                        // Ignore if table doesn't exist yet
+                    } catch (\Throwable $e) {
+                        Log::warning('Unable to load tenant company context', [
+                            'exception_message' => $e->getMessage(),
+                        ]);
                     }
                 }
             }
         }
 
-        // Defense in depth check (MOVED AFTER SWITCH):
-        // Now verifying against the TARGET database context.
-        // If we switched to tenant DB, we are checking the Tenant User.
-        // If we failed to switch (still Main DB), we are checking the Main User.
         if (auth()->check() && auth()->user()->type === \App\Enums\UserType::SUPERADMIN) {
             abort(403, 'Superadmins cannot access tenant routes. Please use the Superadmin panel.');
         }
 
-
-        // Runtime Assertion: Security Check
-        // If accessing dashboard but no tenant set, ABORT.
         if (!session()->has('current_tenant_id') && $request->is('dashboard*') && !$request->is('superadmin*')) {
-             \Log::critical('Security Assertion Failed: Accessing dashboard without tenant context. Host: ' . $request->getHost());
-             abort(500, 'Tenant context missing - Security Abort');
+            Log::critical('Security Assertion Failed: Accessing dashboard without tenant context.', [
+                'host' => $request->getHost(),
+            ]);
+            abort(500, 'Tenant context missing - Security Abort');
         }
 
         return $next($request);
     }
 
-    /**
-     * Switch database connection to tenant
-     */
     private function switchToTenant(string $tenantId): void
     {
+        $centralConnectionName = config('database.default', env('DB_CONNECTION', 'mysql'));
+
         try {
-            // Find tenant from central database (Cached)
-            $tenant = \Illuminate\Support\Facades\Cache::remember("tenant_data_{$tenantId}", now()->addHours(12), function() use ($tenantId) {
-                return Tenant::on('mysql')->find($tenantId);
+            $tenant = Cache::remember("tenant_data_{$tenantId}", now()->addHours(12), function () use ($tenantId, $centralConnectionName) {
+                return Tenant::on($centralConnectionName)->find($tenantId);
             });
 
             if (!$tenant || empty($tenant->data) || !isset($tenant->data['db_host'])) {
-                \Log::warning("SwitchTenantDatabase: Invalid tenant data for ID: $tenantId");
-                session()->forget('current_tenant_id');
-                return;
+                throw new \RuntimeException("Invalid tenant data for ID: {$tenantId}");
             }
 
             $credentials = $tenant->data;
-
-            // Validate required credentials
             if (!isset($credentials['db_name'], $credentials['db_username'])) {
-                \Log::warning("SwitchTenantDatabase: Missing required credentials for tenant: $tenantId");
-                session()->forget('current_tenant_id');
-                return;
+                throw new \RuntimeException("Missing required tenant credentials for tenant: {$tenantId}");
             }
 
-            // Handle password (may be encrypted or empty)
             $password = '';
             if (isset($credentials['db_password']) && !empty($credentials['db_password'])) {
                 try {
                     $password = decrypt($credentials['db_password']);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $password = $credentials['db_password'];
                 }
             }
 
-            // Configure tenant connection
             Config::set('database.connections.tenant', [
                 'driver' => 'mysql',
                 'host' => $credentials['db_host'],
@@ -177,34 +159,29 @@ class SwitchTenantDatabase
                 'strict' => false,
             ]);
 
-            // Test the connection before switching
-            try {
-                DB::purge('tenant');
-                DB::reconnect('tenant');
-                
-                // IMPORTANT: Tell PasswordBroker to use the tenant connection for verification!
-                Config::set('auth.passwords.users.connection', 'tenant');
-                
-                // Test with a simple query
-                DB::connection('tenant')->select('SELECT 1');
-                
-                \Log::info("SwitchTenantDatabase: Successfully switched to tenant database: {$credentials['db_name']}");
-                
-            } catch (\Exception $e) {
-                \Log::error("SwitchTenantDatabase: Failed to connect to tenant database: " . $e->getMessage());
-                
-                // Fall back to default connection AND clear the tenant config
-                // This is critical because User::getConnectionName() checks if this config exists
-                Config::set('database.connections.tenant', []); // Empty array effectively disables it
-                session()->forget('current_tenant_id');
-                
-                // Also purge to be safe
-                DB::purge('tenant');
-            }
-            
-        } catch (\Exception $e) {
-            \Log::error("SwitchTenantDatabase: Error finding tenant: " . $e->getMessage());
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            Config::set('auth.passwords.users.connection', 'tenant');
+            DB::connection('tenant')->select('SELECT 1');
+
+            Log::info('SwitchTenantDatabase succeeded', [
+                'tenant_id' => $tenantId,
+                'database_name' => $credentials['db_name'],
+                'connection_name' => 'tenant',
+            ]);
+        } catch (\Throwable $e) {
+            Config::set('database.connections.tenant', []);
+            DB::purge('tenant');
             session()->forget('current_tenant_id');
+            Log::error('SwitchTenantDatabase failed', [
+                'tenant_id' => $tenantId,
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
     }
 }

@@ -18,10 +18,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="csrf-param" content="_token" />
     <title>{{ $pageTitle ?? '' }} - {{ setting('whitelabel.browser_title', !empty(Theme('name')) ? Theme('name') : config('app.name')) }}</title>
-    @if(setting('whitelabel.favicon'))
-        <link rel="shortcut icon" type="image/x-icon" href="{{ Storage::url(setting('whitelabel.favicon')) }}">
-    @else
-        <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicon.png') }}">
+    @php $faviconUrl = brandingAsset('favicon'); @endphp
+    @if($faviconUrl)
+        <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}">
     @endif
     @php
         $theme = setting('appearance.theme', 'default');

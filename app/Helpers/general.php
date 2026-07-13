@@ -21,19 +21,53 @@ if (!function_exists('route_is')) {
     }
 }
 
-if(!function_exists('appLogo')){
-    function appLogo(){
-        $logo = asset('images/logo2.png');
-        $theme = app(ThemeSettings::class);
-        if(!empty($theme->color_scheme)){
-            if($theme->color_scheme === 'light'){
-                $logo = asset('storage/settings/theme/'.$theme->logo_light);
-            }
-            if($theme->color_scheme === 'dark'){
-                $logo = asset('storage/settings/theme/'.$theme->logo_light);
+if(!function_exists('brandingAsset')){
+    function brandingAsset(string $key = 'logo', ?string $fallback = null): ?string
+    {
+        $settingKeys = match ($key) {
+            'logo' => ['company.logo', 'whitelabel.logo'],
+            'logo_dark' => ['company.dark_logo', 'whitelabel.logo_dark'],
+            'login_logo' => ['company.login_logo', 'whitelabel.login_logo'],
+            'favicon' => ['company.favicon', 'whitelabel.favicon'],
+            'login_background' => ['appearance.login_background', 'whitelabel.login_background'],
+            'app_background' => ['appearance.app_background', 'whitelabel.app_background'],
+            'sidebar_logo' => ['company.sidebar_logo', 'whitelabel.sidebar_logo'],
+            default => ['whitelabel.' . $key],
+        };
+
+        foreach ($settingKeys as $settingKey) {
+            $configured = setting($settingKey);
+            if (!empty($configured)) {
+                return Storage::url($configured);
             }
         }
-        return $logo;
+
+        $publicFallbacks = [
+            'logo' => 'images/main-logo.png',
+            'logo_dark' => 'images/main-logo.png',
+            'login_logo' => 'images/main-logo.png',
+            'favicon' => 'favicon.ico',
+            'login_background' => 'images/placeholder.jpg',
+            'app_background' => 'images/placeholder.jpg',
+            'sidebar_logo' => 'images/main-logo.png',
+        ];
+
+        $fallbackPath = $fallback ?? ($publicFallbacks[$key] ?? null);
+
+        return $fallbackPath ? asset($fallbackPath) : null;
+    }
+}
+
+if(!function_exists('appBrandName')){
+    function appBrandName(): string
+    {
+        return setting('whitelabel.app_name', setting('company.company_name', setting('company.name', config('app.name', 'ERP'))));
+    }
+}
+
+if(!function_exists('appLogo')){
+    function appLogo(){
+        return brandingAsset('logo');
     }
 }
 

@@ -6,10 +6,11 @@
 
 
 
-            @if(setting('whitelabel.login_background'))
+            @php $loginBackground = brandingAsset('login_background'); @endphp
+            @if($loginBackground)
             <style>
                 body.account-page {
-                    background-image: url('{{ Storage::url(setting('whitelabel.login_background')) }}') !important;
+                    background-image: url('{{ $loginBackground }}') !important;
                     background-size: cover !important;
                     background-position: center !important;
                     background-repeat: no-repeat !important;

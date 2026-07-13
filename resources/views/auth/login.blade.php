@@ -5,7 +5,10 @@
     <p class="account-subtitle">{{ setting('whitelabel.welcome_message', __('Access to our dashboard')) }}</p>
     
     <!-- Account Form -->
-    <form action="{{ route('login') }}" method="POST">
+    @php
+        $loginRoute = isset($tenant_id) && $tenant_id ? route('tenant.login.auth', ['tenant' => $tenant_id]) : route('login');
+    @endphp
+    <form action="{{ $loginRoute }}" method="POST">
         @csrf
         @if(isset($tenant_id) && $tenant_id)
             {{-- Hidden input to persist tenant context --}}
@@ -15,7 +18,7 @@
         <x-form.input-block>
             <x-form.label>{{ __('Email Address') }}</x-form.label>
             <x-form.input type="email" name="email" tabindex="1" value="{{ old('email') }}"
-                placeholder="example@mdcodeinc.com" />
+                placeholder="you@example.com" />
         </x-form.input-block>
 
         <x-form.input-block>

@@ -16,22 +16,22 @@ class AuthController extends BaseController
 
     public function login()
     {
-        // Check query param first, then sticky session
-        $tenantId = request()->query('tenant') ?? session('sticky_tenant_id');
-        
-        // Only redirect if authenticated AND database connection is working
+        $tenantId = request()->query('tenant') ?? request()->route('tenant') ?? session('sticky_tenant_id');
+
         if (Auth::check()) {
             try {
-                // Test database connection before redirecting
                 \Illuminate\Support\Facades\DB::connection()->getPdo();
-                
-                // Type-based redirect: Superadmins go to /superadmin, others to /dashboard
+
                 if (Auth::user()->type === \App\Enums\UserType::SUPERADMIN) {
                     return redirect()->route('superadmin.dashboard');
                 }
+
+                if ($tenantId) {
+                    return redirect()->route('tenant.dashboard', ['tenant' => $tenantId]);
+                }
+
                 return redirect()->route('dashboard');
             } catch (\Exception $e) {
-                // Database connection failed - log out user and show login page
                 \Log::warning('Database connection failed on login redirect, logging out user: ' . $e->getMessage());
                 Auth::logout();
                 request()->session()->invalidate();
@@ -39,7 +39,7 @@ class AuthController extends BaseController
                 session()->flash('error', 'Database connection issue. Please login again.');
             }
         }
-        
+
         $this->data['pageTitle'] = __('Login');
         $this->data['tenant_id'] = $tenantId;
         return view('auth.login', $this->data);
@@ -48,7 +48,7 @@ class AuthController extends BaseController
     public function tenantLogin($tenantId)
     {
         session(['sticky_tenant_id' => $tenantId]);
-        return redirect()->route('login');
+        return redirect()->route('tenant.login', ['tenant' => $tenantId]);
     }
 
     public function loginAuth(Request $request)
@@ -58,8 +58,7 @@ class AuthController extends BaseController
             'password' => 'required'
         ]);
         
-        // Check for tenant from both the query string and the path-based tenant middleware
-        $tenantId = $request->query('tenant') ?? $request->input('tenant') ?? session('current_tenant_id');
+        $tenantId = $request->query('tenant') ?? $request->input('tenant') ?? $request->route('tenant') ?? session('current_tenant_id');
         
         \Log::info("AuthController: loginAuth - Tenant ID: " . ($tenantId ?? 'NONE') . ", Email: " . $request->email);
         
@@ -81,10 +80,11 @@ class AuthController extends BaseController
                              // SUCCESS: Manual Login
                              Auth::guard('web')->login($tenantUser);
                              session(['current_tenant_id' => $tenantId]);
+                             session(['sticky_tenant_id' => $tenantId]);
                              $tenantUser->update(['is_online' => true]);
                              
                              \Log::info("AuthController: Tenant login SUCCESS for user {$tenantUser->id}");
-                             return redirect()->route('dashboard');
+                             return redirect()->route('tenant.dashboard', ['tenant' => $tenantId]);
                          }
                          \Log::warning("AuthController: Tenant user account disabled: " . $request->email);
                          return back()->withErrors(['email' => 'Your account is disabled.']);
@@ -181,21 +181,31 @@ class AuthController extends BaseController
             : back()->withErrors(['email' => [__($status)]]);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request, ?string $tenant = null)
     {
-        auth()->user()->update([
-            'is_online' => false,
-        ]);
+        if (auth()->check()) {
+            auth()->user()->update([
+                'is_online' => false,
+            ]);
+        }
+
         auth()->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('login');
+
+        $tenantSlug = $tenant ?? session('sticky_tenant_id') ?? session('current_tenant_id');
+        if ($tenantSlug) {
+            return redirect()->route('tenant.login', ['tenant' => $tenantSlug]);
+        }
+
+        return redirect()->route('login');
     }
 
     private function setupTenantConnection($tenantId)
     {
         try {
-            $tenant = \Modules\Superadmin\Models\Tenant::on('mysql')->find($tenantId);
+            $centralConnectionName = config('database.default', env('DB_CONNECTION', 'mysql'));
+            $tenant = \Modules\Superadmin\Models\Tenant::on($centralConnectionName)->find($tenantId);
 
             if ($tenant && !empty($tenant->data) && isset($tenant->data['db_host'])) {
                 $credentials = $tenant->data;
