@@ -550,97 +550,7 @@ Recommended:
 
 ---
 
-# 1. Clone Repository
 
-```bash
-git clone https://github.com/Kidus-kida/-Enterprise-Resource-Planning-ERP-Multi-Tenant-SaaS-Platform.git
-
-cd -Enterprise-Resource-Planning-ERP-Multi-Tenant-SaaS-Platform
-```
-
----
-
-# 2. Backend Setup
-
-Navigate to backend:
-
-```bash
-cd backend
-```
-
-Install dependencies:
-
-```bash
-composer install
-```
-
-Create environment file:
-
-```bash
-cp .env.example .env
-```
-
-Generate application key:
-
-```bash
-php artisan key:generate
-```
-
-Configure database:
-
-```
-DB_DATABASE=erp_database
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-Run migrations:
-
-```bash
-php artisan migrate
-```
-
-Start Laravel server:
-
-```bash
-php artisan serve
-```
-
-Backend:
-
-```
-http://localhost:8000
-```
-
----
-
-# 3. Frontend Setup
-
-Navigate to frontend:
-
-```bash
-cd frontend
-```
-
-Install packages:
-
-```bash
-npm install
-```
-
-Start development server:
-
-```bash
-npm run dev
-```
-
-Frontend:
-
-```
-http://localhost:5173
-```
-
----
 
 # 🐳 Docker Deployment
 
@@ -719,29 +629,94 @@ php artisan test
 
 # 📷 Screenshots
 
-Add screenshots:
+The ERP platform provides a modern dashboard experience with modules for employee management, attendance tracking, payroll, projects, tasks, communication, and support management.
 
-```
-docs/screenshots/
+## 🔐 Authentication
 
-├── dashboard.png
-├── employee-management.png
-├── payroll.png
-├── inventory.png
-├── reports.png
-└── tenant-management.png
-```
+### Login Page
 
-Recommended screenshots:
-
-- Admin dashboard
-- Tenant management
-- Employee module
-- Payroll processing
-- Inventory dashboard
-- Reports page
+![Login](screenshots/login.png)
 
 ---
+
+# 👨‍💼 Employee Dashboard
+
+![Employee Dashboard](screenshots/employee-dashboard.png)
+
+---
+
+# ⏱️ Attendance Management
+
+### Attendance Table
+
+![Attendance Table](screenshots/attendance-table.png)
+
+
+### Attendance Details (Admin View)
+
+![Admin Attendance Details](screenshots/adminview-attendance-details.png)
+
+---
+
+# 💰 Payroll Management
+
+### Payslip Management
+
+![Payslip](screenshots/payslip.png)
+
+
+### Payslip Items
+
+![Payslip Items](screenshots/payslip-items.png)
+
+---
+
+# 📋 Task & Project Management
+
+### Task Board
+
+![Task Board](screenshots/taskboard.png)
+
+
+### Add Task Board
+
+![Add Task Board](screenshots/add-taskboard.png)
+
+
+### Projects Grid
+
+![Projects Grid](screenshots/projects-grid.png)
+
+
+### Project Details
+
+![Project Details](screenshots/project-details.png)
+
+---
+
+# 💬 Communication System
+
+### Chat Application
+
+![Chat App](screenshots/chat-app.png)
+
+
+### Ticket Chat
+
+![Ticket Chat](screenshots/ticket-chat.png)
+
+---
+
+# 🎨 Design & Collaboration Tools
+
+### Excalidraw Integration
+
+![Excalidraw](screenshots/excalidraw.png)
+
+
+### tldraw Integration
+
+![tldraw](screenshots/tldraw.png)
 
 # 🔒 Security Features
 
