@@ -23,6 +23,10 @@ class SwitchTenantDatabase
             $tenantId = $request->query('tenant');
 
             if ($tenantId) {
+                $resolvedTenant = \Modules\Superadmin\Models\Tenant::resolveByIdentifier($tenantId);
+                if ($resolvedTenant) {
+                    $tenantId = $resolvedTenant->id;
+                }
                 session(['current_tenant_id' => $tenantId]);
             } else {
                 $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
@@ -42,11 +46,31 @@ class SwitchTenantDatabase
                     }
 
                     $centralDomain = env('CENTRAL_DOMAIN', 'ettech.et');
+                    $appHost = parse_url(config('app.url', env('APP_URL', 'http://localhost')), PHP_URL_HOST);
+                    $candidateDomains = array_values(array_filter([
+                        $centralDomain,
+                        $appHost,
+                        'www.' . $centralDomain,
+                        'www.' . $appHost,
+                    ]));
+
+                    foreach ($candidateDomains as $candidateDomain) {
+                        if (!empty($candidateDomain) && \Illuminate\Support\Str::endsWith($host, '.' . $candidateDomain)) {
+                            $subdomain = substr($host, 0, -strlen('.' . $candidateDomain));
+                            if ($subdomain && $subdomain !== 'www') {
+                                $tenant = \Modules\Superadmin\Models\Tenant::resolveByIdentifier($subdomain);
+                                if ($tenant) {
+                                    return $tenant->id;
+                                }
+                            }
+                        }
+                    }
+
                     if (\Illuminate\Support\Str::endsWith($host, '.' . $centralDomain)) {
                         $subdomain = substr($host, 0, -strlen('.' . $centralDomain));
-                        $business = \App\Business::where('subdomain', $subdomain)->first();
-                        if ($business && $business->tenant_id) {
-                            return $business->tenant_id;
+                        $tenant = \Modules\Superadmin\Models\Tenant::resolveByIdentifier($subdomain);
+                        if ($tenant) {
+                            return $tenant->id;
                         }
                     }
 

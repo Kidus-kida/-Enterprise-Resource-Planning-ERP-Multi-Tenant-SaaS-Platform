@@ -108,7 +108,12 @@ if (!function_exists('brand')) {
                 }
             }
 
-            return $default ?? 'MD Code Inc.';
+            $configuredAppName = config('app.name');
+            if (!empty($configuredAppName) && !in_array(strtolower($configuredAppName), ['laravel', 'erp', 'erp system', 'md code inc.', 'md code inc'], true)) {
+                return (string) $configuredAppName;
+            }
+
+            return $default ?? 'ERP System';
         }
 
         return brandingAsset($key, $default);
@@ -118,7 +123,7 @@ if (!function_exists('brand')) {
 if(!function_exists('appBrandName')){
     function appBrandName(): string
     {
-        return brand('name', config('app.name', 'MD Code Inc.'));
+        return brand('name', 'ERP System');
     }
 }
 

@@ -43,10 +43,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // Domain restriction
             'central_domain' => \App\Http\Middleware\CentralDomainOnly::class,
             'tenant.path' => \App\Http\Middleware\IdentifyTenantByPath::class,
+            'tenant.subdomain' => \App\Http\Middleware\IdentifyTenantBySubdomain::class,
         ]);
         
         $middleware->web(append: [
             \App\Http\Middleware\IdentifyTenantByPath::class,
+            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
         ]);
         
@@ -73,6 +75,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\IdentifyTenantByPath::class,
+            \App\Http\Middleware\IdentifyTenantBySubdomain::class,
             \App\Http\Middleware\SwitchTenantDatabase::class,
             \Illuminate\Auth\Middleware\Authenticate::class,
         ]);

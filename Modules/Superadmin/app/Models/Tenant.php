@@ -37,6 +37,48 @@ class Tenant extends Model
         return $this->hasMany(Domain::class);
     }
 
+    public static function resolveByIdentifier(string $identifier): ?self
+    {
+        $normalized = trim($identifier);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $candidateIds = array_values(array_unique([
+            $normalized,
+            'tenant_' . $normalized,
+            'tenant' . $normalized,
+            \Illuminate\Support\Str::slug($normalized),
+            \Illuminate\Support\Str::snake($normalized),
+            \Illuminate\Support\Str::studly($normalized),
+        ]));
+
+        $candidateDatabaseNames = array_values(array_unique([
+            $normalized,
+            'tenant_' . $normalized,
+            'tenant' . $normalized,
+            \Illuminate\Support\Str::slug($normalized),
+            \Illuminate\Support\Str::snake($normalized),
+            \Illuminate\Support\Str::studly($normalized),
+            $normalized . '_db',
+            $normalized . '_database',
+            'tenant_' . \Illuminate\Support\Str::slug($normalized),
+        ]));
+
+        return self::query()
+            ->where(function ($query) use ($candidateIds, $candidateDatabaseNames) {
+                $query->whereIn('id', $candidateIds)
+                    ->orWhereIn('database_name', $candidateDatabaseNames)
+                    ->orWhereHas('business', function ($businessQuery) use ($normalized) {
+                        $businessQuery->where('subdomain', $normalized)
+                            ->orWhere('tenant_id', $normalized)
+                            ->orWhere('tenant_id', 'tenant_' . $normalized)
+                            ->orWhere('tenant_id', 'tenant' . $normalized);
+                    });
+            })
+            ->first();
+    }
+
     protected static function newFactory(): TenantFactory
     {
         //return TenantFactory::new();

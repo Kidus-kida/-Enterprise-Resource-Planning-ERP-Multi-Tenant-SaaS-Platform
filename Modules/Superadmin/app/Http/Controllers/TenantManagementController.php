@@ -85,14 +85,16 @@ class TenantManagementController extends Controller
             );
 
             if ($result['success']) {
+                $existingData = is_array($tenant->data) ? $tenant->data : [];
+
                 $tenant->update([
-                    'data' => [
+                    'data' => array_merge($existingData, [
                         'db_host' => $validated['database_host'],
                         'db_port' => $validated['database_port'],
                         'db_name' => $validated['database_name'],
                         'db_username' => $validated['database_username'],
                         'db_password' => encrypt($validated['database_password'] ?? ''),
-                    ]
+                    ])
                 ]);
 
                 return redirect()->back()->with('success', 'Database connection verified and saved!');

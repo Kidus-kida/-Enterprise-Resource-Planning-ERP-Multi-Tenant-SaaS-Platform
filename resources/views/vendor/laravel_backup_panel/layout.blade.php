@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Laravel Backup Panel{{ config('app.name') ? ' - ' . config('app.name') : '' }}</title>
+    <title>Backup Panel{{ appBrandName() ? ' - ' . appBrandName() : '' }}</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">

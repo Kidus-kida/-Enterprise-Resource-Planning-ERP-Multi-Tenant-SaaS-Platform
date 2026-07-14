@@ -62,15 +62,7 @@ class IdentifyTenantByPath
         ]);
 
         try {
-            $tenantQuery = $this->buildTenantLookupQuery($tenantSlug, $lookupConnectionName);
-
-            Log::info('Tenant bootstrap lookup SQL', [
-                'sql' => $tenantQuery->toSql(),
-                'bindings' => $tenantQuery->getBindings(),
-                'connection' => $lookupConnectionName,
-            ]);
-
-            $tenant = $tenantQuery->first();
+            $tenant = Tenant::resolveByIdentifier($tenantSlug);
 
             if (!$tenant) {
                 Log::info('Tenant bootstrap lookup returned no result', [

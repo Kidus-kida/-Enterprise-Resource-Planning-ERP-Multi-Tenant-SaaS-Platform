@@ -12,29 +12,31 @@ class TenantService
 {
     public function createTenantRecord(Business $business, string $subdomain)
     {
-        $tenantId = 'tenant_' . Str::slug($subdomain);
+        $normalizedSubdomain = trim($subdomain) ?: Str::slug($business->name);
+        $tenantId = 'tenant_' . Str::slug($normalizedSubdomain);
         // Database prefix for tenant databases - configured in tenancy.database.prefix
         // Default value maintained for backward compatibility with existing tenant databases
-        $databaseName = config('tenancy.database.prefix', 'tewoserp_tenant_') . Str::slug($subdomain);
+        $databaseName = config('tenancy.database.prefix', 'erp_tenant_') . Str::slug($normalizedSubdomain);
+        $appHost = parse_url(config('app.url', env('APP_URL', 'http://localhost')), PHP_URL_HOST) ?: 'localhost';
 
         $tenant = Tenant::create([
             'id' => $tenantId,
             'business_id' => $business->id,
             'database_name' => $databaseName,
             'data' => [
-                'subdomain' => $subdomain,
+                'subdomain' => $normalizedSubdomain,
                 'created_at' => now()->toDateTimeString()
             ]
         ]);
 
         Domain::create([
-            'domain' => $subdomain . '.' . config('tenancy.central_domain', 'ettech.et'),
+            'domain' => $normalizedSubdomain . '.' . $appHost,
             'tenant_id' => $tenant->id
         ]);
 
         $business->update([
             'tenant_id' => $tenant->id,
-            'subdomain' => $subdomain
+            'subdomain' => $normalizedSubdomain
         ]);
 
         return $tenant;

@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" type="image/x-icon" href="{{ Vite::asset('resources/assets/img/favicon.png') }}">
 
-    <title>{{ __('Log Viewer ') }} - {{ !empty(Theme('name')) ? Theme('name') : config('app.name') }}</title>
+    <title>{{ __('Log Viewer ') }} - {{ !empty(Theme('name')) ? Theme('name') : appBrandName() }}</title>
 
     <!-- Style sheets-->
     <link href="{{ asset(mix('app.css', 'vendor/log-viewer')) }}" rel="stylesheet" onerror="alert('app.css failed to load. Please refresh the page, re-publish Log Viewer assets, or fix routing for vendor assets.')">

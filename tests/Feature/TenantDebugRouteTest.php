@@ -44,7 +44,8 @@ class TenantDebugRouteTest extends TestCase
             ->get('/tenant/sample/dashboard')
             ->assertOk()
             ->assertSee('Tenant Dashboard')
-            ->assertSee('Welcome')
+            ->assertSee('Good Morning')
+            ->assertSee('Quick Actions')
             ->assertSee('Logout');
     }
 }

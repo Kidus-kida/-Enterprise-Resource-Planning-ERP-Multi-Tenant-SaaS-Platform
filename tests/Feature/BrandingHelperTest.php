@@ -8,7 +8,7 @@ class BrandingHelperTest extends TestCase
 {
     public function test_brand_helper_uses_default_company_name_when_no_setting_exists(): void
     {
-        $this->assertSame('MD Code Inc.', brand('name'));
+        $this->assertSame('ERP System', brand('name'));
     }
 
     public function test_brand_helper_returns_public_asset_fallbacks_when_settings_are_empty(): void
